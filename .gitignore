@@ -1,0 +1,16 @@
+*.zip
+_work/
+PSTW/
+build/
+out/
+obj/
+dist/
+*.obj
+*.pdb
+*.ilk
+.vs/
+.vscode/
+*.user
+*.suo
+Thumbs.db
+Desktop.ini
