@@ -4,6 +4,10 @@ CFLAGS=/nologo /W4 /O2 /TC /Iinclude /Isrc
 !IFNDEF LDFLAGS
 LDFLAGS=
 !ENDIF
+!IFNDEF NSS_DIST
+NSS_DIST=
+!ENDIF
+NSS_CFLAGS=$(CFLAGS) /I$(NSS_DIST)\include\nspr /I$(NSS_DIST)\public\nss
 BUILD=build\vc6
 LIB=$(BUILD)\papinho_secure_transport.lib
 OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_backend.obj
@@ -29,8 +33,29 @@ $(BUILD)\test_backend_spi.obj: tests\test_backend_spi.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_backend_spi.exe: $(BUILD)\test_backend_spi.obj $(LIB)
 	$(CC) /nologo /Fe$@ $(BUILD)\test_backend_spi.obj $(LIB) $(LDFLAGS)
+$(BUILD)\pst_backend_nss.obj: src\backends\nss\pst_backend_nss.c
+	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
+	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_backend_nss.obj: tests\test_backend_nss.c
+	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
+	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_backend_nss.exe: $(BUILD)\test_backend_nss.obj $(BUILD)\pst_backend_nss.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_backend_nss.obj $(BUILD)\pst_backend_nss.obj $(LIB) wsock32.lib $(LDFLAGS)
+$(BUILD)\test_backend_nss_integration.obj: tests\test_backend_nss_integration.c
+	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
+	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_backend_nss_integration.exe: $(BUILD)\test_backend_nss_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_backend_nss_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB) wsock32.lib $(LDFLAGS)
 test: all
 	$(BUILD)\test_foundation.exe
 	$(BUILD)\test_backend_spi.exe
+test-nss-unit: dirs $(LIB) $(BUILD)\test_backend_nss.exe
+	$(BUILD)\test_backend_nss.exe
+nss-integration: dirs $(LIB) $(BUILD)\test_backend_nss_integration.exe
+test-nss-integration: nss-integration
+	@if "$(NSS_TEST_HOST)"=="" echo NSS_TEST_HOST is required & exit 2
+	@if "$(NSS_TEST_PORT)"=="" echo NSS_TEST_PORT is required & exit 2
+	@if "$(NSS_TEST_NAME)"=="" echo NSS_TEST_NAME is required & exit 2
+	$(BUILD)\test_backend_nss_integration.exe $(NSS_TEST_HOST) $(NSS_TEST_PORT) $(NSS_TEST_NAME)
 clean:
 	@if exist $(BUILD) rmdir /s /q $(BUILD)

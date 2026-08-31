@@ -17,7 +17,13 @@
   - In-process registry, exact lookup, and duplicate rejection: complete
   - Incremental readiness, handshake, I/O, and ownership contracts: complete
   - Deterministic mock dispatch tests with VC6 `/W4`: complete
-- Phase 3 - NSS Backend: pending
+- Phase 3 - NSS Backend: complete
+  - Opt-in `retrozilla-nss` descriptor and private NSS/NSPR state: complete
+  - Normal-runtime lifecycle and fail-closed initialization propagation: complete
+  - Transactional native import and single-owner cleanup: complete
+  - Incremental handshake, `PR_Poll`, secure I/O, shutdown, and error mapping: complete
+  - VC6 unit/lifecycle tests and compiled opt-in integration harness: complete
+  - Successful certificate-authenticated TLS integration run: deferred pending Phase 4 test trust/credential fixture
 - Phase 4 - Credentials & Peer Identity: pending
 - Phase 5 - TLS Runtime: pending
 - Phase 6 - Legacy Platform Validation: pending

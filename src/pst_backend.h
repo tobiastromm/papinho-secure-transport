@@ -1,9 +1,9 @@
 #ifndef PST_BACKEND_H
 #define PST_BACKEND_H
 #include "papinho_secure_transport.h"
-#define PST_BACKEND_SPI_VERSION_MAJOR 1UL
+#define PST_BACKEND_SPI_VERSION_MAJOR 2UL
 #define PST_BACKEND_SPI_VERSION_MINOR 0UL
-#define PST_BACKEND_SPI_VERSION 0x00010000UL
+#define PST_BACKEND_SPI_VERSION 0x00020000UL
 #define PST_BACKEND_CAP_TLS_1_2 0x00000001UL
 #define PST_BACKEND_CAP_TLS_1_3 0x00000002UL
 #define PST_BACKEND_CAP_CLIENT_AUTH 0x00000004UL
@@ -52,7 +52,9 @@ typedef struct PST_BACKEND_VTABLE {
     PST_RESULT (*validate_requirements)(void *runtime_state, pst_u32 required_capabilities);
     PST_RESULT (*connection_create)(void *runtime_state, void **connection_state);
     void (*connection_destroy)(void *connection_state);
-    PST_RESULT (*attach_transport)(void *connection_state, void *transport, pst_u32 ownership);
+    PST_RESULT (*attach_transport)(void *connection_state, void *transport,
+                                   pst_u32 ownership,
+                                   pst_u32 *ownership_accepted);
     PST_RESULT (*handshake_step)(void *connection_state, pst_u32 *operation, PST_RESULT *error);
     PST_RESULT (*get_interest)(void *connection_state, pst_u32 *interest);
     PST_RESULT (*wait)(void *connection_state, pst_u32 interest, pst_u32 timeout_ms, PST_BACKEND_WAIT_RESULT *result);

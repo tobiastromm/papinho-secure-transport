@@ -61,12 +61,17 @@ static void mock_connection_destroy(void *connection)
 {
     (void)connection; ++g_connection_destroy_calls;
 }
-static PST_RESULT mock_attach(void *connection, void *transport, pst_u32 ownership)
+static PST_RESULT mock_attach(void *connection, void *transport, pst_u32 ownership,
+                              pst_u32 *ownership_accepted)
 {
     mock_connection_state *c = (mock_connection_state *)connection;
+    if (ownership_accepted == NULL) return PST_RESULT_INVALID_ARGUMENT;
+    *ownership_accepted = 0UL;
     if (c != &g_connection || transport == NULL) return PST_RESULT_INVALID_ARGUMENT;
     if (ownership > PST_BACKEND_OWNERSHIP_RETAINED) return PST_RESULT_INVALID_ARGUMENT;
-    c->transport = transport; c->ownership = ownership; return PST_RESULT_OK;
+    c->transport = transport; c->ownership = ownership;
+    *ownership_accepted = ownership == PST_BACKEND_OWNERSHIP_TRANSFERRED ? 1UL : 0UL;
+    return PST_RESULT_OK;
 }
 static PST_RESULT mock_handshake(void *connection, pst_u32 *operation, PST_RESULT *error)
 {
@@ -149,6 +154,7 @@ int main(void)
     pst_u32 capabilities;
     pst_u32 operation;
     pst_u32 interest;
+    pst_u32 ownership_accepted;
     PST_RESULT error;
     PST_BACKEND_WAIT_RESULT wait_result;
     PST_BACKEND_IO_RESULT io;
@@ -160,7 +166,7 @@ int main(void)
     CHECK(pst_backend_validate(NULL) == PST_RESULT_INVALID_ARGUMENT, 1);
     d = g_descriptor; d.struct_size = PST_BACKEND_DESCRIPTOR_MIN_SIZE - 1UL;
     CHECK(pst_backend_validate(&d) == PST_RESULT_INVALID_ARGUMENT, 2);
-    d = g_descriptor; d.spi_version = 0x00020000UL;
+    d = g_descriptor; d.spi_version = 0x00030000UL;
     CHECK(pst_backend_validate(&d) == PST_RESULT_INCOMPATIBLE_API, 3);
     d = g_descriptor; d.id = "";
     CHECK(pst_backend_validate(&d) == PST_RESULT_INVALID_ARGUMENT, 4);
@@ -174,7 +180,7 @@ int main(void)
     CHECK(pst_backend_validate(&d) == PST_RESULT_INVALID_ARGUMENT, 54);
     v = g_vtable; v.handshake_step = NULL; d = g_descriptor; d.vtable = &v;
     CHECK(pst_backend_validate(&d) == PST_RESULT_INVALID_ARGUMENT, 7);
-    v = g_vtable; v.spi_version = 0x00020000UL; d.vtable = &v;
+    v = g_vtable; v.spi_version = 0x00030000UL; d.vtable = &v;
     CHECK(pst_backend_validate(&d) == PST_RESULT_INCOMPATIBLE_API, 8);
     d = g_descriptor; d.capabilities = PST_BACKEND_CAP_EARLY_DATA;
     CHECK(pst_backend_validate(&d) == PST_RESULT_INVALID_ARGUMENT, 9);
@@ -198,10 +204,11 @@ int main(void)
     CHECK(found->vtable->connection_create(runtime_state, &connection_state) == PST_RESULT_OK, 25);
     CHECK(connection_state == &g_connection && g_connection_create_calls == 1, 26);
     transport_token = 7;
-    CHECK(found->vtable->attach_transport(connection_state, NULL, PST_BACKEND_OWNERSHIP_TRANSFERRED) == PST_RESULT_INVALID_ARGUMENT, 27);
-    CHECK(g_connection.transport == NULL, 28);
-    CHECK(found->vtable->attach_transport(connection_state, &transport_token, PST_BACKEND_OWNERSHIP_TRANSFERRED) == PST_RESULT_OK, 29);
+    CHECK(found->vtable->attach_transport(connection_state, NULL, PST_BACKEND_OWNERSHIP_TRANSFERRED, &ownership_accepted) == PST_RESULT_INVALID_ARGUMENT, 27);
+    CHECK(g_connection.transport == NULL && ownership_accepted == 0UL, 28);
+    CHECK(found->vtable->attach_transport(connection_state, &transport_token, PST_BACKEND_OWNERSHIP_TRANSFERRED, &ownership_accepted) == PST_RESULT_OK, 29);
     CHECK(g_connection.transport == &transport_token && g_connection.ownership == PST_BACKEND_OWNERSHIP_TRANSFERRED, 30);
+    CHECK(ownership_accepted == 1UL, 55);
     states[0] = PST_BACKEND_OPERATION_COMPLETE; states[1] = PST_BACKEND_OPERATION_NEED_READ;
     states[2] = PST_BACKEND_OPERATION_NEED_WRITE; states[3] = PST_BACKEND_OPERATION_NEED_READ_WRITE;
     for (i = 0; i < 4; ++i) {

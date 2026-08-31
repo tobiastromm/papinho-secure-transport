@@ -4,7 +4,7 @@ Status: Phase 2 implementation. This contract is internal to PapinhoSecureTransp
 
 ## Boundary and versioning
 
-The SPI is declared in `src/pst_backend.h`. Consumers include only `include/papinho_secure_transport.h`; they never receive descriptors, vtables, or backend-private pointers. The SPI has its own packed version, currently 1.0 (`0x00010000`), independent of the public API version. Descriptor and vtable records carry both `struct_size` and `spi_version`. The current core accepts the current SPI major and records at least as large as the known layouts.
+The SPI is declared in `src/pst_backend.h`. Consumers include only `include/papinho_secure_transport.h`; they never receive descriptors, vtables, or backend-private pointers. The SPI has its own packed version, currently 2.0 (`0x00020000`), independent of the public API version. Descriptor and vtable records carry both `struct_size` and `spi_version`. The current core accepts the current SPI major and records at least as large as the known layouts.
 
 There is no dynamic loading, DLL discovery, or binary plugin contract. Backends are linked into the process and registered during controlled setup.
 
@@ -59,9 +59,10 @@ This separation permits a future backend to use its correct secure-layer polling
 
 ## Transport ownership
 
-`attach_transport` receives opaque transport state and one explicit mode: BORROWED, TRANSFERRED, or RETAINED. Ownership changes only when the hook returns `PST_RESULT_OK`:
+`attach_transport` receives opaque transport state and one explicit mode: BORROWED, TRANSFERRED, or RETAINED. The hook initializes `ownership_accepted` to zero and changes it to one exactly when a TRANSFERRED resource crosses an irreversible backend boundary. This separately reports transfer from the final operation result:
 
-- on failure, ownership remains with the caller;
+- on failure with `ownership_accepted == 0`, ownership remains with the caller;
+- on failure with `ownership_accepted == 1`, the backend has already consumed and cleaned up the resource, so the caller must invalidate its former handle;
 - BORROWED never grants close ownership to the backend;
 - TRANSFERRED makes the backend/PST path the sole closer after success;
 - RETAINED requires the later transport adapter contract to obtain and release one reference transactionally.
@@ -72,6 +73,9 @@ Phase 2 defines and tests this transition contract but does not define a public 
 
 `tests/test_backend_spi.c` contains a private, deterministic mock named `test-backend`. It uses static counters and opaque mock state to exercise validation, registry behavior, lifecycle dispatch, capability queries, incremental handshake states, readiness, timeout, partial I/O, shutdown, and transactional ownership. It is not linked as a production backend and performs no cryptography, protocol processing, networking, or plaintext transport.
 
+## First implementation
+
+Phase 3 implements `retrozilla-nss` behind this SPI. The NSS descriptor is compiled only by explicit backend targets and remains absent from the portable public header. Native import required SPI 2.0 to add `ownership_accepted` to `attach_transport`, because ownership can cross irreversibly at a successful intermediate import even when later secure-layer construction fails. See [backend-nss.md](backend-nss.md).
 ## Deferred work
 
 Phase 3 may implement the first real backend behind this contract. Later phases still own public runtime/configuration/transport APIs, credential and trust material, peer identity records, selection policy, concurrency, diagnostics, and actual secure operations. Phase 2 does not begin any of that work.

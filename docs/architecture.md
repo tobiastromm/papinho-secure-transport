@@ -63,7 +63,7 @@ No concrete platform handle may leak through the future public interface, includ
 
 The portable PST core delegates cryptographic and secure-protocol mechanism to backend implementations. The proven legacy NSS/NSPR implementation is the first backend candidate. Modern Windows, Linux/POSIX, embedded, or other backends remain possible, but Phase 0.B neither creates them nor chooses their libraries.
 
-Backend state and platform resources remain private behind a backend-neutral boundary. Phase 2 materializes the internal descriptor, C89 function table, capability mask, lifecycle dispatch, readiness contract, and setup-time registry described in [backend-spi.md](backend-spi.md). Runtime selection policy remains deferred; the SPI exposes no backend or platform types publicly.
+Backend state and platform resources remain private behind a backend-neutral boundary. Phase 2 materializes the internal contract described in [backend-spi.md](backend-spi.md), and Phase 3 implements the first opt-in provider, `retrozilla-nss`, as documented in [backend-nss.md](backend-nss.md). Runtime selection policy remains deferred; neither the SPI nor backend/platform types are exposed publicly.
 
 ## Readiness invariant
 
@@ -74,7 +74,7 @@ TLS wants read  == native socket is readable
 TLS wants write == native socket is writable
 ```
 
-A future API/SPI must represent backend-specific readiness or progress requirements without exposing backend handles. Backends may use different mechanisms. Phase 0.B establishes the invariant but does not choose functions, enums, event masks, or polling interfaces.
+The internal SPI represents interest and bounded wait separately without exposing backend handles. The Phase 3 NSS implementation maps those operations to `PR_Poll()` on its private SSL descriptor. Public event-loop integration remains deferred.
 
 ## Ownership and lifetime invariants
 
@@ -82,7 +82,7 @@ Ownership must be explicit at every boundary. Ownership of a PST abstraction is 
 
 The proven NSS layering is native `SOCKET` -> NSPR -> SSL; after import, `PR_Close(ssl_fd)` closes the aggregate. This demonstrates that a backend may assume ownership of an underlying resource. The future design must define whether resources are borrowed, transferred, or retained and must ensure exactly one valid close path. Ambiguous ownership, double-close, use-after-close, and concurrent close by consumer and backend are prohibited.
 
-The concrete construction, transfer, reference, concurrency, and destruction rules are deferred to Phase 0.C.
+SPI 2.0 reports irreversible ownership acceptance separately from final attach success. The NSS backend sets acceptance immediately after successful native import and owns every cleanup path thereafter. Public transport construction, retained references, and concurrency remain deferred.
 
 ## Mechanism and policy
 

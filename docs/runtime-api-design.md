@@ -335,10 +335,10 @@ Phase 1 fixes the portable foundation ABI at API version 1.0.0: `PST_CALL` is `_
 - Portable header spelling, calling convention, visibility macros, integer typedefs, result codes, version record, and opaque handle declarations: implemented in Phase 1.
 - Transport/runtime option and result layouts beyond `PST_VERSION_INFO`: deferred to the phase that implements each surface.
 - Internal backend SPI/vtable, validation, capabilities, and setup-time registry: implemented in Phase 2; see [backend-spi.md](backend-spi.md).
-- NSS adapter, native socket import details, and NSS lifecycle implementation: Phase 3.
+- Opt-in RetroZilla NSS/NSPR descriptor, lifecycle, private Win32 socket import, incremental operations, and `PR_Poll` readiness: implemented in Phase 3; credential/trust integration remains deferred.
 - Credential/trust loaders and complete peer-identity accessors: Phase 4.
 - Runtime/event-loop implementations and convenience blocking orchestration: Phase 5.
 - Legacy-platform compilation and behavioral validation of the implemented API: Phase 6.
 - Interoperability, fuzzing, negative tests, hardening, and stable release ABI: later phases.
 
-Phase 2 adds the internal backend contract and a test-only mock. No real backend, TLS state machine, networking, credential loader, trust loader, or consumer integration is implemented.
+Phase 3 adds an opt-in real NSS/NSPR provider behind the internal SPI. It does not add a public runtime, credential/trust loader, peer-info model, consumer integration, or custom TLS/cryptography implementation.
