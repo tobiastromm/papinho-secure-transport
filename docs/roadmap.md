@@ -23,7 +23,7 @@
   - Transactional native import and single-owner cleanup: complete
   - Incremental handshake, `PR_Poll`, secure I/O, shutdown, and error mapping: complete
   - VC6 unit/lifecycle tests and compiled opt-in integration harness: complete
-  - Successful certificate-authenticated TLS integration run: deferred pending Phase 4 test trust/credential fixture
+  - Authenticated loopback TLS 1.2, backend polling, secure echo, and shutdown proof: complete
 - Phase 4 - Credentials & Peer Identity: pending
 - Phase 5 - TLS Runtime: pending
 - Phase 6 - Legacy Platform Validation: pending

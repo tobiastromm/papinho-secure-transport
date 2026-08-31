@@ -16,4 +16,5 @@ PST_RESULT pst_backend_nss_register(void);
 PST_RESULT pst_backend_nss_normalize_error(pst_i32 native_error);
 int pst_backend_nss_is_would_block(pst_i32 native_error);
 pst_i32 pst_backend_nss_last_error(const void *state);
+pst_u32 pst_backend_nss_connection_protocol_version(const void *state);
 #endif

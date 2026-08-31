@@ -33,6 +33,17 @@ static int connect_ipv4(const char *host, unsigned short port, SOCKET *out_socke
     }
     *out_socket = socket_value; return 1;
 }
+static PST_RESULT wait_for_backend(const PST_BACKEND_DESCRIPTOR *descriptor,
+                                   void *connection)
+{
+    pst_u32 interest;
+    PST_BACKEND_WAIT_RESULT wait_result;
+
+    PST_RESULT result;
+    result = descriptor->vtable->get_interest(connection, &interest);
+    if (result != PST_RESULT_OK) return result;
+    return descriptor->vtable->wait(connection, interest, 250UL, &wait_result);
+}
 int main(int argc, char **argv)
 {
     WSADATA winsock_data;
@@ -41,7 +52,9 @@ int main(int argc, char **argv)
     void *runtime_state;
     void *connection_state;
     PST_NSS_NATIVE_TRANSPORT transport;
+    PST_BACKEND_IO_RESULT io;
     PST_BACKEND_WAIT_RESULT wait_result;
+
     SOCKET socket_value;
     pst_u32 accepted;
     pst_u32 operation;
@@ -50,6 +63,13 @@ int main(int argc, char **argv)
     PST_RESULT result;
     unsigned short port;
     int complete;
+    int io_complete;
+    const char message[] = "pst-phase3-functional-proof";
+    char received[64];
+    pst_size written;
+    pst_size received_count;
+    pst_u32 protocol_version;
+    pst_u32 shutdown_operation;
     int i;
     if (argc != 4) {
         fprintf(stderr, "usage: test_backend_nss_integration host port certificate-hostname\n");
@@ -61,6 +81,7 @@ int main(int argc, char **argv)
     if (!connect_ipv4(argv[1], port, &socket_value)) { WSACleanup(); return 5; }
     descriptor = pst_backend_nss_descriptor(); error = PST_RESULT_OK; backend_state = NULL;
     runtime_state = NULL; connection_state = NULL; accepted = 0UL; complete = 0;
+    io_complete = 0; written = 0; received_count = 0; shutdown_operation = 0UL;
     result = descriptor->vtable->initialize(&backend_state);
     if (result != PST_RESULT_OK) { closesocket(socket_value); WSACleanup(); return 6; }
     result = descriptor->vtable->runtime_create(backend_state, &runtime_state);
@@ -90,8 +111,34 @@ int main(int argc, char **argv)
         if (result != PST_RESULT_OK) break;
     }
     if (complete) {
-        descriptor->vtable->shutdown_step(connection_state, &operation, &error);
-        printf("test_backend_nss_integration: PASS\n");
+        protocol_version = pst_backend_nss_connection_protocol_version(connection_state);
+        for (i = 0; i < 200 && written < sizeof(message) - 1; ++i) {
+            result = descriptor->vtable->write(connection_state, message + written,
+                (sizeof(message) - 1) - written, &io);
+            if (result != PST_RESULT_OK || io.operation == PST_BACKEND_OPERATION_FAILED) break;
+            written += io.bytes_transferred;
+            if (io.operation != PST_BACKEND_OPERATION_COMPLETE &&
+                wait_for_backend(descriptor, connection_state) != PST_RESULT_OK) break;
+        }
+        for (i = 0; i < 200 && received_count < sizeof(message) - 1; ++i) {
+            result = descriptor->vtable->read(connection_state, received + received_count,
+                (sizeof(message) - 1) - received_count, &io);
+            if (result != PST_RESULT_OK || io.operation == PST_BACKEND_OPERATION_FAILED ||
+                io.operation == PST_BACKEND_OPERATION_CLOSED) break;
+            received_count += io.bytes_transferred;
+            if (received_count < sizeof(message) - 1 &&
+                wait_for_backend(descriptor, connection_state) != PST_RESULT_OK) break;
+        }
+        io_complete = written == sizeof(message) - 1 &&
+            received_count == sizeof(message) - 1 &&
+            memcmp(message, received, sizeof(message) - 1) == 0;
+        descriptor->vtable->shutdown_step(connection_state, &shutdown_operation, &error);
+        if (io_complete) {
+            printf("TLS_VERSION=0x%04lx WRITE=%lu READ=%lu SHUTDOWN=%lu\n",
+                   (unsigned long)protocol_version, (unsigned long)written,
+                   (unsigned long)received_count, (unsigned long)shutdown_operation);
+            printf("test_backend_nss_integration: PASS\n");
+        }
     } else {
         fprintf(stderr, "handshake failed: result=%ld native=%ld\n",
                 (long)error, (long)pst_backend_nss_last_error(connection_state));
@@ -99,5 +146,5 @@ int main(int argc, char **argv)
     descriptor->vtable->connection_destroy(connection_state);
     descriptor->vtable->runtime_destroy(runtime_state);
     descriptor->vtable->shutdown(backend_state); WSACleanup();
-    return complete ? 0 : 10;
+    return complete && io_complete ? 0 : 10;
 }
