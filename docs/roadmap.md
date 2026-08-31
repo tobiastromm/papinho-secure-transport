@@ -35,7 +35,10 @@
   - Public Win32 adapter and ownership transition: complete
   - Incremental connection lifecycle, readiness, secure I/O and shutdown: complete
   - Public-only TLS 1.2/TLS 1.3 server-auth, mTLS and negative gates: complete
-- Phase 6 - Legacy Platform Validation: pending
+- Phase 6 - Legacy Platform Validation: in progress
+  - Static VC6/PE/import compatibility audit: complete
+  - Windows NT 4.0 SP6 execution environment: unavailable
+  - Mandatory NT4 public-runtime functional matrix: not executed
 - Phase 7 - Interoperability / Hardening: pending
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending
