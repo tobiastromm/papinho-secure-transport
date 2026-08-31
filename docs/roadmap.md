@@ -29,7 +29,12 @@
   - Frozen backend-neutral hostname and authentication configuration: complete
   - NSS custom trust, client authentication, SHA-256, and owned leaf snapshot: complete
   - Loopback mTLS, wrong-hostname, and untrusted-CA functional gates: complete
-- Phase 5 - TLS Runtime: pending
+- Phase 5 - TLS Runtime: complete
+  - Public runtime selection and capability gating: complete
+  - Frozen TLS version, ALPN, resumption and 0-RTT policy: complete
+  - Public Win32 adapter and ownership transition: complete
+  - Incremental connection lifecycle, readiness, secure I/O and shutdown: complete
+  - Public-only TLS 1.2/TLS 1.3 server-auth, mTLS and negative gates: complete
 - Phase 6 - Legacy Platform Validation: pending
 - Phase 7 - Interoperability / Hardening: pending
 - Phase 8 - Additional Backends: pending

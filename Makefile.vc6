@@ -10,7 +10,7 @@ NSS_DIST=
 NSS_CFLAGS=$(CFLAGS) /I$(NSS_DIST)\include\nspr /I$(NSS_DIST)\public\nss
 BUILD=build\vc6
 LIB=$(BUILD)\papinho_secure_transport.lib
-OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj
+OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj
 all: dirs $(LIB) $(BUILD)\test_foundation.exe $(BUILD)\test_identity.exe $(BUILD)\test_backend_spi.exe
 dirs:
 	@if not exist build mkdir build
@@ -24,6 +24,8 @@ $(BUILD)\pst_validation.obj: src\pst_validation.c
 $(BUILD)\pst_identity.obj: src\pst_identity.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\pst_backend.obj: src\pst_backend.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\pst_runtime.obj: src\pst_runtime.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(LIB): $(OBJS)
 	$(LIBTOOL) /nologo /out:$@ $(OBJS)
@@ -52,6 +54,12 @@ $(BUILD)\test_backend_nss_integration.obj: tests\test_backend_nss_integration.c
 	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_backend_nss_integration.exe: $(BUILD)\test_backend_nss_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB)
 	$(CC) /nologo /Fe$@ $(BUILD)\test_backend_nss_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB) wsock32.lib $(LDFLAGS)
+$(BUILD)\test_tls_runtime_integration.obj: tests\test_tls_runtime_integration.c
+	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
+	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_tls_runtime_integration.exe: $(BUILD)\test_tls_runtime_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_tls_runtime_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB) wsock32.lib $(LDFLAGS)
+runtime-integration: dirs $(LIB) $(BUILD)\test_tls_runtime_integration.exe
 test: all
 	$(BUILD)\test_foundation.exe
 	$(BUILD)\test_identity.exe

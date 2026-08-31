@@ -1,0 +1,31 @@
+#include "papinho_secure_transport.h"
+#include "papinho_secure_transport_win32.h"
+#if defined(_MSC_VER) && _MSC_VER == 1200
+# pragma warning(push)
+# pragma warning(disable:4115 4514)
+#endif
+#include <windows.h>
+#include <winsock.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#if defined(_MSC_VER) && _MSC_VER == 1200
+# pragma warning(pop)
+# pragma warning(disable:4514)
+# pragma warning(disable:4701)
+#endif
+static unsigned char *load(const char *p,pst_size *n){FILE *f;long z;unsigned char *b;*n=0;f=fopen(p,"rb");if(!f)return NULL;if(fseek(f,0,SEEK_END)||(z=ftell(f))<=0||fseek(f,0,SEEK_SET)){fclose(f);return NULL;}b=(unsigned char*)malloc((size_t)z);if(!b||fread(b,1,(size_t)z,f)!=(size_t)z){free(b);fclose(f);return NULL;}fclose(f);*n=(pst_size)z;return b;}
+static int connect4(const char *host,unsigned short port,SOCKET *out){struct sockaddr_in a;SOCKET s;memset(&a,0,sizeof(a));a.sin_family=AF_INET;a.sin_port=htons(port);a.sin_addr.s_addr=inet_addr(host);s=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);if(s==INVALID_SOCKET)return 0;if(connect(s,(struct sockaddr*)&a,sizeof(a))){closesocket(s);return 0;}*out=s;return 1;}
+static int wait_progress(pst_connection *c){PST_WAIT_RESULT w;return pst_connection_wait(c,250,&w)==PST_RESULT_OK;}
+int main(int argc,char **argv){WSADATA wd;SOCKET s;unsigned char *ca,*cd,*kd; pst_size ca_n,cd_n,kd_n;PST_TRUST_SOURCE ts;PST_CREDENTIAL_SOURCE cs;PST_IDENTITY_CONFIG id;PST_TLS_POLICY pol;PST_ALPN_PROTOCOL proto;PST_RUNTIME_OPTIONS ro;PST_RUNTIME_INFO ri;pst_trust *trust;pst_credentials *cred;pst_config *cfg;pst_runtime *rt;pst_transport *tr;pst_connection *cn;pst_peer_info *peer;PST_PEER_INFO_SUMMARY ps;PST_IO_RESULT io;pst_u32 accepted,op;PST_RESULT er,r;char received[32],alpn[32];const char msg[]="pst-phase5-public-runtime";pst_size wr,rd,alpn_n;int i,ok;
+ if(argc!=10){fprintf(stderr,"usage: host port hostname ca.der client.der|- key.pk8|- min max alpn|-\n");return 2;}ca=load(argv[4],&ca_n);cd=NULL;kd=NULL;cd_n=kd_n=0;if(strcmp(argv[5],"-")){cd=load(argv[5],&cd_n);kd=load(argv[6],&kd_n);}if(!ca||(strcmp(argv[5],"-")&&(!cd||!kd)))return 3;
+ trust=NULL;cred=NULL;cfg=NULL;rt=NULL;tr=NULL;cn=NULL;peer=NULL;s=INVALID_SOCKET;memset(&ts,0,sizeof(ts));ts.struct_size=sizeof(ts);ts.api_version=PST_API_VERSION;ts.kind=PST_TRUST_SOURCE_CUSTOM_CA_DER;ts.data=ca;ts.data_size=ca_n;if(pst_trust_create(&ts,&trust)!=PST_RESULT_OK)return 4;
+ if(cd){memset(&cs,0,sizeof(cs));cs.struct_size=sizeof(cs);cs.api_version=PST_API_VERSION;cs.kind=PST_CREDENTIAL_SOURCE_CERT_DER_PKCS8_DER;cs.certificate_der=cd;cs.certificate_der_size=cd_n;cs.private_key_der=kd;cs.private_key_der_size=kd_n;if(pst_credentials_create(&cs,&cred)!=PST_RESULT_OK)return 5;memset(kd,0,kd_n);free(kd);kd=NULL;}
+ if(pst_config_create(&cfg)!=PST_RESULT_OK)return 6;memset(&id,0,sizeof(id));id.struct_size=sizeof(id);id.api_version=PST_API_VERSION;id.credentials=cred;id.trust=trust;id.expected_hostname=argv[3];id.expected_hostname_size=strlen(argv[3]);id.require_peer_authentication=1;id.require_client_authentication=cred?1:0;if(pst_config_set_identity(cfg,&id)!=PST_RESULT_OK)return 7;
+ memset(&pol,0,sizeof(pol));pol.struct_size=sizeof(pol);pol.api_version=PST_API_VERSION;pol.minimum_version=(pst_u32)atoi(argv[7]);pol.maximum_version=(pst_u32)atoi(argv[8]);pol.early_data=PST_FEATURE_DISABLED;if(strcmp(argv[9],"-")){proto.data=(const pst_u8*)argv[9];proto.size=strlen(argv[9]);pol.alpn_protocols=&proto;pol.alpn_protocol_count=1;pol.alpn_requirement=PST_FEATURE_REQUIRED;}if(pst_config_set_tls_policy(cfg,&pol)!=PST_RESULT_OK)return 8;if(pst_config_freeze(cfg)!=PST_RESULT_OK)return 9;
+ if(pst_win32_register_retrozilla_nss()!=PST_RESULT_OK)return 10;memset(&ro,0,sizeof(ro));ro.struct_size=sizeof(ro);ro.api_version=PST_API_VERSION;ro.selection=PST_BACKEND_SELECTION_EXACT;ro.exact_backend_id="retrozilla-nss";if(pst_runtime_create(&ro,&rt)!=PST_RESULT_OK)return 11;memset(&ri,0,sizeof(ri));ri.struct_size=sizeof(ri);ri.api_version=PST_API_VERSION;if(pst_runtime_get_info(rt,&ri)!=PST_RESULT_OK)return 12;
+ if(WSAStartup(MAKEWORD(2,0),&wd)||!connect4(argv[1],(unsigned short)atoi(argv[2]),&s))return 13;if(pst_win32_socket_transport_create((pst_size)s,&tr)!=PST_RESULT_OK)return 14;if(pst_connection_create(rt,cfg,&cn)!=PST_RESULT_OK)return 15;accepted=0;r=pst_connection_attach(cn,tr,PST_OWNERSHIP_TRANSFERRED,&accepted);if(r!=PST_RESULT_OK)return 16;tr=NULL;s=INVALID_SOCKET;
+ ok=0;for(i=0;i<200;i++){r=pst_connection_handshake(cn,&op,&er);if(r!=PST_RESULT_OK||op==PST_OPERATION_FAILED)break;if(op==PST_OPERATION_COMPLETE){ok=1;break;}if(!wait_progress(cn))break;}if(!ok){fprintf(stderr,"HANDSHAKE_FAIL=%ld\n",(long)er);if(pst_connection_handshake(cn,&op,&er)!=PST_RESULT_INVALID_STATE)return 21;goto done;}
+ wr=rd=0;for(i=0;i<200&&wr<sizeof(msg)-1;i++){if(pst_connection_write(cn,msg+wr,sizeof(msg)-1-wr,&io)!=PST_RESULT_OK||io.operation==PST_OPERATION_FAILED)break;wr+=io.bytes_transferred;if(io.operation!=PST_OPERATION_COMPLETE&&!wait_progress(cn))break;}for(i=0;i<200&&rd<sizeof(msg)-1;i++){if(pst_connection_read(cn,received+rd,sizeof(msg)-1-rd,&io)!=PST_RESULT_OK||io.operation==PST_OPERATION_FAILED||io.operation==PST_OPERATION_CLOSED)break;rd+=io.bytes_transferred;if(rd<sizeof(msg)-1&&!wait_progress(cn))break;}ok=wr==sizeof(msg)-1&&rd==sizeof(msg)-1&&!memcmp(msg,received,rd);
+ if(pst_connection_get_peer_info(cn,&peer)!=PST_RESULT_OK)ok=0;memset(&ps,0,sizeof(ps));ps.struct_size=sizeof(ps);ps.api_version=PST_API_VERSION;if(peer&&pst_peer_info_get_summary(peer,&ps)!=PST_RESULT_OK)ok=0;alpn_n=0;if(strcmp(argv[9],"-")&&(pst_connection_get_negotiated_alpn(cn,(pst_u8*)alpn,sizeof(alpn),&alpn_n)!=PST_RESULT_OK||alpn_n!=strlen(argv[9])||memcmp(alpn,argv[9],alpn_n)))ok=0;pst_connection_shutdown(cn,&op,&er);printf("BACKEND=%s TLS=0x%04lx WRITE=%lu READ=%lu ALPN=%lu AUTH=%lu\n",ri.backend_id,(unsigned long)ps.tls_version,(unsigned long)wr,(unsigned long)rd,(unsigned long)alpn_n,(unsigned long)ps.peer_authenticated);
+done: pst_peer_info_release(peer);pst_connection_release(cn);pst_config_release(cfg);pst_credentials_release(cred);pst_trust_release(trust);pst_runtime_release(rt);if(tr)pst_transport_release(tr);if(s!=INVALID_SOCKET)closesocket(s);WSACleanup();free(ca);free(cd);if(kd){memset(kd,0,kd_n);free(kd);}return ok?0:20;}

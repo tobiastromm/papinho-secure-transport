@@ -17,6 +17,10 @@ int main(void)
     void *runtime_state;
     void *connection_state;
     pst_u32 accepted;
+    PST_RUNTIME_OPTIONS options;
+    PST_RUNTIME_INFO runtime_info;
+    pst_runtime *public_runtime;
+    const char *preferences[2];
     pst_backend_registry_reset();
     descriptor = pst_backend_nss_descriptor();
     CHECK(descriptor != NULL, 1);
@@ -25,7 +29,8 @@ int main(void)
     expected = PST_BACKEND_CAP_TLS_1_2 | PST_BACKEND_CAP_TLS_1_3 |
         PST_BACKEND_CAP_HOSTNAME_VERIFY | PST_BACKEND_CAP_NONBLOCKING |
         PST_BACKEND_CAP_BACKEND_WAIT | PST_BACKEND_CAP_CLIENT_AUTH |
-        PST_BACKEND_CAP_CUSTOM_TRUST | PST_BACKEND_CAP_PEER_INFO;
+        PST_BACKEND_CAP_CUSTOM_TRUST | PST_BACKEND_CAP_PEER_INFO |
+        PST_BACKEND_CAP_ALPN;
     CHECK(descriptor->capabilities == expected, 4);
     CHECK(descriptor->vtable->wait != NULL, 5);
     CHECK(descriptor->vtable->peer_info_create != NULL, 6);
@@ -61,6 +66,23 @@ int main(void)
         descriptor->vtable->connection_destroy(connection_state);
         descriptor->vtable->runtime_destroy(runtime_state);
         descriptor->vtable->shutdown(backend_state);
+        CHECK(pst_backend_nss_register() == PST_RESULT_OK, 32);
+        memset(&options,0,sizeof(options));options.struct_size=sizeof(options);
+        options.api_version=PST_API_VERSION;options.selection=PST_BACKEND_SELECTION_EXACT;
+        options.exact_backend_id="missing";public_runtime=NULL;
+        CHECK(pst_runtime_create(&options,&public_runtime)==PST_RESULT_UNSUPPORTED,33);
+        options.exact_backend_id="retrozilla-nss";
+        CHECK(pst_runtime_create(&options,&public_runtime)==PST_RESULT_OK,34);
+        memset(&runtime_info,0,sizeof(runtime_info));runtime_info.struct_size=sizeof(runtime_info);runtime_info.api_version=PST_API_VERSION;
+        CHECK(pst_runtime_get_info(public_runtime,&runtime_info)==PST_RESULT_OK,35);
+        CHECK(strcmp(runtime_info.backend_id,"retrozilla-nss")==0,36);pst_runtime_release(public_runtime);
+        preferences[0]="missing";preferences[1]="retrozilla-nss";options.selection=PST_BACKEND_SELECTION_ORDERED;options.preferred_backend_ids=preferences;options.preferred_backend_count=2;
+        CHECK(pst_runtime_create(&options,&public_runtime)==PST_RESULT_OK,37);pst_runtime_release(public_runtime);
+        options.selection=PST_BACKEND_SELECTION_AUTOMATIC;options.required_capabilities=0;
+        CHECK(pst_runtime_create(&options,&public_runtime)==PST_RESULT_OK,38);pst_runtime_release(public_runtime);
+        options.selection=PST_BACKEND_SELECTION_EXACT;options.exact_backend_id="retrozilla-nss";options.required_capabilities=PST_CAP_SYSTEM_TRUST;
+        CHECK(pst_runtime_create(&options,&public_runtime)==PST_RESULT_UNSUPPORTED,39);
+        CHECK(pst_backend_unregister("retrozilla-nss")==PST_RESULT_OK,40);
     }
     printf("test_backend_nss: PASS\n"); return 0;
 }

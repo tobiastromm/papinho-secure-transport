@@ -2,6 +2,8 @@
 
 Phase 4 materializes immutable credentials/trust, frozen identity configuration, and an owned peer snapshot without changing this boundary. No NSS, NSPR, WinSock, certificate-parser, or crypto type enters the public API.
 
+Phase 5 adds the public runtime and lifecycle core. The generic transport remains opaque; the Win32 adapter is a separate header and implementation. Backend selection is finalized before connection state exists, so no authentication failure can trigger provider fallback.
+
 ## Mission
 
 PapinhoSecureTransport (PST) is an independent **portable secure transport abstraction**. Its initial secure protocol is TLS, provided by mature cryptographic/TLS backends. PST is intended for PapinhoAccelerator, PapinhoBrowser, and future consumers without placing any consumer-specific concept in its core.

@@ -130,12 +130,15 @@ static PST_RESULT mock_shutdown_step(void *connection, pst_u32 *operation, PST_R
     *operation = PST_BACKEND_OPERATION_COMPLETE; *error = PST_RESULT_OK;
     return PST_RESULT_OK;
 }
+static PST_RESULT mock_configure(void *connection,const pst_config *config){return connection==&g_connection&&config!=NULL?PST_RESULT_OK:PST_RESULT_INVALID_ARGUMENT;}
+static PST_RESULT mock_alpn(void *connection,pst_u8 *buffer,pst_size capacity,pst_size *size){(void)buffer;(void)capacity;if(connection!=&g_connection||!size)return PST_RESULT_INVALID_ARGUMENT;*size=0;return PST_RESULT_UNAVAILABLE;}
 static const PST_BACKEND_VTABLE g_vtable = {
     sizeof(PST_BACKEND_VTABLE), PST_BACKEND_SPI_VERSION,
     mock_initialize, mock_shutdown, mock_runtime_create, mock_runtime_destroy,
     mock_query, mock_validate_requirements, mock_connection_create,
     mock_connection_destroy, mock_attach, mock_handshake, mock_interest,
-    mock_wait, mock_read, mock_write, mock_shutdown_step, NULL, NULL
+    mock_wait, mock_read, mock_write, mock_shutdown_step, NULL, NULL,
+    mock_configure, mock_alpn
 };
 static const PST_BACKEND_DESCRIPTOR g_descriptor = {
     sizeof(PST_BACKEND_DESCRIPTOR), PST_BACKEND_SPI_VERSION,

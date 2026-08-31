@@ -55,6 +55,9 @@ PST_RESULT pst_backend_validate(const PST_BACKEND_DESCRIPTOR *d)
         (v->struct_size < (pst_u32)sizeof(PST_BACKEND_VTABLE) ||
          v->connection_configure_identity == NULL))
         return PST_RESULT_INVALID_ARGUMENT;
+    if ((d->capabilities & PST_BACKEND_CAP_ALPN) != 0UL &&
+        (v->struct_size < (pst_u32)sizeof(PST_BACKEND_VTABLE) ||
+         v->connection_get_alpn == NULL)) return PST_RESULT_INVALID_ARGUMENT;
     return PST_RESULT_OK;
 }
 PST_RESULT pst_backend_register(const PST_BACKEND_DESCRIPTOR *d)
@@ -96,6 +99,7 @@ const PST_BACKEND_DESCRIPTOR *pst_backend_find(const char *id)
             return pst_backend_registry[i];
     return NULL;
 }
+const PST_BACKEND_DESCRIPTOR *pst_backend_find_by_index(pst_size index){return index<pst_backend_registry_count?pst_backend_registry[index]:NULL;}
 pst_size pst_backend_count(void) { return pst_backend_registry_count; }
 void pst_backend_registry_reset(void)
 {

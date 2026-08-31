@@ -1,6 +1,6 @@
 # Provisional runtime and API design
 
-Phase 4 implements only the identity subset in [credentials-trust-peer.md](credentials-trust-peer.md). Runtime selection, connection orchestration, and the remaining surface stay deferred to Phase 5.
+Phase 5 materializes runtime selection and connection orchestration as documented in [tls-runtime.md](tls-runtime.md). Later hardening and additional providers remain deferred.
 
 Status: Phase 0.C design specification with the Phase 1 portable foundation materialized. The transport/runtime surface remains provisional; only the foundation declarations in `include/papinho_secure_transport.h` are currently implemented and tested.
 
