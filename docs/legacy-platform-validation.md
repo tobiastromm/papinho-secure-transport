@@ -1,6 +1,6 @@
 # Legacy platform validation
 
-Status: Phase 6 in progress. The first real Windows NT 4.0 SP6 execution has succeeded for the smoke suite and for the TLS 1.3 handshake, mTLS authentication, and ALPN negotiation. The complete mandatory gate has not yet been satisfied and no complete legacy support claim is made.
+Status: Phase 6 in progress. Real Windows NT 4.0 SP6 execution has passed TLS 1.3 and TLS 1.2 mTLS/ALPN with bidirectional secure I/O, TLS 1.2 server-authentication without a client certificate, wrong-hostname rejection, and the TLS 1.3-required no-downgrade gate. The untrusted-CA and missing-client-credential gates remain pending on NT4, so no complete legacy support claim is made.
 
 ## Environment audit
 
@@ -56,12 +56,12 @@ Phase 6.B-R3 adds an internal backend-neutral progress guard. After an auxiliary
 
 ## Remaining mandatory NT4 matrix
 
-The following are now proved on NT4: foundation, SPI, NSS lifecycle, identity, public runtime execution, TLS 1.3 handshake, mTLS, and ALPN. Still unproved or incomplete are server-authentication-only mode, TLS 1.2, secure bidirectional and partial I/O, nonblocking trace details including `PR_WOULD_BLOCK_ERROR` and SSL-descriptor `PR_Poll`, peer snapshot lifetime, graceful shutdown, negative hostname/CA/downgrade/client-credential cases, and repeated lifecycle.
+The following are now proved on NT4: foundation, SPI, NSS lifecycle, identity, public runtime execution, TLS 1.3 and TLS 1.2 mTLS/ALPN, secure bidirectional I/O, TLS 1.2 server-authentication-only mode, wrong-hostname rejection, and TLS 1.3-required rejection of a TLS 1.2-only server. The two remaining final negative gates are untrusted CA and missing client credential against an mTLS-required server.
 
 The Windows 10 Phase 5 evidence cannot replace any entry in this matrix. Module paths logged on Windows 10 likewise do not prove which DLLs an NT4 process would load.
 
 ## Required next execution
 
-Copy the Phase 6.B-R3 progress-fix package to Windows NT 4.0 SP6 and run `run_tls13_diag.bat HOST PORT HOSTNAME`. Preserve `tls13diag-client.log`, `tls13diag-backend.log`, server output, executable error level, and module paths. Require `TLS=0x0304 WRITE=25 READ=25 CONTENT_MATCH=1 ALPN=9 AUTH=2`; only after that real result should TLS 1.2 be run with the same bidirectional requirement. Execute the remaining matrix before marking Phase 6 complete.
+Copy the Phase 6.C package to Windows NT 4.0 SP6. Start a fresh TLS 1.3 `fixture/1` server with client certificates required for each case, then run `run_untrusted_ca.bat HOST PORT localhost` and `run_missing_client_credential.bat HOST PORT localhost`. Preserve each BAT output, generated client log, module trace, server output, and errorlevel. Both BATs must print their explicit negative-gate PASS line and return zero before Phase 6 can be considered complete.
 
 Phase 6.B-R3 changes only the internal, backend-neutral wait/progress orchestration in the PST core. The public API, SPI version and layout, NSS backend readiness mapping, TLS policy, trust, credentials, RNG, and HUP handling remain unchanged. Phase 7 has not started.

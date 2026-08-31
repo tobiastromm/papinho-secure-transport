@@ -24,3 +24,20 @@ Phase 6.B-R1 is diagnostic only. The second real NT4 execution proved that the s
 
 For the next NT4 run, start the TLS 1.3 server normally and execute run_tls13_diag.bat HOST PORT HOSTNAME. Send back tls13diag-client.log, tls13diag-backend.log, and the complete server output. The backend log includes SSL_DataPending, PR_Poll input/output flags and classification, plus PR_Read return, PR_GetError, would-block status, and generated PST classification.
 Phase 6.B-R2 adds timing without changing readiness behavior. The client log now records elapsed milliseconds per READ_STEP, duration of each wait, and READ_LOOP_ELAPSED_MS. The backend log records duration_ms for every PR_Poll. Run run_tls13_diag.bat as before and return both logs; these values will determine whether persistent WRITE-only readiness consumes all 200 steps before READ becomes ready.
+
+## Phase 6.C final negative gates
+
+The package adds `bad-ca.der`, an artificial TEST-ONLY self-signed CA unrelated to the normal server fixture. No private key for this CA is shipped. Start a fresh TLS 1.3 server for each gate:
+
+```text
+python tests\nt4_tls_server.py 0.0.0.0 8443 build\nt4-validation\server-fixture\server.pem build\nt4-validation\server-fixture\server.key build\nt4-validation\server-fixture\ca.pem 13 fixture/1 required
+```
+
+From the copied client directory on NT4, run:
+
+```text
+run_untrusted_ca.bat HOST 8443 localhost
+run_missing_client_credential.bat HOST 8443 localhost
+```
+
+Restart the one-connection server between commands. The first runner uses `bad-ca.der` while retaining the normal client certificate. It passes only for normalized `PST_RESULT_AUTH_FAILURE`. The second passes `- -` in the certificate and private-key positions, so credentials are absent by explicit harness configuration without deleting package files. It accepts a normalized protocol failure during handshake, or a normalized protocol/transport failure after the server rejects the credential-free peer, with the additional required evidence `WRITE=25 READ=0 CONTENT_MATCH=0`. Any unexpected successful connection or unrelated failure makes the BAT return nonzero.
