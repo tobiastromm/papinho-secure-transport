@@ -58,6 +58,7 @@ typedef CERTCertificate *(*pst_ssl_peer_certificate_fn)(PRFileDesc *);
 typedef SECStatus (*pst_ssl_version_set_fn)(PRFileDesc *, const SSLVersionRange *);
 typedef SECStatus (*pst_ssl_set_alpn_fn)(PRFileDesc *, const unsigned char *, unsigned int);
 typedef SECStatus (*pst_ssl_get_alpn_fn)(PRFileDesc *, SSLNextProtoState *, unsigned char *, unsigned int *, unsigned int);
+typedef int (*pst_ssl_data_pending_fn)(PRFileDesc *);
 typedef CERTCertDBHandle *(*pst_cert_default_db_fn)(void);
 typedef CERTCertificate *(*pst_cert_new_temp_fn)(CERTCertDBHandle *, SECItem *, char *, PRBool, PRBool);
 typedef SECStatus (*pst_cert_change_trust_fn)(CERTCertDBHandle *, CERTCertificate *, CERTCertTrust *);
@@ -104,6 +105,7 @@ typedef struct pst_nss_backend_state {
     pst_ssl_version_set_fn ssl_version_set;
     pst_ssl_set_alpn_fn ssl_set_alpn;
     pst_ssl_get_alpn_fn ssl_get_alpn;
+    pst_ssl_data_pending_fn ssl_data_pending;
     pst_cert_default_db_fn cert_default_db;
     pst_cert_new_temp_fn cert_new_temp;
     pst_cert_change_trust_fn cert_change_trust;
@@ -208,6 +210,7 @@ static int pst_nss_load(pst_nss_backend_state *s)
     s->ssl_version_set = (pst_ssl_version_set_fn)pst_nss_symbol(s->ssl_module, "SSL_VersionRangeSet");
     s->ssl_set_alpn = (pst_ssl_set_alpn_fn)pst_nss_symbol(s->ssl_module, "SSL_SetNextProtoNego");
     s->ssl_get_alpn = (pst_ssl_get_alpn_fn)pst_nss_symbol(s->ssl_module, "SSL_GetNextProto");
+    s->ssl_data_pending = (pst_ssl_data_pending_fn)pst_nss_symbol(s->ssl_module, "SSL_DataPending");
     s->cert_dup = (pst_cert_dup_fn)pst_nss_symbol(s->nss_module, "CERT_DupCertificate");
     s->pk11_get_slot = (pst_pk11_get_slot_fn)pst_nss_symbol(s->nss_module, "PK11_GetInternalKeySlot");
     s->pk11_free_slot = (pst_pk11_free_slot_fn)pst_nss_symbol(s->nss_module, "PK11_FreeSlot");
@@ -586,28 +589,51 @@ static PST_RESULT pst_nss_wait(void *state, pst_u32 interest, pst_u32 timeout_ms
     pst_nss_backend_state *s;
     PRPollDesc poll_desc;
     PRInt32 count;
+    int pending;
+    char detail[256];
     if (c == NULL || c->ssl_fd == NULL || result == NULL)
         return PST_RESULT_INVALID_ARGUMENT;
     s = c->runtime->backend; result->ready_interest = 0UL; result->timed_out = 0UL;
     poll_desc.fd = c->ssl_fd; poll_desc.in_flags = 0; poll_desc.out_flags = 0;
     if ((interest & PST_BACKEND_INTEREST_READ) != 0UL) poll_desc.in_flags |= PR_POLL_READ;
     if ((interest & PST_BACKEND_INTEREST_WRITE) != 0UL) poll_desc.in_flags |= PR_POLL_WRITE;
-    pst_nss_trace("PR_Poll", "call");
+    pending = s->ssl_data_pending == NULL ? -1 : s->ssl_data_pending(c->ssl_fd);
+    sprintf(detail, "call state=%s interest=0x%08lx in=0x%04x timeout_ms=%lu pending=%d",
+            c->handshake_complete ? "established" : "handshaking",
+            (unsigned long)interest, (unsigned int)poll_desc.in_flags,
+            (unsigned long)timeout_ms, pending);
+    pst_nss_trace("PR_Poll", detail);
     count = s->pr_poll(&poll_desc, 1, s->pr_ms_interval((PRUint32)timeout_ms));
+    if (count < 0) pst_nss_capture_error(s, &c->last_error);
+    pending = s->ssl_data_pending == NULL ? -1 : s->ssl_data_pending(c->ssl_fd);
+    sprintf(detail, "result=%ld out=0x%04x read=%d write=%d err=%d hup=%d nval=%d pending=%d error=%ld",
+            (long)count, (unsigned int)poll_desc.out_flags,
+            (poll_desc.out_flags & PR_POLL_READ) != 0,
+            (poll_desc.out_flags & PR_POLL_WRITE) != 0,
+            (poll_desc.out_flags & PR_POLL_ERR) != 0,
+            (poll_desc.out_flags & PR_POLL_HUP) != 0,
+            (poll_desc.out_flags & PR_POLL_NVAL) != 0, pending,
+            count < 0 ? (long)c->last_error : 0L);
+    pst_nss_trace("PR_Poll", detail);
     if (count == 0) {
-        result->timed_out = 1UL; pst_nss_trace("PR_Poll", "timeout");
+        result->timed_out = 1UL; pst_nss_trace("PR_Poll_class", "timeout result=OK");
         return PST_RESULT_OK;
     }
     if (count < 0) {
-        pst_nss_capture_error(s, &c->last_error);
+        pst_nss_trace("PR_Poll_class", "error result=normalized");
         return pst_backend_nss_normalize_error(c->last_error);
     }
-    pst_nss_trace("PR_Poll", "ready");
     if ((poll_desc.out_flags & PR_POLL_READ) != 0) result->ready_interest |= PST_BACKEND_INTEREST_READ;
     if ((poll_desc.out_flags & PR_POLL_WRITE) != 0) result->ready_interest |= PST_BACKEND_INTEREST_WRITE;
-    if ((poll_desc.out_flags & (PR_POLL_ERR | PR_POLL_NVAL)) != 0)
+    if ((poll_desc.out_flags & (PR_POLL_ERR | PR_POLL_NVAL)) != 0) {
+        pst_nss_trace("PR_Poll_class", "ERR_OR_NVAL result=TRANSPORT_FAILURE");
         return PST_RESULT_TRANSPORT_FAILURE;
-    if ((poll_desc.out_flags & PR_POLL_HUP) != 0) return PST_RESULT_CLOSED;
+    }
+    if ((poll_desc.out_flags & PR_POLL_HUP) != 0) {
+        pst_nss_trace("PR_Poll_class", "HUP result=CLOSED");
+        return PST_RESULT_CLOSED;
+    }
+    pst_nss_trace("PR_Poll_class", "ready result=OK");
     return PST_RESULT_OK;
 }
 static void pst_nss_io_reset(PST_BACKEND_IO_RESULT *result)
@@ -620,34 +646,47 @@ static PST_RESULT pst_nss_read(void *state, void *buffer, pst_size capacity,
 {
     pst_nss_connection_state *c = (pst_nss_connection_state *)state;
     pst_nss_backend_state *s;
-    PRInt32 amount;
+    PRInt32 amount, requested;
+    int pending;
+    char detail[256];
     if (c == NULL || c->ssl_fd == NULL || buffer == NULL || result == NULL)
         return PST_RESULT_INVALID_ARGUMENT;
     pst_nss_io_reset(result); s = c->runtime->backend;
-    amount = s->pr_read(c->ssl_fd, buffer,
-                        capacity > (pst_size)INT_MAX ? INT_MAX : (PRInt32)capacity);
+    requested = capacity > (pst_size)INT_MAX ? INT_MAX : (PRInt32)capacity;
+    pending = s->ssl_data_pending == NULL ? -1 : s->ssl_data_pending(c->ssl_fd);
+    sprintf(detail, "call requested=%ld interest=0x%08lx pending=%d",
+            (long)requested, (unsigned long)c->interest, pending);
+    pst_nss_trace("PR_Read", detail);
+    amount = s->pr_read(c->ssl_fd, buffer, requested);
+    if (amount < 0) pst_nss_capture_error(s, &c->last_error);
+    pending = s->ssl_data_pending == NULL ? -1 : s->ssl_data_pending(c->ssl_fd);
+    sprintf(detail, "ret=%ld error=%ld would_block=%d pending=%d",
+            (long)amount, amount < 0 ? (long)c->last_error : 0L,
+            amount < 0 && pst_backend_nss_is_would_block(c->last_error), pending);
+    pst_nss_trace("PR_Read", detail);
     if (amount > 0) {
         result->bytes_transferred = (pst_size)amount;
         result->operation = PST_BACKEND_OPERATION_COMPLETE;
-        pst_nss_trace("PR_Read", "progress");
+        pst_nss_trace("PR_Read_class", "COMPLETE");
         c->interest = PST_BACKEND_INTEREST_NONE; return PST_RESULT_OK;
     }
     if (amount == 0) {
         result->operation = PST_BACKEND_OPERATION_CLOSED;
         result->close_kind = PST_BACKEND_CLOSE_CLEAN;
-        pst_nss_trace("PR_Read", "clean_close");
+        pst_nss_trace("PR_Read_class", "CLOSED clean");
         c->interest = PST_BACKEND_INTEREST_NONE; return PST_RESULT_OK;
     }
-    pst_nss_capture_error(s, &c->last_error);
     if (pst_backend_nss_is_would_block(c->last_error)) {
         result->operation = PST_BACKEND_OPERATION_NEED_READ_WRITE;
         c->interest = PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE;
+        pst_nss_trace("PR_Read_class", "NEED_READ_WRITE");
         return PST_RESULT_OK;
     }
     result->operation = PST_BACKEND_OPERATION_FAILED;
     result->error = pst_backend_nss_normalize_error(c->last_error);
     if (result->error == PST_RESULT_TRUNCATED)
         result->close_kind = PST_BACKEND_CLOSE_TRUNCATED;
+    pst_nss_trace("PR_Read_class", "FAILED normalized");
     c->interest = PST_BACKEND_INTEREST_NONE; return PST_RESULT_OK;
 }
 static PST_RESULT pst_nss_write(void *state, const void *buffer, pst_size length,
