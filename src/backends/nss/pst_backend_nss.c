@@ -589,6 +589,7 @@ static PST_RESULT pst_nss_wait(void *state, pst_u32 interest, pst_u32 timeout_ms
     pst_nss_backend_state *s;
     PRPollDesc poll_desc;
     PRInt32 count;
+    DWORD poll_start, poll_end;
     int pending;
     char detail[256];
     if (c == NULL || c->ssl_fd == NULL || result == NULL)
@@ -603,11 +604,14 @@ static PST_RESULT pst_nss_wait(void *state, pst_u32 interest, pst_u32 timeout_ms
             (unsigned long)interest, (unsigned int)poll_desc.in_flags,
             (unsigned long)timeout_ms, pending);
     pst_nss_trace("PR_Poll", detail);
+    poll_start = GetTickCount();
     count = s->pr_poll(&poll_desc, 1, s->pr_ms_interval((PRUint32)timeout_ms));
+    poll_end = GetTickCount();
     if (count < 0) pst_nss_capture_error(s, &c->last_error);
     pending = s->ssl_data_pending == NULL ? -1 : s->ssl_data_pending(c->ssl_fd);
-    sprintf(detail, "result=%ld out=0x%04x read=%d write=%d err=%d hup=%d nval=%d pending=%d error=%ld",
-            (long)count, (unsigned int)poll_desc.out_flags,
+    sprintf(detail, "result=%ld duration_ms=%lu out=0x%04x read=%d write=%d err=%d hup=%d nval=%d pending=%d error=%ld",
+            (long)count, (unsigned long)(poll_end - poll_start),
+            (unsigned int)poll_desc.out_flags,
             (poll_desc.out_flags & PR_POLL_READ) != 0,
             (poll_desc.out_flags & PR_POLL_WRITE) != 0,
             (poll_desc.out_flags & PR_POLL_ERR) != 0,

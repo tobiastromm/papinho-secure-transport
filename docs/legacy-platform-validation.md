@@ -44,6 +44,11 @@ Phase 6.B initially hardened the fixture shutdown ordering: it now accumulates a
 Phase 6.B-R1 adds diagnostic-only tracing without changing public API, SPI, ownership, readiness behavior, or result classification. The current backend maps PR_POLL_ERR or PR_POLL_NVAL to transport failure and maps any PR_POLL_HUP to PST_RESULT_CLOSED, even when PR_POLL_READ is also present. pst_connection_wait returns that result but does not itself change connection state; the integration loop stops when wait is not PST_RESULT_OK, so PR_Read might not be retried. The NSS lineage provides SSL_DataPending and its SSL poll layer uses it to report buffered plaintext readiness. The diagnostic trace records pending bytes, requested and returned poll flags, poll classification, PR_Read return/error/would-block classification, and public read totals.
 
 On the Windows 10 validation host, the diagnostic VC6 executable passed TLS 1.3. One observed package run first returned PR_WOULD_BLOCK_ERROR from PR_Read, then PR_Poll reported READ|WRITE without HUP, and the next PR_Read returned 25 bytes. Final evidence was WRITE=25 READ=25 CONTENT_MATCH=1 ALPN=9 AUTH=2 with server RECV=25 SEND=25 CONTENT_MATCH=True. This baseline does not prove which NT4 branch occurs; a new diagnostic NT4 run is required.
+The real NT4 R1 logs then showed 200 consecutive PR_Read would-block results. Every application-read PR_Poll requested READ|WRITE and returned WRITE only, with no READ, ERR, HUP, NVAL, timeout, or SSL_DataPending bytes. This rejects the READ|HUP hypothesis for that execution and supports a possible WRITE-readiness spin, but the R1 logs contain no timestamps.
+
+Source audit shows that application-data PR_Read would-block is conservatively mapped by the PST NSS backend to NEED_READ_WRITE. In the NSS SSL poll layer, after the first handshake is complete and SSL_DataPending is zero, READ|WRITE is passed to the lower descriptor. A writable lower socket may therefore make PR_Poll return immediately with WRITE even though the read operation cannot advance. SSL_DataPending reports only plaintext already buffered in the SSL receive buffer; zero does not state whether ciphertext is queued in the transport or may arrive later.
+
+Phase 6.B-R2 adds GetTickCount-based diagnostic timing, available on NT4: elapsed milliseconds for every read step, duration for every PR_Poll, and total read-loop elapsed time. Windows 10 reached READ=25 in one read step and 0 measured milliseconds in the captured run. No readiness behavior has been changed; the updated NT4 package is intended to measure whether its 200 WRITE-only polls consume the budget immediately.
 
 ## Remaining mandatory NT4 matrix
 
@@ -53,6 +58,6 @@ The Windows 10 Phase 5 evidence cannot replace any entry in this matrix. Module 
 
 ## Required next execution
 
-Copy the Phase 6.B-R1 diagnostic package to Windows NT 4.0 SP6 and run run_tls13_diag.bat HOST PORT HOSTNAME. Preserve tls13diag-client.log, tls13diag-backend.log, server output, executable error level, and module paths. This run is intended to determine whether NT4 observes READ with HUP, pending plaintext, a PR_Read error, or another sequence; it does not yet contain a behavioral fix. Execute the remaining matrix before marking Phase 6 complete.
+Copy the Phase 6.B-R2 timing diagnostic package to Windows NT 4.0 SP6 and run run_tls13_diag.bat HOST PORT HOSTNAME. Preserve tls13diag-client.log, tls13diag-backend.log, server output, executable error level, and module paths. This run is intended to determine whether NT4 observes READ with HUP, pending plaintext, a PR_Read error, or another sequence; it does not yet contain a behavioral fix. Execute the remaining matrix before marking Phase 6 complete.
 
 No PST core, public API, SPI, NSS backend, or TLS behavior was changed. The reproduced incompatibility was confined to package BAT control flow. Phase 7 has not started.
