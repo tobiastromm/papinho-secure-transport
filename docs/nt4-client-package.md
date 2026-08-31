@@ -41,3 +41,6 @@ run_missing_client_credential.bat HOST 8443 localhost
 ```
 
 Restart the one-connection server between commands. The first runner uses `bad-ca.der` while retaining the normal client certificate. It passes only for normalized `PST_RESULT_AUTH_FAILURE`. The second passes `- -` in the certificate and private-key positions, so credentials are absent by explicit harness configuration without deleting package files. It accepts a normalized protocol failure during handshake, or a normalized protocol/transport failure after the server rejects the credential-free peer, with the additional required evidence `WRITE=25 READ=0 CONTENT_MATCH=0`. Any unexpected successful connection or unrelated failure makes the BAT return nonzero.
+## Phase 6 closure runner pending
+
+The existing package is sufficient for the completed functional and negative gates, but not for the original repeated full-lifecycle closure gate. Do not substitute three separate process launches: the remaining runner must execute repeated real TLS cycles in one VC6 process and assert bounded shutdown plus peer-snapshot validity after connection destruction. Phase 6 remains in progress until that updated package is built and executed on real NT4.

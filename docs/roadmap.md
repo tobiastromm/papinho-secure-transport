@@ -37,8 +37,8 @@
   - Public-only TLS 1.2/TLS 1.3 server-auth, mTLS and negative gates: complete
 - Phase 6 - Legacy Platform Validation: in progress
   - Static VC6/PE/import compatibility audit: complete
-  - Windows NT 4.0 SP6 execution environment: unavailable
-  - Mandatory NT4 public-runtime functional matrix: not executed
+  - Windows NT 4.0 SP6 real execution: functional matrix complete; lifecycle closure pending
+  - Repeated full TLS lifecycle on real NT4: pending
 - Phase 7 - Interoperability / Hardening: pending
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending
