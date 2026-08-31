@@ -14,3 +14,7 @@ python tests\nt4_tls_server.py 0.0.0.0 8443 server.pem server.key ca.pem 13 fixt
 Use the full paths under `build\nt4-validation\server-fixture` when starting outside that directory. Permit only the needed local test ports through the host firewall. `HOST` is the modern host IP reachable by NT4; `HOSTNAME` remains `localhost`, matching the artificial certificate.
 
 On NT4, copy the complete `client` directory, enter it using `cd`, and run `run_smoke.bat`, `run_tls12.bat HOST 8442 localhost`, or `run_tls13.bat HOST 8443 localhost`. See the package `README-NT4.txt` for logging and `run_all.bat`.
+
+The first NT4 SP6 execution showed that `exit /b` did not terminate these wrappers reliably. The package BAT files therefore use only explicit labels and `goto`, finish naturally at end-of-file, establish success with `ver >nul`, and establish failure with the NT-compatible `verify other 2>nul` idiom. They do not invoke `exit`, so running a BAT directly cannot close the user's command window.
+
+The first real run passed the four smoke executables and proved TLS 1.3, mTLS, and ALPN. Its `READ=0` field means zero received application bytes, so it does not yet prove bidirectional secure I/O. Preserve the next run's full output and error level; a successful echo round trip from the current integration executable must report `WRITE=25 READ=25`.

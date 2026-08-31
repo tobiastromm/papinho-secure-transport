@@ -1,6 +1,6 @@
 # Legacy platform validation
 
-Status: Phase 6 in progress. The mandatory Windows NT 4.0 SP6 functional gate has not yet been executed and no legacy support claim is made.
+Status: Phase 6 in progress. The first real Windows NT 4.0 SP6 execution has succeeded for the smoke suite and for the TLS 1.3 handshake, mTLS authentication, and ALPN negotiation. The complete mandatory gate has not yet been satisfied and no complete legacy support claim is made.
 
 ## Environment audit
 
@@ -29,14 +29,24 @@ The normal fail-closed pair remains unchanged:
 
 No failure-injection artifact is present in the runtime. No RNG implementation or fallback was changed in Phase 6.
 
-## Mandatory NT4 matrix
+## First real NT4 execution evidence
 
-All entries below remain **NOT EXECUTED** on NT4: foundation, SPI, NSS lifecycle, identity, public runtime load, server authentication, TLS 1.2, TLS 1.3, mTLS, ALPN, nonblocking progress, `PR_WOULD_BLOCK_ERROR`, SSL-descriptor `PR_Poll`, secure/partial I/O, peer snapshot lifetime, graceful shutdown, wrong hostname, untrusted CA, downgrade rejection, missing client credential, and repeated lifecycle.
+On Windows NT 4.0 SP6, `run_smoke.bat` executed all four VC6 test programs successfully: foundation, backend SPI, NSS backend, and identity. It printed `PAPINHOSECURETRANSPORT NT4 SMOKE TESTS PASS`. The original wrapper then reached failure labels because NT4 `cmd.exe` did not handle its `exit /b` termination as expected; this was a BAT compatibility defect after the executable results, not a failure of those four tests.
+
+The public runtime integration executable also completed a real TLS 1.3 handshake and printed `BACKEND=retrozilla-nss TLS=0x0304 WRITE=25 READ=0 ALPN=9 AUTH=2`. The modern fixture independently recorded `CLIENT ('172.16.0.11', 2797) AUTH=True ALPN=fixture/1`. This proves the RetroZilla NSS backend path, TLS 1.3 negotiation, client authentication, and ALPN on NT4.
+
+`READ=0` is the integration test's `rd` byte accumulator, not a result code or close-state field. It means that this execution received zero application-data bytes. The current source requires both `WRITE=25` and `READ=25`, with equal payloads, for `ok` to remain true and the process to return zero. Consequently, secure bidirectional application I/O is not yet proved by this run. The reported BAT PASS and the source's expected exit status for `READ=0` are inconsistent and must be captured again after the BAT compatibility correction.
+
+All six package wrappers were changed to avoid `exit /b`. Success now reaches EOF with a zero status established by `ver >nul`; usage and failure paths reach EOF with a nonzero status established by the NT-compatible `verify other 2>nul` idiom. Explicit `goto` paths prevent success from falling through into error labels and do not close the user's command window.
+
+## Remaining mandatory NT4 matrix
+
+The following are now proved on NT4: foundation, SPI, NSS lifecycle, identity, public runtime execution, TLS 1.3 handshake, mTLS, and ALPN. Still unproved or incomplete are server-authentication-only mode, TLS 1.2, secure bidirectional and partial I/O, nonblocking trace details including `PR_WOULD_BLOCK_ERROR` and SSL-descriptor `PR_Poll`, peer snapshot lifetime, graceful shutdown, negative hostname/CA/downgrade/client-credential cases, and repeated lifecycle.
 
 The Windows 10 Phase 5 evidence cannot replace any entry in this matrix. Module paths logged on Windows 10 likewise do not prove which DLLs an NT4 process would load.
 
 ## Required next execution
 
-Provide or start a real Windows NT 4.0 SP6 x86 VM/machine reachable from a modern local TLS fixture server. Copy the VC6-built smoke tests, public integration executable, canonical runtime DLLs, and ephemeral public certificate inputs to it. Execute the mandatory matrix through the public PST API and preserve client/server outputs plus backend trace. Only then may this document and roadmap mark Phase 6 complete.
+Repeat the corrected wrappers on the existing Windows NT 4.0 SP6 environment and preserve the executable error level, complete client output, server output, and backend module/operation trace. Resolve the `READ=0` evidence and execute the remaining matrix through the public PST API. Only then may this document and roadmap mark Phase 6 complete.
 
-No code correction was made in Phase 6 because no NT4 incompatibility was reproduced. Phase 7 has not started.
+No PST core, public API, SPI, NSS backend, or TLS behavior was changed. The reproduced incompatibility was confined to package BAT control flow. Phase 7 has not started.
