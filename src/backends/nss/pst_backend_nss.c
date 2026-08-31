@@ -19,6 +19,7 @@
 #include "pk11pub.h"
 #include "secoid.h"
 #include "pst_identity_internal.h"
+#include "pst_diagnostic.h"
 #include "pst_transport_internal.h"
 #include "papinho_secure_transport_win32.h"
 #include "secerr.h"
@@ -72,6 +73,7 @@ typedef SECKEYPrivateKey *(*pst_key_copy_fn)(const SECKEYPrivateKey *);
 typedef void (*pst_key_destroy_fn)(SECKEYPrivateKey *);
 typedef struct pst_nss_backend_state {
     pst_i32 last_error;
+    pst_internal_diagnostic diagnostic;
     HMODULE nspr_module;
     HMODULE nss_module;
     HMODULE ssl_module;
@@ -120,10 +122,12 @@ typedef struct pst_nss_backend_state {
 } pst_nss_backend_state;
 typedef struct pst_nss_runtime_state {
     pst_i32 last_error;
+    pst_internal_diagnostic diagnostic;
     pst_nss_backend_state *backend;
 } pst_nss_runtime_state;
 typedef struct pst_nss_connection_state {
     pst_i32 last_error;
+    pst_internal_diagnostic diagnostic;
     pst_nss_runtime_state *runtime;
     PRFileDesc *ssl_fd;
     pst_u32 interest;
@@ -286,7 +290,23 @@ PST_RESULT pst_backend_nss_normalize_error(pst_i32 error)
     if (IS_SEC_ERROR(error)) return PST_RESULT_BACKEND_FAILURE;
     return PST_RESULT_BACKEND_FAILURE;
 }
-pst_i32 pst_backend_nss_last_error(const void *state)
+static pst_u32 pst_nss_error_domain(pst_i32 error)
+{
+    if (IS_SSL_ERROR(error) || IS_SEC_ERROR(error))
+        return PST_DIAGNOSTIC_DOMAIN_NSS;
+    return PST_DIAGNOSTIC_DOMAIN_NSPR;
+}
+static void pst_nss_record(pst_nss_connection_state *c, pst_u32 phase)
+{
+    PST_RESULT result = pst_backend_nss_normalize_error(c->last_error);
+    if (result == PST_RESULT_HOSTNAME_MISMATCH)
+        phase = PST_DIAGNOSTIC_PHASE_HOSTNAME_VERIFY;
+    else if (result == PST_RESULT_AUTH_FAILURE)
+        phase = PST_DIAGNOSTIC_PHASE_PEER_AUTHENTICATE;
+    pst_diagnostic_capture(&c->diagnostic, result, phase, "retrozilla-nss",
+        pst_nss_error_domain(c->last_error), c->last_error, 0,
+        PST_DIAGNOSTIC_FLAG_NATIVE);
+}pst_i32 pst_backend_nss_last_error(const void *state)
 {
     if (state == NULL) return 0;
     return *(const pst_i32 *)state;
@@ -347,6 +367,10 @@ static PST_RESULT pst_nss_install_test_ca(pst_nss_backend_state *s,
     if (s == NULL) return PST_RESULT_OUT_OF_MEMORY;
     if (!pst_nss_load(s)) {
         s->last_error = (pst_i32)GetLastError();
+        pst_diagnostic_capture(&s->diagnostic, PST_RESULT_UNAVAILABLE,
+            PST_DIAGNOSTIC_PHASE_BACKEND_INITIALIZE, "retrozilla-nss",
+            PST_DIAGNOSTIC_DOMAIN_WIN32, s->last_error, 0,
+            PST_DIAGNOSTIC_FLAG_NATIVE);
         pst_nss_unload(s); free(s); return PST_RESULT_UNAVAILABLE;
     }
     s->pr_init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
@@ -359,6 +383,10 @@ static PST_RESULT pst_nss_install_test_ca(pst_nss_backend_state *s,
     else { status = s->nss_init(db_dir); s->has_database = 1; }
     if (status != SECSuccess) {
         pst_nss_capture_error(s, &s->last_error);
+        pst_diagnostic_capture(&s->diagnostic, PST_RESULT_BACKEND_FAILURE,
+            PST_DIAGNOSTIC_PHASE_BACKEND_INITIALIZE, "retrozilla-nss",
+            pst_nss_error_domain(s->last_error), s->last_error, 0,
+            PST_DIAGNOSTIC_FLAG_NATIVE);
         s->pr_cleanup(); pst_nss_unload(s); free(s);
         return PST_RESULT_BACKEND_FAILURE;
     }
@@ -508,6 +536,10 @@ static PST_RESULT pst_nss_attach(void *state, void *transport, pst_u32 ownership
     nonblocking = 1UL;
     if (ioctlsocket(socket_value, FIONBIO, &nonblocking) != 0) {
         c->last_error = (pst_i32)WSAGetLastError();
+        pst_diagnostic_capture(&c->diagnostic, PST_RESULT_TRANSPORT_FAILURE,
+            PST_DIAGNOSTIC_PHASE_TRANSPORT_ATTACH, "retrozilla-nss",
+            PST_DIAGNOSTIC_DOMAIN_WINSOCK, c->last_error, 0,
+            PST_DIAGNOSTIC_FLAG_NATIVE);
         return PST_RESULT_TRANSPORT_FAILURE;
     }
     pst_nss_trace("FIONBIO", "ok");
@@ -587,6 +619,7 @@ static PST_RESULT pst_nss_handshake(void *state, pst_u32 *operation, PST_RESULT 
         c->interest = PST_BACKEND_INTEREST_NONE;
         *operation = PST_BACKEND_OPERATION_COMPLETE; *error = PST_RESULT_OK;
         c->handshake_complete = 1;
+        pst_diagnostic_clear(&c->diagnostic);
         pst_nss_trace("SSL_ForceHandshake_class", "COMPLETE");
         pst_nss_trace_module("module_softokn3", GetModuleHandleA("softokn3.dll"));
         pst_nss_trace_module("module_freebl3", GetModuleHandleA("freebl3.dll"));
@@ -601,6 +634,7 @@ static PST_RESULT pst_nss_handshake(void *state, pst_u32 *operation, PST_RESULT 
         return PST_RESULT_OK;
     }
     c->interest = PST_BACKEND_INTEREST_NONE;
+    pst_nss_record(c, PST_DIAGNOSTIC_PHASE_HANDSHAKE);
     *operation = PST_BACKEND_OPERATION_FAILED;
     *error = pst_backend_nss_normalize_error(c->last_error);
     return PST_RESULT_OK;
@@ -637,7 +671,7 @@ static PST_RESULT pst_nss_wait(void *state, pst_u32 interest, pst_u32 timeout_ms
     poll_start = GetTickCount();
     count = s->pr_poll(&poll_desc, 1, s->pr_ms_interval((PRUint32)timeout_ms));
     poll_end = GetTickCount();
-    if (count < 0) pst_nss_capture_error(s, &c->last_error);
+    if (count < 0) { pst_nss_capture_error(s, &c->last_error); pst_nss_record(c, PST_DIAGNOSTIC_PHASE_WAIT); }
     pending = s->ssl_data_pending == NULL ? -1 : s->ssl_data_pending(c->ssl_fd);
     sprintf(detail, "END result=%ld duration_ms=%lu out=0x%04x read=%d write=%d err=%d hup=%d nval=%d pending=%d error=%ld",
             (long)count, (unsigned long)(poll_end - poll_start),
@@ -703,6 +737,7 @@ static PST_RESULT pst_nss_read(void *state, void *buffer, pst_size capacity,
             (unsigned long)(read_end - read_start));
     pst_nss_trace("PR_Read", detail);
     if (amount > 0) {
+        pst_diagnostic_clear(&c->diagnostic);
         result->bytes_transferred = (pst_size)amount;
         result->operation = PST_BACKEND_OPERATION_COMPLETE;
         pst_nss_trace("PR_Read_class", "COMPLETE");
@@ -720,6 +755,7 @@ static PST_RESULT pst_nss_read(void *state, void *buffer, pst_size capacity,
         pst_nss_trace("PR_Read_class", "NEED_READ_WRITE");
         return PST_RESULT_OK;
     }
+    pst_nss_record(c, PST_DIAGNOSTIC_PHASE_READ);
     result->operation = PST_BACKEND_OPERATION_FAILED;
     result->error = pst_backend_nss_normalize_error(c->last_error);
     if (result->error == PST_RESULT_TRUNCATED)
@@ -765,6 +801,7 @@ static PST_RESULT pst_nss_write(void *state, const void *buffer, pst_size length
         c->interest = PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE;
         return PST_RESULT_OK;
     }
+    pst_nss_record(c, PST_DIAGNOSTIC_PHASE_WRITE);
     result->operation = PST_BACKEND_OPERATION_FAILED;
     result->error = pst_backend_nss_normalize_error(c->last_error);
     c->interest = PST_BACKEND_INTEREST_NONE; return PST_RESULT_OK;
@@ -827,6 +864,7 @@ static PST_RESULT pst_nss_shutdown_step(void *state, pst_u32 *operation, PST_RES
         return PST_RESULT_INVALID_ARGUMENT;
     s = c->runtime->backend;
     if (s->pr_shutdown(c->ssl_fd, PR_SHUTDOWN_BOTH) == PR_SUCCESS) {
+        pst_diagnostic_clear(&c->diagnostic);
         *operation = PST_BACKEND_OPERATION_COMPLETE; *error = PST_RESULT_OK;
         c->interest = PST_BACKEND_INTEREST_NONE;
         pst_nss_trace("PR_Shutdown", "complete"); return PST_RESULT_OK;
@@ -837,6 +875,7 @@ static PST_RESULT pst_nss_shutdown_step(void *state, pst_u32 *operation, PST_RES
         c->interest = PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE;
         return PST_RESULT_OK;
     }
+    pst_nss_record(c, PST_DIAGNOSTIC_PHASE_SHUTDOWN);
     *operation = PST_BACKEND_OPERATION_FAILED;
     *error = pst_backend_nss_normalize_error(c->last_error);
     c->interest = PST_BACKEND_INTEREST_NONE; return PST_RESULT_OK;

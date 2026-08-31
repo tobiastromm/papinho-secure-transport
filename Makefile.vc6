@@ -10,14 +10,16 @@ NSS_DIST=
 NSS_CFLAGS=$(CFLAGS) /I$(NSS_DIST)\include\nspr /I$(NSS_DIST)\public\nss
 BUILD=build\vc6
 LIB=$(BUILD)\papinho_secure_transport.lib
-OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj
-all: dirs $(LIB) $(BUILD)\test_foundation.exe $(BUILD)\test_identity.exe $(BUILD)\test_backend_spi.exe
+OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_diagnostic.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj
+all: dirs $(LIB) $(BUILD)\test_foundation.exe $(BUILD)\test_identity.exe $(BUILD)\test_backend_spi.exe $(BUILD)\test_diagnostic.exe
 dirs:
 	@if not exist build mkdir build
 	@if not exist $(BUILD) mkdir $(BUILD)
 $(BUILD)\pst_version.obj: src\pst_version.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\pst_result.obj: src\pst_result.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\pst_diagnostic.obj: src\pst_diagnostic.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\pst_validation.obj: src\pst_validation.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
@@ -41,6 +43,10 @@ $(BUILD)\test_backend_spi.obj: tests\test_backend_spi.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_backend_spi.exe: $(BUILD)\test_backend_spi.obj $(LIB)
 	$(CC) /nologo /Fe$@ $(BUILD)\test_backend_spi.obj $(LIB) $(LDFLAGS)
+$(BUILD)\test_diagnostic.obj: tests\test_diagnostic.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_diagnostic.exe: $(BUILD)\test_diagnostic.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_diagnostic.obj $(LIB) $(LDFLAGS)
 $(BUILD)\pst_backend_nss.obj: src\backends\nss\pst_backend_nss.c
 	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
 	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
@@ -70,6 +76,7 @@ test: all
 	$(BUILD)\test_foundation.exe
 	$(BUILD)\test_identity.exe
 	$(BUILD)\test_backend_spi.exe
+	$(BUILD)\test_diagnostic.exe
 test-nss-unit: dirs $(LIB) $(BUILD)\test_backend_nss.exe
 	$(BUILD)\test_backend_nss.exe
 nss-integration: dirs $(LIB) $(BUILD)\test_backend_nss_integration.exe

@@ -40,6 +40,7 @@
   - Windows NT 4.0 SP6 real execution: complete
   - Repeated full TLS lifecycle, bounded shutdown and peer snapshot lifetime: complete
 - Phase 7 - Interoperability / Hardening: in progress
-  - 7.A Error & Diagnostic Model Hardening audit: in progress
+  - 7.A Error & Diagnostic Model Hardening: in progress
+    - 7.A1 internal diagnostic snapshot: complete
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending

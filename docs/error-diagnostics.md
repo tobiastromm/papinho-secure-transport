@@ -61,3 +61,12 @@ The stable current ID is `retrozilla-nss`. A future name `nss-modern` would use 
 ## Next 7.A step
 
 Design and test an internal-only diagnostic snapshot first: normalized result, operation phase, backend ID, optional native domain/code, and safe local flags. Define capture/reset/lifetime rules and redaction before considering any public API. Remote behavior and TLS alerts must remain unchanged.
+## 7.A1 internal diagnostic snapshot
+
+Diagnostic is structured local data; logging is a later optional presentation mechanism owned by the consumer. `PST_RESULT` remains portable control flow. The internal `pst_internal_diagnostic` stores normalized result, real operation phase, native domain and primary/secondary codes, classification flags, generation, validity, and a lifetime-safe copied backend ID. It contains no native pointers, arbitrary strings, paths, hostname, certificate/DER, application payload, or credential material.
+
+The snapshot is embedded and requires no allocation on failure. Initialization produces an empty generation zero. A relevant failure replaces all fields and increments generation. Successful completion/reset clears validity and all detail while incrementing generation, preventing stale failure A from being attributed to successful operation B. Native errors are captured only immediately after a documented failing NSS/NSPR/WinSock operation; `PR_GetError` is never sampled after success and `PR_WOULD_BLOCK_ERROR` is progress state rather than a diagnostic failure.
+
+Initial NSS integration covers DLL/NSS initialization, WinSock transport attach, handshake (with authentication and hostname phase refinement), poll/wait, secure read, secure write, and shutdown. The core internal header exposes the backend-neutral facility for native-domain-NONE diagnostics without changing the public header or SPI. Deterministic tests cover empty state, normalized-only capture, native domains/codes, replacement, reset, copied backend ID, two AUTH causes sharing one `PST_RESULT`, and preserved protocol/hostname/transport distinctions.
+
+Future logging remains consumer-owned and optional: a browser, accelerator, mail client, or minimal consumer may choose its own sink or no logging. No logger, automatic file, severity API, public ABI, TLS alert, or remote disclosure is introduced by 7.A1.
