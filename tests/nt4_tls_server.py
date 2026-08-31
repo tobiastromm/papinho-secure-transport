@@ -2,6 +2,8 @@ import ssl
 import socket
 import sys
 
+EXPECTED = b"pst-phase5-public-runtime"
+
 if len(sys.argv) != 9:
     raise SystemExit("usage: bind port cert.pem key.pem ca.pem 12|13 alpn required|optional")
 
@@ -22,11 +24,27 @@ print("READY %s:%s TLS%s" % (sys.argv[1], sys.argv[2], version), flush=True)
 try:
     raw, address = listener.accept()
     with context.wrap_socket(raw, server_side=True) as tls:
+        tls.settimeout(30)
         peer = tls.getpeercert()
         print("CLIENT %s AUTH=%s ALPN=%s" % (address, bool(peer), tls.selected_alpn_protocol()), flush=True)
-        data = tls.recv(4096)
-        if data:
-            tls.sendall(data)
+        data = b""
+        while len(data) < len(EXPECTED):
+            part = tls.recv(len(EXPECTED) - len(data))
+            if not part:
+                break
+            data += part
+        content_match = data == EXPECTED
+        sent = 0
+        if content_match:
+            tls.sendall(EXPECTED)
+            sent = len(EXPECTED)
+        print("IO RECV=%d SEND=%d CONTENT_MATCH=%s" %
+              (len(data), sent, content_match), flush=True)
+        if content_match:
+            try:
+                tls.recv(1)
+            except socket.timeout:
+                print("SHUTDOWN_WAIT_TIMEOUT", flush=True)
 except (ssl.SSLError, OSError) as error:
     print("TLS_ERROR", error, flush=True)
 finally:

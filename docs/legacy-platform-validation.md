@@ -39,6 +39,10 @@ The public runtime integration executable also completed a real TLS 1.3 handshak
 
 All six package wrappers were changed to avoid `exit /b`. Success now reaches EOF with a zero status established by `ver >nul`; usage and failure paths reach EOF with a nonzero status established by the NT-compatible `verify other 2>nul` idiom. Explicit `goto` paths prevent success from falling through into error labels and do not close the user's command window.
 
+Phase 6.B identified the fixture shutdown ordering as the cause of the incomplete bidirectional evidence: after one `recv` and `sendall`, the server immediately left the TLS context. The updated fixture accumulates and validates exactly 25 expected bytes, sends the deterministic echo, records `RECV`, `SEND`, and `CONTENT_MATCH`, then waits at most 30 seconds for client shutdown. The public integration executable now reports `CONTENT_MATCH` explicitly and still returns failure unless all 25 response bytes match.
+
+On the Windows 10 validation host, the updated VC6 executable passed both TLS 1.3 and TLS 1.2 with `WRITE=25 READ=25 CONTENT_MATCH=1 ALPN=9 AUTH=2`. The server recorded `RECV=25 SEND=25 CONTENT_MATCH=True` in both cases. This modern-host result validates the corrected package but does not replace a new NT4 execution.
+
 ## Remaining mandatory NT4 matrix
 
 The following are now proved on NT4: foundation, SPI, NSS lifecycle, identity, public runtime execution, TLS 1.3 handshake, mTLS, and ALPN. Still unproved or incomplete are server-authentication-only mode, TLS 1.2, secure bidirectional and partial I/O, nonblocking trace details including `PR_WOULD_BLOCK_ERROR` and SSL-descriptor `PR_Poll`, peer snapshot lifetime, graceful shutdown, negative hostname/CA/downgrade/client-credential cases, and repeated lifecycle.
@@ -47,6 +51,6 @@ The Windows 10 Phase 5 evidence cannot replace any entry in this matrix. Module 
 
 ## Required next execution
 
-Repeat the corrected wrappers on the existing Windows NT 4.0 SP6 environment and preserve the executable error level, complete client output, server output, and backend module/operation trace. Resolve the `READ=0` evidence and execute the remaining matrix through the public PST API. Only then may this document and roadmap mark Phase 6 complete.
+Copy the updated Phase 6.B package to the existing Windows NT 4.0 SP6 environment, repeat the corrected TLS runner, and preserve the executable error level, complete client output, server output, and backend module/operation trace. The NT4 bidirectional result must show `WRITE=25 READ=25 CONTENT_MATCH=1`. Execute the remaining matrix through the public PST API before marking Phase 6 complete.
 
 No PST core, public API, SPI, NSS backend, or TLS behavior was changed. The reproduced incompatibility was confined to package BAT control flow. Phase 7 has not started.

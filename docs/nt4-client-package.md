@@ -17,4 +17,6 @@ On NT4, copy the complete `client` directory, enter it using `cd`, and run `run_
 
 The first NT4 SP6 execution showed that `exit /b` did not terminate these wrappers reliably. The package BAT files therefore use only explicit labels and `goto`, finish naturally at end-of-file, establish success with `ver >nul`, and establish failure with the NT-compatible `verify other 2>nul` idiom. They do not invoke `exit`, so running a BAT directly cannot close the user's command window.
 
-The first real run passed the four smoke executables and proved TLS 1.3, mTLS, and ALPN. Its `READ=0` field means zero received application bytes, so it does not yet prove bidirectional secure I/O. Preserve the next run's full output and error level; a successful echo round trip from the current integration executable must report `WRITE=25 READ=25`.
+The first real run passed the four smoke executables and proved TLS 1.3, mTLS, and ALPN. Its `READ=0` field means zero received application bytes, so it does not yet prove bidirectional secure I/O. Preserve the next run's full output and error level; a successful echo round trip from the current integration executable must report `WRITE=25 READ=25 CONTENT_MATCH=1`.
+
+The Phase 6.B package contains the rebuilt VC6 integration executable and deterministic echo fixture behavior. Modern-host TLS 1.2 and TLS 1.3 validation produced `WRITE=25 READ=25 CONTENT_MATCH=1`, while the server produced `RECV=25 SEND=25 CONTENT_MATCH=True`. A new real NT4 run is still required; Phase 6 remains in progress.
