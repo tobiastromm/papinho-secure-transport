@@ -38,7 +38,7 @@
 - Phase 6 - Legacy Platform Validation: in progress
   - Static VC6/PE/import compatibility audit: complete
   - Windows NT 4.0 SP6 real execution: functional matrix complete; lifecycle closure pending
-  - Repeated full TLS lifecycle on real NT4: pending
+  - Phase 6.D repeated-lifecycle package: Windows 10 validated; real NT4 execution pending
 - Phase 7 - Interoperability / Hardening: pending
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending

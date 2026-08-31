@@ -59,6 +59,12 @@ $(BUILD)\test_tls_runtime_integration.obj: tests\test_tls_runtime_integration.c
 	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_tls_runtime_integration.exe: $(BUILD)\test_tls_runtime_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB)
 	$(CC) /nologo /Fe$@ $(BUILD)\test_tls_runtime_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB) wsock32.lib $(LDFLAGS)
+$(BUILD)\test_nt4_lifecycle_integration.obj: tests\test_nt4_lifecycle_integration.c
+	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
+	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_nt4_lifecycle_integration.exe: $(BUILD)\test_nt4_lifecycle_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_nt4_lifecycle_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB) wsock32.lib $(LDFLAGS)
+lifecycle-integration: dirs $(LIB) $(BUILD)\test_nt4_lifecycle_integration.exe
 runtime-integration: dirs $(LIB) $(BUILD)\test_tls_runtime_integration.exe
 test: all
 	$(BUILD)\test_foundation.exe

@@ -44,3 +44,21 @@ Restart the one-connection server between commands. The first runner uses `bad-c
 ## Phase 6 closure runner pending
 
 The existing package is sufficient for the completed functional and negative gates, but not for the original repeated full-lifecycle closure gate. Do not substitute three separate process launches: the remaining runner must execute repeated real TLS cycles in one VC6 process and assert bounded shutdown plus peer-snapshot validity after connection destruction. Phase 6 remains in progress until that updated package is built and executed on real NT4.
+
+## Phase 6.D final lifecycle package
+
+The package now contains `test_nt4_lifecycle_integration.exe` and the NT4-compatible `run_lifecycle.bat`. The executable performs three complete public-API TLS 1.3 mTLS/required-ALPN cycles in one process. Each cycle creates and releases its runtime, creates a fresh transport and connection, validates the 25-byte echo, completes bounded incremental shutdown, destroys the connection, and then validates the independently owned peer snapshot.
+
+Start the modern fixture from the repository root with:
+
+```text
+python tests\nt4_lifecycle_server.py 0.0.0.0 8443 build\nt4-validation\server-fixture\server.pem build\nt4-validation\server-fixture\server.key build\nt4-validation\server-fixture\ca.pem 13 fixture/1 required 3
+```
+
+On NT4, from the copied package directory, run:
+
+```text
+run_lifecycle.bat HOST 8443 localhost
+```
+
+The Windows 10 validation passed all three cycles with `WRITE=25 READ=25 CONTENT_MATCH=1 SHUTDOWN_COMPLETE=1 SNAPSHOT_AFTER_DESTROY=1`. This prepares but does not close Phase 6; the same gate still requires real NT4 execution.
