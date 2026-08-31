@@ -1,12 +1,12 @@
 # Provisional runtime and API design
 
-Status: Phase 0.C design specification. This document is concrete enough to guide implementation, but it is not a released API or ABI. Names and signatures remain provisional until Phase 1 produces and tests public headers.
+Status: Phase 0.C design specification with the Phase 1 portable foundation materialized. The transport/runtime surface remains provisional; only the foundation declarations in `include/papinho_secure_transport.h` are currently implemented and tested.
 
 ## Design constraints and naming
 
-The public C namespace uses lowercase `pst_` for functions and typedefs and uppercase `PST_` for constants/macros. Public identifiers must not expose backend or platform types.
+The public C namespace uses lowercase `pst_` for functions, portable scalar types, and opaque handles. Public ABI records and result types use uppercase `PST_`; constants and macros also use uppercase `PST_`. Public identifiers must not expose backend or platform types.
 
-The interface targets C89 and Visual C++ 6.0. It does not require C99, C++, `stdint.h`, VLAs, atomics, or modern threading. Fixed-width wire values, where needed, will use PST-owned compatibility typedefs whose exact definitions are a Phase 1 concern.
+The interface targets C89 and Visual C++ 6.0. It does not require C99, C++, `stdint.h`, VLAs, atomics, or modern threading. Fixed-width values use PST-owned `pst_u8`, `pst_u16`, `pst_u32`, and `pst_i32` compatibility typedefs selected through `<limits.h>`, with compile-time width checks. `pst_size` aliases `size_t`.
 
 All extensible input structures begin conceptually with `struct_size` and `api_version`. Callers zero unknown/reserved fields. Output structures use caller-provided size or opaque accessors so older binaries do not require recompilation when fields are added.
 
@@ -328,11 +328,12 @@ Phase 1 must document exact reference/lifetime synchronization. Per-connection w
 - Backend identifiers are strings; adding a backend does not extend a public enum.
 - A runtime API-version query and compile-time header version allow compatibility checks.
 
-Plugin ABI, dynamic backend loading, symbol export macros, calling convention, exact integer typedefs, and final struct layouts are Phase 1 implementation decisions. They must follow these evolution rules.
+Phase 1 fixes the portable foundation ABI at API version 1.0.0: `PST_CALL` is `__cdecl` on MSVC, `PST_API` supports future static/DLL builds, integer widths are checked at compile time, and stateful handles are incomplete public types. `PST_VERSION_INFO` begins with `struct_size` and `api_version`; the library rejects undersized records and incompatible API major versions, accepts same-major versions, and leaves caller extensions beyond the known record untouched. Plugin ABI, dynamic backend loading, and transport/runtime structure layouts remain deferred.
 
 ## Deferred beyond Phase 0.C
 
-- Final header spelling, calling convention, visibility macros, integer typedefs, and binary layouts: Phase 1.
+- Portable header spelling, calling convention, visibility macros, integer typedefs, result codes, version record, and opaque handle declarations: implemented in Phase 1.
+- Transport/runtime option and result layouts beyond `PST_VERSION_INFO`: deferred to the phase that implements each surface.
 - Concrete backend SPI/vtable implementation and registration: Phase 2.
 - NSS adapter, native socket import details, and NSS lifecycle implementation: Phase 3.
 - Credential/trust loaders and complete peer-identity accessors: Phase 4.
@@ -340,4 +341,4 @@ Plugin ABI, dynamic backend loading, symbol export macros, calling convention, e
 - Legacy-platform compilation and behavioral validation of the implemented API: Phase 6.
 - Interoperability, fuzzing, negative tests, hardening, and stable release ABI: later phases.
 
-No source code, backend, build system, or functional public header is created by Phase 0.C.
+Phase 1 adds only the portable foundation source, VC6 static-library build, and foundation tests. No backend, TLS state machine, networking, credential loader, trust loader, or consumer integration is implemented.

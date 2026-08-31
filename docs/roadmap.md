@@ -5,7 +5,12 @@
   - 0.A-R1 RNG fail-closed A/B revalidation addendum: complete
   - 0.B Scope & Architectural Boundaries: complete
   - 0.C Runtime/API Design: complete
-- Phase 1 - Portable Foundation: pending
+- Phase 1 - Portable Foundation: complete
+  - C89/Visual C++ 6 portable integer and size types: complete
+  - Stable result model and result strings: complete
+  - API/library version query and size/version validation: complete
+  - Opaque public handle declarations: complete
+  - VC6 static-library build and foundation test: complete
 - Phase 2 - Backend Interface / SPI: pending
 - Phase 3 - NSS Backend: pending
 - Phase 4 - Credentials & Peer Identity: pending
