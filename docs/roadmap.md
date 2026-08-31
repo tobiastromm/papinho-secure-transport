@@ -11,7 +11,12 @@
   - API/library version query and size/version validation: complete
   - Opaque public handle declarations: complete
   - VC6 static-library build and foundation test: complete
-- Phase 2 - Backend Interface / SPI: pending
+- Phase 2 - Backend Interface / SPI: complete
+  - Internal versioned descriptor and C89 function table: complete
+  - Capability model and consistency validation: complete
+  - In-process registry, exact lookup, and duplicate rejection: complete
+  - Incremental readiness, handshake, I/O, and ownership contracts: complete
+  - Deterministic mock dispatch tests with VC6 `/W4`: complete
 - Phase 3 - NSS Backend: pending
 - Phase 4 - Credentials & Peer Identity: pending
 - Phase 5 - TLS Runtime: pending

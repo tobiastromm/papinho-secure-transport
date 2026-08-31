@@ -130,7 +130,7 @@ Runtime options support three conceptual selection policies:
 
 Selection occurs during runtime creation, before connections exist. The chosen backend never changes within a runtime. Failure after backend selection does not retry another backend silently. No selection mode may weaken explicit policy.
 
-Backend identifiers are stable diagnostic strings, not enums tied to a fixed backend list. The runtime exposes selected identifier, implementation version, and capability snapshot without exposing backend handles. Registry/linkage mechanics are internal and deferred.
+Backend identifiers are stable diagnostic strings, not enums tied to a fixed backend list. The runtime exposes selected identifier, implementation version, and capability snapshot without exposing backend handles. Phase 2 provides an internal in-process descriptor registry with exact-ID lookup and validation. Ordered and automatic runtime selection remain deferred.
 
 ## Capability model
 
@@ -142,7 +142,7 @@ Capabilities are immutable facts reported by the selected backend/runtime. They 
 
 Capability queries cover protocol-version ranges and named features such as client authentication, ALPN, custom trust, system trust, resumption, 0-RTT, hostname verification, peer-certificate extraction, nonblocking operation, and backend-correct waiting.
 
-Capabilities are extensible named/bit flags plus versioned detail queries. Unknown capabilities are treated as unavailable, never implicitly supported. Freezing configuration validates requirements that can be checked statically; connection/handshake validates the rest.
+Phase 2 materializes backend capabilities as an internal controlled-width bitmask plus a query hook. Descriptor bits represent implementation facts, while the query may refine environment-dependent availability. Unknown capabilities are treated as unavailable by current core logic, never implicitly supported. Requested-policy and negotiated-result representations remain separate and deferred. Freezing configuration will validate requirements that can be checked statically; connection/handshake will validate the rest.
 
 ## Configuration and policy
 
@@ -334,11 +334,11 @@ Phase 1 fixes the portable foundation ABI at API version 1.0.0: `PST_CALL` is `_
 
 - Portable header spelling, calling convention, visibility macros, integer typedefs, result codes, version record, and opaque handle declarations: implemented in Phase 1.
 - Transport/runtime option and result layouts beyond `PST_VERSION_INFO`: deferred to the phase that implements each surface.
-- Concrete backend SPI/vtable implementation and registration: Phase 2.
+- Internal backend SPI/vtable, validation, capabilities, and setup-time registry: implemented in Phase 2; see [backend-spi.md](backend-spi.md).
 - NSS adapter, native socket import details, and NSS lifecycle implementation: Phase 3.
 - Credential/trust loaders and complete peer-identity accessors: Phase 4.
 - Runtime/event-loop implementations and convenience blocking orchestration: Phase 5.
 - Legacy-platform compilation and behavioral validation of the implemented API: Phase 6.
 - Interoperability, fuzzing, negative tests, hardening, and stable release ABI: later phases.
 
-Phase 1 adds only the portable foundation source, VC6 static-library build, and foundation tests. No backend, TLS state machine, networking, credential loader, trust loader, or consumer integration is implemented.
+Phase 2 adds the internal backend contract and a test-only mock. No real backend, TLS state machine, networking, credential loader, trust loader, or consumer integration is implemented.

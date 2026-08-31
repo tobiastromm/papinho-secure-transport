@@ -6,19 +6,18 @@ LDFLAGS=
 !ENDIF
 BUILD=build\vc6
 LIB=$(BUILD)\papinho_secure_transport.lib
-OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_validation.obj
-
-all: dirs $(LIB) $(BUILD)\test_foundation.exe
-
+OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_backend.obj
+all: dirs $(LIB) $(BUILD)\test_foundation.exe $(BUILD)\test_backend_spi.exe
 dirs:
 	@if not exist build mkdir build
 	@if not exist $(BUILD) mkdir $(BUILD)
-
 $(BUILD)\pst_version.obj: src\pst_version.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\pst_result.obj: src\pst_result.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\pst_validation.obj: src\pst_validation.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\pst_backend.obj: src\pst_backend.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(LIB): $(OBJS)
 	$(LIBTOOL) /nologo /out:$@ $(OBJS)
@@ -26,7 +25,12 @@ $(BUILD)\test_foundation.obj: tests\test_foundation.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_foundation.exe: $(BUILD)\test_foundation.obj $(LIB)
 	$(CC) /nologo /Fe$@ $(BUILD)\test_foundation.obj $(LIB) $(LDFLAGS)
+$(BUILD)\test_backend_spi.obj: tests\test_backend_spi.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_backend_spi.exe: $(BUILD)\test_backend_spi.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_backend_spi.obj $(LIB) $(LDFLAGS)
 test: all
 	$(BUILD)\test_foundation.exe
+	$(BUILD)\test_backend_spi.exe
 clean:
 	@if exist $(BUILD) rmdir /s /q $(BUILD)

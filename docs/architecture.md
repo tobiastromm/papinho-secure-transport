@@ -63,7 +63,7 @@ No concrete platform handle may leak through the future public interface, includ
 
 The portable PST core delegates cryptographic and secure-protocol mechanism to backend implementations. The proven legacy NSS/NSPR implementation is the first backend candidate. Modern Windows, Linux/POSIX, embedded, or other backends remain possible, but Phase 0.B neither creates them nor chooses their libraries.
 
-Backend state and platform resources remain private behind a backend-neutral boundary. The concrete SPI, dispatch model, opaque types, capability representation, and backend-selection rules are deliberately deferred to Phase 0.C.
+Backend state and platform resources remain private behind a backend-neutral boundary. Phase 2 materializes the internal descriptor, C89 function table, capability mask, lifecycle dispatch, readiness contract, and setup-time registry described in [backend-spi.md](backend-spi.md). Runtime selection policy remains deferred; the SPI exposes no backend or platform types publicly.
 
 ## Readiness invariant
 
@@ -108,7 +108,7 @@ Phase 0.B records portability as a constraint. It does not implement a PAL, sock
 
 - Public API and ABI shape.
 - Names and definitions of handles, functions, errors, states, enums, and structs.
-- Backend SPI, dispatch/vtable model, registration, selection, and capabilities.
+- Backend SPI, dispatch/vtable model, registration, selection, and capabilities (descriptor, validation, registry, dispatch, and capabilities were materialized internally in Phase 2; runtime selection remains deferred).
 - Underlying-transport attachment and ownership-transfer representation.
 - Readiness/progress interface and event-loop integration contract.
 - Incremental handshake and I/O call semantics.
