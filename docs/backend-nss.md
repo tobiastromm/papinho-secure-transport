@@ -1,5 +1,7 @@
 # RetroZilla NSS/NSPR backend
 
+Phase 4 adds backend-neutral custom trust, memory DER/PKCS#8 local credentials, client authentication, and independent peer snapshots. Phase 3 environment overrides remain test-only compatibility mechanisms, not the Phase 4 contract. See [credentials-trust-peer.md](credentials-trust-peer.md).
+
 Status: Phase 3 backend implementation. The backend is private and opt-in; it is not part of the default core build and exposes no NSS/NSPR type through the public header.
 
 ## Lineage and preserved runtime

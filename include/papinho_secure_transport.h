@@ -91,11 +91,62 @@ typedef struct PST_VERSION_INFO {
 
 #define PST_VERSION_INFO_MIN_SIZE ((pst_u32)sizeof(PST_VERSION_INFO))
 
+#define PST_CREDENTIAL_SOURCE_CERT_DER_PKCS8_DER 1UL
+#define PST_TRUST_SOURCE_CUSTOM_CA_DER 1UL
+#define PST_TRUST_SOURCE_SYSTEM 2UL
+#define PST_REQUIREMENT_DISABLED 0UL
+#define PST_REQUIREMENT_REQUIRED 1UL
+#define PST_KNOWN_UNKNOWN 0UL
+#define PST_KNOWN_FALSE 1UL
+#define PST_KNOWN_TRUE 2UL
+#define PST_KNOWN_UNSUPPORTED 3UL
+typedef struct PST_CREDENTIAL_SOURCE {
+    pst_u32 struct_size; pst_u32 api_version; pst_u32 kind;
+    const pst_u8 *certificate_der; pst_size certificate_der_size;
+    const pst_u8 *private_key_der; pst_size private_key_der_size;
+} PST_CREDENTIAL_SOURCE;
+typedef struct PST_TRUST_SOURCE {
+    pst_u32 struct_size; pst_u32 api_version; pst_u32 kind;
+    const pst_u8 *data; pst_size data_size;
+} PST_TRUST_SOURCE;
+typedef struct PST_IDENTITY_CONFIG {
+    pst_u32 struct_size; pst_u32 api_version;
+    pst_credentials *credentials; pst_trust *trust;
+    const char *expected_hostname; pst_size expected_hostname_size;
+    pst_u32 require_peer_authentication;
+    pst_u32 require_client_authentication;
+} PST_IDENTITY_CONFIG;
+typedef struct PST_PEER_INFO_SUMMARY {
+    pst_u32 struct_size; pst_u32 api_version;
+    pst_u32 certificate_present; pst_u32 chain_validated;
+    pst_u32 hostname_validated; pst_u32 peer_authenticated;
+    pst_u32 tls_version; pst_u32 cipher_suite;
+    pst_u32 alpn_available; pst_u32 session_resumed;
+    pst_u32 early_data_accepted;
+    pst_u8 certificate_sha256[32];
+    pst_size certificate_sha256_size; pst_size leaf_der_size;
+} PST_PEER_INFO_SUMMARY;
+#define PST_CREDENTIAL_SOURCE_MIN_SIZE ((pst_u32)sizeof(PST_CREDENTIAL_SOURCE))
+#define PST_TRUST_SOURCE_MIN_SIZE ((pst_u32)sizeof(PST_TRUST_SOURCE))
+#define PST_IDENTITY_CONFIG_MIN_SIZE ((pst_u32)sizeof(PST_IDENTITY_CONFIG))
+#define PST_PEER_INFO_SUMMARY_MIN_SIZE ((pst_u32)sizeof(PST_PEER_INFO_SUMMARY))
+
 PST_API pst_u32 PST_CALL pst_api_version(void);
 PST_API pst_u32 PST_CALL pst_library_version(void);
 PST_API PST_RESULT PST_CALL pst_version_info_init(PST_VERSION_INFO *info);
 PST_API PST_RESULT PST_CALL pst_get_version(PST_VERSION_INFO *info);
 PST_API const char *PST_CALL pst_result_string(PST_RESULT result);
+PST_API PST_RESULT PST_CALL pst_credentials_create(const PST_CREDENTIAL_SOURCE *source, pst_credentials **out_credentials);
+PST_API void PST_CALL pst_credentials_release(pst_credentials *credentials);
+PST_API PST_RESULT PST_CALL pst_trust_create(const PST_TRUST_SOURCE *source, pst_trust **out_trust);
+PST_API void PST_CALL pst_trust_release(pst_trust *trust);
+PST_API PST_RESULT PST_CALL pst_config_create(pst_config **out_config);
+PST_API PST_RESULT PST_CALL pst_config_set_identity(pst_config *config, const PST_IDENTITY_CONFIG *identity);
+PST_API PST_RESULT PST_CALL pst_config_freeze(pst_config *config);
+PST_API void PST_CALL pst_config_release(pst_config *config);
+PST_API PST_RESULT PST_CALL pst_peer_info_get_summary(const pst_peer_info *peer_info, PST_PEER_INFO_SUMMARY *summary);
+PST_API PST_RESULT PST_CALL pst_peer_info_copy_leaf_der(const pst_peer_info *peer_info, pst_u8 *buffer, pst_size capacity, pst_size *out_size);
+PST_API void PST_CALL pst_peer_info_release(pst_peer_info *peer_info);
 
 #ifdef __cplusplus
 }

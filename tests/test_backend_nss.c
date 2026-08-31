@@ -24,10 +24,12 @@ int main(void)
     CHECK(pst_backend_validate(descriptor) == PST_RESULT_OK, 3);
     expected = PST_BACKEND_CAP_TLS_1_2 | PST_BACKEND_CAP_TLS_1_3 |
         PST_BACKEND_CAP_HOSTNAME_VERIFY | PST_BACKEND_CAP_NONBLOCKING |
-        PST_BACKEND_CAP_BACKEND_WAIT;
+        PST_BACKEND_CAP_BACKEND_WAIT | PST_BACKEND_CAP_CLIENT_AUTH |
+        PST_BACKEND_CAP_CUSTOM_TRUST | PST_BACKEND_CAP_PEER_INFO;
     CHECK(descriptor->capabilities == expected, 4);
     CHECK(descriptor->vtable->wait != NULL, 5);
-    CHECK(descriptor->vtable->peer_info_create == NULL, 6);
+    CHECK(descriptor->vtable->peer_info_create != NULL, 6);
+    CHECK(descriptor->vtable->connection_configure_identity != NULL, 31);
     CHECK(pst_backend_nss_is_would_block(PR_WOULD_BLOCK_ERROR), 7);
     CHECK(!pst_backend_nss_is_would_block(PR_CONNECT_RESET_ERROR), 8);
     CHECK(pst_backend_nss_normalize_error(PR_CONNECT_RESET_ERROR) == PST_RESULT_TRUNCATED, 9);
@@ -47,7 +49,7 @@ int main(void)
         CHECK(descriptor->vtable->initialize(&backend_state) == PST_RESULT_OK, 20);
         CHECK(backend_state != NULL, 21);
         CHECK(descriptor->vtable->query_capabilities(backend_state, &capabilities) == PST_RESULT_OK, 28);
-        CHECK((capabilities & PST_BACKEND_CAP_HOSTNAME_VERIFY) == 0UL, 29);
+        CHECK((capabilities & PST_BACKEND_CAP_HOSTNAME_VERIFY) != 0UL, 29);
         CHECK((capabilities & PST_BACKEND_CAP_TLS_1_3) != 0UL, 30);
         CHECK(descriptor->vtable->initialize(&second_state) == PST_RESULT_INVALID_STATE, 22);
         CHECK(second_state == NULL, 23);

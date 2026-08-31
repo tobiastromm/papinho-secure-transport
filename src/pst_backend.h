@@ -2,8 +2,8 @@
 #define PST_BACKEND_H
 #include "papinho_secure_transport.h"
 #define PST_BACKEND_SPI_VERSION_MAJOR 2UL
-#define PST_BACKEND_SPI_VERSION_MINOR 0UL
-#define PST_BACKEND_SPI_VERSION 0x00020000UL
+#define PST_BACKEND_SPI_VERSION_MINOR 1UL
+#define PST_BACKEND_SPI_VERSION 0x00020001UL
 #define PST_BACKEND_CAP_TLS_1_2 0x00000001UL
 #define PST_BACKEND_CAP_TLS_1_3 0x00000002UL
 #define PST_BACKEND_CAP_CLIENT_AUTH 0x00000004UL
@@ -63,6 +63,8 @@ typedef struct PST_BACKEND_VTABLE {
     PST_RESULT (*shutdown_step)(void *connection_state, pst_u32 *operation, PST_RESULT *error);
     PST_RESULT (*peer_info_create)(void *connection_state, void **peer_info);
     void (*peer_info_destroy)(void *peer_info);
+    PST_RESULT (*connection_configure_identity)(void *connection_state,
+                                                const pst_config *config);
 } PST_BACKEND_VTABLE;
 typedef struct PST_BACKEND_DESCRIPTOR {
     pst_u32 struct_size;
@@ -72,7 +74,7 @@ typedef struct PST_BACKEND_DESCRIPTOR {
     pst_u32 capabilities;
     const PST_BACKEND_VTABLE *vtable;
 } PST_BACKEND_DESCRIPTOR;
-#define PST_BACKEND_VTABLE_MIN_SIZE ((pst_u32)sizeof(PST_BACKEND_VTABLE))
+#define PST_BACKEND_VTABLE_MIN_SIZE ((pst_u32)offsetof(PST_BACKEND_VTABLE, connection_configure_identity))
 #define PST_BACKEND_DESCRIPTOR_MIN_SIZE ((pst_u32)sizeof(PST_BACKEND_DESCRIPTOR))
 PST_RESULT pst_backend_validate(const PST_BACKEND_DESCRIPTOR *descriptor);
 PST_RESULT pst_backend_register(const PST_BACKEND_DESCRIPTOR *descriptor);

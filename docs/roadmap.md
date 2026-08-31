@@ -24,7 +24,11 @@
   - Incremental handshake, `PR_Poll`, secure I/O, shutdown, and error mapping: complete
   - VC6 unit/lifecycle tests and compiled opt-in integration harness: complete
   - Authenticated loopback TLS 1.2, backend polling, secure echo, and shutdown proof: complete
-- Phase 4 - Credentials & Peer Identity: pending
+- Phase 4 - Credentials & Peer Identity: complete
+  - Immutable memory DER/PKCS#8 credentials and custom/system trust representation: complete
+  - Frozen backend-neutral hostname and authentication configuration: complete
+  - NSS custom trust, client authentication, SHA-256, and owned leaf snapshot: complete
+  - Loopback mTLS, wrong-hostname, and untrusted-CA functional gates: complete
 - Phase 5 - TLS Runtime: pending
 - Phase 6 - Legacy Platform Validation: pending
 - Phase 7 - Interoperability / Hardening: pending

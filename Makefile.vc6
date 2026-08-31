@@ -10,8 +10,8 @@ NSS_DIST=
 NSS_CFLAGS=$(CFLAGS) /I$(NSS_DIST)\include\nspr /I$(NSS_DIST)\public\nss
 BUILD=build\vc6
 LIB=$(BUILD)\papinho_secure_transport.lib
-OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_backend.obj
-all: dirs $(LIB) $(BUILD)\test_foundation.exe $(BUILD)\test_backend_spi.exe
+OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj
+all: dirs $(LIB) $(BUILD)\test_foundation.exe $(BUILD)\test_identity.exe $(BUILD)\test_backend_spi.exe
 dirs:
 	@if not exist build mkdir build
 	@if not exist $(BUILD) mkdir $(BUILD)
@@ -21,6 +21,8 @@ $(BUILD)\pst_result.obj: src\pst_result.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\pst_validation.obj: src\pst_validation.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\pst_identity.obj: src\pst_identity.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\pst_backend.obj: src\pst_backend.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(LIB): $(OBJS)
@@ -29,6 +31,10 @@ $(BUILD)\test_foundation.obj: tests\test_foundation.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_foundation.exe: $(BUILD)\test_foundation.obj $(LIB)
 	$(CC) /nologo /Fe$@ $(BUILD)\test_foundation.obj $(LIB) $(LDFLAGS)
+$(BUILD)\test_identity.obj: tests\test_identity.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_identity.exe: $(BUILD)\test_identity.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_identity.obj $(LIB) $(LDFLAGS)
 $(BUILD)\test_backend_spi.obj: tests\test_backend_spi.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_backend_spi.exe: $(BUILD)\test_backend_spi.obj $(LIB)
@@ -48,6 +54,7 @@ $(BUILD)\test_backend_nss_integration.exe: $(BUILD)\test_backend_nss_integration
 	$(CC) /nologo /Fe$@ $(BUILD)\test_backend_nss_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB) wsock32.lib $(LDFLAGS)
 test: all
 	$(BUILD)\test_foundation.exe
+	$(BUILD)\test_identity.exe
 	$(BUILD)\test_backend_spi.exe
 test-nss-unit: dirs $(LIB) $(BUILD)\test_backend_nss.exe
 	$(BUILD)\test_backend_nss.exe

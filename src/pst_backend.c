@@ -49,6 +49,12 @@ PST_RESULT pst_backend_validate(const PST_BACKEND_DESCRIPTOR *d)
     if ((d->capabilities & PST_BACKEND_CAP_PEER_INFO) != 0UL &&
         (v->peer_info_create == NULL || v->peer_info_destroy == NULL))
         return PST_RESULT_INVALID_ARGUMENT;
+    if ((d->capabilities & (PST_BACKEND_CAP_CLIENT_AUTH |
+                            PST_BACKEND_CAP_CUSTOM_TRUST |
+                            PST_BACKEND_CAP_HOSTNAME_VERIFY)) != 0UL &&
+        (v->struct_size < (pst_u32)sizeof(PST_BACKEND_VTABLE) ||
+         v->connection_configure_identity == NULL))
+        return PST_RESULT_INVALID_ARGUMENT;
     return PST_RESULT_OK;
 }
 PST_RESULT pst_backend_register(const PST_BACKEND_DESCRIPTOR *d)
