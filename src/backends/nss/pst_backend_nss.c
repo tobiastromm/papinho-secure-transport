@@ -138,6 +138,13 @@ typedef struct pst_nss_connection_state {
     pst_u8 *alpn; pst_size alpn_size;
 } pst_nss_connection_state;
 static int pst_nss_active;
+static DWORD pst_nss_trace_epoch;
+static int pst_nss_trace_epoch_set;
+void pst_backend_nss_trace_set_epoch(pst_u32 epoch)
+{
+    pst_nss_trace_epoch = (DWORD)epoch;
+    pst_nss_trace_epoch_set = 1;
+}
 static void pst_nss_trace(const char *event, const char *detail)
 {
     char path[1024];
@@ -147,8 +154,13 @@ static void pst_nss_trace(const char *event, const char *detail)
     if (length == 0 || length >= sizeof(path)) return;
     file = fopen(path, "a");
     if (file == NULL) return;
-    fprintf(file, "%s%s%s\n", event, detail == NULL ? "" : " ",
-            detail == NULL ? "" : detail);
+    if (!pst_nss_trace_epoch_set) {
+        pst_nss_trace_epoch = GetTickCount();
+        pst_nss_trace_epoch_set = 1;
+    }
+    fprintf(file, "T_MS=%010lu %s%s%s\n",
+            (unsigned long)(GetTickCount() - pst_nss_trace_epoch), event,
+            detail == NULL ? "" : " ", detail == NULL ? "" : detail);
     fclose(file);
 }
 static void pst_nss_trace_module(const char *name, HMODULE module)
@@ -548,24 +560,42 @@ static PST_RESULT pst_nss_handshake(void *state, pst_u32 *operation, PST_RESULT 
 {
     pst_nss_connection_state *c = (pst_nss_connection_state *)state;
     pst_nss_backend_state *s;
+    SECStatus handshake_status;
+    DWORD handshake_start, handshake_end;
+    char detail[192];
     if (c == NULL || c->ssl_fd == NULL || operation == NULL || error == NULL)
         return PST_RESULT_INVALID_ARGUMENT;
     s = c->runtime->backend;
-    if (s->ssl_force_handshake(c->ssl_fd) == SECSuccess) {
-        if(c->alpn_requirement==PST_FEATURE_REQUIRED){unsigned char value[256];unsigned int n=0;SSLNextProtoState st;char detail[64];SECStatus ar=s->ssl_get_alpn(c->ssl_fd,&st,value,&n,sizeof(value));sprintf(detail,"status=%d state=%d length=%u",(int)ar,(int)st,n);pst_nss_trace("ALPN",detail);if(ar!=SECSuccess||(st!=SSL_NEXT_PROTO_NEGOTIATED&&st!=SSL_NEXT_PROTO_SELECTED)){c->interest=PST_BACKEND_INTEREST_NONE;*operation=PST_BACKEND_OPERATION_FAILED;*error=PST_RESULT_POLICY_VIOLATION;return PST_RESULT_OK;}}
+    sprintf(detail, "BEGIN state=%s interest=0x%08lx",
+            c->handshake_complete ? "established" : "handshaking",
+            (unsigned long)c->interest);
+    pst_nss_trace("SSL_ForceHandshake", detail);
+    handshake_start = GetTickCount();
+    handshake_status = s->ssl_force_handshake(c->ssl_fd);
+    handshake_end = GetTickCount();
+    if (handshake_status != SECSuccess)
+        pst_nss_capture_error(s, &c->last_error);
+    sprintf(detail, "END status=%d error=%ld would_block=%d duration_ms=%lu",
+            (int)handshake_status,
+            handshake_status == SECSuccess ? 0L : (long)c->last_error,
+            handshake_status != SECSuccess &&
+                pst_backend_nss_is_would_block(c->last_error),
+            (unsigned long)(handshake_end - handshake_start));
+    pst_nss_trace("SSL_ForceHandshake", detail);
+    if (handshake_status == SECSuccess) {
+        if(c->alpn_requirement==PST_FEATURE_REQUIRED){unsigned char value[256];unsigned int n=0;SSLNextProtoState st;char alpn_detail[64];SECStatus ar=s->ssl_get_alpn(c->ssl_fd,&st,value,&n,sizeof(value));sprintf(alpn_detail,"status=%d state=%d length=%u",(int)ar,(int)st,n);pst_nss_trace("ALPN",alpn_detail);if(ar!=SECSuccess||(st!=SSL_NEXT_PROTO_NEGOTIATED&&st!=SSL_NEXT_PROTO_SELECTED)){c->interest=PST_BACKEND_INTEREST_NONE;*operation=PST_BACKEND_OPERATION_FAILED;*error=PST_RESULT_POLICY_VIOLATION;return PST_RESULT_OK;}}
         c->interest = PST_BACKEND_INTEREST_NONE;
         *operation = PST_BACKEND_OPERATION_COMPLETE; *error = PST_RESULT_OK;
         c->handshake_complete = 1;
-        pst_nss_trace("SSL_ForceHandshake", "complete");
+        pst_nss_trace("SSL_ForceHandshake_class", "COMPLETE");
         pst_nss_trace_module("module_softokn3", GetModuleHandleA("softokn3.dll"));
         pst_nss_trace_module("module_freebl3", GetModuleHandleA("freebl3.dll"));
         return PST_RESULT_OK;
     }
-    pst_nss_capture_error(s, &c->last_error);
     if (pst_backend_nss_is_would_block(c->last_error)) {
         c->interest = PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE;
         *operation = PST_BACKEND_OPERATION_NEED_READ_WRITE; *error = PST_RESULT_OK;
-        pst_nss_trace("SSL_ForceHandshake", "PR_WOULD_BLOCK_ERROR");
+        pst_nss_trace("SSL_ForceHandshake_class", "PR_WOULD_BLOCK_ERROR");
         pst_nss_trace_module("module_softokn3", GetModuleHandleA("softokn3.dll"));
         pst_nss_trace_module("module_freebl3", GetModuleHandleA("freebl3.dll"));
         return PST_RESULT_OK;
@@ -599,7 +629,7 @@ static PST_RESULT pst_nss_wait(void *state, pst_u32 interest, pst_u32 timeout_ms
     if ((interest & PST_BACKEND_INTEREST_READ) != 0UL) poll_desc.in_flags |= PR_POLL_READ;
     if ((interest & PST_BACKEND_INTEREST_WRITE) != 0UL) poll_desc.in_flags |= PR_POLL_WRITE;
     pending = s->ssl_data_pending == NULL ? -1 : s->ssl_data_pending(c->ssl_fd);
-    sprintf(detail, "call state=%s interest=0x%08lx in=0x%04x timeout_ms=%lu pending=%d",
+    sprintf(detail, "BEGIN state=%s interest=0x%08lx in=0x%04x timeout_ms=%lu pending=%d",
             c->handshake_complete ? "established" : "handshaking",
             (unsigned long)interest, (unsigned int)poll_desc.in_flags,
             (unsigned long)timeout_ms, pending);
@@ -609,7 +639,7 @@ static PST_RESULT pst_nss_wait(void *state, pst_u32 interest, pst_u32 timeout_ms
     poll_end = GetTickCount();
     if (count < 0) pst_nss_capture_error(s, &c->last_error);
     pending = s->ssl_data_pending == NULL ? -1 : s->ssl_data_pending(c->ssl_fd);
-    sprintf(detail, "result=%ld duration_ms=%lu out=0x%04x read=%d write=%d err=%d hup=%d nval=%d pending=%d error=%ld",
+    sprintf(detail, "END result=%ld duration_ms=%lu out=0x%04x read=%d write=%d err=%d hup=%d nval=%d pending=%d error=%ld",
             (long)count, (unsigned long)(poll_end - poll_start),
             (unsigned int)poll_desc.out_flags,
             (poll_desc.out_flags & PR_POLL_READ) != 0,
@@ -651,6 +681,7 @@ static PST_RESULT pst_nss_read(void *state, void *buffer, pst_size capacity,
     pst_nss_connection_state *c = (pst_nss_connection_state *)state;
     pst_nss_backend_state *s;
     PRInt32 amount, requested;
+    DWORD read_start, read_end;
     int pending;
     char detail[256];
     if (c == NULL || c->ssl_fd == NULL || buffer == NULL || result == NULL)
@@ -658,15 +689,18 @@ static PST_RESULT pst_nss_read(void *state, void *buffer, pst_size capacity,
     pst_nss_io_reset(result); s = c->runtime->backend;
     requested = capacity > (pst_size)INT_MAX ? INT_MAX : (PRInt32)capacity;
     pending = s->ssl_data_pending == NULL ? -1 : s->ssl_data_pending(c->ssl_fd);
-    sprintf(detail, "call requested=%ld interest=0x%08lx pending=%d",
+    sprintf(detail, "BEGIN requested=%ld interest=0x%08lx pending=%d",
             (long)requested, (unsigned long)c->interest, pending);
     pst_nss_trace("PR_Read", detail);
+    read_start = GetTickCount();
     amount = s->pr_read(c->ssl_fd, buffer, requested);
+    read_end = GetTickCount();
     if (amount < 0) pst_nss_capture_error(s, &c->last_error);
     pending = s->ssl_data_pending == NULL ? -1 : s->ssl_data_pending(c->ssl_fd);
-    sprintf(detail, "ret=%ld error=%ld would_block=%d pending=%d",
+    sprintf(detail, "END ret=%ld error=%ld would_block=%d pending=%d duration_ms=%lu",
             (long)amount, amount < 0 ? (long)c->last_error : 0L,
-            amount < 0 && pst_backend_nss_is_would_block(c->last_error), pending);
+            amount < 0 && pst_backend_nss_is_would_block(c->last_error), pending,
+            (unsigned long)(read_end - read_start));
     pst_nss_trace("PR_Read", detail);
     if (amount > 0) {
         result->bytes_transferred = (pst_size)amount;
@@ -698,22 +732,34 @@ static PST_RESULT pst_nss_write(void *state, const void *buffer, pst_size length
 {
     pst_nss_connection_state *c = (pst_nss_connection_state *)state;
     pst_nss_backend_state *s;
-    PRInt32 amount;
+    PRInt32 amount, requested;
+    DWORD write_start, write_end;
+    char detail[192];
     if (c == NULL || c->ssl_fd == NULL || buffer == NULL || result == NULL)
         return PST_RESULT_INVALID_ARGUMENT;
     pst_nss_io_reset(result); s = c->runtime->backend;
-    amount = s->pr_write(c->ssl_fd, buffer,
-                         length > (pst_size)INT_MAX ? INT_MAX : (PRInt32)length);
+    requested = length > (pst_size)INT_MAX ? INT_MAX : (PRInt32)length;
+    sprintf(detail, "BEGIN requested=%ld interest=0x%08lx",
+            (long)requested, (unsigned long)c->interest);
+    pst_nss_trace("PR_Write", detail);
+    write_start = GetTickCount();
+    amount = s->pr_write(c->ssl_fd, buffer, requested);
+    write_end = GetTickCount();
+    if (amount < 0) pst_nss_capture_error(s, &c->last_error);
+    sprintf(detail, "END ret=%ld error=%ld would_block=%d duration_ms=%lu",
+            (long)amount, amount < 0 ? (long)c->last_error : 0L,
+            amount < 0 && pst_backend_nss_is_would_block(c->last_error),
+            (unsigned long)(write_end - write_start));
+    pst_nss_trace("PR_Write", detail);
     if (amount >= 0) {
         result->bytes_transferred = (pst_size)amount;
         result->operation = amount == 0 && length != 0 ?
             PST_BACKEND_OPERATION_NEED_READ_WRITE : PST_BACKEND_OPERATION_COMPLETE;
         c->interest = amount == 0 && length != 0 ?
             PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE : PST_BACKEND_INTEREST_NONE;
-        pst_nss_trace("PR_Write", amount > 0 ? "progress" : "zero");
+        pst_nss_trace("PR_Write_class", amount > 0 ? "progress" : "zero");
         return PST_RESULT_OK;
     }
-    pst_nss_capture_error(s, &c->last_error);
     if (pst_backend_nss_is_would_block(c->last_error)) {
         result->operation = PST_BACKEND_OPERATION_NEED_READ_WRITE;
         c->interest = PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE;
