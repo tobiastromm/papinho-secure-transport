@@ -2,6 +2,7 @@
 
 - Phase 0 - Scope, Provenance & Architecture: in progress
   - 0.A Legacy NSS Asset Ingestion & Provenance: complete
+  - 0.A-R1 RNG fail-closed A/B revalidation addendum: complete
   - 0.B Scope & Architectural Boundaries: pending
   - 0.C Runtime/API Design: pending
 - Phase 1 - Portable Foundation: pending
