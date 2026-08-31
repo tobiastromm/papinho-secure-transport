@@ -50,6 +50,10 @@ Source audit shows that application-data PR_Read would-block is conservatively m
 
 Phase 6.B-R2 adds GetTickCount-based diagnostic timing, available on NT4: elapsed milliseconds for every read step, duration for every PR_Poll, and total read-loop elapsed time. Windows 10 reached READ=25 in one read step and 0 measured milliseconds in the captured run. No readiness behavior has been changed; the updated NT4 package is intended to measure whether its 200 WRITE-only polls consume the budget immediately.
 
+Phase 6.B-R2A then supplied a shared process-relative monotonic timeline. The returned NT4 evidence proved that approximately 200 PR_Read would-block / immediate WRITE-only PR_Poll cycles consumed only tens of milliseconds. The root cause is therefore confirmed: conservative NEED_READ_WRITE plus level-triggered WRITE readiness repeatedly reported readiness without useful progress for the pending application read.
+
+Phase 6.B-R3 adds an internal backend-neutral progress guard. After an auxiliary-only readiness event, a retry with zero transferred bytes, unchanged operation and unchanged interest suppresses that auxiliary bit for the following wait. The primary operation interest remains enabled. A timeout re-enables the auxiliary bit, and any byte progress, completion, interest change, handshake, or shutdown resets the guard. This preserves legitimate reads that require WRITE and keeps PR_Poll on the SSL descriptor. Windows 10 VC6 /W4 validation passed deterministic WRITE-only/no-progress, WRITE-required/progress, and READ|WRITE/progress cases, plus TLS 1.2 and TLS 1.3 mTLS/ALPN echoes with WRITE=25 READ=25 CONTENT_MATCH=1. This does not claim that NT4 is fixed until the updated package is executed there.
+
 ## Remaining mandatory NT4 matrix
 
 The following are now proved on NT4: foundation, SPI, NSS lifecycle, identity, public runtime execution, TLS 1.3 handshake, mTLS, and ALPN. Still unproved or incomplete are server-authentication-only mode, TLS 1.2, secure bidirectional and partial I/O, nonblocking trace details including `PR_WOULD_BLOCK_ERROR` and SSL-descriptor `PR_Poll`, peer snapshot lifetime, graceful shutdown, negative hostname/CA/downgrade/client-credential cases, and repeated lifecycle.
@@ -58,6 +62,6 @@ The Windows 10 Phase 5 evidence cannot replace any entry in this matrix. Module 
 
 ## Required next execution
 
-Copy the Phase 6.B-R2 timing diagnostic package to Windows NT 4.0 SP6 and run run_tls13_diag.bat HOST PORT HOSTNAME. Preserve tls13diag-client.log, tls13diag-backend.log, server output, executable error level, and module paths. This run is intended to determine whether NT4 observes READ with HUP, pending plaintext, a PR_Read error, or another sequence; it does not yet contain a behavioral fix. Execute the remaining matrix before marking Phase 6 complete.
+Copy the Phase 6.B-R3 progress-fix package to Windows NT 4.0 SP6 and run `run_tls13_diag.bat HOST PORT HOSTNAME`. Preserve `tls13diag-client.log`, `tls13diag-backend.log`, server output, executable error level, and module paths. Require `TLS=0x0304 WRITE=25 READ=25 CONTENT_MATCH=1 ALPN=9 AUTH=2`; only after that real result should TLS 1.2 be run with the same bidirectional requirement. Execute the remaining matrix before marking Phase 6 complete.
 
-No PST core, public API, SPI, NSS backend, or TLS behavior was changed. The reproduced incompatibility was confined to package BAT control flow. Phase 7 has not started.
+Phase 6.B-R3 changes only the internal, backend-neutral wait/progress orchestration in the PST core. The public API, SPI version and layout, NSS backend readiness mapping, TLS policy, trust, credentials, RNG, and HUP handling remain unchanged. Phase 7 has not started.
