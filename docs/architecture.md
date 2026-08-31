@@ -117,3 +117,5 @@ Phase 0.B records portability as a constraint. It does not implement a PAL, sock
 - Threading/concurrency contract and exact lifetime state model.
 
 No item in this document should be read as pre-approving a concrete API design.
+
+Phase 0.C resolves these design questions provisionally in [runtime-api-design.md](runtime-api-design.md). That specification remains documentation, not a released public header or implementation.

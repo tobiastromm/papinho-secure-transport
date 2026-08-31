@@ -1,10 +1,10 @@
 # Roadmap
 
-- Phase 0 - Scope, Provenance & Architecture: in progress
+- Phase 0 - Scope, Provenance & Architecture: complete
   - 0.A Legacy NSS Asset Ingestion & Provenance: complete
   - 0.A-R1 RNG fail-closed A/B revalidation addendum: complete
   - 0.B Scope & Architectural Boundaries: complete
-  - 0.C Runtime/API Design: pending
+  - 0.C Runtime/API Design: complete
 - Phase 1 - Portable Foundation: pending
 - Phase 2 - Backend Interface / SPI: pending
 - Phase 3 - NSS Backend: pending
