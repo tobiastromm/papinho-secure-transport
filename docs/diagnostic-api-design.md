@@ -1,6 +1,6 @@
 # Controlled diagnostic exposure design
 
-Status: Phase 7.A5 public diagnostic ABI foundation implemented. The limited subset approved in 7.A4 is now public; SPI, TLS, readiness, logging, and wire behavior are unchanged.
+Status: Phase 7.A5 public diagnostic ABI foundation implemented and hardened by 7.A6. Phase 7.A7 separately designs optional consumer-controlled logging; SPI, TLS, readiness, diagnostic ABI, and wire behavior are unchanged.
 
 ## Decision
 
@@ -186,3 +186,7 @@ Generation wraps modulo 2^32, is local to one source/context, and cannot order d
 WOULD_BLOCK/NEED states and normal wait timeout remain progress, not failure diagnostics. Clean CLOSED remains distinct from TRUNCATED; a retained truncation diagnostic, when present, carries normalized `TRUNCATED` without native detail. Native domains/codes, flags, detailed phases, paths, hostnames, peer text, credentials, trust, keys, tokens, payload and arbitrary messages remain structurally absent. Diagnostics do not affect TLS alerts or wire bytes.
 
 Application policy remains: normalized result for portable decisions; operation/backend ID for local support context; `pst_result_string` for generic stable English text; localization, UI wording and logging policy belong to the application. No logger, callback, sink, severity, automatic file, or backend-version API is introduced.
+
+## Relationship to the 7.A7 event design
+
+The future event sink is documented in [logging-design.md](logging-design.md). It consumes an inline redacted diagnostic value or equivalent projection captured at emission time; it never becomes the source of diagnostic truth and never requires callback reentry to query the emitting object. Logging OFF and a null sink leave all diagnostic query and constructor-output behavior intact. `PST_DIAGNOSTIC_INFO` remains 56 bytes and its fields, operation numbers, generation, version compatibility, and redaction contract are unchanged.

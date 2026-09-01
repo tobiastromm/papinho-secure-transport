@@ -1,6 +1,6 @@
 # Error and diagnostic model hardening
 
-Status: Phase 7.A in progress. Phase 7.A5 exposes the first structurally redacted public diagnostic value ABI; TLS behavior and remote-visible behavior are unchanged, and the internal SPI remains 2.3.
+Status: Phase 7.A in progress. Phase 7.A5 exposes the first structurally redacted public diagnostic value ABI; Phase 7.A7 defines, but does not implement, a consumer-controlled event sink. TLS behavior and remote-visible behavior are unchanged, and the internal SPI remains 2.3.
 
 ## Policy
 
@@ -125,3 +125,7 @@ VC6 `/W4` ABI tests freeze the 56-byte layout and offsets, constants, version co
 Deterministic VC6 tests now cover malformed sizes/versions, future tails across all four public producers, null semantics, constructor transactional behavior, unknown-selector non-reflection, backend-ID boundaries, generation wrap/locality, copied snapshot immutability, success clearing, runtime/connection isolation, normalized-result association, and redaction with adjacent fake path/token/payload fixtures. A standalone `/W4` C89 consumer includes only `papinho_secure_transport.h`.
 
 The review found no public ABI flaw. One internal association bug was corrected: `pst_connection_create_ex` with a null connection-output pointer now reports coarse operation `CONNECTION`, not `RUNTIME`. API remains 1.1.0, library 0.2.0, and SPI 2.3. No native details, logging surface, backend version, TLS/readiness behavior, or remote disclosure were added.
+
+## 7.A7 logging/event sink design
+
+The future logging boundary is specified in [logging-design.md](logging-design.md). Diagnostics remain independent structured state and logging remains optional presentation. The selected direction is a limited public structured sink with richer internal TRACE detail until its taxonomy is stable. Delivery is synchronous, runtime-scoped, consumer-owned, non-authoritative, allocation-free for basic events, and absolutely redacted. No logger API, event ABI, callback, console/file output, worker, native error exposure, version bump, or functional behavior was added in 7.A7.
