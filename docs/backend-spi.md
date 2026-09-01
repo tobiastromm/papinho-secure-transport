@@ -85,3 +85,7 @@ Phase 3 may implement the first real backend behind this contract. Later phases 
 ## SPI 2.3 internal diagnostic copy hook
 
 Phase 7.A2 appends the optional, backend-neutral `diagnostic_copy` hook to the internal vtable. The change is necessary because backend runtime and connection states are deliberately opaque: without an operation-local return expansion or a hook, the core cannot obtain the structured snapshot without a global/thread-local side channel or backend type knowledge. The hook copies a value-like `pst_internal_diagnostic`; it exposes no NSS/NSPR objects and does not move mapping logic into the core. Older same-major vtables remain usable because the core checks `struct_size` before reading the appended field. The mock and NSS descriptors use SPI 2.3; public API and ABI are unaffected.
+
+### Failed initialize cleanup state
+
+Phase 7.A3 clarifies, without changing the SPI 2.3 layout or version, that `initialize` may return a non-null opaque state together with failure solely for diagnostic copy and immediate `shutdown`. Such state is not a usable initialized backend and never escapes the transactional runtime creation operation. The core first invokes the optional 2.3 `diagnostic_copy` hook, then invokes `shutdown` exactly once. Backends that return null on failure remain valid and receive a core normalized diagnostic without invented native detail.

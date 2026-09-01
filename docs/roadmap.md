@@ -43,5 +43,6 @@
   - 7.A Error & Diagnostic Model Hardening: in progress
     - 7.A1 internal diagnostic snapshot: complete
     - 7.A2 internal diagnostic transport, copy and redaction: complete
+    - 7.A3 pre-runtime diagnostic retention and internal operation context: complete
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending

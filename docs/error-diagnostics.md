@@ -80,3 +80,28 @@ Runtime and connection core objects now embed separate diagnostic values. NSS ba
 Redaction is structural: the snapshot contains only normalized result, numeric phase/domain/codes/flags/generation/validity and the validated copied backend ID. It has no fields for hostname, paths, DLL paths, certificates, keys, passwords, tokens, payload, peer-controlled text, environment values, or native error strings. Future optional logging/event code may receive a safe copy, never a transient backend pointer. Diagnostic remains distinct from logging, public control flow remains `PST_RESULT`, and remote disclosure/wire behavior are unchanged.
 
 Deterministic tests cover valid/invalid/self-copy, generation preservation and reset, replacement, independent contexts, source-destruction lifetime, backend ID/domain/code preservation, core `NONE/0`, distinct NSS native causes, successful clearing, would-block, timeout, phase association, runtime/connection separation, and the redacted fixed schema.
+
+## 7.A3 pre-runtime diagnostic retention
+
+Constructor failures can precede the lifetime of the object that would normally own their diagnostic. The internal solution is an explicit stack/value-like `pst_internal_operation_context`, passed to internal transactional creation functions. Public constructors remain unchanged wrappers and discard their private context for now. There is no process-global, static, singleton, thread-local, `errno`-like, or `pst_get_last_error` state.
+
+### Constructor/failure-path matrix
+
+| Constructor/path | Class | Current diagnostic finding |
+|---|---|---|
+| runtime option validation / exact ID not found | A/B | Core-only structured failure; no native error exists and no runtime survives. The operation context retains phase `BACKEND_SELECT` or `RUNTIME_CREATE`, domain `NONE`, code zero. |
+| backend selection, initialize, capability query and backend runtime creation | B | A runtime may not survive. The operation context retains the candidate diagnostic before immediate cleanup. |
+| config creation | A | Validation/allocation only; no backend/native diagnostic exists and no object survives OOM. The explicit context pattern can be reused later without a second mechanism. |
+| credentials/trust creation | A | Memory copy, validation and OOM paths only. They deliberately retain no DER/key/path/text diagnostic; public API is unchanged. |
+| config identity/TLS setters and freeze | C | The config survives failure. Failures are normalized policy/validation/OOM results; no backend native error is produced. |
+| connection creation/configuration | B | Backend connection creation or identity configuration can fail before a public connection survives. The same operation-context pattern now retains runtime/connection backend detail before cleanup. |
+| peer-info creation | B/C | The live connection survives, but the newly requested peer-info object may not. Its backend operation can use the connection diagnostic transport in a future focused integration; no separate mechanism is required. |
+| Win32 transport wrapper creation | A/D | Only argument/allocation failure occurs before the wrapper exists; it performs no socket syscall/import. Native `SOCKET` ownership remains unchanged. Native import occurs later during connection attach, where the connection survives and already owns a diagnostic. |
+
+Creation is transactional: no failed public object escapes. A backend `initialize` failure may return an opaque cleanup-only state; the core copies its diagnostic through SPI 2.3 and immediately calls `shutdown`. The state never escapes, and the copied snapshot remains valid after cleanup. A backend that returns no failure state still receives a normalized domain-`NONE` fallback diagnostic.
+
+Each internal creation call initializes its explicit context at generation zero. Every candidate failure is captured into that context and increments its local generation. Copy preserves generation. Explicit reset increments generation and invalidates detail. Generation orders replacements only within the originating context; it is not globally unique.
+
+Selection precedence is deliberately simple. Exact selection retains its one failure. Ordered and automatic selection replace the active diagnostic for each declared/registry-order candidate, so if all candidates fail the final attempted candidate is retained. OOM in core allocation returns immediately and takes precedence. If a later candidate succeeds, the context is cleared and the returned runtime has no stale failure; rejected candidates may only become future optional trace/events, never the active runtime diagnostic.
+
+The operation context contains only the existing redacted snapshot. It allocates nothing, retains no backend/runtime pointer and stores no path, environment content, native text, credentials, trust data, hostname, certificate, payload or peer-controlled text. Diagnostic remains distinct from logging, and public/wire behavior is unchanged.

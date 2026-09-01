@@ -24,6 +24,8 @@
 #define PST_DIAGNOSTIC_PHASE_SHUTDOWN 13UL
 #define PST_DIAGNOSTIC_PHASE_PEER_INFO 14UL
 #define PST_DIAGNOSTIC_PHASE_IDENTITY_SETUP 15UL
+#define PST_DIAGNOSTIC_PHASE_BACKEND_SELECT 16UL
+#define PST_DIAGNOSTIC_PHASE_CONNECTION_CREATE 17UL
 #define PST_DIAGNOSTIC_FLAG_NATIVE 0x00000001UL
 #define PST_DIAGNOSTIC_FLAG_SECONDARY 0x00000002UL
 typedef struct pst_internal_diagnostic { PST_RESULT result; pst_u32 phase; pst_u32 native_domain; pst_i32 native_code; pst_i32 secondary_native_code; pst_u32 flags; pst_u32 generation; pst_u32 valid; char backend_id[PST_DIAGNOSTIC_BACKEND_ID_CAPACITY]; } pst_internal_diagnostic;

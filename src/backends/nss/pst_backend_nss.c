@@ -371,12 +371,12 @@ static PST_RESULT pst_nss_install_test_ca(pst_nss_backend_state *s,
             PST_DIAGNOSTIC_PHASE_BACKEND_INITIALIZE, "retrozilla-nss",
             PST_DIAGNOSTIC_DOMAIN_WIN32, s->last_error, 0,
             PST_DIAGNOSTIC_FLAG_NATIVE);
-        pst_nss_unload(s); free(s); return PST_RESULT_UNAVAILABLE;
+        pst_nss_unload(s); *out_state=s; return PST_RESULT_UNAVAILABLE;
     }
     s->pr_init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
     length = GetEnvironmentVariableA("PST_NSS_DB_DIR", db_dir, sizeof(db_dir));
     if (length >= sizeof(db_dir)) {
-        s->pr_cleanup(); pst_nss_unload(s); free(s);
+        s->pr_cleanup(); pst_nss_unload(s); *out_state=s;
         return PST_RESULT_INVALID_ARGUMENT;
     }
     if (length == 0) status = s->nss_nodb_init(NULL);
@@ -387,18 +387,18 @@ static PST_RESULT pst_nss_install_test_ca(pst_nss_backend_state *s,
             PST_DIAGNOSTIC_PHASE_BACKEND_INITIALIZE, "retrozilla-nss",
             pst_nss_error_domain(s->last_error), s->last_error, 0,
             PST_DIAGNOSTIC_FLAG_NATIVE);
-        s->pr_cleanup(); pst_nss_unload(s); free(s);
+        s->pr_cleanup(); pst_nss_unload(s); *out_state=s;
         return PST_RESULT_BACKEND_FAILURE;
     }
     length = GetEnvironmentVariableA("PST_NSS_TEST_CA_DER", ca_path, sizeof(ca_path));
     if (length >= sizeof(ca_path)) {
-        s->nss_shutdown(); s->pr_cleanup(); pst_nss_unload(s); free(s);
+        s->nss_shutdown(); s->pr_cleanup(); pst_nss_unload(s); *out_state=s;
         return PST_RESULT_INVALID_ARGUMENT;
     }
     if (length != 0) {
         result = pst_nss_install_test_ca(s, ca_path);
         if (result != PST_RESULT_OK) {
-            s->nss_shutdown(); s->pr_cleanup(); pst_nss_unload(s); free(s);
+            s->nss_shutdown(); s->pr_cleanup(); pst_nss_unload(s); *out_state=s;
             return result;
         }
     }
