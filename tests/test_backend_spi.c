@@ -368,8 +368,16 @@ int main(void)
         diagnostic.phase == PST_DIAGNOSTIC_PHASE_WAIT, 124);
     CHECK(pst_connection_get_interest(public_connection, &interest) ==
         PST_RESULT_INVALID_STATE, 122);
+    CHECK(pst_connection_handshake(public_connection, &operation, &error) ==
+        PST_RESULT_INVALID_STATE, 125);
     CHECK(pst_connection_read(public_connection, buffer, sizeof(buffer),
         &public_io) == PST_RESULT_INVALID_STATE, 123);
+    CHECK(pst_connection_write(public_connection, buffer, sizeof(buffer),
+        &public_io) == PST_RESULT_INVALID_STATE, 126);
+    CHECK(pst_connection_wait(public_connection, 0, &public_wait) ==
+        PST_RESULT_INVALID_STATE, 127);
+    CHECK(pst_connection_shutdown(public_connection, &operation, &error) ==
+        PST_RESULT_INVALID_STATE, 128);
     pst_connection_release(public_connection);
 
     CHECK(pst_connection_create(public_runtime, public_config, &public_connection) == PST_RESULT_OK, 89);

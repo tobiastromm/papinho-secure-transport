@@ -52,7 +52,7 @@
     - 7.A closure audit: complete
   - 7.B Connection Failure Matrix: in progress
     - audit and readiness/wait defect correction: host complete
-    - deterministic close/reset/write/shutdown fixtures: pending
-    - targeted NT4 HUP/read regression: pending
+    - deterministic functional fixtures: host executed; abrupt close classification blocker found
+    - targeted NT4 HUP/read package: ready, real execution pending
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending

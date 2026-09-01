@@ -63,3 +63,19 @@ run_lifecycle.bat HOST 8443 localhost
 ```
 
 The Windows 10 validation passed all three cycles with `WRITE=25 READ=25 CONTENT_MATCH=1 SHUTDOWN_COMPLETE=1 SNAPSHOT_AFTER_DESTROY=1`. The same gate subsequently passed on real NT4 for all three cycles. Phase 6 is complete; the package remains reproducible validation evidence.
+
+## Phase 7.B targeted failure package
+
+The ignored client package now includes test_connection_failures.exe and the NT4-compatible run_failure_regression.bat. This is package preparation, not NT4 evidence.
+
+Modern server, once per mode:
+
+    python tests\connection_failure_server.py 0.0.0.0 PORT MODE build\nt4-validation\server-fixture\server.pem build\nt4-validation\server-fixture\server.key build\nt4-validation\server-fixture\ca.pem 13 fixture/1 required
+
+From the copied NT4 package directory:
+
+    run_failure_regression.bat HOST PORT localhost data_then_close
+    run_failure_regression.bat HOST PORT localhost clean_close
+    run_failure_regression.bat HOST PORT localhost abrupt_close
+
+Also rerun run_tls13.bat against the normal TLS 1.3 echo fixture. Return complete client and server output. The first two modes passed on the modern host. Abrupt deliberately remains failing because the preserved NSS returns zero from PR_Read for FIN without close_notify and the backend reports clean CLOSED instead of TRUNCATED. Do not report abrupt NT4 PASS unless output actually shows the required distinction.

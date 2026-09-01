@@ -38,12 +38,26 @@ int main(void)
     CHECK(descriptor->vtable->connection_configure_identity != NULL, 31);
     CHECK(pst_backend_nss_is_would_block(PR_WOULD_BLOCK_ERROR), 7);
     CHECK(!pst_backend_nss_is_would_block(PR_CONNECT_RESET_ERROR), 8);
+    CHECK(pst_backend_nss_classify_poll_flags(1, 0, 0, 0, 0,
+        &ready_interest) == PST_RESULT_OK, 48);
+    CHECK(ready_interest == PST_BACKEND_INTEREST_READ, 49);
+    CHECK(pst_backend_nss_classify_poll_flags(0, 1, 0, 0, 0,
+        &ready_interest) == PST_RESULT_OK, 50);
+    CHECK(ready_interest == PST_BACKEND_INTEREST_WRITE, 51);
+    CHECK(pst_backend_nss_classify_poll_flags(1, 1, 0, 0, 0,
+        &ready_interest) == PST_RESULT_OK, 52);
+    CHECK(ready_interest == (PST_BACKEND_INTEREST_READ |
+        PST_BACKEND_INTEREST_WRITE), 53);
     CHECK(pst_backend_nss_classify_poll_flags(1, 0, 0, 1, 0,
         &ready_interest) == PST_RESULT_OK, 41);
     CHECK(ready_interest == PST_BACKEND_INTEREST_READ, 42);
     CHECK(pst_backend_nss_classify_poll_flags(0, 0, 0, 1, 0,
         &ready_interest) == PST_RESULT_OK, 43);
     CHECK(ready_interest == PST_BACKEND_INTEREST_READ, 44);
+    CHECK(pst_backend_nss_classify_poll_flags(0, 1, 0, 1, 0,
+        &ready_interest) == PST_RESULT_OK, 54);
+    CHECK(ready_interest == (PST_BACKEND_INTEREST_READ |
+        PST_BACKEND_INTEREST_WRITE), 55);
     CHECK(pst_backend_nss_classify_poll_flags(1, 1, 1, 0, 0,
         &ready_interest) == PST_RESULT_TRANSPORT_FAILURE, 45);
     CHECK(pst_backend_nss_classify_poll_flags(0, 0, 0, 0, 1,
