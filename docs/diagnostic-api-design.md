@@ -190,3 +190,6 @@ Application policy remains: normalized result for portable decisions; operation/
 ## Relationship to the 7.A7 event design
 
 The future event sink is documented in [logging-design.md](logging-design.md). It consumes an inline redacted diagnostic value or equivalent projection captured at emission time; it never becomes the source of diagnostic truth and never requires callback reentry to query the emitting object. Logging OFF and a null sink leave all diagnostic query and constructor-output behavior intact. `PST_DIAGNOSTIC_INFO` remains 56 bytes and its fields, operation numbers, generation, version compatibility, and redaction contract are unchanged.
+## 7.A8 diagnostic/event integration
+
+PST_LOG_EVENT carries selected redacted value fields at emission time: normalized result, public operation and copied backend ID. It does not embed or alter PST_DIAGNOSTIC_INFO, and contains no native domain/code, diagnostic flags, generation, hostname, peer text or payload. This avoids stale callback queries while keeping diagnostics authoritative and independently queryable with logging OFF. The logging addition moves the current API/library versions to 1.2.0/0.3.0; the diagnostic layout and SPI 2.3 remain unchanged.

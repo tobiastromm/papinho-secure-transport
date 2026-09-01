@@ -1,10 +1,10 @@
 # PapinhoSecureTransport
 
-Phase 6 legacy-platform validation is complete and Phase 7 interoperability/hardening is in progress. Phase 7.A5 adds the first limited public diagnostic snapshot ABI while retaining normalized `PST_RESULT` control flow. See [docs/tls-runtime.md](docs/tls-runtime.md), [docs/error-diagnostics.md](docs/error-diagnostics.md), and [docs/diagnostic-api-design.md](docs/diagnostic-api-design.md).
+Phase 6 legacy-platform validation is complete and Phase 7 interoperability/hardening is in progress. Phase 7.A8 adds an optional consumer-controlled structured logging sink while retaining normalized PST_RESULT and diagnostic snapshots as authoritative state. See [docs/logging-design.md](docs/logging-design.md), [docs/error-diagnostics.md](docs/error-diagnostics.md), and [docs/diagnostic-api-design.md](docs/diagnostic-api-design.md).
 
 PapinhoSecureTransport is an independent secure-transport abstraction project. Its direction is portable C, initially focused on TLS through mature cryptographic/TLS backends. It will not implement cryptography, certificate validation, or a TLS state machine of its own.
 
-The public API remains C89/VC6-compatible and backend-neutral. API 1.1.0/library 0.2.0 provide size/version-tagged `PST_DIAGNOSTIC_INFO`, typed runtime/connection snapshot copies, and optional-output extended constructors. The public snapshot deliberately excludes native error codes, private phases, pointers, secrets, peer data, payload, paths, and arbitrary text.
+The public API remains C89/VC6-compatible and backend-neutral. API 1.2.0/library 0.3.0 retain the diagnostic ABI and add Papinho Logging Levels v1 plus an immutable runtime-level structured sink. PST supplies no console/file logger, worker, queue, arbitrary message, payload, peer text, native error code, secret, path, endpoint, or backend pointer through this interface.
 
 Project licensing is pending a decision. Third-party files retain their own licenses under `third_party/`.
 

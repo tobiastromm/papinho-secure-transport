@@ -129,3 +129,6 @@ The review found no public ABI flaw. One internal association bug was corrected:
 ## 7.A7 logging/event sink design
 
 The future logging boundary is specified in [logging-design.md](logging-design.md). Diagnostics remain independent structured state and logging remains optional presentation. The selected direction is a limited public structured sink with richer internal TRACE detail until its taxonomy is stable. Delivery is synchronous, runtime-scoped, consumer-owned, non-authoritative, allocation-free for basic events, and absolutely redacted. No logger API, event ABI, callback, console/file output, worker, native error exposure, version bump, or functional behavior was added in 7.A7.
+## 7.A8 minimal public event sink
+
+The optional runtime-scoped structured sink is now public. Failure events copy only normalized result, public operation and backend ID from the already-redacted diagnostic boundary; they never recapture or expose native state. Logging OFF and TRACE produce identical diagnostics and operation results, and a callback cannot affect secure behavior. The diagnostic ABI remains 56 bytes and unchanged. API 1.2.0/library 0.3.0 identify the additive logging API; SPI remains 2.3.

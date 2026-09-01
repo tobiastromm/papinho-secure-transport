@@ -1,6 +1,6 @@
 # Consumer-controlled logging and event sink design
 
-Status: Phase 7.A7 design complete. This document defines a future logging boundary; it does not add a logger, callback, event ABI, worker, file, console output, PAL dependency, or wire-visible behavior. Phase 7.A remains in progress.
+Status: Phase 7.A8 minimal public sink implemented. PST now exposes a limited structured, consumer-controlled callback ABI without a worker, queue, file, console output, PAL dependency, or wire-visible behavior. Phase 7.A remains in progress.
 
 ## Decision
 
@@ -27,7 +27,7 @@ The meanings are shared; implementation code and types are not. PST must not inc
 
 The authoritative PapinhoAccelerator files inspected for 7.A8 are `src/runtime/log.h`, `src/runtime/log.c`, and `tests/log_test.c` in the local PapinhoAccelerator source tree. They currently define `DEBUG=0`, `INFO=1`, `WARNING=2`, `ERROR=3`, and `OFF=4`; delivery rejects OFF and otherwise emits when `event_level >= minimum_level`. No TRACE level exists.
 
-This is not a six-level numeric convention that PST can adopt unchanged. Assigning a PST TRACE number, renumbering the existing meanings, or claiming numeric identity would invent an unverified cross-project ABI. Phase 7.A8 therefore stops before public logging constants or sink implementation. The required next decision is a separately reviewed cross-Papinho convention that adds TRACE while explicitly deciding whether the established Accelerator values remain frozen or are versioned. Semantic compatibility remains unchanged in the meantime.
+Papinho Logging Levels v1 subsequently resolved the shared convention for new APIs: OFF=0, ERROR=1, WARN=2, INFO=3, DEBUG=4, and TRACE=5. PST adopts those exact public ABI values and emits a non-OFF event when event_level <= configured_level. The Accelerator implementation remains semantically compatible but numerically legacy; migrating it is a separate coordinated task and PST has no dependency on its source.
 
 One effective threshold is sufficient initially. There is no separate enable flag and no per-category threshold. OFF means that the sink receives no normal logger events. It does not suppress return values, pst_result_string, explicitly requested diagnostic snapshots, state queries, application UI, or any other functional output.
 
@@ -161,6 +161,39 @@ Before numeric levels or event IDs are frozen, the review must verify PapinhoAcc
 
 ## Scope disposition and next step
 
-Phase 7 and 7.A remain in progress. Phase 7.A7 changes documentation only. It does not change API 1.1.0, library 0.2.0, SPI 2.3, PST_DIAGNOSTIC_INFO, TLS, trust, credentials, hostname validation, readiness, wire behavior, or remote disclosure. It starts neither 7.B nor Phase 8/9.
+Phase 7 and 7.A remain in progress. Phase 7.A8 adds the limited public sink and bumps API/library minor versions to 1.2.0/0.3.0. It does not change SPI 2.3, PST_DIAGNOSTIC_INFO, TLS, trust, credentials, hostname validation, readiness semantics, wire behavior, or remote disclosure. It starts neither 7.B nor Phase 8/9.
 
-The exact next step within 7.A is to resolve the six-level numeric convention identified by the 7.A8 audit. Only after that decision may 7.A8 freeze the minimal level/config/callback/event prefix and compact IDs, resolve the logging-aware runtime-constructor compatibility shape, and prove VC6 layout before adding emission sites.
+The exact next step within 7.A is a closure audit covering the combined diagnostic and logging model, ABI/version inventory, redaction boundary, test evidence, and any narrowly scoped remaining defect. 7.B remains unstarted.
+## 7.A8 implemented public ABI
+
+PST_LOG_LEVEL is pst_u32 with Papinho Logging Levels v1 values 0 through 5. PST_LOG_EVENT is a 60-byte value under VC6: size at 0, API version at 4, level at 8, event ID at 12, category at 16, normalized result at 20, public diagnostic operation at 24, and copied 32-byte backend ID at 28. It contains no pointer or arbitrary string. The initial stable event IDs are runtime ready/failure, connection secure/failure, authentication failure, connection closed, state transition, and operation progress. Categories remain the eight coarse groups documented above.
+
+PST_LOG_CONFIG is 20 bytes on VC6 and contains size/version, one level, a void callback, and caller-owned context. pst_log_config_init initializes it to OFF with no sink. pst_runtime_create_with_logging accepts this immutable runtime policy and an optional diagnostic destination; existing constructors remain unchanged. A null config or null callback is accepted and behaves as OFF. Invalid level, size, or API major is rejected before runtime side effects. A supplied sink can observe a pre-runtime failure without global state.
+
+Delivery is synchronous and the event pointer is valid only during the callback. The callback may copy all 60 known bytes. It must not reenter, mutate, close, or release the emitting runtime/connection. The context must remain valid until runtime release. Callback behavior cannot alter the operation result.
+
+C89 usage:
+
+    static void PST_CALL application_log(
+        void *context,
+        const PST_LOG_EVENT *event)
+    {
+        application_logger *logger = (application_logger *)context;
+        application_logger_accept(logger, event);
+    }
+
+    PST_LOG_CONFIG logging;
+    PST_DIAGNOSTIC_INFO diagnostic;
+    pst_runtime *runtime = NULL;
+
+    pst_log_config_init(&logging);
+    logging.level = PST_LOG_LEVEL_INFO;
+    logging.callback = application_log;
+    logging.user_context = &application_logger_instance;
+    pst_diagnostic_info_init(&diagnostic);
+    result = pst_runtime_create_with_logging(
+        &runtime_options, &logging, &runtime, &diagnostic);
+
+The application owns formatting, localization and persistence. It branches on result, not on event delivery or native details.
+
+The API version is 1.2.0 and library version is 0.3.0 for the additive public logging ABI. SPI remains 2.3. VC6 /W4 tests freeze numeric values, event layout, configuration layout, the 6x6 threshold matrix, invalid configurations, null sink, callback copy/context, pre-runtime failure, diagnostic independence, runtime isolation and connection inheritance. Real TLS 1.2 and 1.3 OFF/INFO/TRACE sessions retained authenticated ALPN secure echo. INFO produced three events per normal session; OFF produced none.

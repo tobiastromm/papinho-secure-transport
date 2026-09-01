@@ -48,6 +48,7 @@
     - 7.A5 public diagnostic ABI foundation: complete
     - 7.A6 public diagnostic API hardening and abuse resistance: complete
     - 7.A7 consumer-controlled logging/event sink design: complete
-    - 7.A8 logging event ABI review and minimal implementation: current; numeric convention decision required
+    - 7.A8 logging event ABI review and minimal public sink: complete
+    - 7.A closure audit: next
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending

@@ -2,6 +2,7 @@
 #define PST_INTERNAL_H
 #include "papinho_secure_transport.h"
 #include "pst_diagnostic.h"
+#include "pst_log.h"
 typedef struct pst_internal_operation_context {
     pst_internal_diagnostic diagnostic;
 } pst_internal_operation_context;

@@ -23,13 +23,13 @@ extern "C" {
 #endif
 
 #define PST_API_VERSION_MAJOR 1UL
-#define PST_API_VERSION_MINOR 1UL
+#define PST_API_VERSION_MINOR 2UL
 #define PST_API_VERSION_PATCH 0UL
-#define PST_API_VERSION 0x00010100UL
+#define PST_API_VERSION 0x00010200UL
 #define PST_LIBRARY_VERSION_MAJOR 0UL
-#define PST_LIBRARY_VERSION_MINOR 2UL
+#define PST_LIBRARY_VERSION_MINOR 3UL
 #define PST_LIBRARY_VERSION_PATCH 0UL
-#define PST_LIBRARY_VERSION 0x00000200UL
+#define PST_LIBRARY_VERSION 0x00000300UL
 
 typedef unsigned char pst_u8;
 #if USHRT_MAX == 0xffffU
@@ -102,6 +102,54 @@ typedef struct PST_DIAGNOSTIC_INFO {
     char backend_id[PST_DIAGNOSTIC_BACKEND_ID_CAPACITY];
 } PST_DIAGNOSTIC_INFO;
 #define PST_DIAGNOSTIC_INFO_MIN_SIZE 56UL
+
+typedef pst_u32 PST_LOG_LEVEL;
+#define PST_LOG_LEVEL_OFF 0UL
+#define PST_LOG_LEVEL_ERROR 1UL
+#define PST_LOG_LEVEL_WARN 2UL
+#define PST_LOG_LEVEL_INFO 3UL
+#define PST_LOG_LEVEL_DEBUG 4UL
+#define PST_LOG_LEVEL_TRACE 5UL
+
+#define PST_LOG_EVENT_RUNTIME_READY 1UL
+#define PST_LOG_EVENT_RUNTIME_FAILURE 2UL
+#define PST_LOG_EVENT_CONNECTION_SECURE 3UL
+#define PST_LOG_EVENT_CONNECTION_FAILURE 4UL
+#define PST_LOG_EVENT_AUTHENTICATION_FAILURE 5UL
+#define PST_LOG_EVENT_CONNECTION_CLOSED 6UL
+#define PST_LOG_EVENT_STATE_TRANSITION 7UL
+#define PST_LOG_EVENT_OPERATION_PROGRESS 8UL
+
+#define PST_LOG_CATEGORY_RUNTIME 1UL
+#define PST_LOG_CATEGORY_BACKEND 2UL
+#define PST_LOG_CATEGORY_CONNECTION 3UL
+#define PST_LOG_CATEGORY_TLS 4UL
+#define PST_LOG_CATEGORY_AUTHENTICATION 5UL
+#define PST_LOG_CATEGORY_IO 6UL
+#define PST_LOG_CATEGORY_READINESS 7UL
+#define PST_LOG_CATEGORY_SHUTDOWN 8UL
+
+typedef struct PST_LOG_EVENT {
+    pst_u32 struct_size;
+    pst_u32 api_version;
+    PST_LOG_LEVEL level;
+    pst_u32 event_id;
+    pst_u32 category;
+    PST_RESULT normalized_result;
+    pst_u32 operation;
+    char backend_id[PST_DIAGNOSTIC_BACKEND_ID_CAPACITY];
+} PST_LOG_EVENT;
+#define PST_LOG_EVENT_MIN_SIZE 60UL
+
+typedef void (PST_CALL *PST_LOG_CALLBACK)(void *user_context,const PST_LOG_EVENT *event);
+typedef struct PST_LOG_CONFIG {
+    pst_u32 struct_size;
+    pst_u32 api_version;
+    PST_LOG_LEVEL level;
+    PST_LOG_CALLBACK callback;
+    void *user_context;
+} PST_LOG_CONFIG;
+#define PST_LOG_CONFIG_MIN_SIZE ((pst_u32)sizeof(PST_LOG_CONFIG))
 
 typedef struct PST_VERSION_INFO {
     pst_u32 struct_size;
@@ -217,6 +265,7 @@ PST_API PST_RESULT PST_CALL pst_version_info_init(PST_VERSION_INFO *info);
 PST_API PST_RESULT PST_CALL pst_get_version(PST_VERSION_INFO *info);
 PST_API const char *PST_CALL pst_result_string(PST_RESULT result);
 PST_API PST_RESULT PST_CALL pst_diagnostic_info_init(PST_DIAGNOSTIC_INFO *info);
+PST_API PST_RESULT PST_CALL pst_log_config_init(PST_LOG_CONFIG *config);
 PST_API PST_RESULT PST_CALL pst_credentials_create(const PST_CREDENTIAL_SOURCE *source, pst_credentials **out_credentials);
 PST_API void PST_CALL pst_credentials_release(pst_credentials *credentials);
 PST_API PST_RESULT PST_CALL pst_trust_create(const PST_TRUST_SOURCE *source, pst_trust **out_trust);
@@ -230,6 +279,7 @@ PST_API PST_RESULT PST_CALL pst_peer_info_copy_leaf_der(const pst_peer_info *pee
 PST_API void PST_CALL pst_peer_info_release(pst_peer_info *peer_info);
 PST_API PST_RESULT PST_CALL pst_runtime_create(const PST_RUNTIME_OPTIONS *options, pst_runtime **out_runtime);
 PST_API PST_RESULT PST_CALL pst_runtime_create_ex(const PST_RUNTIME_OPTIONS *options, pst_runtime **out_runtime, PST_DIAGNOSTIC_INFO *diagnostic);
+PST_API PST_RESULT PST_CALL pst_runtime_create_with_logging(const PST_RUNTIME_OPTIONS *options, const PST_LOG_CONFIG *logging, pst_runtime **out_runtime, PST_DIAGNOSTIC_INFO *diagnostic);
 PST_API PST_RESULT PST_CALL pst_runtime_copy_diagnostic(const pst_runtime *runtime, PST_DIAGNOSTIC_INFO *diagnostic);
 PST_API void PST_CALL pst_runtime_release(pst_runtime *runtime);
 PST_API PST_RESULT PST_CALL pst_runtime_get_info(const pst_runtime *runtime, PST_RUNTIME_INFO *info);
