@@ -53,6 +53,6 @@
   - 7.B Connection Failure Matrix: in progress
     - audit and readiness/wait defect correction: host complete
     - deterministic functional fixtures: host executed; abrupt close classification blocker found
-    - targeted NT4 HUP/read package: ready, real execution pending
+    - targeted NT4 initial run: delayed failures observed; clean_close timeline diagnostic package ready
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending

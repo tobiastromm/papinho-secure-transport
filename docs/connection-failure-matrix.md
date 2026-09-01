@@ -98,3 +98,20 @@ On NT4:
     run_failure_regression.bat HOST PORT localhost abrupt_close
 
 Package preparation is READY; no NT4 PASS is claimed.
+
+## Phase 7.B NT4 failure timeline diagnostic
+
+The first real targeted NT4 run preserved the normal TLS 1.3 baseline but data_then_close, clean_close and abrupt_close all failed. In each failure mode the modern server completed almost immediately while the NT4 executable remained active for tens of seconds to roughly one minute. Existing module logs could not locate the delay, so no behavior change was made.
+
+The diagnostic client and backend now share one GetTickCount epoch. failure-client.log records configured bounds, every handshake/read/wait/shutdown boundary, operation/result/bytes/read total/close kind, loop elapsed time, terminal check, every release boundary and total process elapsed time. failure-backend.log records operational NSS/NSPR events. failure-modules.log contains only module paths.
+
+Modern clean_close diagnostic evidence:
+
+- total elapsed: 234 ms;
+- attach began handshake at 46 ms;
+- handshake completed at 218 ms after one 109 ms poll;
+- PR_Read began at 218 ms and returned zero/CLOSED clean at 234 ms;
+- no HUP, ERR or NVAL was reported because no PR_Poll was needed after handshake;
+- connection, config, credentials, trust and runtime release all completed at 234 ms.
+
+The next real NT4 run must execute only clean_close with run_failure_diag.bat and return all three logs plus server output. Phase 7.B remains in progress; the delay location and existing abrupt-close classification blocker remain unresolved.

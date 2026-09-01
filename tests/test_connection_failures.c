@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #if defined(_MSC_VER) && _MSC_VER == 1200
 # pragma warning(pop)
 # pragma warning(disable:4514)
@@ -19,6 +20,18 @@
 #define WAIT_MS 125UL
 static const char g_expected[] = "pst-phase7b-data-before-close";
 static const char g_client_write[] = "pst-phase7b-client-write";
+static DWORD g_epoch;
+
+static void timeline(const char *format, ...)
+{
+    va_list arguments;
+    printf("T_MS=%010lu ", (unsigned long)(GetTickCount() - g_epoch));
+    va_start(arguments, format);
+    vprintf(format, arguments);
+    va_end(arguments);
+    printf("\n");
+    fflush(stdout);
+}
 
 typedef struct failure_log {
     pst_u32 total;
@@ -79,12 +92,24 @@ static int connect4(const char *host, unsigned short port, SOCKET *out)
     return 1;
 }
 
-static int wait_once(pst_connection *connection, PST_RESULT *failure)
+static int wait_once(pst_connection *connection, PST_RESULT *failure,
+                     const char *loop, int step)
 {
     PST_WAIT_RESULT wait_result;
     PST_RESULT result;
+    pst_u32 interest;
+    DWORD start;
+    interest = 0;
+    result = pst_connection_get_interest(connection, &interest);
+    timeline("LOOP=%s STEP=%d BEFORE_WAIT STATE=ACTIVE INTEREST_RESULT=%ld INTEREST=0x%08lx",
+        loop, step, (long)result, (unsigned long)interest);
     memset(&wait_result, 0, sizeof(wait_result));
+    start = GetTickCount();
     result = pst_connection_wait(connection, WAIT_MS, &wait_result);
+    timeline("LOOP=%s STEP=%d AFTER_WAIT WAIT_RESULT=%ld READY=0x%08lx TIMED_OUT=%lu DURATION_MS=%lu",
+        loop, step, (long)result, (unsigned long)wait_result.ready_interest,
+        (unsigned long)wait_result.timed_out,
+        (unsigned long)(GetTickCount() - start));
     if (result != PST_RESULT_OK) {
         *failure = result;
         return 0;
@@ -156,12 +181,20 @@ int main(int argc, char **argv)
     int mode_write;
     int mode_shutdown;
     const char *mode;
+    DWORD loop_start;
+    DWORD loop_end;
 
     if (argc != 11) {
         fprintf(stderr, "usage: host port hostname ca.der client.der key.pk8 tls alpn mode log-level\n");
         return 2;
     }
+    g_epoch = GetTickCount();
+    pst_backend_nss_trace_set_epoch((pst_u32)g_epoch);
     mode = argv[9];
+    timeline("MODE=%s PROCESS_EPOCH=%lu", mode, (unsigned long)g_epoch);
+    timeline("BOUNDS HANDSHAKE_MAX_STEPS=%d HANDSHAKE_WAIT_MS=%lu READ_MAX_STEPS=%d READ_WAIT_MS=%lu SHUTDOWN_MAX_STEPS=%d SHUTDOWN_WAIT_MS=%lu",
+        MAX_STEPS, (unsigned long)WAIT_MS, MAX_STEPS, (unsigned long)WAIT_MS,
+        MAX_STEPS, (unsigned long)WAIT_MS);
     ca_data = load_file(argv[4], &ca_size);
     cert_data = load_file(argv[5], &cert_size);
     key_data = load_file(argv[6], &key_size);
@@ -249,11 +282,17 @@ int main(int argc, char **argv)
     transport = NULL;
     native_socket = INVALID_SOCKET;
 
+    timeline("CONNECTION_ATTACHED OWNERSHIP_ACCEPTED=%lu HANDSHAKE_START",
+        (unsigned long)accepted);
     established = 0;
     final_result = PST_RESULT_OK;
     final_close = PST_CLOSE_NONE;
+    loop_start = GetTickCount();
     for (step = 0; step < MAX_STEPS; ++step) {
+        timeline("LOOP=HANDSHAKE STEP=%d BEFORE_HANDSHAKE STATE=HANDSHAKING", step);
         result = pst_connection_handshake(connection, &operation, &error);
+        timeline("LOOP=HANDSHAKE STEP=%d AFTER_HANDSHAKE RESULT=%ld OPERATION=%lu ERROR=%ld",
+            step, (long)result, (unsigned long)operation, (long)error);
         if (result != PST_RESULT_OK) {
             final_result = result;
             break;
@@ -266,8 +305,12 @@ int main(int argc, char **argv)
             final_result = error;
             break;
         }
-        if (!wait_once(connection, &final_result)) break;
+        if (!wait_once(connection, &final_result, "HANDSHAKE", step)) break;
     }
+    loop_end = GetTickCount();
+    timeline("LOOP=HANDSHAKE END STEPS=%d ELAPSED_MS=%lu ESTABLISHED=%d FINAL=%ld",
+        step, (unsigned long)(loop_end - loop_start), established,
+        (long)final_result);
 
     mode_read = !strcmp(mode, "clean_close") ||
         !strcmp(mode, "abrupt_close") ||
@@ -281,11 +324,20 @@ int main(int argc, char **argv)
     memset(received, 0, sizeof(received));
 
     if (established && mode_read) {
+        loop_start = GetTickCount();
+        timeline("LOOP=READ START STATE=ESTABLISHED TOTAL_READ=%lu",
+            (unsigned long)total_read);
         for (step = 0; step < MAX_STEPS; ++step) {
+            timeline("LOOP=READ STEP=%d BEFORE_READ STATE=ESTABLISHED TOTAL_READ=%lu",
+                step, (unsigned long)total_read);
             memset(&io, 0, sizeof(io));
             result = pst_connection_read(connection, received + total_read,
                 sizeof(received) - total_read, &io);
             total_read += io.bytes_transferred;
+            timeline("LOOP=READ STEP=%d AFTER_READ READ_RESULT=%ld OPERATION=%lu BYTES=%lu TOTAL_READ=%lu CLOSE_KIND=%lu ERROR=%ld",
+                step, (long)result, (unsigned long)io.operation,
+                (unsigned long)io.bytes_transferred, (unsigned long)total_read,
+                (unsigned long)io.close_kind, (long)io.error);
             if (result != PST_RESULT_OK) {
                 final_result = result;
                 break;
@@ -300,8 +352,13 @@ int main(int argc, char **argv)
                 final_close = io.close_kind;
                 break;
             }
-            if (!wait_once(connection, &final_result)) break;
+            if (!wait_once(connection, &final_result, "READ", step)) break;
         }
+        loop_end = GetTickCount();
+        timeline("LOOP=READ END STEPS=%d ELAPSED_MS=%lu TOTAL_READ=%lu FINAL=%ld CLOSE_KIND=%lu",
+            step, (unsigned long)(loop_end - loop_start),
+            (unsigned long)total_read, (long)final_result,
+            (unsigned long)final_close);
     } else if (established && mode_write) {
         for (step = 0; step < MAX_STEPS &&
             total_written < sizeof(g_client_write) - 1; ++step) {
@@ -316,7 +373,7 @@ int main(int argc, char **argv)
                 break;
             }
             if (io.operation != PST_OPERATION_COMPLETE &&
-                !wait_once(connection, &final_result)) break;
+                !wait_once(connection, &final_result, "WRITE", step)) break;
         }
         if (final_result == PST_RESULT_OK) {
             for (step = 0; step < MAX_STEPS; ++step) {
@@ -336,7 +393,7 @@ int main(int argc, char **argv)
                     final_close = io.close_kind;
                     break;
                 }
-                if (!wait_once(connection, &final_result)) break;
+                if (!wait_once(connection, &final_result, "WRITE", step)) break;
             }
         }
     } else if (established && mode_shutdown) {
@@ -353,11 +410,17 @@ int main(int argc, char **argv)
                 break;
             }
             if (io.operation != PST_OPERATION_COMPLETE &&
-                !wait_once(connection, &final_result)) break;
+                !wait_once(connection, &final_result, "WRITE", step)) break;
         }
         if (final_result == PST_RESULT_OK) {
+            loop_start = GetTickCount();
+            timeline("LOOP=SHUTDOWN START STATE=ESTABLISHED");
             for (step = 0; step < MAX_STEPS; ++step) {
+                timeline("LOOP=SHUTDOWN STEP=%d BEFORE_SHUTDOWN STATE=SHUTTING_DOWN",
+                    step);
                 result = pst_connection_shutdown(connection, &operation, &error);
+                timeline("LOOP=SHUTDOWN STEP=%d AFTER_SHUTDOWN RESULT=%ld OPERATION=%lu ERROR=%ld",
+                    step, (long)result, (unsigned long)operation, (long)error);
                 if (result != PST_RESULT_OK) {
                     final_result = result;
                     break;
@@ -371,8 +434,12 @@ int main(int argc, char **argv)
                     final_result = error;
                     break;
                 }
-                if (!wait_once(connection, &final_result)) break;
+                if (!wait_once(connection, &final_result, "SHUTDOWN", step)) break;
             }
+            loop_end = GetTickCount();
+            timeline("LOOP=SHUTDOWN END STEPS=%d ELAPSED_MS=%lu FINAL=%ld",
+                step, (unsigned long)(loop_end - loop_start),
+                (long)final_result);
         }
     }
 
@@ -380,7 +447,10 @@ int main(int argc, char **argv)
     diagnostic.struct_size = sizeof(diagnostic);
     diagnostic.api_version = PST_API_VERSION;
     pst_connection_copy_diagnostic(connection, &diagnostic);
+    timeline("TERMINAL_CHECK BEFORE STATE=%s",
+        established ? "ESTABLISHED_OR_TERMINAL" : "FAILED");
     terminal = terminal_rejects_operations(connection);
+    timeline("TERMINAL_CHECK AFTER TERMINAL=%d", terminal);
     content_match = total_read == sizeof(g_expected) - 1 &&
         memcmp(received, g_expected, total_read) == 0;
 
@@ -414,20 +484,26 @@ int main(int argc, char **argv)
     if (log_config.level == PST_LOG_LEVEL_ERROR && final_result != PST_RESULT_CLOSED)
         ok = ok && log.errors == 1UL && log.warnings == 0UL;
 
-    printf("MODE=%s ESTABLISHED=%d FINAL=%ld CLOSE_KIND=%lu READ=%lu WRITE=%lu CONTENT_MATCH=%d TERMINAL=%d DIAG_VALID=%lu DIAG_RESULT=%ld DIAG_OPERATION=%lu LOG_TOTAL=%lu LOG_ERROR=%lu LOG_WARN=%lu STEPS=%d PASS=%d\n",
-        mode, established, (long)final_result, (unsigned long)final_close,
-        (unsigned long)total_read, (unsigned long)total_written, content_match,
-        terminal, (unsigned long)diagnostic.valid,
-        (long)diagnostic.normalized_result,
-        (unsigned long)diagnostic.operation,
-        (unsigned long)log.total, (unsigned long)log.errors,
-        (unsigned long)log.warnings, step, ok);
+    timeline("MODE=%s ESTABLISHED=%d FINAL=%ld FINAL_STATE=%s CLOSE_KIND=%lu READ=%lu WRITE=%lu CONTENT_MATCH=%d TERMINAL=%d DIAG_VALID=%lu DIAG_RESULT=%ld DIAG_OPERATION=%lu LOG_TOTAL=%lu LOG_ERROR=%lu LOG_WARN=%lu STEPS=%d PASS=%d",
+        mode, established, (long)final_result,
+        final_result == PST_RESULT_CLOSED ? "CLOSED" : "FAILED",
+        (unsigned long)final_close, (unsigned long)total_read,
+        (unsigned long)total_written, content_match, terminal,
+        (unsigned long)diagnostic.valid, (long)diagnostic.normalized_result,
+        (unsigned long)diagnostic.operation, (unsigned long)log.total,
+        (unsigned long)log.errors, (unsigned long)log.warnings, step, ok);
 
+    timeline("CLEANUP BEFORE_CONNECTION_RELEASE");
     pst_connection_release(connection);
+    timeline("CLEANUP AFTER_CONNECTION_RELEASE BEFORE_CONFIG_RELEASE");
     pst_config_release(config);
+    timeline("CLEANUP AFTER_CONFIG_RELEASE BEFORE_CREDENTIALS_RELEASE");
     pst_credentials_release(credentials);
+    timeline("CLEANUP AFTER_CREDENTIALS_RELEASE BEFORE_TRUST_RELEASE");
     pst_trust_release(trust);
+    timeline("CLEANUP AFTER_TRUST_RELEASE BEFORE_RUNTIME_RELEASE");
     pst_runtime_release(runtime);
+    timeline("CLEANUP AFTER_RUNTIME_RELEASE");
     if (transport != NULL) pst_transport_release(transport);
     if (native_socket != INVALID_SOCKET) closesocket(native_socket);
     WSACleanup();
@@ -437,5 +513,7 @@ int main(int argc, char **argv)
         memset(key_data, 0, key_size);
         free(key_data);
     }
+    timeline("TOTAL_ELAPSED_MS=%lu EXIT_CODE=%d",
+        (unsigned long)(GetTickCount() - g_epoch), ok ? 0 : 20);
     return ok ? 0 : 20;
 }

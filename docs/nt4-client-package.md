@@ -79,3 +79,11 @@ From the copied NT4 package directory:
     run_failure_regression.bat HOST PORT localhost abrupt_close
 
 Also rerun run_tls13.bat against the normal TLS 1.3 echo fixture. Return complete client and server output. The first two modes passed on the modern host. Abrupt deliberately remains failing because the preserved NSS returns zero from PR_Read for FIN without close_notify and the backend reports clean CLOSED instead of TRUNCATED. Do not report abrupt NT4 PASS unless output actually shows the required distinction.
+
+## Phase 7.B NT4 timeline diagnostic package
+
+The first real targeted run showed a long client-side delay after the server completed, but module provenance alone could not identify the operation. The package now contains run_failure_diag.bat and an instrumented test_connection_failures.exe. Run only clean_close first:
+
+    run_failure_diag.bat HOST 8443 localhost clean_close
+
+The BAT deletes prior failure-client.log, failure-backend.log and failure-modules.log before execution. Return all three new files and complete server output. Do not run data_then_close or abrupt_close again until the clean_close timeline identifies the delayed operation.
