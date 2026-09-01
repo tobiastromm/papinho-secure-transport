@@ -1,6 +1,6 @@
 # Error and diagnostic model hardening
 
-Status: Phase 7.A in progress. Phase 7.A5 exposes the first structurally redacted public diagnostic value ABI; Phase 7.A7 defines, but does not implement, a consumer-controlled event sink. TLS behavior and remote-visible behavior are unchanged, and the internal SPI remains 2.3.
+Status: Phase 7.A complete. The public diagnostic value and consumer-controlled event sink are hardened, structurally redacted, and regression-tested. TLS behavior and remote-visible behavior are unchanged, and the internal SPI remains 2.3.
 
 ## Policy
 
@@ -132,3 +132,7 @@ The future logging boundary is specified in [logging-design.md](logging-design.m
 ## 7.A8 minimal public event sink
 
 The optional runtime-scoped structured sink is now public. Failure events copy only normalized result, public operation and backend ID from the already-redacted diagnostic boundary; they never recapture or expose native state. Logging OFF and TRACE produce identical diagnostics and operation results, and a callback cannot affect secure behavior. The diagnostic ABI remains 56 bytes and unchanged. API 1.2.0/library 0.3.0 identify the additive logging API; SPI remains 2.3.
+
+## 7.A closure
+
+The closure audit found every original 7.A goal satisfied: normalized portable control flow, private native detail, lifetime-safe isolated snapshots, failed-constructor retention without global state, hardened public ABI, absolute redaction, minimal remote disclosure, and observational consumer-owned logging. Clean VC6 /W4 regressions and TLS 1.2/1.3 OFF/INFO/TRACE secure-echo gates passed with zero warnings. Phase 7 remains in progress; later provider metadata, naming, native-detail exposure, mutable logging, category thresholds, formatting, and history remain explicitly deferred.

@@ -1,6 +1,6 @@
 # Consumer-controlled logging and event sink design
 
-Status: Phase 7.A8 minimal public sink implemented. PST now exposes a limited structured, consumer-controlled callback ABI without a worker, queue, file, console output, PAL dependency, or wire-visible behavior. Phase 7.A remains in progress.
+Status: Phase 7.A complete. PST exposes a closure-audited limited structured, consumer-controlled callback ABI without a worker, queue, file, console output, PAL dependency, or wire-visible behavior.
 
 ## Decision
 
@@ -197,3 +197,7 @@ C89 usage:
 The application owns formatting, localization and persistence. It branches on result, not on event delivery or native details.
 
 The API version is 1.2.0 and library version is 0.3.0 for the additive public logging ABI. SPI remains 2.3. VC6 /W4 tests freeze numeric values, event layout, configuration layout, the 6x6 threshold matrix, invalid configurations, null sink, callback copy/context, pre-runtime failure, diagnostic independence, runtime isolation and connection inheritance. Real TLS 1.2 and 1.3 OFF/INFO/TRACE sessions retained authenticated ALPN secure echo. INFO produced three events per normal session; OFF produced none.
+
+## 7.A closure
+
+The closure audit confirmed Papinho Logging Levels v1, cumulative filtering, immutable runtime ownership, connection inheritance, synchronous callback lifetime/reentrancy rules, bounded INFO volume, TRACE readiness progress, diagnostic independence, allocation-free basic delivery, and structural redaction. Clean VC6 /W4 and real TLS 1.2/1.3 OFF/INFO/TRACE gates passed with zero warnings. No logger destination, native detail, payload, peer-controlled text, endpoint, worker, queue, history, runtime mutation, or category threshold was introduced.

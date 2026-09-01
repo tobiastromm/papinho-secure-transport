@@ -1,6 +1,6 @@
 # Controlled diagnostic exposure design
 
-Status: Phase 7.A5 public diagnostic ABI foundation implemented and hardened by 7.A6. Phase 7.A7 separately designs optional consumer-controlled logging; SPI, TLS, readiness, diagnostic ABI, and wire behavior are unchanged.
+Status: Phase 7.A complete. The public diagnostic ABI foundation, abuse-resistance rules, and optional consumer-controlled logging integration passed closure audit; SPI, TLS, readiness, diagnostic ABI, and wire behavior are unchanged.
 
 ## Decision
 
@@ -193,3 +193,7 @@ The future event sink is documented in [logging-design.md](logging-design.md). I
 ## 7.A8 diagnostic/event integration
 
 PST_LOG_EVENT carries selected redacted value fields at emission time: normalized result, public operation and copied backend ID. It does not embed or alter PST_DIAGNOSTIC_INFO, and contains no native domain/code, diagnostic flags, generation, hostname, peer text or payload. This avoids stale callback queries while keeping diagnostics authoritative and independently queryable with logging OFF. The logging addition moves the current API/library versions to 1.2.0/0.3.0; the diagnostic layout and SPI 2.3 remain unchanged.
+
+## 7.A closure
+
+The final audit confirms the 56-byte diagnostic ABI, append-only validation, tail preservation, context-local generation, copy lifetime, constructor coverage, multi-object isolation, progress semantics, redaction, and local-versus-remote disclosure policy. No mandatory diagnostic gap remains. API is 1.2.0, library is 0.3.0, and SPI remains 2.3.
