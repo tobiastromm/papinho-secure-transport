@@ -8,10 +8,11 @@ The public API remains C89/VC6-compatible and backend-neutral. API 1.1.0/library
 
 Project licensing is pending a decision. Third-party files retain their own licenses under `third_party/`.
 
-Build and run the portable foundation test from a Visual C++ 6.0 command environment:
+The canonical VC6 environment, clean-build, regression, NSS SDK, and runtime-DLL instructions are in [docs/build-vc6.md](docs/build-vc6.md). Quick start:
 
 ```bat
-nmake /f Makefile.vc6 test
+tools\build-vc6.bat clean
+tools\build-vc6.bat test test-nss-unit
 ```
 
 The public entry point is `include/papinho_secure_transport.h`. Generated objects, the static library, and the test executable are placed under `build/vc6/`.
