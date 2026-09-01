@@ -23,6 +23,12 @@ PST adopts the Papinho semantic level set exactly:
 
 The meanings are shared; implementation code and types are not. PST must not include Accelerator headers, link its logger, call its PAL, or claim numeric compatibility until the actual Accelerator numeric constants have been reviewed. The implementation subtask must verify those constants before freezing PST values. If numeric equality is unsuitable, PST still freezes explicit local values and preserves the semantic mapping above.
 
+### 7.A8 numeric compatibility audit
+
+The authoritative PapinhoAccelerator files inspected for 7.A8 are `src/runtime/log.h`, `src/runtime/log.c`, and `tests/log_test.c` in the local PapinhoAccelerator source tree. They currently define `DEBUG=0`, `INFO=1`, `WARNING=2`, `ERROR=3`, and `OFF=4`; delivery rejects OFF and otherwise emits when `event_level >= minimum_level`. No TRACE level exists.
+
+This is not a six-level numeric convention that PST can adopt unchanged. Assigning a PST TRACE number, renumbering the existing meanings, or claiming numeric identity would invent an unverified cross-project ABI. Phase 7.A8 therefore stops before public logging constants or sink implementation. The required next decision is a separately reviewed cross-Papinho convention that adds TRACE while explicitly deciding whether the established Accelerator values remain frozen or are versioned. Semantic compatibility remains unchanged in the meantime.
+
 One effective threshold is sufficient initially. There is no separate enable flag and no per-category threshold. OFF means that the sink receives no normal logger events. It does not suppress return values, pst_result_string, explicitly requested diagnostic snapshots, state queries, application UI, or any other functional output.
 
 ## Severity policy
@@ -157,4 +163,4 @@ Before numeric levels or event IDs are frozen, the review must verify PapinhoAcc
 
 Phase 7 and 7.A remain in progress. Phase 7.A7 changes documentation only. It does not change API 1.1.0, library 0.2.0, SPI 2.3, PST_DIAGNOSTIC_INFO, TLS, trust, credentials, hostname validation, readiness, wire behavior, or remote disclosure. It starts neither 7.B nor Phase 8/9.
 
-The exact next step within 7.A is a focused 7.A8 ABI review/prototype on paper and in compile-time layout tests: verify Accelerator numeric constants, freeze the minimal level/config/callback/event prefix and compact IDs, resolve the logging-aware runtime-constructor compatibility shape, and prove VC6 layout before adding any emission sites.
+The exact next step within 7.A is to resolve the six-level numeric convention identified by the 7.A8 audit. Only after that decision may 7.A8 freeze the minimal level/config/callback/event prefix and compact IDs, resolve the logging-aware runtime-constructor compatibility shape, and prove VC6 layout before adding emission sites.
