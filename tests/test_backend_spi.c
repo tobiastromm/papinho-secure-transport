@@ -1,14 +1,16 @@
 #include "pst_backend.h"
+#include "pst_internal.h"
 #include "pst_transport_internal.h"
 #include <stdio.h>
 #include <string.h>
-typedef struct mock_backend_state { int initialized; } mock_backend_state;
-typedef struct mock_runtime_state { mock_backend_state *backend; } mock_runtime_state;
+typedef struct mock_backend_state { int initialized; pst_internal_diagnostic diagnostic; } mock_backend_state;
+typedef struct mock_runtime_state { mock_backend_state *backend; pst_internal_diagnostic diagnostic; } mock_runtime_state;
 typedef struct mock_connection_state {
     mock_runtime_state *runtime;
     void *transport;
     pst_u32 ownership;
     pst_u32 interest;
+    pst_internal_diagnostic diagnostic;
 } mock_connection_state;
 static mock_backend_state g_backend;
 static mock_runtime_state g_runtime;
@@ -27,7 +29,7 @@ static pst_u32 g_wait_interests[4];
 static int g_transport_destroy_calls;
 static PST_RESULT mock_initialize(void **state)
 {
-    ++g_initialize_calls; g_backend.initialized = 1; *state = &g_backend;
+    ++g_initialize_calls; g_backend.initialized = 1; pst_diagnostic_initialize(&g_backend.diagnostic); *state = &g_backend;
     return PST_RESULT_OK;
 }
 static void mock_shutdown(void *state)
@@ -38,7 +40,7 @@ static void mock_shutdown(void *state)
 static PST_RESULT mock_runtime_create(void *state, void **runtime)
 {
     ++g_runtime_create_calls; g_runtime.backend = (mock_backend_state *)state;
-    *runtime = &g_runtime; return PST_RESULT_OK;
+    pst_diagnostic_initialize(&g_runtime.diagnostic); *runtime = &g_runtime; return PST_RESULT_OK;
 }
 static void mock_runtime_destroy(void *runtime)
 {
@@ -61,7 +63,7 @@ static PST_RESULT mock_connection_create(void *runtime, void **connection)
 {
     if (runtime != &g_runtime) return PST_RESULT_INVALID_ARGUMENT;
     ++g_connection_create_calls; memset(&g_connection, 0, sizeof(g_connection));
-    g_connection.runtime = &g_runtime; *connection = &g_connection;
+    g_connection.runtime = &g_runtime; pst_diagnostic_initialize(&g_connection.diagnostic); *connection = &g_connection;
     return PST_RESULT_OK;
 }
 static void mock_connection_destroy(void *connection)
@@ -93,7 +95,13 @@ static PST_RESULT mock_handshake(void *connection, pst_u32 *operation, PST_RESUL
         g_connection.interest = PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE;
     else g_connection.interest = PST_BACKEND_INTEREST_NONE;
     *error = g_next_operation == PST_BACKEND_OPERATION_FAILED ?
-        PST_RESULT_PROTOCOL_FAILURE : PST_RESULT_OK;
+        PST_RESULT_AUTH_FAILURE : PST_RESULT_OK;
+    if (g_next_operation == PST_BACKEND_OPERATION_FAILED)
+        pst_diagnostic_capture(&g_connection.diagnostic, PST_RESULT_AUTH_FAILURE,
+            PST_DIAGNOSTIC_PHASE_PEER_AUTHENTICATE, "test-backend",
+            PST_DIAGNOSTIC_DOMAIN_NSS, -8179, 0, PST_DIAGNOSTIC_FLAG_NATIVE);
+    else if (g_next_operation == PST_BACKEND_OPERATION_COMPLETE)
+        pst_diagnostic_clear(&g_connection.diagnostic);
     return PST_RESULT_OK;
 }
 static PST_RESULT mock_interest(void *connection, pst_u32 *interest)
@@ -169,13 +177,14 @@ static PST_RESULT mock_shutdown_step(void *connection, pst_u32 *operation, PST_R
 static void mock_transport_destroy(pst_transport *transport,int consumed){(void)transport;(void)consumed;++g_transport_destroy_calls;}
 static PST_RESULT mock_configure(void *connection,const pst_config *config){return connection==&g_connection&&config!=NULL?PST_RESULT_OK:PST_RESULT_INVALID_ARGUMENT;}
 static PST_RESULT mock_alpn(void *connection,pst_u8 *buffer,pst_size capacity,pst_size *size){(void)buffer;(void)capacity;if(connection!=&g_connection||!size)return PST_RESULT_INVALID_ARGUMENT;*size=0;return PST_RESULT_UNAVAILABLE;}
+static void mock_diagnostic_copy(const void *state,pst_internal_diagnostic *out){if(!out)return;if(state==&g_backend)pst_diagnostic_copy(out,&g_backend.diagnostic);else if(state==&g_runtime)pst_diagnostic_copy(out,&g_runtime.diagnostic);else if(state==&g_connection)pst_diagnostic_copy(out,&g_connection.diagnostic);else pst_diagnostic_initialize(out);}
 static const PST_BACKEND_VTABLE g_vtable = {
     sizeof(PST_BACKEND_VTABLE), PST_BACKEND_SPI_VERSION,
     mock_initialize, mock_shutdown, mock_runtime_create, mock_runtime_destroy,
     mock_query, mock_validate_requirements, mock_connection_create,
     mock_connection_destroy, mock_attach, mock_handshake, mock_interest,
     mock_wait, mock_read, mock_write, mock_shutdown_step, NULL, NULL,
-    mock_configure, mock_alpn
+    mock_configure, mock_alpn, mock_diagnostic_copy
 };
 static const PST_BACKEND_DESCRIPTOR g_descriptor = {
     sizeof(PST_BACKEND_DESCRIPTOR), PST_BACKEND_SPI_VERSION,
@@ -209,6 +218,8 @@ int main(void)
     PST_IO_RESULT public_io;
     PST_WAIT_RESULT public_wait;
     pst_u32 public_accepted;
+    pst_internal_diagnostic diagnostic;
+    pst_internal_diagnostic saved_diagnostic;
     int i;
     pst_backend_registry_reset();
     CHECK(pst_backend_validate(NULL) == PST_RESULT_INVALID_ARGUMENT, 1);
@@ -300,10 +311,16 @@ int main(void)
     g_next_operation = PST_BACKEND_OPERATION_COMPLETE;
     CHECK(pst_connection_handshake(public_connection, &operation, &error) == PST_RESULT_OK, 62);
     CHECK(operation == PST_OPERATION_COMPLETE, 63);
+    CHECK(pst_connection_wait(public_connection, 0, &public_wait) == PST_RESULT_OK, 103);
+    CHECK(public_wait.timed_out == 1UL, 104);
+    pst_connection_diagnostic_copy(public_connection, &diagnostic);
+    CHECK(!diagnostic.valid, 105);
 
     g_readiness_scenario = 1; g_scenario_read_calls = 0; g_scenario_wait_calls = 0;
     CHECK(pst_connection_read(public_connection, buffer, sizeof(buffer), &public_io) == PST_RESULT_OK, 64);
     CHECK(public_io.operation == PST_OPERATION_NEED_READ_WRITE && public_io.bytes_transferred == 0, 65);
+    pst_connection_diagnostic_copy(public_connection, &diagnostic);
+    CHECK(!diagnostic.valid, 106);
     CHECK(pst_connection_wait(public_connection, 250, &public_wait) == PST_RESULT_OK, 66);
     CHECK(g_wait_interests[0] == (PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE), 67);
     CHECK(public_wait.ready_interest == PST_BACKEND_INTEREST_WRITE, 68);
@@ -332,9 +349,33 @@ int main(void)
     CHECK(public_io.operation == PST_OPERATION_COMPLETE && public_io.bytes_transferred == 1, 87);
     g_readiness_scenario = 0;
     pst_connection_release(public_connection);
+
+    CHECK(pst_connection_create(public_runtime, public_config, &public_connection) == PST_RESULT_OK, 89);
+    CHECK(pst_connection_read(public_connection, buffer, sizeof(buffer), &public_io) == PST_RESULT_INVALID_STATE, 90);
+    pst_connection_diagnostic_copy(public_connection, &diagnostic);
+    CHECK(diagnostic.valid && diagnostic.result == PST_RESULT_INVALID_STATE, 91);
+    CHECK(diagnostic.phase == PST_DIAGNOSTIC_PHASE_READ, 101);
+    CHECK(diagnostic.native_domain == PST_DIAGNOSTIC_DOMAIN_NONE && diagnostic.native_code == 0, 102);
+    pst_connection_release(public_connection);
+
+    CHECK(pst_connection_create(public_runtime, public_config, &public_connection) == PST_RESULT_OK, 92);
+    public_accepted = 0UL;
+    CHECK(pst_connection_attach(public_connection, &public_transport, PST_OWNERSHIP_TRANSFERRED, &public_accepted) == PST_RESULT_OK, 93);
+    g_next_operation = PST_BACKEND_OPERATION_FAILED;
+    CHECK(pst_connection_handshake(public_connection, &operation, &error) == PST_RESULT_OK, 94);
+    CHECK(operation == PST_OPERATION_FAILED && error == PST_RESULT_AUTH_FAILURE, 95);
+    pst_connection_diagnostic_copy(public_connection, &diagnostic);
+    CHECK(diagnostic.valid && diagnostic.result == PST_RESULT_AUTH_FAILURE, 96);
+    CHECK(diagnostic.phase == PST_DIAGNOSTIC_PHASE_PEER_AUTHENTICATE, 97);
+    CHECK(diagnostic.native_domain == PST_DIAGNOSTIC_DOMAIN_NSS && diagnostic.native_code == -8179, 98);
+    pst_diagnostic_copy(&saved_diagnostic, &diagnostic);
+    pst_connection_release(public_connection);
+    CHECK(saved_diagnostic.valid && saved_diagnostic.native_code == -8179, 99);
+    pst_runtime_diagnostic_copy(public_runtime, &diagnostic);
+    CHECK(!diagnostic.valid, 100);
     pst_config_release(public_config);
     pst_runtime_release(public_runtime);
-    CHECK(g_transport_destroy_calls == 1, 88);
+    CHECK(g_transport_destroy_calls == 2, 88);
     CHECK(pst_backend_unregister("test-backend") == PST_RESULT_OK, 50);
     CHECK(pst_backend_count() == 0 && pst_backend_find("test-backend") == NULL, 51);
     CHECK(pst_backend_unregister("test-backend") == PST_RESULT_UNAVAILABLE, 52);

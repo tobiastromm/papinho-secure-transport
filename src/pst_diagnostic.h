@@ -29,5 +29,6 @@
 typedef struct pst_internal_diagnostic { PST_RESULT result; pst_u32 phase; pst_u32 native_domain; pst_i32 native_code; pst_i32 secondary_native_code; pst_u32 flags; pst_u32 generation; pst_u32 valid; char backend_id[PST_DIAGNOSTIC_BACKEND_ID_CAPACITY]; } pst_internal_diagnostic;
 void pst_diagnostic_initialize(pst_internal_diagnostic *diagnostic);
 void pst_diagnostic_clear(pst_internal_diagnostic *diagnostic);
+void pst_diagnostic_copy(pst_internal_diagnostic *destination,const pst_internal_diagnostic *source);
 void pst_diagnostic_capture(pst_internal_diagnostic *diagnostic,PST_RESULT result,pst_u32 phase,const char *backend_id,pst_u32 native_domain,pst_i32 native_code,pst_i32 secondary_native_code,pst_u32 flags);
 #endif

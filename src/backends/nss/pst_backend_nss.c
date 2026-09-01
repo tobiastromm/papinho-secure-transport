@@ -880,6 +880,14 @@ static PST_RESULT pst_nss_shutdown_step(void *state, pst_u32 *operation, PST_RES
     *error = pst_backend_nss_normalize_error(c->last_error);
     c->interest = PST_BACKEND_INTEREST_NONE; return PST_RESULT_OK;
 }
+typedef struct pst_nss_diagnostic_prefix { pst_i32 last_error; pst_internal_diagnostic diagnostic; } pst_nss_diagnostic_prefix;
+static void pst_nss_diagnostic_copy(const void *state,pst_internal_diagnostic *out)
+{
+    const pst_nss_diagnostic_prefix *prefix=(const pst_nss_diagnostic_prefix*)state;
+    if(!out)return;
+    if(!prefix){pst_diagnostic_initialize(out);return;}
+    pst_diagnostic_copy(out,&prefix->diagnostic);
+}
 static const PST_BACKEND_VTABLE pst_nss_vtable = {
     sizeof(PST_BACKEND_VTABLE), PST_BACKEND_SPI_VERSION,
     pst_nss_initialize, pst_nss_shutdown, pst_nss_runtime_create,
@@ -887,7 +895,8 @@ static const PST_BACKEND_VTABLE pst_nss_vtable = {
     pst_nss_connection_create, pst_nss_connection_destroy, pst_nss_attach,
     pst_nss_handshake, pst_nss_interest, pst_nss_wait, pst_nss_read,
     pst_nss_write, pst_nss_shutdown_step, pst_nss_peer_info_create,
-    pst_nss_peer_info_destroy, pst_nss_configure_identity, pst_nss_get_alpn
+    pst_nss_peer_info_destroy, pst_nss_configure_identity, pst_nss_get_alpn,
+    pst_nss_diagnostic_copy
 };
 static const PST_BACKEND_DESCRIPTOR pst_nss_descriptor = {
     sizeof(PST_BACKEND_DESCRIPTOR), PST_BACKEND_SPI_VERSION,

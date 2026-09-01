@@ -1,9 +1,10 @@
 #ifndef PST_BACKEND_H
 #define PST_BACKEND_H
 #include "papinho_secure_transport.h"
+#include "pst_diagnostic.h"
 #define PST_BACKEND_SPI_VERSION_MAJOR 2UL
-#define PST_BACKEND_SPI_VERSION_MINOR 2UL
-#define PST_BACKEND_SPI_VERSION 0x00020002UL
+#define PST_BACKEND_SPI_VERSION_MINOR 3UL
+#define PST_BACKEND_SPI_VERSION 0x00020003UL
 #define PST_BACKEND_CAP_TLS_1_2 0x00000001UL
 #define PST_BACKEND_CAP_TLS_1_3 0x00000002UL
 #define PST_BACKEND_CAP_CLIENT_AUTH 0x00000004UL
@@ -66,6 +67,7 @@ typedef struct PST_BACKEND_VTABLE {
     PST_RESULT (*connection_configure_identity)(void *connection_state,
                                                 const pst_config *config);
     PST_RESULT (*connection_get_alpn)(void *connection_state,pst_u8 *buffer,pst_size capacity,pst_size *out_size);
+    void (*diagnostic_copy)(const void *state,pst_internal_diagnostic *out);
 } PST_BACKEND_VTABLE;
 typedef struct PST_BACKEND_DESCRIPTOR {
     pst_u32 struct_size;

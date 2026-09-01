@@ -1,6 +1,6 @@
 # Error and diagnostic model hardening
 
-Status: Phase 7.A audit started. No public API, ABI, SPI, TLS behavior, or remote-visible behavior has changed.
+Status: Phase 7.A in progress. Public API/ABI, TLS behavior, and remote-visible behavior are unchanged; Phase 7.A2 adds one optional append-only hook to the internal SPI.
 
 ## Policy
 
@@ -70,3 +70,13 @@ The snapshot is embedded and requires no allocation on failure. Initialization p
 Initial NSS integration covers DLL/NSS initialization, WinSock transport attach, handshake (with authentication and hostname phase refinement), poll/wait, secure read, secure write, and shutdown. The core internal header exposes the backend-neutral facility for native-domain-NONE diagnostics without changing the public header or SPI. Deterministic tests cover empty state, normalized-only capture, native domains/codes, replacement, reset, copied backend ID, two AUTH causes sharing one `PST_RESULT`, and preserved protocol/hostname/transport distinctions.
 
 Future logging remains consumer-owned and optional: a browser, accelerator, mail client, or minimal consumer may choose its own sink or no logging. No logger, automatic file, severity API, public ABI, TLS alert, or remote disclosure is introduced by 7.A1.
+
+## 7.A2 internal transport, copy, and redaction
+
+Runtime and connection core objects now embed separate diagnostic values. NSS backend-global, backend-runtime, and per-connection states likewise retain separate snapshots; one connection cannot overwrite another. After each backend connection operation, the core uses the optional internal SPI 2.3 `diagnostic_copy` hook to copy the backend-owned value. The core does not interpret or remap native codes. Core-originated connection errors use domain `NONE` and native code zero.
+
+`pst_diagnostic_copy` preserves every field, including validity and generation, and is safe for self-copy. A copied value owns all of its bytes and remains valid after the source connection/state is destroyed. Capture and clear are the only operations that increment generation; copy preserves it. Clear increments generation, invalidates the snapshot, and zeros result detail, phase, domains, codes, flags, and backend ID. A relevant successful backend operation clears only its own context. `PR_WOULD_BLOCK_ERROR`/NEED states and `PST_WAIT_RESULT.timed_out` remain progress outcomes and do not create failure diagnostics.
+
+Redaction is structural: the snapshot contains only normalized result, numeric phase/domain/codes/flags/generation/validity and the validated copied backend ID. It has no fields for hostname, paths, DLL paths, certificates, keys, passwords, tokens, payload, peer-controlled text, environment values, or native error strings. Future optional logging/event code may receive a safe copy, never a transient backend pointer. Diagnostic remains distinct from logging, public control flow remains `PST_RESULT`, and remote disclosure/wire behavior are unchanged.
+
+Deterministic tests cover valid/invalid/self-copy, generation preservation and reset, replacement, independent contexts, source-destruction lifetime, backend ID/domain/code preservation, core `NONE/0`, distinct NSS native causes, successful clearing, would-block, timeout, phase association, runtime/connection separation, and the redacted fixed schema.

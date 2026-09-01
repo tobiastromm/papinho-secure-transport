@@ -6,7 +6,7 @@ Status: Phase 2 implementation. This contract is internal to PapinhoSecureTransp
 
 ## Boundary and versioning
 
-The SPI is declared in `src/pst_backend.h`. Consumers include only `include/papinho_secure_transport.h`; they never receive descriptors, vtables, or backend-private pointers. The SPI has its own packed version, currently 2.0 (`0x00020000`), independent of the public API version. Descriptor and vtable records carry both `struct_size` and `spi_version`. The current core accepts the current SPI major and records at least as large as the known layouts.
+The SPI is declared in `src/pst_backend.h`. Consumers include only `include/papinho_secure_transport.h`; they never receive descriptors, vtables, or backend-private pointers. The SPI has its own packed version, currently 2.3 (`0x00020003`), independent of the public API version. Descriptor and vtable records carry both `struct_size` and `spi_version`. The current core accepts the current SPI major and records at least as large as the known layouts.
 
 There is no dynamic loading, DLL discovery, or binary plugin contract. Backends are linked into the process and registered during controlled setup.
 
@@ -81,3 +81,7 @@ Phase 3 implements `retrozilla-nss` behind this SPI. The NSS descriptor is compi
 ## Deferred work
 
 Phase 3 may implement the first real backend behind this contract. Later phases still own public runtime/configuration/transport APIs, credential and trust material, peer identity records, selection policy, concurrency, diagnostics, and actual secure operations. Phase 2 does not begin any of that work.
+
+## SPI 2.3 internal diagnostic copy hook
+
+Phase 7.A2 appends the optional, backend-neutral `diagnostic_copy` hook to the internal vtable. The change is necessary because backend runtime and connection states are deliberately opaque: without an operation-local return expansion or a hook, the core cannot obtain the structured snapshot without a global/thread-local side channel or backend type knowledge. The hook copies a value-like `pst_internal_diagnostic`; it exposes no NSS/NSPR objects and does not move mapping logic into the core. Older same-major vtables remain usable because the core checks `struct_size` before reading the appended field. The mock and NSS descriptors use SPI 2.3; public API and ABI are unaffected.

@@ -42,5 +42,6 @@
 - Phase 7 - Interoperability / Hardening: in progress
   - 7.A Error & Diagnostic Model Hardening: in progress
     - 7.A1 internal diagnostic snapshot: complete
+    - 7.A2 internal diagnostic transport, copy and redaction: complete
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending
