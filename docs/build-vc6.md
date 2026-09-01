@@ -76,7 +76,7 @@ tools\build-vc6.bat test-nss-unit
 tools\build-vc6.bat runtime-integration
 ```
 
-Regular `test` runs `test_foundation`, `test_identity`, `test_backend_spi`, `test_diagnostic`, `test_diagnostic_transport`, `test_diagnostic_creation`, and `test_public_diagnostic`. `test-nss-unit` runs `test_backend_nss`.
+Regular `test` runs `test_foundation`, `test_identity`, `test_backend_spi`, `test_diagnostic`, `test_diagnostic_transport`, `test_diagnostic_creation`, `test_public_diagnostic`, and `test_public_header`. `test-nss-unit` runs `test_backend_nss`.
 
 After building, individual tests can be rerun directly:
 
@@ -88,6 +88,7 @@ build\vc6\test_diagnostic.exe
 build\vc6\test_diagnostic_transport.exe
 build\vc6\test_diagnostic_creation.exe
 build\vc6\test_public_diagnostic.exe
+build\vc6\test_public_header.exe
 build\vc6\test_backend_nss.exe
 ```
 

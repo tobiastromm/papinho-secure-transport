@@ -109,6 +109,73 @@ static int check_export(void)
     return 0;
 }
 
+static int public_contains(const PST_DIAGNOSTIC_INFO *value,const char *text)
+{
+    const unsigned char *bytes; pst_size i,length;
+    bytes=(const unsigned char *)value;length=strlen(text);
+    for(i=0;i+length<=sizeof(*value);++i)if(memcmp(bytes+i,text,length)==0)return 1;
+    return 0;
+}
+
+static int check_boundaries(void)
+{
+    static const pst_size lengths[]={0UL,1UL,30UL,31UL,32UL,47UL};
+    static const pst_u32 sizes[]={0UL,1UL,3UL,4UL,7UL,8UL,15UL,16UL,23UL,24UL,55UL,56UL,64UL};
+    static const pst_u32 versions[]={0UL,0x00000100UL,0x00010000UL,0x00010100UL,0x0001ffffUL,0x00020000UL};
+    pst_internal_diagnostic source; PST_DIAGNOSTIC_INFO out; char id[48]; pst_size i,j,expected; PST_RESULT validation_result;
+    memset(id,'b',sizeof(id));id[sizeof(id)-1]='\0';
+    for(i=0;i<sizeof(lengths)/sizeof(lengths[0]);++i){
+        id[lengths[i]]='\0';pst_diagnostic_initialize(&source);
+        pst_diagnostic_capture(&source,PST_RESULT_BACKEND_FAILURE,PST_DIAGNOSTIC_PHASE_RUNTIME_CREATE,id,PST_DIAGNOSTIC_DOMAIN_NSS,-1,-2,PST_DIAGNOSTIC_FLAG_NATIVE);
+        CHECK(pst_diagnostic_info_init(&out)==PST_RESULT_OK,60);
+        CHECK(pst_diagnostic_export_public(&source,&out)==PST_RESULT_OK,61);
+        expected=lengths[i]<31UL?lengths[i]:31UL;CHECK(strlen(out.backend_id)==expected,62);
+        CHECK(out.backend_id[31]=='\0',63);memset(id,'b',sizeof(id));id[sizeof(id)-1]='\0';
+    }
+    pst_diagnostic_initialize(&source);
+    for(i=0;i<sizeof(sizes)/sizeof(sizes[0]);++i)for(j=0;j<sizeof(versions)/sizeof(versions[0]);++j){
+        memset(&out,0xa5,sizeof(out));out.struct_size=sizes[i];out.api_version=versions[j];
+        validation_result=pst_diagnostic_export_public(&source,&out);
+        if(sizes[i]<PST_DIAGNOSTIC_INFO_MIN_SIZE){CHECK(validation_result==PST_RESULT_INVALID_ARGUMENT,64);}
+        else if(((versions[j]>>16)&0xffffUL)!=PST_API_VERSION_MAJOR){CHECK(validation_result==PST_RESULT_INCOMPATIBLE_API,65);}
+        else {CHECK(validation_result==PST_RESULT_OK,66);}
+    }
+    pst_diagnostic_initialize(&source);source.generation=0xffffffffUL;
+    pst_diagnostic_capture(&source,PST_RESULT_TRANSPORT_FAILURE,PST_DIAGNOSTIC_PHASE_READ,"wrap",PST_DIAGNOSTIC_DOMAIN_NSPR,-1,0,PST_DIAGNOSTIC_FLAG_NATIVE);
+    CHECK(source.valid&&source.generation==0UL,67);CHECK(pst_diagnostic_info_init(&out)==PST_RESULT_OK,68);
+    CHECK(pst_diagnostic_export_public(&source,&out)==PST_RESULT_OK&&out.generation==0UL,69);
+    return 0;
+}
+
+static int check_result_consistency(void)
+{
+    static const PST_RESULT results[]={PST_RESULT_TRANSPORT_FAILURE,PST_RESULT_PROTOCOL_FAILURE,PST_RESULT_AUTH_FAILURE,PST_RESULT_HOSTNAME_MISMATCH,PST_RESULT_CLOSED,PST_RESULT_TRUNCATED};
+    static const pst_u32 phases[]={PST_DIAGNOSTIC_PHASE_TRANSPORT_ATTACH,PST_DIAGNOSTIC_PHASE_HANDSHAKE,PST_DIAGNOSTIC_PHASE_PEER_AUTHENTICATE,PST_DIAGNOSTIC_PHASE_HOSTNAME_VERIFY,PST_DIAGNOSTIC_PHASE_READ,PST_DIAGNOSTIC_PHASE_READ};
+    pst_internal_diagnostic source; PST_DIAGNOSTIC_INFO out; pst_size i;
+    for(i=0;i<sizeof(results)/sizeof(results[0]);++i){
+        pst_diagnostic_initialize(&source);pst_diagnostic_capture(&source,results[i],phases[i],"retrozilla-nss",PST_DIAGNOSTIC_DOMAIN_NSPR,-5961,0,PST_DIAGNOSTIC_FLAG_NATIVE);
+        CHECK(pst_diagnostic_info_init(&out)==PST_RESULT_OK,85);CHECK(pst_diagnostic_export_public(&source,&out)==PST_RESULT_OK,86);
+        CHECK(out.valid&&out.normalized_result==results[i],87);
+    }
+    CHECK(results[4]!=results[5],88);return 0;
+}
+
+static int check_redaction_abuse(void)
+{
+    struct fixture { char path[24]; pst_internal_diagnostic internal; char secret[32]; } fixture;
+    PST_DIAGNOSTIC_INFO out; PST_DIAGNOSTIC_INFO saved;
+    memset(&fixture,0,sizeof(fixture));strcpy(fixture.path,"C:\\private\\fixture.key");strcpy(fixture.secret,"token=application-payload");
+    pst_diagnostic_capture(&fixture.internal,PST_RESULT_AUTH_FAILURE,PST_DIAGNOSTIC_PHASE_HOSTNAME_VERIFY,"retrozilla-nss",PST_DIAGNOSTIC_DOMAIN_NSS,-8179,-12286,PST_DIAGNOSTIC_FLAG_NATIVE|PST_DIAGNOSTIC_FLAG_SECONDARY);
+    CHECK(pst_diagnostic_info_init(&out)==PST_RESULT_OK,70);CHECK(pst_diagnostic_export_public(&fixture.internal,&out)==PST_RESULT_OK,71);
+    CHECK(!public_contains(&out,"private")&&!public_contains(&out,"token")&&!public_contains(&out,"payload"),72);
+    CHECK(!public_contains(&out,"-8179")&&!public_contains(&out,"-12286"),73);
+    saved=out;pst_diagnostic_clear(&fixture.internal);
+    CHECK(saved.valid&&saved.normalized_result==PST_RESULT_AUTH_FAILURE&&!strcmp(saved.backend_id,"retrozilla-nss"),74);
+    CHECK(pst_diagnostic_info_init(&out)==PST_RESULT_OK&&pst_diagnostic_export_public(&fixture.internal,&out)==PST_RESULT_OK&&!out.valid,75);
+    CHECK(saved.valid&&saved.operation==PST_DIAGNOSTIC_OPERATION_AUTHENTICATION,76);
+    return 0;
+}
+
 int main(void)
 {
     int result; volatile pst_u32 constant;
@@ -121,5 +188,8 @@ int main(void)
     result=check_layout();if(result)return result;
     result=check_init();if(result)return result;
     result=check_export();if(result)return result;
+    result=check_boundaries();if(result)return result;
+    result=check_result_consistency();if(result)return result;
+    result=check_redaction_abuse();if(result)return result;
     printf("test_public_diagnostic: PASS\n");return 0;
 }

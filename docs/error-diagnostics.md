@@ -119,3 +119,9 @@ The public snapshot contains only size/version, validity, context-local generati
 `pst_runtime_copy_diagnostic` and `pst_connection_copy_diagnostic` copy live-object state. `pst_runtime_create_ex` and `pst_connection_create_ex` cover failures for which no object survives, with optional caller-owned output. Existing constructors are unchanged wrappers. Output validation occurs before backend side effects; same-major larger records preserve their unknown tail. Success clears active detail, snapshots have independent lifetime, and there is no allocation or global/thread-local last error.
 
 VC6 `/W4` ABI tests freeze the 56-byte layout and offsets, constants, version compatibility, tail preservation, backend-ID truncation/termination, explicit redaction mapping, failure/success constructor behavior, multiple contexts and lifetime after destruction. API 1.1.0 and library 0.2.0 identify the public addition. SPI 2.3 is unchanged. TLS 1.2 and TLS 1.3 mTLS/ALPN secure echo regressions both retained `WRITE=25 READ=25 CONTENT_MATCH=1`.
+
+## 7.A6 abuse resistance
+
+Deterministic VC6 tests now cover malformed sizes/versions, future tails across all four public producers, null semantics, constructor transactional behavior, unknown-selector non-reflection, backend-ID boundaries, generation wrap/locality, copied snapshot immutability, success clearing, runtime/connection isolation, normalized-result association, and redaction with adjacent fake path/token/payload fixtures. A standalone `/W4` C89 consumer includes only `papinho_secure_transport.h`.
+
+The review found no public ABI flaw. One internal association bug was corrected: `pst_connection_create_ex` with a null connection-output pointer now reports coarse operation `CONNECTION`, not `RUNTIME`. API remains 1.1.0, library 0.2.0, and SPI 2.3. No native details, logging surface, backend version, TLS/readiness behavior, or remote disclosure were added.

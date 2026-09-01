@@ -363,6 +363,16 @@ int main(void)
     CHECK(diagnostic.phase == PST_DIAGNOSTIC_PHASE_READ, 101);
     CHECK(diagnostic.native_domain == PST_DIAGNOSTIC_DOMAIN_NONE && diagnostic.native_code == 0, 102);
     public_diagnostic.struct_size=sizeof(public_diagnostic);public_diagnostic.api_version=PST_API_VERSION;
+    CHECK(pst_connection_copy_diagnostic(public_connection,&public_diagnostic)==PST_RESULT_OK&&public_diagnostic.valid,115);
+    CHECK(public_diagnostic.normalized_result==PST_RESULT_INVALID_STATE&&public_diagnostic.operation==PST_DIAGNOSTIC_OPERATION_READ,116);
+    saved_public_diagnostic=public_diagnostic;
+    public_accepted=0UL;CHECK(pst_connection_attach(public_connection,&public_transport,PST_OWNERSHIP_TRANSFERRED,&public_accepted)==PST_RESULT_OK&&public_accepted==1UL,117);
+    g_next_operation=PST_BACKEND_OPERATION_COMPLETE;
+    CHECK(pst_connection_handshake(public_connection,&operation,&error)==PST_RESULT_OK&&operation==PST_OPERATION_COMPLETE,118);
+    public_diagnostic.struct_size=sizeof(public_diagnostic);public_diagnostic.api_version=PST_API_VERSION;
+    CHECK(pst_connection_copy_diagnostic(public_connection,&public_diagnostic)==PST_RESULT_OK&&!public_diagnostic.valid,119);
+    CHECK(saved_public_diagnostic.valid&&saved_public_diagnostic.normalized_result==PST_RESULT_INVALID_STATE,120);
+    public_diagnostic.struct_size=sizeof(public_diagnostic);public_diagnostic.api_version=PST_API_VERSION;
     CHECK(pst_connection_copy_diagnostic(public_connection_b,&public_diagnostic)==PST_RESULT_OK&&!public_diagnostic.valid,114);
     pst_connection_release(public_connection_b);pst_connection_release(public_connection);
 
@@ -390,7 +400,7 @@ int main(void)
     CHECK(!diagnostic.valid, 100);
     pst_config_release(public_config);
     pst_runtime_release(public_runtime);
-    CHECK(g_transport_destroy_calls == 2, 88);
+    CHECK(g_transport_destroy_calls == 3, 88);
     CHECK(pst_backend_unregister("test-backend") == PST_RESULT_OK, 50);
     CHECK(pst_backend_count() == 0 && pst_backend_find("test-backend") == NULL, 51);
     CHECK(pst_backend_unregister("test-backend") == PST_RESULT_UNAVAILABLE, 52);

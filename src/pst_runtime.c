@@ -77,7 +77,7 @@ PST_RESULT pst_connection_create_internal(pst_runtime *r,pst_config *cfg,pst_con
 {
     pst_connection *c; PST_RESULT x; pst_u32 req;
     pst_internal_operation_context_initialize(context);
-    if(!out){operation_capture(context,PST_RESULT_INVALID_ARGUMENT,PST_DIAGNOSTIC_PHASE_RUNTIME_CREATE,NULL);return PST_RESULT_INVALID_ARGUMENT;}
+    if(!out){operation_capture(context,PST_RESULT_INVALID_ARGUMENT,PST_DIAGNOSTIC_PHASE_CONNECTION_CREATE,NULL);return PST_RESULT_INVALID_ARGUMENT;}
     *out=NULL;
     if(!r||!cfg||!pst_config_is_frozen(cfg)){operation_capture(context,PST_RESULT_INVALID_STATE,PST_DIAGNOSTIC_PHASE_CONNECTION_CREATE,r?r->backend->id:NULL);return PST_RESULT_INVALID_STATE;}
     req=pst_config_required_capabilities(cfg);

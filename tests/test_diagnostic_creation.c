@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 typedef struct creation_state { pst_internal_diagnostic diagnostic; int initialized; int shutdowns; } creation_state;
+typedef struct larger_public_diagnostic { PST_DIAGNOSTIC_INFO base; unsigned char tail[8]; } larger_public_diagnostic;
 static creation_state g_a,g_b,g_c,g_r,g_oom;
 static int g_connection_fail;
 #define CHECK(c,n) if(!(c))return(n)
@@ -42,7 +43,7 @@ static const PST_BACKEND_DESCRIPTOR d_oom={sizeof(PST_BACKEND_DESCRIPTOR),PST_BA
 static void options(PST_RUNTIME_OPTIONS *o,pst_u32 selection,const char *exact,const char **ordered,pst_size count){memset(o,0,sizeof(*o));o->struct_size=sizeof(*o);o->api_version=PST_API_VERSION;o->selection=selection;o->exact_backend_id=exact;o->preferred_backend_ids=ordered;o->preferred_backend_count=count;}
 int main(void)
 {
-    PST_RUNTIME_OPTIONS o; pst_internal_operation_context a,c,success,all,oom,connection; pst_internal_diagnostic da,dc,saved; pst_runtime *runtime; pst_connection *conn; pst_config *config; const char *ordered[2]; pst_u32 g; PST_DIAGNOSTIC_INFO public_diag,public_saved; int shutdowns;
+    PST_RUNTIME_OPTIONS o; pst_internal_operation_context a,c,success,all,oom,connection; pst_internal_diagnostic da,dc,saved; pst_runtime *runtime; pst_connection *conn; pst_config *config; const char *ordered[2]; pst_u32 g; PST_DIAGNOSTIC_INFO public_diag,public_saved; larger_public_diagnostic larger; PST_RESULT old_result,new_result; int shutdowns; pst_size tail_index,size_index; static const pst_u32 bad_sizes[]={0UL,1UL,PST_DIAGNOSTIC_INFO_MIN_SIZE-1UL}; char reflected_id[80];
     pst_backend_registry_reset(); CHECK(pst_backend_register(&d_a)==PST_RESULT_OK,1);CHECK(pst_backend_register(&d_b)==PST_RESULT_OK,2);CHECK(pst_backend_register(&d_c)==PST_RESULT_OK,3);CHECK(pst_backend_register(&d_oom)==PST_RESULT_OK,4);CHECK(pst_backend_register(&d_r)==PST_RESULT_OK,49);
     options(&o,PST_BACKEND_SELECTION_EXACT,"missing-backend",NULL,0);runtime=NULL;CHECK(pst_runtime_create_internal(&o,&runtime,&a)==PST_RESULT_UNSUPPORTED,5);pst_internal_operation_context_diagnostic_copy(&a,&da);CHECK(da.valid&&da.result==PST_RESULT_UNSUPPORTED&&da.phase==PST_DIAGNOSTIC_PHASE_BACKEND_SELECT,6);CHECK(da.native_domain==PST_DIAGNOSTIC_DOMAIN_NONE&&da.native_code==0&&da.backend_id[0]=='\0',7);
     options(&o,PST_BACKEND_SELECTION_EXACT,"create-fail-a",NULL,0);CHECK(pst_runtime_create_internal(&o,&runtime,&a)==PST_RESULT_UNSUPPORTED,8);pst_internal_operation_context_diagnostic_copy(&a,&da);CHECK(da.valid&&da.result==PST_RESULT_UNAVAILABLE&&da.native_domain==PST_DIAGNOSTIC_DOMAIN_WIN32&&da.native_code==126,9);CHECK(!strcmp(da.backend_id,"create-fail-a")&&g_a.shutdowns==1&&!g_a.diagnostic.valid,10);pst_diagnostic_copy(&saved,&da);
@@ -100,5 +101,66 @@ int main(void)
     g_connection_fail=0;public_diag.struct_size=sizeof(public_diag);public_diag.api_version=PST_API_VERSION;
     CHECK(pst_connection_create_ex(runtime,config,&conn,&public_diag)==PST_RESULT_OK&&conn!=NULL,47);
     CHECK(!public_diag.valid,48);pst_connection_release(conn);pst_config_release(config);pst_runtime_release(runtime);
+
+    options(&o,PST_BACKEND_SELECTION_EXACT,"missing-backend",NULL,0);runtime=NULL;
+    memset(&larger,0xa5,sizeof(larger));larger.base.struct_size=sizeof(larger);larger.base.api_version=PST_API_VERSION;
+    CHECK(pst_runtime_create_ex(&o,&runtime,&larger.base)==PST_RESULT_UNSUPPORTED&&runtime==NULL,54);
+    for(tail_index=0;tail_index<sizeof(larger.tail);++tail_index)CHECK(larger.tail[tail_index]==0xa5,55);
+    old_result=pst_runtime_create(&o,&runtime);new_result=pst_runtime_create_ex(&o,&runtime,NULL);
+    CHECK(old_result==new_result&&new_result==PST_RESULT_UNSUPPORTED&&runtime==NULL,56);
+
+    options(&o,PST_BACKEND_SELECTION_EXACT,"create-ok-b",NULL,0);runtime=NULL;
+    memset(&larger,0xa5,sizeof(larger));larger.base.struct_size=sizeof(larger);larger.base.api_version=PST_API_VERSION;
+    CHECK(pst_runtime_create_ex(&o,&runtime,&larger.base)==PST_RESULT_OK&&runtime!=NULL&&!larger.base.valid,57);
+    for(tail_index=0;tail_index<sizeof(larger.tail);++tail_index)CHECK(larger.tail[tail_index]==0xa5,58);
+    memset(&larger,0xa5,sizeof(larger));larger.base.struct_size=sizeof(larger);larger.base.api_version=0x0001ffffUL;
+    CHECK(pst_runtime_copy_diagnostic(runtime,&larger.base)==PST_RESULT_OK&&!larger.base.valid,59);
+    for(tail_index=0;tail_index<sizeof(larger.tail);++tail_index)CHECK(larger.tail[tail_index]==0xa5,60);
+    CHECK(pst_runtime_copy_diagnostic(NULL,&larger.base)==PST_RESULT_INVALID_ARGUMENT,61);
+    CHECK(pst_runtime_copy_diagnostic(runtime,NULL)==PST_RESULT_INVALID_ARGUMENT,62);
+
+    CHECK(pst_config_create(&config)==PST_RESULT_OK&&pst_config_freeze(config)==PST_RESULT_OK,63);
+    memset(&larger,0xa5,sizeof(larger));larger.base.struct_size=sizeof(larger);larger.base.api_version=PST_API_VERSION;
+    CHECK(pst_connection_create_ex(runtime,config,&conn,&larger.base)==PST_RESULT_OK&&conn!=NULL&&!larger.base.valid,64);
+    for(tail_index=0;tail_index<sizeof(larger.tail);++tail_index)CHECK(larger.tail[tail_index]==0xa5,65);
+    memset(&larger,0xa5,sizeof(larger));larger.base.struct_size=sizeof(larger);larger.base.api_version=PST_API_VERSION;
+    CHECK(pst_connection_copy_diagnostic(conn,&larger.base)==PST_RESULT_OK&&!larger.base.valid,66);
+    for(tail_index=0;tail_index<sizeof(larger.tail);++tail_index)CHECK(larger.tail[tail_index]==0xa5,67);
+    CHECK(pst_connection_copy_diagnostic(NULL,&larger.base)==PST_RESULT_INVALID_ARGUMENT,68);
+    CHECK(pst_connection_copy_diagnostic(conn,NULL)==PST_RESULT_INVALID_ARGUMENT,69);
+    pst_connection_release(conn);
+
+    public_diag.struct_size=sizeof(public_diag);public_diag.api_version=PST_API_VERSION;
+    CHECK(pst_connection_create_ex(runtime,config,NULL,&public_diag)==PST_RESULT_INVALID_ARGUMENT,70);
+    CHECK(public_diag.valid&&public_diag.normalized_result==PST_RESULT_INVALID_ARGUMENT,71);
+    CHECK(public_diag.operation==PST_DIAGNOSTIC_OPERATION_CONNECTION,72);
+
+    options(&o,PST_BACKEND_SELECTION_EXACT,"create-ok-b",NULL,0);
+    for(size_index=0;size_index<sizeof(bad_sizes)/sizeof(bad_sizes[0]);++size_index){
+        conn=NULL;memset(&public_diag,0xa5,sizeof(public_diag));public_diag.struct_size=bad_sizes[size_index];public_diag.api_version=PST_API_VERSION;
+        CHECK(pst_connection_create_ex(runtime,config,&conn,&public_diag)==PST_RESULT_INVALID_ARGUMENT&&conn==NULL,74);
+    }
+    conn=NULL;public_diag.struct_size=sizeof(public_diag);public_diag.api_version=0x00020000UL;
+    CHECK(pst_connection_create_ex(runtime,config,&conn,&public_diag)==PST_RESULT_INCOMPATIBLE_API&&conn==NULL,75);
+    g_connection_fail=1;memset(&larger,0xa5,sizeof(larger));larger.base.struct_size=sizeof(larger);larger.base.api_version=PST_API_VERSION;
+    CHECK(pst_connection_create_ex(runtime,config,&conn,&larger.base)==PST_RESULT_BACKEND_FAILURE&&conn==NULL,76);
+    CHECK(larger.base.valid&&larger.base.normalized_result==PST_RESULT_BACKEND_FAILURE&&larger.base.operation==PST_DIAGNOSTIC_OPERATION_CONNECTION,77);
+    for(tail_index=0;tail_index<sizeof(larger.tail);++tail_index)CHECK(larger.tail[tail_index]==0xa5,78);g_connection_fail=0;
+    conn=NULL;old_result=pst_connection_create(runtime,config,&conn);pst_connection_release(conn);conn=NULL;
+    new_result=pst_connection_create_ex(runtime,config,&conn,NULL);CHECK(old_result==new_result&&new_result==PST_RESULT_OK,73);
+    pst_connection_release(conn);pst_config_release(config);pst_runtime_release(runtime);
+
+    memset(reflected_id,'A',sizeof(reflected_id));reflected_id[sizeof(reflected_id)-1]='\0';
+    options(&o,PST_BACKEND_SELECTION_EXACT,reflected_id,NULL,0);runtime=NULL;public_diag.struct_size=sizeof(public_diag);public_diag.api_version=PST_API_VERSION;
+    CHECK(pst_runtime_create_ex(&o,&runtime,&public_diag)==PST_RESULT_UNSUPPORTED&&runtime==NULL,79);
+    CHECK(public_diag.valid&&public_diag.backend_id[0]=='\0'&&public_diag.normalized_result==PST_RESULT_UNSUPPORTED,80);
+
+    options(&o,PST_BACKEND_SELECTION_EXACT,"create-ok-b",NULL,0);o.required_capabilities=PST_BACKEND_CAP_TLS_1_3;runtime=NULL;
+    public_diag.struct_size=sizeof(public_diag);public_diag.api_version=PST_API_VERSION;
+    CHECK(pst_runtime_create_ex(&o,&runtime,&public_diag)==PST_RESULT_UNSUPPORTED&&runtime==NULL,81);
+    CHECK(public_diag.valid&&public_diag.operation==PST_DIAGNOSTIC_OPERATION_RUNTIME&&!strcmp(public_diag.backend_id,"create-ok-b"),82);
+    options(&o,PST_BACKEND_SELECTION_EXACT,"create-ok-b",NULL,0);public_diag.struct_size=sizeof(public_diag);public_diag.api_version=PST_API_VERSION;
+    CHECK(pst_runtime_create_ex(&o,NULL,&public_diag)==PST_RESULT_INVALID_ARGUMENT,83);
+    CHECK(public_diag.valid&&public_diag.normalized_result==PST_RESULT_INVALID_ARGUMENT&&public_diag.operation==PST_DIAGNOSTIC_OPERATION_RUNTIME,84);
     pst_backend_registry_reset();printf("test_diagnostic_creation: PASS\n");return 0;
 }

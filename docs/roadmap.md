@@ -46,5 +46,6 @@
     - 7.A3 pre-runtime diagnostic retention and internal operation context: complete
     - 7.A4 controlled diagnostic exposure design: complete
     - 7.A5 public diagnostic ABI foundation: complete
+    - 7.A6 public diagnostic API hardening and abuse resistance: complete
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending

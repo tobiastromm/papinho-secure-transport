@@ -151,3 +151,38 @@ Live snapshots use `pst_runtime_copy_diagnostic` and `pst_connection_copy_diagno
 Redaction is structural. The public record has no fields for native domain/code, flags, internal phase, arbitrary/native text, pointers, paths, environment data, hostname, ALPN, certificate/DER, trust, credentials, keys, tokens, payload, timestamps, threads, history, or severity. Portable control flow continues to use the returned `PST_RESULT` and progress records.
 
 The API version is now 1.1.0 and the library version is 0.2.0. The internal backend SPI remains 2.3 because public snapshot export and constructor wrappers require no backend-vtable change.
+
+## 7.A6 hardening contract
+
+Phase 7.A6 freezes the 7.A5 public layout and values without an API, ABI, library-version, or SPI-version change. `PST_DIAGNOSTIC_INFO` remains 56 bytes on VC6 with minimum prefix 56, backend ID capacity 32, API 1.1.0, library 0.2.0, and SPI 2.3.
+
+Canonical C89 initialization is:
+
+```c
+PST_DIAGNOSTIC_INFO diagnostic;
+pst_runtime *runtime;
+PST_RESULT result;
+
+runtime = NULL;
+if (pst_diagnostic_info_init(&diagnostic) != PST_RESULT_OK) {
+    /* invalid local pointer */
+}
+result = pst_runtime_create_ex(&options, &runtime, &diagnostic);
+if (result != PST_RESULT_OK && diagnostic.valid) {
+    /* Branch portably on result/diagnostic.normalized_result. */
+    /* operation and backend_id are supplemental local troubleshooting context. */
+    /* pst_result_string(diagnostic.normalized_result) is stable generic text. */
+}
+```
+
+A caller may instead zero storage and assign `struct_size` and `api_version`. No other bytes need initialization. Consumers must not overlap diagnostic output storage with another argument or output object; overlapping argument buffers are outside the contract. `diagnostic == NULL` remains allowed only for the extended constructors. Typed copy functions require both a live typed object and valid output storage.
+
+Every diagnostic-consuming API rejects sizes 0, 1, field-boundary representatives, and 55 before backend/object side effects. Size 56 is accepted. Larger same-major records are accepted, only the known 56-byte prefix is written, and the unknown tail is preserved by runtime query, connection query, runtime creation, and connection creation. Major 1 versions, including later minor values, are compatible; zero and other majors are incompatible.
+
+The backend ID is a copied stable provider ID, never display name or requested selector reflection. Empty through 31-byte values are terminated directly; 32-byte and longer internal values truncate deterministically to 31 bytes plus NUL. A shorter later value clears stale bytes. An unknown caller-supplied exact selector exports an empty backend ID.
+
+Generation wraps modulo 2^32, is local to one source/context, and cannot order different objects. Capture/reset increment it; copy preserves it; older caller snapshots remain unchanged by later capture/reset or destruction. Runtime, connection, and constructor-attempt contexts remain independent.
+
+WOULD_BLOCK/NEED states and normal wait timeout remain progress, not failure diagnostics. Clean CLOSED remains distinct from TRUNCATED; a retained truncation diagnostic, when present, carries normalized `TRUNCATED` without native detail. Native domains/codes, flags, detailed phases, paths, hostnames, peer text, credentials, trust, keys, tokens, payload and arbitrary messages remain structurally absent. Diagnostics do not affect TLS alerts or wire bytes.
+
+Application policy remains: normalized result for portable decisions; operation/backend ID for local support context; `pst_result_string` for generic stable English text; localization, UI wording and logging policy belong to the application. No logger, callback, sink, severity, automatic file, or backend-version API is introduced.
