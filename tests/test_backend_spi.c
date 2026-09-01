@@ -114,6 +114,13 @@ static PST_RESULT mock_wait(void *connection, pst_u32 interest, pst_u32 timeout_
                             PST_BACKEND_WAIT_RESULT *result)
 {
     if (connection != &g_connection || result == NULL) return PST_RESULT_INVALID_ARGUMENT;
+    if (g_readiness_scenario == 4) {
+        result->timed_out = 0UL; result->ready_interest = PST_BACKEND_INTEREST_NONE;
+        pst_diagnostic_capture(&g_connection.diagnostic, PST_RESULT_TRANSPORT_FAILURE,
+            PST_DIAGNOSTIC_PHASE_WAIT, "test-backend",
+            PST_DIAGNOSTIC_DOMAIN_NSPR, -5961, 10054, PST_DIAGNOSTIC_FLAG_NATIVE | PST_DIAGNOSTIC_FLAG_SECONDARY);
+        return PST_RESULT_TRANSPORT_FAILURE;
+    }
     if (g_readiness_scenario != 0) {
         g_wait_interests[g_scenario_wait_calls] = interest;
         ++g_scenario_wait_calls; result->timed_out = 0UL;
@@ -352,7 +359,17 @@ int main(void)
     CHECK(public_wait.ready_interest == (PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE), 85);
     CHECK(pst_connection_read(public_connection, buffer, sizeof(buffer), &public_io) == PST_RESULT_OK, 86);
     CHECK(public_io.operation == PST_OPERATION_COMPLETE && public_io.bytes_transferred == 1, 87);
-    g_readiness_scenario = 0;
+    g_readiness_scenario = 4;
+    g_connection.interest = PST_BACKEND_INTEREST_READ;
+    CHECK(pst_connection_wait(public_connection, 250, &public_wait) ==
+        PST_RESULT_TRANSPORT_FAILURE, 121);
+    pst_connection_diagnostic_copy(public_connection, &diagnostic);
+    CHECK(diagnostic.valid && diagnostic.result == PST_RESULT_TRANSPORT_FAILURE &&
+        diagnostic.phase == PST_DIAGNOSTIC_PHASE_WAIT, 124);
+    CHECK(pst_connection_get_interest(public_connection, &interest) ==
+        PST_RESULT_INVALID_STATE, 122);
+    CHECK(pst_connection_read(public_connection, buffer, sizeof(buffer),
+        &public_io) == PST_RESULT_INVALID_STATE, 123);
     pst_connection_release(public_connection);
 
     CHECK(pst_connection_create(public_runtime, public_config, &public_connection) == PST_RESULT_OK, 89);

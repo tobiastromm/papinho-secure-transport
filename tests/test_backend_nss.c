@@ -17,6 +17,7 @@ int main(void)
     void *runtime_state;
     void *connection_state;
     pst_u32 accepted;
+    pst_u32 ready_interest;
     PST_RUNTIME_OPTIONS options;
     PST_RUNTIME_INFO runtime_info;
     pst_runtime *public_runtime;
@@ -37,6 +38,18 @@ int main(void)
     CHECK(descriptor->vtable->connection_configure_identity != NULL, 31);
     CHECK(pst_backend_nss_is_would_block(PR_WOULD_BLOCK_ERROR), 7);
     CHECK(!pst_backend_nss_is_would_block(PR_CONNECT_RESET_ERROR), 8);
+    CHECK(pst_backend_nss_classify_poll_flags(1, 0, 0, 1, 0,
+        &ready_interest) == PST_RESULT_OK, 41);
+    CHECK(ready_interest == PST_BACKEND_INTEREST_READ, 42);
+    CHECK(pst_backend_nss_classify_poll_flags(0, 0, 0, 1, 0,
+        &ready_interest) == PST_RESULT_OK, 43);
+    CHECK(ready_interest == PST_BACKEND_INTEREST_READ, 44);
+    CHECK(pst_backend_nss_classify_poll_flags(1, 1, 1, 0, 0,
+        &ready_interest) == PST_RESULT_TRANSPORT_FAILURE, 45);
+    CHECK(pst_backend_nss_classify_poll_flags(0, 0, 0, 0, 1,
+        &ready_interest) == PST_RESULT_TRANSPORT_FAILURE, 46);
+    CHECK(pst_backend_nss_classify_poll_flags(0, 0, 0, 0, 0,
+        NULL) == PST_RESULT_INVALID_ARGUMENT, 47);
     CHECK(pst_backend_nss_normalize_error(PR_CONNECT_RESET_ERROR) == PST_RESULT_TRUNCATED, 9);
     CHECK(pst_backend_nss_normalize_error(PR_IO_ERROR) == PST_RESULT_TRANSPORT_FAILURE, 10);
     CHECK(pst_backend_nss_normalize_error(SSL_ERROR_BAD_CERT_DOMAIN) == PST_RESULT_HOSTNAME_MISMATCH, 11);

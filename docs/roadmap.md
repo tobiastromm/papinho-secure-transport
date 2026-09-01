@@ -50,5 +50,9 @@
     - 7.A7 consumer-controlled logging/event sink design: complete
     - 7.A8 logging event ABI review and minimal public sink: complete
     - 7.A closure audit: complete
+  - 7.B Connection Failure Matrix: in progress
+    - audit and readiness/wait defect correction: host complete
+    - deterministic close/reset/write/shutdown fixtures: pending
+    - targeted NT4 HUP/read regression: pending
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending

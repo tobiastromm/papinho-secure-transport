@@ -15,6 +15,9 @@ const PST_BACKEND_DESCRIPTOR *pst_backend_nss_descriptor(void);
 PST_RESULT pst_backend_nss_register(void);
 PST_RESULT pst_backend_nss_normalize_error(pst_i32 native_error);
 int pst_backend_nss_is_would_block(pst_i32 native_error);
+PST_RESULT pst_backend_nss_classify_poll_flags(int read_ready, int write_ready,
+    int error_ready, int hangup_ready, int invalid_ready,
+    pst_u32 *ready_interest);
 pst_i32 pst_backend_nss_last_error(const void *state);
 pst_u32 pst_backend_nss_connection_protocol_version(const void *state);
 void pst_backend_nss_trace_set_epoch(pst_u32 epoch);

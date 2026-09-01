@@ -257,6 +257,17 @@ int pst_backend_nss_is_would_block(pst_i32 error)
 {
     return error == (pst_i32)PR_WOULD_BLOCK_ERROR;
 }
+PST_RESULT pst_backend_nss_classify_poll_flags(int read_ready, int write_ready,
+    int error_ready, int hangup_ready, int invalid_ready,
+    pst_u32 *ready_interest)
+{
+    if (ready_interest == NULL) return PST_RESULT_INVALID_ARGUMENT;
+    *ready_interest = PST_BACKEND_INTEREST_NONE;
+    if (read_ready || hangup_ready) *ready_interest |= PST_BACKEND_INTEREST_READ;
+    if (write_ready) *ready_interest |= PST_BACKEND_INTEREST_WRITE;
+    if (error_ready || invalid_ready) return PST_RESULT_TRANSPORT_FAILURE;
+    return PST_RESULT_OK;
+}
 PST_RESULT pst_backend_nss_normalize_error(pst_i32 error)
 {
     if (pst_backend_nss_is_would_block(error)) return PST_RESULT_OK;
@@ -691,16 +702,21 @@ static PST_RESULT pst_nss_wait(void *state, pst_u32 interest, pst_u32 timeout_ms
         pst_nss_trace("PR_Poll_class", "error result=normalized");
         return pst_backend_nss_normalize_error(c->last_error);
     }
-    if ((poll_desc.out_flags & PR_POLL_READ) != 0) result->ready_interest |= PST_BACKEND_INTEREST_READ;
-    if ((poll_desc.out_flags & PR_POLL_WRITE) != 0) result->ready_interest |= PST_BACKEND_INTEREST_WRITE;
-    if ((poll_desc.out_flags & (PR_POLL_ERR | PR_POLL_NVAL)) != 0) {
-        pst_nss_trace("PR_Poll_class", "ERR_OR_NVAL result=TRANSPORT_FAILURE");
-        return PST_RESULT_TRANSPORT_FAILURE;
+    {
+        PST_RESULT classification = pst_backend_nss_classify_poll_flags(
+            (poll_desc.out_flags & PR_POLL_READ) != 0,
+            (poll_desc.out_flags & PR_POLL_WRITE) != 0,
+            (poll_desc.out_flags & PR_POLL_ERR) != 0,
+            (poll_desc.out_flags & PR_POLL_HUP) != 0,
+            (poll_desc.out_flags & PR_POLL_NVAL) != 0,
+            &result->ready_interest);
+        if (classification != PST_RESULT_OK) {
+            pst_nss_trace("PR_Poll_class", "ERR_OR_NVAL result=TRANSPORT_FAILURE");
+            return classification;
+        }
     }
-    if ((poll_desc.out_flags & PR_POLL_HUP) != 0) {
-        pst_nss_trace("PR_Poll_class", "HUP result=CLOSED");
-        return PST_RESULT_CLOSED;
-    }
+    if ((poll_desc.out_flags & PR_POLL_HUP) != 0)
+        pst_nss_trace("PR_Poll_class", "HUP result=READ_READY");
     pst_nss_trace("PR_Poll_class", "ready result=OK");
     return PST_RESULT_OK;
 }
