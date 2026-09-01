@@ -23,13 +23,13 @@ extern "C" {
 #endif
 
 #define PST_API_VERSION_MAJOR 1UL
-#define PST_API_VERSION_MINOR 0UL
+#define PST_API_VERSION_MINOR 1UL
 #define PST_API_VERSION_PATCH 0UL
-#define PST_API_VERSION 0x00010000UL
+#define PST_API_VERSION 0x00010100UL
 #define PST_LIBRARY_VERSION_MAJOR 0UL
-#define PST_LIBRARY_VERSION_MINOR 1UL
+#define PST_LIBRARY_VERSION_MINOR 2UL
 #define PST_LIBRARY_VERSION_PATCH 0UL
-#define PST_LIBRARY_VERSION 0x00000100UL
+#define PST_LIBRARY_VERSION 0x00000200UL
 
 typedef unsigned char pst_u8;
 #if USHRT_MAX == 0xffffU
@@ -78,6 +78,30 @@ typedef struct pst_trust pst_trust;
 typedef struct pst_connection pst_connection;
 typedef struct pst_peer_info pst_peer_info;
 typedef struct pst_transport pst_transport;
+
+#define PST_DIAGNOSTIC_BACKEND_ID_CAPACITY 32UL
+#define PST_DIAGNOSTIC_OPERATION_NONE 0UL
+#define PST_DIAGNOSTIC_OPERATION_RUNTIME 1UL
+#define PST_DIAGNOSTIC_OPERATION_CONFIGURATION 2UL
+#define PST_DIAGNOSTIC_OPERATION_TRANSPORT 3UL
+#define PST_DIAGNOSTIC_OPERATION_CONNECTION 4UL
+#define PST_DIAGNOSTIC_OPERATION_HANDSHAKE 5UL
+#define PST_DIAGNOSTIC_OPERATION_AUTHENTICATION 6UL
+#define PST_DIAGNOSTIC_OPERATION_READ 7UL
+#define PST_DIAGNOSTIC_OPERATION_WRITE 8UL
+#define PST_DIAGNOSTIC_OPERATION_WAIT 9UL
+#define PST_DIAGNOSTIC_OPERATION_SHUTDOWN 10UL
+#define PST_DIAGNOSTIC_OPERATION_PEER_INFO 11UL
+typedef struct PST_DIAGNOSTIC_INFO {
+    pst_u32 struct_size;
+    pst_u32 api_version;
+    pst_u32 valid;
+    pst_u32 generation;
+    PST_RESULT normalized_result;
+    pst_u32 operation;
+    char backend_id[PST_DIAGNOSTIC_BACKEND_ID_CAPACITY];
+} PST_DIAGNOSTIC_INFO;
+#define PST_DIAGNOSTIC_INFO_MIN_SIZE 56UL
 
 typedef struct PST_VERSION_INFO {
     pst_u32 struct_size;
@@ -192,6 +216,7 @@ PST_API pst_u32 PST_CALL pst_library_version(void);
 PST_API PST_RESULT PST_CALL pst_version_info_init(PST_VERSION_INFO *info);
 PST_API PST_RESULT PST_CALL pst_get_version(PST_VERSION_INFO *info);
 PST_API const char *PST_CALL pst_result_string(PST_RESULT result);
+PST_API PST_RESULT PST_CALL pst_diagnostic_info_init(PST_DIAGNOSTIC_INFO *info);
 PST_API PST_RESULT PST_CALL pst_credentials_create(const PST_CREDENTIAL_SOURCE *source, pst_credentials **out_credentials);
 PST_API void PST_CALL pst_credentials_release(pst_credentials *credentials);
 PST_API PST_RESULT PST_CALL pst_trust_create(const PST_TRUST_SOURCE *source, pst_trust **out_trust);
@@ -204,10 +229,14 @@ PST_API PST_RESULT PST_CALL pst_peer_info_get_summary(const pst_peer_info *peer_
 PST_API PST_RESULT PST_CALL pst_peer_info_copy_leaf_der(const pst_peer_info *peer_info, pst_u8 *buffer, pst_size capacity, pst_size *out_size);
 PST_API void PST_CALL pst_peer_info_release(pst_peer_info *peer_info);
 PST_API PST_RESULT PST_CALL pst_runtime_create(const PST_RUNTIME_OPTIONS *options, pst_runtime **out_runtime);
+PST_API PST_RESULT PST_CALL pst_runtime_create_ex(const PST_RUNTIME_OPTIONS *options, pst_runtime **out_runtime, PST_DIAGNOSTIC_INFO *diagnostic);
+PST_API PST_RESULT PST_CALL pst_runtime_copy_diagnostic(const pst_runtime *runtime, PST_DIAGNOSTIC_INFO *diagnostic);
 PST_API void PST_CALL pst_runtime_release(pst_runtime *runtime);
 PST_API PST_RESULT PST_CALL pst_runtime_get_info(const pst_runtime *runtime, PST_RUNTIME_INFO *info);
 PST_API PST_RESULT PST_CALL pst_config_set_tls_policy(pst_config *config, const PST_TLS_POLICY *policy);
 PST_API PST_RESULT PST_CALL pst_connection_create(pst_runtime *runtime, pst_config *config, pst_connection **out_connection);
+PST_API PST_RESULT PST_CALL pst_connection_create_ex(pst_runtime *runtime, pst_config *config, pst_connection **out_connection, PST_DIAGNOSTIC_INFO *diagnostic);
+PST_API PST_RESULT PST_CALL pst_connection_copy_diagnostic(const pst_connection *connection, PST_DIAGNOSTIC_INFO *diagnostic);
 PST_API PST_RESULT PST_CALL pst_connection_attach(pst_connection *connection, pst_transport *transport, pst_u32 ownership, pst_u32 *ownership_accepted);
 PST_API PST_RESULT PST_CALL pst_connection_handshake(pst_connection *connection, pst_u32 *operation, PST_RESULT *error);
 PST_API PST_RESULT PST_CALL pst_connection_get_interest(pst_connection *connection, pst_u32 *interest);

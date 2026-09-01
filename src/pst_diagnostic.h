@@ -1,7 +1,6 @@
 #ifndef PST_DIAGNOSTIC_H
 #define PST_DIAGNOSTIC_H
 #include "papinho_secure_transport.h"
-#define PST_DIAGNOSTIC_BACKEND_ID_CAPACITY 32
 #define PST_DIAGNOSTIC_DOMAIN_NONE 0UL
 #define PST_DIAGNOSTIC_DOMAIN_NSPR 1UL
 #define PST_DIAGNOSTIC_DOMAIN_NSS 2UL
@@ -32,5 +31,7 @@ typedef struct pst_internal_diagnostic { PST_RESULT result; pst_u32 phase; pst_u
 void pst_diagnostic_initialize(pst_internal_diagnostic *diagnostic);
 void pst_diagnostic_clear(pst_internal_diagnostic *diagnostic);
 void pst_diagnostic_copy(pst_internal_diagnostic *destination,const pst_internal_diagnostic *source);
+PST_RESULT pst_diagnostic_validate_public(const PST_DIAGNOSTIC_INFO *out);
+PST_RESULT pst_diagnostic_export_public(const pst_internal_diagnostic *source,PST_DIAGNOSTIC_INFO *out);
 void pst_diagnostic_capture(pst_internal_diagnostic *diagnostic,PST_RESULT result,pst_u32 phase,const char *backend_id,pst_u32 native_domain,pst_i32 native_code,pst_i32 secondary_native_code,pst_u32 flags);
 #endif

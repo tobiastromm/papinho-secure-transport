@@ -1,6 +1,6 @@
 # Error and diagnostic model hardening
 
-Status: Phase 7.A in progress. Public API/ABI, TLS behavior, and remote-visible behavior are unchanged; Phase 7.A2 adds one optional append-only hook to the internal SPI.
+Status: Phase 7.A in progress. Phase 7.A5 exposes the first structurally redacted public diagnostic value ABI; TLS behavior and remote-visible behavior are unchanged, and the internal SPI remains 2.3.
 
 ## Policy
 
@@ -52,7 +52,7 @@ Already available separately:
 - backend ID and capabilities through `pst_runtime_get_info`;
 - negotiated TLS version through `PST_PEER_INFO_SUMMARY`.
 
-Not currently available publicly: backend implementation version and a structured local diagnostic snapshot. These must remain distinct concepts if added. No ABI addition is approved by this audit.
+A limited structured local snapshot is now available publicly through `PST_DIAGNOSTIC_INFO`. Backend implementation version remains unavailable and distinct provider metadata; it is not duplicated into error snapshots.
 
 ## Backend naming
 
@@ -111,3 +111,11 @@ The operation context contains only the existing redacted snapshot. It allocates
 The public boundary audit is recorded in [diagnostic-api-design.md](diagnostic-api-design.md). No API is added in 7.A4. The recommendation is a limited first public subset in a later 7.A subtask: caller-owned value snapshot, coarse stable operation category, normalized result, context-local generation and copied backend ID; typed runtime/connection copy functions; and compatibility-preserving extended constructors for failures with no returned object. Native domains/codes, fine internal phases and classification flags remain internal until a cross-backend registry and ABI review are complete.
 
 This design solves live runtime, live connection and failed-constructor cases without `pst_get_last_error`, global or thread-local state. Diagnostic remains a latest active snapshot, not history or logging. Backend implementation version remains separate runtime/provider metadata. Success clears stale detail; clean close, WOULD_BLOCK and timeout are not forced into diagnostic failures. Public API/ABI, SPI, TLS and remote disclosure remain unchanged by 7.A4.
+
+## 7.A5 public diagnostic ABI foundation
+
+The public snapshot contains only size/version, validity, context-local generation, normalized `PST_RESULT`, a coarse public operation and a copied fixed-capacity backend ID. Native domains/codes, secondary codes, flags and fine internal phases remain private. Arbitrary strings, paths, hostname/ALPN, certificates, credentials, trust, keys, tokens, application payload and native pointers are structurally unrepresentable.
+
+`pst_runtime_copy_diagnostic` and `pst_connection_copy_diagnostic` copy live-object state. `pst_runtime_create_ex` and `pst_connection_create_ex` cover failures for which no object survives, with optional caller-owned output. Existing constructors are unchanged wrappers. Output validation occurs before backend side effects; same-major larger records preserve their unknown tail. Success clears active detail, snapshots have independent lifetime, and there is no allocation or global/thread-local last error.
+
+VC6 `/W4` ABI tests freeze the 56-byte layout and offsets, constants, version compatibility, tail preservation, backend-ID truncation/termination, explicit redaction mapping, failure/success constructor behavior, multiple contexts and lifetime after destruction. API 1.1.0 and library 0.2.0 identify the public addition. SPI 2.3 is unchanged. TLS 1.2 and TLS 1.3 mTLS/ALPN secure echo regressions both retained `WRITE=25 READ=25 CONTENT_MATCH=1`.

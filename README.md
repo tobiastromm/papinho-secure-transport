@@ -1,10 +1,10 @@
 # PapinhoSecureTransport
 
-Phase 5 provides the public incremental TLS runtime. See [docs/tls-runtime.md](docs/tls-runtime.md) for backend selection, frozen policy, the separate Win32 adapter, readiness, secure I/O, peer identity and shutdown. Phase 6 legacy-platform validation has not started.
+Phase 6 legacy-platform validation is complete and Phase 7 interoperability/hardening is in progress. Phase 7.A5 adds the first limited public diagnostic snapshot ABI while retaining normalized `PST_RESULT` control flow. See [docs/tls-runtime.md](docs/tls-runtime.md), [docs/error-diagnostics.md](docs/error-diagnostics.md), and [docs/diagnostic-api-design.md](docs/diagnostic-api-design.md).
 
 PapinhoSecureTransport is an independent secure-transport abstraction project. Its direction is portable C, initially focused on TLS through mature cryptographic/TLS backends. It will not implement cryptography, certificate validation, or a TLS state machine of its own.
 
-Phase 1 provides the portable public foundation: C89-compatible fixed-width types, stable result codes, API/library version queries, size/version-tagged public records, and opaque handle declarations. The foundation builds and its unit test runs with Visual C++ 6.0. It does not yet implement TLS, backend selection, networking, credentials, trust, or the backend SPI.
+The public API remains C89/VC6-compatible and backend-neutral. API 1.1.0/library 0.2.0 provide size/version-tagged `PST_DIAGNOSTIC_INFO`, typed runtime/connection snapshot copies, and optional-output extended constructors. The public snapshot deliberately excludes native error codes, private phases, pointers, secrets, peer data, payload, paths, and arbitrary text.
 
 Project licensing is pending a decision. Third-party files retain their own licenses under `third_party/`.
 

@@ -1,10 +1,10 @@
 # Controlled diagnostic exposure design
 
-Status: Phase 7.A4 design decision. No public API, ABI, implementation, SPI, TLS, readiness, logging, or wire behavior is changed by this document.
+Status: Phase 7.A5 public diagnostic ABI foundation implemented. The limited subset approved in 7.A4 is now public; SPI, TLS, readiness, logging, and wire behavior are unchanged.
 
 ## Decision
 
-Use a staged, explicit and typed public model in a later 7.A subtask. The recommended first public subset consists of a caller-owned value snapshot, typed copy functions for live runtime/connection objects, and compatibility-preserving extended constructor variants that accept an optional caller-owned diagnostic destination. Existing constructor signatures remain indefinitely supported. No public diagnostic API is implemented in 7.A4.
+The first public subset is staged, explicit and typed: caller-owned `PST_DIAGNOSTIC_INFO` value snapshots, typed copy functions for live runtime/connection objects, and compatibility-preserving extended constructor variants accepting an optional diagnostic destination. Existing constructor signatures remain supported wrappers. Native detail remains private.
 
 This is Option 3: expose a limited subset first. The internal taxonomy and native detail remain private until their stability and cross-backend policy are proven. This avoids freezing Phase 9 ABI prematurely while solving live-object and failed-constructor cases without global last-error state.
 
@@ -119,6 +119,35 @@ The eventual structure must use explicit PST integer types, `struct_size`, `api_
 
 The proposed public subset is local structured data, not remote protocol data. It never changes TLS alerts, certificate validation, trust, credentials, hostname verification, ALPN, readiness, secure I/O or shutdown. No localization, logging callback, level, console output or automatic file is introduced.
 
-## Next gate inside 7.A
+## 7.A4 gate disposition
 
-The next subtask should specify and test the limited public snapshot ABI and conversion from internal snapshots, including VC6 layout/size-version behavior, without yet exposing native domains/codes. It should also prototype typed runtime/connection copy and compatible extended runtime/connection constructors. Public constants should be accepted only after that focused ABI review.
+The focused ABI review requested by 7.A4 was completed in 7.A5. The limited snapshot, explicit conversion, typed copies and extended constructors were accepted with the constraints below.
+
+## 7.A5 implemented ABI
+
+`PST_DIAGNOSTIC_INFO` is a 56-byte C89 value on VC6: `struct_size` at offset 0, `api_version` at 4, `valid` at 8, `generation` at 12, normalized result at 16, coarse operation at 20, and a copied 32-byte backend ID at 24. `pst_diagnostic_info_init` initializes current size/version in caller storage, consistently with the Phase 1 initializer. Queries and extended constructors validate those fields. The implementation rejects a too-small record or incompatible API major before constructor side effects, accepts a larger same-major record, writes only the known 56-byte prefix, preserves the unknown tail, and guarantees backend-ID termination. The inline textual backend ID capacity is 32 bytes: at most 31 ID bytes plus the terminating NUL; longer validated internal IDs are deterministically truncated.
+
+The public operations are `NONE`, `RUNTIME`, `CONFIGURATION`, `TRANSPORT`, `CONNECTION`, `HANDSHAKE`, `AUTHENTICATION`, `READ`, `WRITE`, `WAIT`, `SHUTDOWN`, and `PEER_INFO`. Their numeric values are explicitly frozen from 0 through 11.
+
+| Internal phase | Public operation |
+|---|---|
+| `NONE` or unknown | `NONE` |
+| backend initialize, runtime create, capability validate, backend select | `RUNTIME` |
+| TLS configure, ALPN, identity setup | `CONFIGURATION` |
+| transport attach | `TRANSPORT` |
+| connection create | `CONNECTION` |
+| handshake | `HANDSHAKE` |
+| peer authenticate, hostname verify | `AUTHENTICATION` |
+| read | `READ` |
+| write | `WRITE` |
+| wait | `WAIT` |
+| shutdown | `SHUTDOWN` |
+| peer info | `PEER_INFO` |
+
+No internal phase number crosses the ABI.
+
+Live snapshots use `pst_runtime_copy_diagnostic` and `pst_connection_copy_diagnostic`. Failed-constructor snapshots use `pst_runtime_create_ex` and `pst_connection_create_ex`; the diagnostic pointer is optional. The original constructors call the extended forms with no diagnostic, preserving source and binary behavior. No global/thread-local last-error state exists. A successful operation exports `valid=0`, while a relevant failure exports a normalized result and copied backend ID. A copied value survives source mutation and object destruction without allocation.
+
+Redaction is structural. The public record has no fields for native domain/code, flags, internal phase, arbitrary/native text, pointers, paths, environment data, hostname, ALPN, certificate/DER, trust, credentials, keys, tokens, payload, timestamps, threads, history, or severity. Portable control flow continues to use the returned `PST_RESULT` and progress records.
+
+The API version is now 1.1.0 and the library version is 0.2.0. The internal backend SPI remains 2.3 because public snapshot export and constructor wrappers require no backend-vtable change.

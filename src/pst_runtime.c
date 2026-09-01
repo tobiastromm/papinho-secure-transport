@@ -60,7 +60,17 @@ PST_RESULT pst_runtime_create_internal(const PST_RUNTIME_OPTIONS *o,pst_runtime 
     }
     return PST_RESULT_UNSUPPORTED;
 }
-PST_RESULT PST_CALL pst_runtime_create(const PST_RUNTIME_OPTIONS *o,pst_runtime **out){pst_internal_operation_context context;return pst_runtime_create_internal(o,out,&context);}
+PST_RESULT PST_CALL pst_runtime_create_ex(const PST_RUNTIME_OPTIONS *o,pst_runtime **out,PST_DIAGNOSTIC_INFO *diagnostic)
+{
+    pst_internal_operation_context context;PST_RESULT result,export_result;
+    if(out)*out=NULL;
+    if(diagnostic){result=pst_diagnostic_validate_public(diagnostic);if(result!=PST_RESULT_OK)return result;}
+    result=pst_runtime_create_internal(o,out,&context);
+    if(diagnostic){export_result=pst_diagnostic_export_public(&context.diagnostic,diagnostic);if(export_result!=PST_RESULT_OK)return export_result;if(diagnostic->valid)diagnostic->normalized_result=result;}
+    return result;
+}
+PST_RESULT PST_CALL pst_runtime_create(const PST_RUNTIME_OPTIONS *o,pst_runtime **out){return pst_runtime_create_ex(o,out,NULL);}
+PST_RESULT PST_CALL pst_runtime_copy_diagnostic(const pst_runtime *runtime,PST_DIAGNOSTIC_INFO *diagnostic){if(!runtime||!diagnostic)return PST_RESULT_INVALID_ARGUMENT;return pst_diagnostic_export_public(&runtime->diagnostic,diagnostic);}
 void PST_CALL pst_runtime_release(pst_runtime *r){if(!r)return;if(r->connections)return;r->backend->vtable->runtime_destroy(r->runtime_state);r->backend->vtable->shutdown(r->backend_state);free(r);}
 PST_RESULT PST_CALL pst_runtime_get_info(const pst_runtime *r,PST_RUNTIME_INFO *i){if(!r||!i||i->struct_size<PST_RUNTIME_INFO_MIN_SIZE)return PST_RESULT_INVALID_ARGUMENT;if(!version_ok(i->api_version))return PST_RESULT_INCOMPATIBLE_API;i->backend_id=r->backend->id;i->capabilities=r->capabilities;return PST_RESULT_OK;}
 PST_RESULT pst_connection_create_internal(pst_runtime *r,pst_config *cfg,pst_connection **out,pst_internal_operation_context *context)
@@ -84,7 +94,17 @@ PST_RESULT pst_connection_create_internal(pst_runtime *r,pst_config *cfg,pst_con
     if(context)pst_diagnostic_clear(&context->diagnostic);
     *out=c;return PST_RESULT_OK;
 }
-PST_RESULT PST_CALL pst_connection_create(pst_runtime *r,pst_config *cfg,pst_connection **out){pst_internal_operation_context context;return pst_connection_create_internal(r,cfg,out,&context);}
+PST_RESULT PST_CALL pst_connection_create_ex(pst_runtime *r,pst_config *cfg,pst_connection **out,PST_DIAGNOSTIC_INFO *diagnostic)
+{
+    pst_internal_operation_context context;PST_RESULT result,export_result;
+    if(out)*out=NULL;
+    if(diagnostic){result=pst_diagnostic_validate_public(diagnostic);if(result!=PST_RESULT_OK)return result;}
+    result=pst_connection_create_internal(r,cfg,out,&context);
+    if(diagnostic){export_result=pst_diagnostic_export_public(&context.diagnostic,diagnostic);if(export_result!=PST_RESULT_OK)return export_result;if(diagnostic->valid)diagnostic->normalized_result=result;}
+    return result;
+}
+PST_RESULT PST_CALL pst_connection_create(pst_runtime *r,pst_config *cfg,pst_connection **out){return pst_connection_create_ex(r,cfg,out,NULL);}
+PST_RESULT PST_CALL pst_connection_copy_diagnostic(const pst_connection *connection,PST_DIAGNOSTIC_INFO *diagnostic){if(!connection||!diagnostic)return PST_RESULT_INVALID_ARGUMENT;return pst_diagnostic_export_public(&connection->diagnostic,diagnostic);}
 PST_RESULT PST_CALL pst_connection_attach(pst_connection *c,pst_transport *t,pst_u32 own,pst_u32 *accepted){PST_RESULT x;if(!accepted)return PST_RESULT_INVALID_ARGUMENT;*accepted=0;if(!c||!t||c->state!=C_CREATED)return PST_RESULT_INVALID_STATE;if(own!=PST_OWNERSHIP_TRANSFERRED)return PST_RESULT_UNSUPPORTED;if(strcmp(t->backend_id,c->runtime->backend->id))return PST_RESULT_UNSUPPORTED;x=c->runtime->backend->vtable->attach_transport(c->backend_state,t->native,own,accepted);diagnostic_pull(c->runtime->backend,c->backend_state,&c->diagnostic);if(*accepted){c->transport=t;c->state=x==PST_RESULT_OK?C_ATTACHED:C_FAILED;}return x;}
 PST_RESULT PST_CALL pst_connection_handshake(pst_connection *c,pst_u32 *op,PST_RESULT *error){PST_RESULT x;if(!c||!op||!error||(c->state!=C_ATTACHED&&c->state!=C_HANDSHAKING))return PST_RESULT_INVALID_STATE;progress_reset(c);c->state=C_HANDSHAKING;x=c->runtime->backend->vtable->handshake_step(c->backend_state,op,error);diagnostic_pull(c->runtime->backend,c->backend_state,&c->diagnostic);if(x!=PST_RESULT_OK||*op==PST_OPERATION_FAILED)c->state=C_FAILED;else if(*op==PST_OPERATION_COMPLETE)c->state=C_ESTABLISHED;return x;}
 PST_RESULT PST_CALL pst_connection_get_interest(pst_connection *c,pst_u32 *i){if(!c||!i||(c->state!=C_HANDSHAKING&&c->state!=C_SHUTTING&&c->state!=C_ESTABLISHED))return PST_RESULT_INVALID_STATE;return c->runtime->backend->vtable->get_interest(c->backend_state,i);}

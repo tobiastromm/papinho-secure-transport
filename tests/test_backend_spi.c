@@ -214,12 +214,15 @@ int main(void)
     pst_runtime *public_runtime;
     pst_config *public_config;
     pst_connection *public_connection;
+    pst_connection *public_connection_b;
     pst_transport public_transport;
     PST_IO_RESULT public_io;
     PST_WAIT_RESULT public_wait;
     pst_u32 public_accepted;
     pst_internal_diagnostic diagnostic;
     pst_internal_diagnostic saved_diagnostic;
+    PST_DIAGNOSTIC_INFO public_diagnostic;
+    PST_DIAGNOSTIC_INFO saved_public_diagnostic;
     int i;
     pst_backend_registry_reset();
     CHECK(pst_backend_validate(NULL) == PST_RESULT_INVALID_ARGUMENT, 1);
@@ -315,6 +318,8 @@ int main(void)
     CHECK(public_wait.timed_out == 1UL, 104);
     pst_connection_diagnostic_copy(public_connection, &diagnostic);
     CHECK(!diagnostic.valid, 105);
+    memset(&public_diagnostic,0,sizeof(public_diagnostic));public_diagnostic.struct_size=sizeof(public_diagnostic);public_diagnostic.api_version=PST_API_VERSION;
+    CHECK(pst_connection_copy_diagnostic(public_connection,&public_diagnostic)==PST_RESULT_OK&&!public_diagnostic.valid,107);
 
     g_readiness_scenario = 1; g_scenario_read_calls = 0; g_scenario_wait_calls = 0;
     CHECK(pst_connection_read(public_connection, buffer, sizeof(buffer), &public_io) == PST_RESULT_OK, 64);
@@ -351,12 +356,15 @@ int main(void)
     pst_connection_release(public_connection);
 
     CHECK(pst_connection_create(public_runtime, public_config, &public_connection) == PST_RESULT_OK, 89);
+    public_connection_b=NULL;CHECK(pst_connection_create(public_runtime,public_config,&public_connection_b)==PST_RESULT_OK,113);
     CHECK(pst_connection_read(public_connection, buffer, sizeof(buffer), &public_io) == PST_RESULT_INVALID_STATE, 90);
     pst_connection_diagnostic_copy(public_connection, &diagnostic);
     CHECK(diagnostic.valid && diagnostic.result == PST_RESULT_INVALID_STATE, 91);
     CHECK(diagnostic.phase == PST_DIAGNOSTIC_PHASE_READ, 101);
     CHECK(diagnostic.native_domain == PST_DIAGNOSTIC_DOMAIN_NONE && diagnostic.native_code == 0, 102);
-    pst_connection_release(public_connection);
+    public_diagnostic.struct_size=sizeof(public_diagnostic);public_diagnostic.api_version=PST_API_VERSION;
+    CHECK(pst_connection_copy_diagnostic(public_connection_b,&public_diagnostic)==PST_RESULT_OK&&!public_diagnostic.valid,114);
+    pst_connection_release(public_connection_b);pst_connection_release(public_connection);
 
     CHECK(pst_connection_create(public_runtime, public_config, &public_connection) == PST_RESULT_OK, 92);
     public_accepted = 0UL;
@@ -367,10 +375,17 @@ int main(void)
     pst_connection_diagnostic_copy(public_connection, &diagnostic);
     CHECK(diagnostic.valid && diagnostic.result == PST_RESULT_AUTH_FAILURE, 96);
     CHECK(diagnostic.phase == PST_DIAGNOSTIC_PHASE_PEER_AUTHENTICATE, 97);
+    public_diagnostic.struct_size=sizeof(public_diagnostic);public_diagnostic.api_version=PST_API_VERSION;
+    CHECK(pst_connection_copy_diagnostic(public_connection,&public_diagnostic)==PST_RESULT_OK,108);
+    CHECK(public_diagnostic.valid&&public_diagnostic.normalized_result==PST_RESULT_AUTH_FAILURE,109);
+    CHECK(public_diagnostic.operation==PST_DIAGNOSTIC_OPERATION_AUTHENTICATION&&!strcmp(public_diagnostic.backend_id,"test-backend"),110);
+    saved_public_diagnostic=public_diagnostic;
     CHECK(diagnostic.native_domain == PST_DIAGNOSTIC_DOMAIN_NSS && diagnostic.native_code == -8179, 98);
     pst_diagnostic_copy(&saved_diagnostic, &diagnostic);
     pst_connection_release(public_connection);
     CHECK(saved_diagnostic.valid && saved_diagnostic.native_code == -8179, 99);
+    CHECK(saved_public_diagnostic.valid&&saved_public_diagnostic.normalized_result==PST_RESULT_AUTH_FAILURE,111);
+    CHECK(!strcmp(saved_public_diagnostic.backend_id,"test-backend"),112);
     pst_runtime_diagnostic_copy(public_runtime, &diagnostic);
     CHECK(!diagnostic.valid, 100);
     pst_config_release(public_config);
