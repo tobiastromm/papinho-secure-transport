@@ -78,6 +78,14 @@
     - focused deterministic lifecycle/counter matrix: complete
     - real NSS lifecycle revalidation: complete
     - 7.E closure audit: complete
-  - 7.F Interoperability Matrix: pending; next
+  - 7.F Interoperability Matrix: in progress
+    - bounded scope and existing-evidence audit: complete
+    - canonical interoperability matrix: complete
+    - independent non-OpenSSL server proof: pending; next
+    - intermediate certificate-chain proof: pending
+    - negotiated-cipher functional assertion: pending
+    - 7.F closure audit: pending
+  - 7.G Diagnostics / Security Disclosure: pending
+  - 7.H Stress / Long-run Stability: pending
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending
