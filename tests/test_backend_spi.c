@@ -24,6 +24,8 @@ static int g_connection_create_calls;
 static int g_connection_destroy_calls;
 static int g_readiness_scenario;
 static int g_scenario_read_calls;
+static int g_scenario_write_calls;
+static int g_scenario_step_calls;
 static int g_scenario_wait_calls;
 static pst_u32 g_wait_interests[4];
 static int g_transport_destroy_calls;
@@ -86,6 +88,13 @@ static PST_RESULT mock_handshake(void *connection, pst_u32 *operation, PST_RESUL
 {
     if (connection != &g_connection || operation == NULL || error == NULL)
         return PST_RESULT_INVALID_ARGUMENT;
+    if (g_readiness_scenario == 12) {
+        ++g_scenario_step_calls;
+        if (g_scenario_step_calls == 1) g_next_operation = PST_BACKEND_OPERATION_NEED_WRITE;
+        else if (g_scenario_step_calls == 2) g_next_operation = PST_BACKEND_OPERATION_NEED_READ;
+        else if (g_scenario_step_calls == 3) g_next_operation = PST_BACKEND_OPERATION_NEED_READ_WRITE;
+        else g_next_operation = PST_BACKEND_OPERATION_COMPLETE;
+    }
     *operation = g_next_operation;
     if (g_next_operation == PST_BACKEND_OPERATION_NEED_READ)
         g_connection.interest = PST_BACKEND_INTEREST_READ;
@@ -124,9 +133,23 @@ static PST_RESULT mock_wait(void *connection, pst_u32 interest, pst_u32 timeout_
     if (g_readiness_scenario != 0) {
         g_wait_interests[g_scenario_wait_calls] = interest;
         ++g_scenario_wait_calls; result->timed_out = 0UL;
-        if (g_readiness_scenario == 3)
+        if (g_readiness_scenario == 3 || g_readiness_scenario == 8 ||
+            g_readiness_scenario == 9)
             result->ready_interest = PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE;
         else if (g_readiness_scenario == 1 && g_scenario_wait_calls == 2)
+            result->ready_interest = PST_BACKEND_INTEREST_READ;
+        else if ((g_readiness_scenario == 5 || g_readiness_scenario == 6 ||
+                  g_readiness_scenario == 9 || g_readiness_scenario == 11) &&
+                 g_scenario_wait_calls == 1)
+            result->ready_interest = PST_BACKEND_INTEREST_READ;
+        else if (g_readiness_scenario == 7 && g_scenario_wait_calls == 2) {
+            result->ready_interest = PST_BACKEND_INTEREST_NONE;
+            result->timed_out = 1UL;
+        } else if (g_readiness_scenario == 12) {
+            if (g_scenario_wait_calls == 1) result->ready_interest = PST_BACKEND_INTEREST_WRITE;
+            else if (g_scenario_wait_calls == 2) result->ready_interest = PST_BACKEND_INTEREST_READ;
+            else result->ready_interest = PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE;
+        } else if (g_readiness_scenario == 13)
             result->ready_interest = PST_BACKEND_INTEREST_READ;
         else result->ready_interest = PST_BACKEND_INTEREST_WRITE;
         return PST_RESULT_OK;
@@ -144,9 +167,17 @@ static PST_RESULT mock_read(void *connection, void *buffer, pst_size capacity,
     if (g_readiness_scenario != 0) {
         ++g_scenario_read_calls; result->bytes_transferred = 0;
         if ((g_readiness_scenario == 1 && g_scenario_read_calls < 3) ||
-            (g_readiness_scenario != 1 && g_scenario_read_calls < 2)) {
+            (g_readiness_scenario == 7 && g_scenario_read_calls < 3) ||
+            (g_readiness_scenario != 1 && g_readiness_scenario != 7 && g_scenario_read_calls < 2)) {
             result->operation = PST_BACKEND_OPERATION_NEED_READ_WRITE;
             g_connection.interest = PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE;
+        } else if (g_readiness_scenario == 8 && g_scenario_read_calls == 2) {
+            ((char *)buffer)[0] = 'r'; result->bytes_transferred = 1;
+            result->operation = PST_BACKEND_OPERATION_NEED_READ_WRITE;
+            g_connection.interest = PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE;
+        } else if (g_readiness_scenario == 10 && g_scenario_read_calls == 2) {
+            result->operation = PST_BACKEND_OPERATION_NEED_WRITE;
+            g_connection.interest = PST_BACKEND_INTEREST_WRITE;
         } else {
             ((char *)buffer)[0] = 'r'; result->bytes_transferred = 1;
             result->operation = PST_BACKEND_OPERATION_COMPLETE;
@@ -167,10 +198,22 @@ static PST_RESULT mock_write(void *connection, const void *buffer, pst_size leng
 {
     if (connection != &g_connection || buffer == NULL || result == NULL)
         return PST_RESULT_INVALID_ARGUMENT;
-    result->bytes_transferred = length < 2 ? length : 2;
-    result->operation = length > result->bytes_transferred ?
-        PST_BACKEND_OPERATION_NEED_WRITE : PST_BACKEND_OPERATION_COMPLETE;
-    g_connection.interest = result->operation == PST_BACKEND_OPERATION_NEED_WRITE ? PST_BACKEND_INTEREST_WRITE : PST_BACKEND_INTEREST_NONE;
+    if (g_readiness_scenario >= 5 && g_readiness_scenario <= 11) {
+        ++g_scenario_write_calls; result->bytes_transferred = 0;
+        if (g_readiness_scenario == 6 && g_scenario_write_calls == 2) result->bytes_transferred = 2;
+        else if (g_readiness_scenario == 9 && g_scenario_write_calls == 2) result->bytes_transferred = 1;
+        if (g_readiness_scenario == 11 && g_scenario_write_calls == 2) result->operation = PST_BACKEND_OPERATION_NEED_READ;
+        else if (g_scenario_write_calls < 3) result->operation = PST_BACKEND_OPERATION_NEED_READ_WRITE;
+        else result->operation = PST_BACKEND_OPERATION_COMPLETE;
+    } else {
+        result->bytes_transferred = length < 2 ? length : 2;
+        result->operation = length > result->bytes_transferred ?
+            PST_BACKEND_OPERATION_NEED_WRITE : PST_BACKEND_OPERATION_COMPLETE;
+    }
+    if (result->operation == PST_BACKEND_OPERATION_NEED_READ) g_connection.interest = PST_BACKEND_INTEREST_READ;
+    else if (result->operation == PST_BACKEND_OPERATION_NEED_WRITE) g_connection.interest = PST_BACKEND_INTEREST_WRITE;
+    else if (result->operation == PST_BACKEND_OPERATION_NEED_READ_WRITE) g_connection.interest = PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE;
+    else g_connection.interest = PST_BACKEND_INTEREST_NONE;
     result->close_kind = PST_BACKEND_CLOSE_NONE; result->error = PST_RESULT_OK;
     return PST_RESULT_OK;
 }
@@ -178,7 +221,12 @@ static PST_RESULT mock_shutdown_step(void *connection, pst_u32 *operation, PST_R
 {
     if (connection != &g_connection || operation == NULL || error == NULL)
         return PST_RESULT_INVALID_ARGUMENT;
-    *operation = PST_BACKEND_OPERATION_COMPLETE; *error = PST_RESULT_OK;
+    if (g_readiness_scenario == 13 && ++g_scenario_step_calls == 1) {
+        *operation = PST_BACKEND_OPERATION_NEED_READ; g_connection.interest = PST_BACKEND_INTEREST_READ;
+    } else {
+        *operation = PST_BACKEND_OPERATION_COMPLETE; g_connection.interest = PST_BACKEND_INTEREST_NONE;
+    }
+    *error = PST_RESULT_OK;
     return PST_RESULT_OK;
 }
 static void mock_transport_destroy(pst_transport *transport,int consumed){(void)transport;(void)consumed;++g_transport_destroy_calls;}
@@ -359,6 +407,90 @@ int main(void)
     CHECK(public_wait.ready_interest == (PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE), 85);
     CHECK(pst_connection_read(public_connection, buffer, sizeof(buffer), &public_io) == PST_RESULT_OK, 86);
     CHECK(public_io.operation == PST_OPERATION_COMPLETE && public_io.bytes_transferred == 1, 87);
+    g_readiness_scenario=5;g_scenario_write_calls=0;g_scenario_wait_calls=0;
+    CHECK(pst_connection_write(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,129);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[0]==3UL,130);
+    CHECK(pst_connection_write(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK&&public_io.bytes_transferred==0,131);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[1]==2UL,132);
+    g_readiness_scenario=6;g_scenario_write_calls=0;g_scenario_wait_calls=0;
+    CHECK(pst_connection_write(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,133);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK,134);
+    CHECK(pst_connection_write(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK&&public_io.bytes_transferred==2,135);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[1]==3UL,136);
+    g_readiness_scenario=7;g_scenario_read_calls=0;g_scenario_wait_calls=0;
+    CHECK(pst_connection_read(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,137);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK,138);
+    CHECK(pst_connection_read(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK&&public_io.bytes_transferred==0,139);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[1]==1UL&&public_wait.timed_out==1UL,140);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[2]==3UL,141);
+    CHECK(pst_connection_read(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK&&public_io.bytes_transferred==1,142);
+    g_readiness_scenario=8;g_scenario_read_calls=0;g_scenario_wait_calls=0;
+    CHECK(pst_connection_read(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,143);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK,144);
+    CHECK(pst_connection_read(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK&&public_io.bytes_transferred==1,145);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[1]==3UL,146);
+    g_readiness_scenario=9;g_scenario_write_calls=0;g_scenario_wait_calls=0;
+    CHECK(pst_connection_write(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,147);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK,148);
+    CHECK(pst_connection_write(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK&&public_io.bytes_transferred==1,149);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[1]==3UL,150);
+    g_readiness_scenario=10;g_scenario_read_calls=0;g_scenario_wait_calls=0;
+    CHECK(pst_connection_read(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,151);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK,152);
+    CHECK(pst_connection_read(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK&&public_io.operation==PST_OPERATION_NEED_WRITE,153);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[1]==2UL,154);
+    g_readiness_scenario=11;g_scenario_write_calls=0;g_scenario_wait_calls=0;
+    CHECK(pst_connection_write(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,155);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK,156);
+    CHECK(pst_connection_write(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK&&public_io.operation==PST_OPERATION_NEED_READ,157);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[1]==1UL,158);
+    g_readiness_scenario=1;g_scenario_read_calls=0;g_scenario_wait_calls=0;
+    CHECK(pst_connection_read(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,159);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK,160);
+    CHECK(pst_connection_read(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,161);
+    g_readiness_scenario=5;g_scenario_write_calls=0;
+    CHECK(pst_connection_write(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,162);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[1]==3UL,163);
+
+    public_connection_b=NULL;CHECK(pst_connection_create(public_runtime,public_config,&public_connection_b)==PST_RESULT_OK,164);
+    public_accepted=0UL;CHECK(pst_connection_attach(public_connection_b,&public_transport,PST_OWNERSHIP_TRANSFERRED,&public_accepted)==PST_RESULT_OK,165);
+    g_readiness_scenario=0;g_next_operation=PST_BACKEND_OPERATION_COMPLETE;
+    CHECK(pst_connection_handshake(public_connection_b,&operation,&error)==PST_RESULT_OK,166);
+    g_readiness_scenario=1;g_scenario_read_calls=0;g_scenario_wait_calls=0;
+    CHECK(pst_connection_read(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,167);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK,168);
+    CHECK(pst_connection_read(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,169);
+    g_scenario_read_calls=0;
+    CHECK(pst_connection_read(public_connection_b,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,170);
+    CHECK(pst_connection_wait(public_connection_b,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[1]==3UL,171);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[2]==1UL,172);
+    pst_connection_release(public_connection_b);pst_connection_release(public_connection);
+
+    CHECK(pst_connection_create(public_runtime,public_config,&public_connection)==PST_RESULT_OK,173);
+    public_accepted=0UL;CHECK(pst_connection_attach(public_connection,&public_transport,PST_OWNERSHIP_TRANSFERRED,&public_accepted)==PST_RESULT_OK,174);
+    g_readiness_scenario=12;g_scenario_step_calls=0;g_scenario_wait_calls=0;
+    CHECK(pst_connection_handshake(public_connection,&operation,&error)==PST_RESULT_OK&&operation==PST_OPERATION_NEED_WRITE,175);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[0]==2UL,176);
+    CHECK(pst_connection_handshake(public_connection,&operation,&error)==PST_RESULT_OK&&operation==PST_OPERATION_NEED_READ,177);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[1]==1UL,178);
+    CHECK(pst_connection_handshake(public_connection,&operation,&error)==PST_RESULT_OK&&operation==PST_OPERATION_NEED_READ_WRITE,179);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[2]==3UL,180);
+    CHECK(pst_connection_handshake(public_connection,&operation,&error)==PST_RESULT_OK&&operation==PST_OPERATION_COMPLETE,181);
+
+    g_readiness_scenario=1;g_scenario_read_calls=0;g_scenario_wait_calls=0;
+    CHECK(pst_connection_read(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,182);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK,183);
+    CHECK(pst_connection_read(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,184);
+    g_readiness_scenario=13;g_scenario_step_calls=0;
+    CHECK(pst_connection_shutdown(public_connection,&operation,&error)==PST_RESULT_OK&&operation==PST_OPERATION_NEED_READ,185);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[1]==1UL,186);
+    CHECK(pst_connection_shutdown(public_connection,&operation,&error)==PST_RESULT_OK&&operation==PST_OPERATION_COMPLETE,187);
+    pst_connection_release(public_connection);
+
+    CHECK(pst_connection_create(public_runtime,public_config,&public_connection)==PST_RESULT_OK,188);
+    public_accepted=0UL;CHECK(pst_connection_attach(public_connection,&public_transport,PST_OWNERSHIP_TRANSFERRED,&public_accepted)==PST_RESULT_OK,189);
+    g_readiness_scenario=0;g_next_operation=PST_BACKEND_OPERATION_COMPLETE;
+    CHECK(pst_connection_handshake(public_connection,&operation,&error)==PST_RESULT_OK,190);
     g_readiness_scenario = 4;
     g_connection.interest = PST_BACKEND_INTEREST_READ;
     CHECK(pst_connection_wait(public_connection, 250, &public_wait) ==
@@ -425,7 +557,7 @@ int main(void)
     CHECK(!diagnostic.valid, 100);
     pst_config_release(public_config);
     pst_runtime_release(public_runtime);
-    CHECK(g_transport_destroy_calls == 3, 88);
+    CHECK(g_transport_destroy_calls == 6, 88);
     CHECK(pst_backend_unregister("test-backend") == PST_RESULT_OK, 50);
     CHECK(pst_backend_count() == 0 && pst_backend_find("test-backend") == NULL, 51);
     CHECK(pst_backend_unregister("test-backend") == PST_RESULT_UNAVAILABLE, 52);

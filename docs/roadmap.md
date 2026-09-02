@@ -62,6 +62,9 @@
     - 7.B closure audit: complete
   - 7.C Readiness / Progress Hardening: in progress
     - audit and operation/interest matrix: complete
-    - deterministic coverage gaps: identified; implementation pending
+    - deterministic READ/WRITE, timeout, partial-I/O and interest-change coverage: complete
+    - isolation, operation-transition, handshake and generic-shutdown coverage: complete
+    - host TLS 1.2/TLS 1.3 and failure-fixture revalidation: pending
+    - 7.C closure audit: blocked on host revalidation
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending

@@ -145,3 +145,23 @@ progress behavior, a targeted real-NT4 regression becomes mandatory.
 Deferred housekeeping remains unchanged: preserve and vendor the exact
 RetroZilla NSS source/provenance so `C:\PSTW` can eventually be disposable. It
 is not part of this audit.
+## Phase 7.C2 deterministic regression matrix
+
+The existing SPI mock now exercises the application-I/O guard symmetrically.
+Deterministic sequences prove WRITE NEED_READ_WRITE plus READ-only readiness
+suppresses auxiliary READ after a zero-byte retry; positive WRITE progress
+clears suppression; timeout re-enables auxiliary WRITE for READ; partial READ
+and WRITE clear stale suppression; and changes to NEED_WRITE or NEED_READ take
+effect immediately. Assertions use call counts and requested-interest masks,
+not wall-clock timing.
+
+The first run exposed a test-provider defect: its new WRITE script returned
+NEED_READ_WRITE but updated mock interest as NONE. The mock now maps all three
+pending operations consistently. No production behavior changed.
+
+The completed matrix also proves two-connection isolation, READ-to-WRITE
+transition reset, alternating handshake readiness, and stale-guard clearing on
+entry to generic pending shutdown. Existing fatal-wait, provider HUP/ERR/NVAL
+classification and no-resurrection tests remain passing. No production behavior
+changed, so existing NT4 evidence remains applicable. Fresh host TLS 1.2/TLS
+1.3 and failure-fixture execution remains mandatory before the closure audit.
