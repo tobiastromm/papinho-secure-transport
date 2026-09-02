@@ -18,6 +18,8 @@ int main(void)
     void *connection_state;
     pst_u32 accepted;
     pst_u32 ready_interest;
+    pst_u32 close_notify_observed;
+    PST_BACKEND_IO_RESULT io_result;
     PST_RUNTIME_OPTIONS options;
     PST_RUNTIME_INFO runtime_info;
     pst_runtime *public_runtime;
@@ -64,6 +66,28 @@ int main(void)
         &ready_interest) == PST_RESULT_TRANSPORT_FAILURE, 46);
     CHECK(pst_backend_nss_classify_poll_flags(0, 0, 0, 0, 0,
         NULL) == PST_RESULT_INVALID_ARGUMENT, 47);
+    close_notify_observed = 0UL;
+    CHECK(!pst_backend_nss_is_close_notify_alert(10UL), 56);
+    pst_backend_nss_observe_alert(10UL, &close_notify_observed);
+    CHECK(close_notify_observed == 0UL, 57);
+    CHECK(pst_backend_nss_is_close_notify_alert(0UL), 58);
+    pst_backend_nss_observe_alert(0UL, &close_notify_observed);
+    CHECK(close_notify_observed == 1UL, 59);
+    memset(&io_result, 0xa5, sizeof(io_result));
+    CHECK(pst_backend_nss_classify_eof(1UL, &io_result) == PST_RESULT_OK, 60);
+    CHECK(io_result.operation == PST_BACKEND_OPERATION_CLOSED &&
+        io_result.close_kind == PST_BACKEND_CLOSE_CLEAN &&
+        io_result.error == PST_RESULT_OK, 61);
+    memset(&io_result, 0xa5, sizeof(io_result));
+    CHECK(pst_backend_nss_classify_eof(0UL, &io_result) == PST_RESULT_OK, 62);
+    CHECK(io_result.operation == PST_BACKEND_OPERATION_FAILED &&
+        io_result.close_kind == PST_BACKEND_CLOSE_TRUNCATED &&
+        io_result.error == PST_RESULT_TRUNCATED, 63);
+    CHECK(pst_backend_nss_classify_eof(0UL, NULL) ==
+        PST_RESULT_INVALID_ARGUMENT, 64);
+    CHECK(pst_backend_nss_alert_registration_result(1) == PST_RESULT_OK, 65);
+    CHECK(pst_backend_nss_alert_registration_result(0) ==
+        PST_RESULT_BACKEND_FAILURE, 66);
     CHECK(pst_backend_nss_normalize_error(PR_CONNECT_RESET_ERROR) == PST_RESULT_TRUNCATED, 9);
     CHECK(pst_backend_nss_normalize_error(PR_IO_ERROR) == PST_RESULT_TRANSPORT_FAILURE, 10);
     CHECK(pst_backend_nss_normalize_error(SSL_ERROR_BAD_CERT_DOMAIN) == PST_RESULT_HOSTNAME_MISMATCH, 11);

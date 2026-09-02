@@ -5,6 +5,8 @@ import sys
 
 EXPECTED = b"pst-phase7b-data-before-close"
 CLIENT_WRITE = b"pst-phase7b-client-write"
+ACCEPT_TIMEOUT_SECONDS = 120
+OPERATION_TIMEOUT_SECONDS = 10
 MODES = {
     "pre_tls_close", "non_tls", "handshake_close", "handshake_reset",
     "clean_close", "abrupt_close", "read_clean", "read_abrupt",
@@ -31,14 +33,18 @@ if len(sys.argv) != 10 or sys.argv[3] not in MODES:
 bind, port, mode = sys.argv[1], int(sys.argv[2]), sys.argv[3]
 listener = socket.socket()
 listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-listener.settimeout(10)
+listener.settimeout(ACCEPT_TIMEOUT_SECONDS)
 listener.bind((bind, port))
 listener.listen(1)
-print("READY MODE=%s BIND=%s PORT=%d" % (mode, bind, port), flush=True)
+print("READY MODE=%s BIND=%s PORT=%d ACCEPT_TIMEOUT_SECONDS=%d" % (
+    mode, bind, port, ACCEPT_TIMEOUT_SECONDS
+), flush=True)
 
+accepted = False
 try:
     raw, address = listener.accept()
-    raw.settimeout(10)
+    accepted = True
+    raw.settimeout(OPERATION_TIMEOUT_SECONDS)
     print("ACCEPT MODE=%s PEER=%s" % (mode, address), flush=True)
 
     if mode == "pre_tls_close":
@@ -78,7 +84,7 @@ try:
     )
 
     tls = context.wrap_socket(raw, server_side=True)
-    tls.settimeout(10)
+    tls.settimeout(OPERATION_TIMEOUT_SECONDS)
     print("TLS MODE=%s VERSION=%s AUTH=%s ALPN=%s" % (
         mode, tls.version(), bool(tls.getpeercert()), tls.selected_alpn_protocol()
     ), flush=True)
@@ -102,7 +108,17 @@ try:
         print("RECV=%d CONTENT_MATCH=%s" % (len(data), data == CLIENT_WRITE), flush=True)
         abort_tls(tls)
         print("CLOSE TYPE=TCP_RST_NO_CLOSE_NOTIFY", flush=True)
-except (socket.timeout, ssl.SSLError, OSError) as error:
+except socket.timeout as error:
+    if not accepted:
+        print("FIXTURE_TIMEOUT STAGE=ACCEPT REASON=NO_CLIENT "
+              "ACCEPT_TIMEOUT_SECONDS=%d" % ACCEPT_TIMEOUT_SECONDS,
+              flush=True)
+    else:
+        print("FIXTURE_ERROR TYPE=%s TEXT=%s" % (
+            type(error).__name__, str(error).replace("\r", " ").replace("\n", " ")
+        ), flush=True)
+    raise SystemExit(3)
+except (ssl.SSLError, OSError) as error:
     print("FIXTURE_ERROR TYPE=%s TEXT=%s" % (
         type(error).__name__, str(error).replace("\r", " ").replace("\n", " ")
     ), flush=True)

@@ -97,11 +97,11 @@ On NT4:
     run_failure_regression.bat HOST PORT localhost clean_close
     run_failure_regression.bat HOST PORT localhost abrupt_close
 
-Package preparation is READY; no NT4 PASS is claimed.
+Package preparation is READY. Real NT4 now proves clean_close and data_then_close PASS; abrupt_close remains the next target.
 
 ## Phase 7.B NT4 failure timeline diagnostic
 
-The first real targeted NT4 run preserved the normal TLS 1.3 baseline but data_then_close, clean_close and abrupt_close all failed. In each failure mode the modern server completed almost immediately while the NT4 executable remained active for tens of seconds to roughly one minute. Existing module logs could not locate the delay, so no behavior change was made.
+An early data_then_close attempt was invalid fixture/operator evidence: the server printed READY, its former 10-second initial accept window expired before the operator launched the NT4 client, and the later client connect ended with native error 10060. This timeout occurred before PST could connect and must not be attributed to PST. A prompt repeat reached ACCEPT, negotiated TLS 1.3 with authenticated mTLS and ALPN fixture/1, sent the expected 29 bytes, completed TLS close_notify, and the NT4 client reported TOTAL_READ=29, clean close and PASS. clean_close also passed on real NT4.
 
 The diagnostic client and backend now share one GetTickCount epoch. failure-client.log records configured bounds, every handshake/read/wait/shutdown boundary, operation/result/bytes/read total/close kind, loop elapsed time, terminal check, every release boundary and total process elapsed time. failure-backend.log records operational NSS/NSPR events. failure-modules.log contains only module paths.
 
@@ -114,4 +114,42 @@ Modern clean_close diagnostic evidence:
 - no HUP, ERR or NVAL was reported because no PR_Poll was needed after handshake;
 - connection, config, credentials, trust and runtime release all completed at 234 ms.
 
-The next real NT4 run must execute only clean_close with run_failure_diag.bat and return all three logs plus server output. Phase 7.B remains in progress; the delay location and existing abrupt-close classification blocker remain unresolved.
+The next real NT4 run is abrupt_close. Phase 7.B remains in progress because the existing abrupt-close classification blocker remains unresolved.
+
+### NT4 diagnostic log creation correction
+
+The initial NT4 diagnostic console output still had perceptible client-side delays after the server exited, and none of the three diagnostic files was created. Console timing cannot substitute for the missing files. The client now opens failure-client.log directly with C89 fopen mode w, reports numeric errno on failure and keeps sparse timestamped console markers. Backend and module traces use separate relative files, create them with mode w on first event and report open failures. The BAT sets all three expected environment variables and no longer redirects stdout. The 79 ms modern clean_close validation proves log creation only; it is not evidence that the NT4 delay disappeared.
+
+### NT4 pre-handshake timeline package
+
+The real NT4 evidence stopped after BOUNDS, so the diagnostic now covers every setup boundary through HANDSHAKE_BEGIN and routes every setup failure through timestamped conditional cleanup. It records fixture loading, trust, credentials, config, identity, ALPN/TLS policy, backend registration, runtime creation, Winsock startup, socket creation, blocking connect, transport creation, connection creation and attach. Environment reporting is limited to presence flags and equality with the three test-controlled relative filenames.
+
+Trace creation is demand-driven: failure-modules.log first opens while RUNTIME_CREATE loads and inventories NSS/NSPR modules; failure-backend.log first opens during CONNECTION_CREATE when the backend creates NSS connection state. Their absence before those boundaries is therefore not evidence of fopen failure.
+
+Modern clean_close passed with all three logs: runtime creation ended at 32 ms, blocking connect ended successfully at 32 ms, connection creation and attach ended at 32 ms, handshake completed at 79 ms, clean EOF was read at 79 ms, and cleanup/total also ended at 79 ms. Real NT4 subsequently passed clean_close and a valid data_then_close execution. The next real NT4 run is abrupt_close. Phase 7.B remains in progress.
+
+### Manual fixture accept window
+
+The fixture now uses an explicit 120-second timeout only for the initial listener accept and prints ACCEPT_TIMEOUT_SECONDS=120 on READY. If no client arrives it reports FIXTURE_TIMEOUT STAGE=ACCEPT REASON=NO_CLIENT before exiting. Once ACCEPT succeeds, all existing 10-second per-operation socket/TLS bounds remain unchanged. The modern matrix was rerun: every previously passing mode still passed, while abrupt_close/read_abrupt retain the already documented NSS classification blocker.
+
+## RetroZilla NSS close_notify observability audit
+
+The exact examined lineage is RetroZilla source record 2f274574d3c6ee8769914046920d649bbae9f81b, NSS 3.42 Beta and NSPR 4.7.7, built as Win32 x86 with VC6. The examined build-tree ssl3.dll has the same SHA-256 as the versioned runtime (a45adb3ca8abfab4716315acba515f0de1ad4c56b095c89f32042dfc120277da).
+
+PR_Read dispatches to the SSL layer's ssl_SecureRead/ssl_SecureRecv, then DoRecv, ssl3_GatherAppDataRecord, ssl3_GatherCompleteHandshake, ssl3_GatherData, and finally ssl_DefRecv on the lower NSPR descriptor. Raw transport EOF makes ssl3_GatherData return zero without setting a distinct public error. A valid alert record instead reaches ssl3_HandleAlert; for alert description zero (close_notify) it sets private ss->recvdCloseNotify, invokes the registered received-alert callback synchronously while processing the record, and the gather/read path ultimately also returns zero. Thus the ordinary PR_Read return value intentionally collapses the two cases, but the alert event remains observable.
+
+The reliable supported mechanism is the public SSL_AlertReceivedCallback API. It is declared in ssl.h, implemented in sslsecur.c, listed in ssl.def since the NSS 3.30 symbol set, present in the VC6 link map, and exported by the exact versioned ssl3.dll. Upstream tests in this same source tree register it, receive close_notify, then verify that PR_Read returns zero. SSL_GetChannelInfo, SSL_SecurityStatus, SSL_OptionGet, SSL_DataPending, NSPR EOF/error state, and poll/HUP expose no equivalent closure distinction.
+
+The recommended correction is provider-local: register an alert-received callback on the private SSL descriptor, retain only a private boolean when alert description zero is observed, and classify a later PR_Read == 0 as CLEAN only when that flag is set; otherwise use the existing TRUNCATED result/close-kind path. Callback registration failure must fail closed during provider attach. No TLS record parsing, HUP heuristic, NSS source patch, public PST API change, generic core change, or SPI change is required. This audit makes no behavior change; implementation and modern plus real-NT4 clean/data/abrupt regressions are the next step.
+
+Cross-platform evidence before the provider correction was definitive: real NT4 clean_close PASS; real NT4 data_then_close PASS with all 29 bytes before close_notify; real NT4 abrupt_close FAIL because TCP FIN without close_notify became CLOSED/CLEAN. Windows 10 reproduced those three original provider outcomes.
+
+## Phase 7.B3 provider-local close_notify implementation
+
+The RetroZilla NSS provider now resolves and requires `SSL_AlertReceivedCallback`, registers it on each private SSL descriptor immediately after `SSL_ImportFD`, and retains a per-connection boolean only when alert description zero is observed. Registration failure fails attach closed as `BACKEND_FAILURE`. A later `PR_Read == 0` maps to `CLOSED/CLEAN` only when that connection observed close_notify; otherwise it maps to `FAILED/TRUNCATED`. Application data returned before the alert remains observable and is not discarded.
+
+This change is confined to the private NSS provider. It does not parse TLS records, infer closure from HUP, patch NSS, or change the public API, generic core, SPI, readiness, ownership, timeout, or shutdown contracts.
+
+Modern-host validation passed: `clean_close` ended `FINAL_STATE=CLOSED CLOSE_KIND=1` without a diagnostic; `data_then_close` delivered `READ=29 CONTENT_MATCH=1` before the same clean close; and `abrupt_close` plus `read_abrupt` ended `FINAL_STATE=FAILED CLOSE_KIND=2 DIAG_RESULT=TRUNCATED DIAG_OPERATION=READ`. The pre-handshake close/reset fixtures retained their existing failure mappings. TLS 1.2 and TLS 1.3 bidirectional regressions both reported `WRITE=25 READ=25 CONTENT_MATCH=1`.
+
+The package is ready for targeted real-NT4 revalidation of clean_close, data_then_close and abrupt_close. Those new NT4 results, the shutdown-abort proof and the 7.B closure audit remain pending, so Phase 7.B remains in progress.

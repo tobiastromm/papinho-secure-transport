@@ -82,8 +82,30 @@ Also rerun run_tls13.bat against the normal TLS 1.3 echo fixture. Return complet
 
 ## Phase 7.B NT4 timeline diagnostic package
 
-The first real targeted run showed a long client-side delay after the server completed, but module provenance alone could not identify the operation. The package now contains run_failure_diag.bat and an instrumented test_connection_failures.exe. Run only clean_close first:
+The first real targeted run showed a long client-side delay after the server completed, but module provenance alone could not identify the operation. The package added run_failure_diag.bat and an instrumented test_connection_failures.exe; at that diagnostic stage clean_close was run first:
 
     run_failure_diag.bat HOST 8443 localhost clean_close
 
-The BAT deletes prior failure-client.log, failure-backend.log and failure-modules.log before execution. Return all three new files and complete server output. Do not run data_then_close or abrupt_close again until the clean_close timeline identifies the delayed operation.
+The BAT deletes prior failure-client.log, failure-backend.log and failure-modules.log before execution. That historical clean_close diagnostic returned all three files and complete server output before the later targeted modes proceeded.
+
+### Failure timeline logging fix
+
+run_failure_diag.bat now leaves sparse timestamped markers on the NT4 console while the EXE creates failure-client.log directly. The backend creates failure-backend.log and failure-modules.log separately. All names are relative to the package directory and open failures print numeric errno. The initial clean_close-only restriction applied while the delay was being diagnosed. A quick modern-host PASS verified instrumentation, not NT4 timing.
+
+### Pre-handshake timeline update
+
+The diagnostic EXE now timestamps the complete setup path between BOUNDS and HANDSHAKE_BEGIN and sends every setup failure through conditional cleanup. failure-modules.log is expected to open during RUNTIME_CREATE; failure-backend.log is expected to open during CONNECTION_CREATE. Their absence is meaningful only after the corresponding client marker is reached.
+
+The modern clean_close package check passed with all three logs and a 79 ms total. This proved the instrumentation, not NT4 timing. Historical NT4 diagnostic command:
+
+    run_failure_diag.bat HOST 8443 localhost clean_close
+
+Real NT4 subsequently passed clean_close and a valid data_then_close run with READ=29 and clean close. A prior data_then_close native error 10060 is invalid evidence because the fixture's listener had already timed out before the client was launched. The fixture now advertises a bounded 120-second initial accept window while preserving all post-accept bounds.
+
+The Phase 7.B3 package contains the provider-local close_notify correction validated on the modern host. Repeat, with a fresh one-connection server for each mode:
+
+    run_failure_regression.bat HOST PORT localhost clean_close
+    run_failure_regression.bat HOST PORT localhost data_then_close
+    run_failure_regression.bat HOST PORT localhost abrupt_close
+
+Expected results are clean close for the first two modes, including `READ=29 CONTENT_MATCH=1` for data_then_close, and `FINAL_STATE=FAILED CLOSE_KIND=2 DIAG_RESULT=13 DIAG_OPERATION=7 PASS=1` for abrupt_close. Also rerun `run_tls12.bat` and `run_tls13.bat` against their normal echo fixtures. Phase 7.B remains in progress until targeted real-NT4 evidence, shutdown-abort proof and closure audit are complete.

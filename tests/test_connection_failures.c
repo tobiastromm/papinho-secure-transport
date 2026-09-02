@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <errno.h>
 #if defined(_MSC_VER) && _MSC_VER == 1200
 # pragma warning(pop)
 # pragma warning(disable:4514)
@@ -21,8 +22,22 @@
 static const char g_expected[] = "pst-phase7b-data-before-close";
 static const char g_client_write[] = "pst-phase7b-client-write";
 static DWORD g_epoch;
+static FILE *g_client_log;
 
 static void timeline(const char *format, ...)
+{
+    va_list arguments;
+    if (g_client_log == NULL) return;
+    fprintf(g_client_log, "T_MS=%010lu ",
+            (unsigned long)(GetTickCount() - g_epoch));
+    va_start(arguments, format);
+    vfprintf(g_client_log, format, arguments);
+    va_end(arguments);
+    fprintf(g_client_log, "\n");
+    fflush(g_client_log);
+}
+
+static void console_marker(const char *format, ...)
 {
     va_list arguments;
     printf("T_MS=%010lu ", (unsigned long)(GetTickCount() - g_epoch));
@@ -74,21 +89,31 @@ static unsigned char *load_file(const char *path, pst_size *size)
     return data;
 }
 
-static int connect4(const char *host, unsigned short port, SOCKET *out)
+static SOCKET socket4_create(int *native_error)
+{
+    SOCKET value;
+    value = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (value == INVALID_SOCKET) {
+        *native_error = WSAGetLastError();
+        return INVALID_SOCKET;
+    }
+    *native_error = 0;
+    return value;
+}
+
+static int connect4(SOCKET value, const char *host, unsigned short port,
+                    int *native_error)
 {
     struct sockaddr_in address;
-    SOCKET socket_value;
     memset(&address, 0, sizeof(address));
     address.sin_family = AF_INET;
     address.sin_port = htons(port);
     address.sin_addr.s_addr = inet_addr(host);
-    socket_value = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (socket_value == INVALID_SOCKET) return 0;
-    if (connect(socket_value, (struct sockaddr *)&address, sizeof(address)) != 0) {
-        closesocket(socket_value);
+    if (connect(value, (struct sockaddr *)&address, sizeof(address)) != 0) {
+        *native_error = WSAGetLastError();
         return 0;
     }
-    *out = socket_value;
+    *native_error = 0;
     return 1;
 }
 
@@ -103,6 +128,9 @@ static int wait_once(pst_connection *connection, PST_RESULT *failure,
     result = pst_connection_get_interest(connection, &interest);
     timeline("LOOP=%s STEP=%d BEFORE_WAIT STATE=ACTIVE INTEREST_RESULT=%ld INTEREST=0x%08lx",
         loop, step, (long)result, (unsigned long)interest);
+    if (step == 0)
+        console_marker("BEFORE_WAIT LOOP=%s STEP=%d INTEREST=0x%08lx",
+            loop, step, (unsigned long)interest);
     memset(&wait_result, 0, sizeof(wait_result));
     start = GetTickCount();
     result = pst_connection_wait(connection, WAIT_MS, &wait_result);
@@ -110,6 +138,12 @@ static int wait_once(pst_connection *connection, PST_RESULT *failure,
         loop, step, (long)result, (unsigned long)wait_result.ready_interest,
         (unsigned long)wait_result.timed_out,
         (unsigned long)(GetTickCount() - start));
+    if (step == 0 || result != PST_RESULT_OK || wait_result.timed_out)
+        console_marker("AFTER_WAIT LOOP=%s STEP=%d RESULT=%ld READY=0x%08lx TIMED_OUT=%lu DURATION_MS=%lu",
+            loop, step, (long)result,
+            (unsigned long)wait_result.ready_interest,
+            (unsigned long)wait_result.timed_out,
+            (unsigned long)(GetTickCount() - start));
     if (result != PST_RESULT_OK) {
         *failure = result;
         return 0;
@@ -180,7 +214,12 @@ int main(int argc, char **argv)
     int mode_read;
     int mode_write;
     int mode_shutdown;
+    int winsock_started;
+    int exit_code;
+    int setup_failed;
+    int native_error;
     const char *mode;
+    const char *client_log_path;
     DWORD loop_start;
     DWORD loop_end;
 
@@ -191,15 +230,37 @@ int main(int argc, char **argv)
     g_epoch = GetTickCount();
     pst_backend_nss_trace_set_epoch((pst_u32)g_epoch);
     mode = argv[9];
+    client_log_path = getenv("PST_FAILURE_CLIENT_LOG");
+    if (client_log_path == NULL || client_log_path[0] == '\0')
+        client_log_path = "failure-client.log";
+    errno = 0;
+    g_client_log = fopen(client_log_path, "w");
+    if (g_client_log == NULL)
+        console_marker("CLIENT_LOG_OPEN=0 FILE=%s ERRNO=%d",
+            client_log_path, errno);
+    else
+        console_marker("CLIENT_LOG_OPEN=1 FILE=%s ERRNO=0",
+            client_log_path);
     timeline("MODE=%s PROCESS_EPOCH=%lu", mode, (unsigned long)g_epoch);
     timeline("BOUNDS HANDSHAKE_MAX_STEPS=%d HANDSHAKE_WAIT_MS=%lu READ_MAX_STEPS=%d READ_WAIT_MS=%lu SHUTDOWN_MAX_STEPS=%d SHUTDOWN_WAIT_MS=%lu",
         MAX_STEPS, (unsigned long)WAIT_MS, MAX_STEPS, (unsigned long)WAIT_MS,
         MAX_STEPS, (unsigned long)WAIT_MS);
-    ca_data = load_file(argv[4], &ca_size);
-    cert_data = load_file(argv[5], &cert_size);
-    key_data = load_file(argv[6], &key_size);
-    if (ca_data == NULL || cert_data == NULL || key_data == NULL) return 3;
+    timeline("ENV PST_FAILURE_CLIENT_LOG_PRESENT=%d PST_NSS_TRACE_FILE_PRESENT=%d PST_NSS_MODULE_FILE_PRESENT=%d",
+        getenv("PST_FAILURE_CLIENT_LOG") != NULL,
+        getenv("PST_NSS_TRACE_FILE") != NULL,
+        getenv("PST_NSS_MODULE_FILE") != NULL);
+    timeline("ENV_SAFE CLIENT=%d BACKEND=%d MODULES=%d",
+        getenv("PST_FAILURE_CLIENT_LOG") != NULL &&
+            strcmp(getenv("PST_FAILURE_CLIENT_LOG"), "failure-client.log") == 0,
+        getenv("PST_NSS_TRACE_FILE") != NULL &&
+            strcmp(getenv("PST_NSS_TRACE_FILE"), "failure-backend.log") == 0,
+        getenv("PST_NSS_MODULE_FILE") != NULL &&
+            strcmp(getenv("PST_NSS_MODULE_FILE"), "failure-modules.log") == 0);
 
+    ca_data = NULL;
+    cert_data = NULL;
+    key_data = NULL;
+    ca_size = cert_size = key_size = 0;
     trust = NULL;
     credentials = NULL;
     config = NULL;
@@ -207,14 +268,49 @@ int main(int argc, char **argv)
     transport = NULL;
     connection = NULL;
     native_socket = INVALID_SOCKET;
+    winsock_started = 0;
+    exit_code = 20;
+    setup_failed = 0;
+    native_error = 0;
+    accepted = 0;
+    established = 0;
+    terminal = 0;
+    content_match = 0;
+    ok = 0;
+    step = 0;
+    final_result = PST_RESULT_OK;
+    final_close = PST_CLOSE_NONE;
+    total_read = 0;
+    total_written = 0;
     memset(&log, 0, sizeof(log));
+
+    timeline("FIXTURE_LOAD_BEGIN");
+    ca_data = load_file(argv[4], &ca_size);
+    cert_data = load_file(argv[5], &cert_size);
+    key_data = load_file(argv[6], &key_size);
+    result = ca_data != NULL && cert_data != NULL && key_data != NULL ?
+        PST_RESULT_OK : PST_RESULT_RESOURCE_FAILURE;
+    timeline("FIXTURE_LOAD_END result=%ld", (long)result);
+    if (result != PST_RESULT_OK) {
+        timeline("SETUP_FAIL stage=FIXTURE_LOAD result=%ld", (long)result);
+        console_marker("SETUP_FAIL stage=FIXTURE_LOAD result=%ld", (long)result);
+        exit_code = 3; setup_failed = 1; goto cleanup;
+    }
+
     memset(&trust_source, 0, sizeof(trust_source));
     trust_source.struct_size = sizeof(trust_source);
     trust_source.api_version = PST_API_VERSION;
     trust_source.kind = PST_TRUST_SOURCE_CUSTOM_CA_DER;
     trust_source.data = ca_data;
     trust_source.data_size = ca_size;
-    if (pst_trust_create(&trust_source, &trust) != PST_RESULT_OK) return 4;
+    timeline("TRUST_CREATE_BEGIN");
+    result = pst_trust_create(&trust_source, &trust);
+    timeline("TRUST_CREATE_END result=%ld", (long)result);
+    if (result != PST_RESULT_OK) {
+        timeline("SETUP_FAIL stage=TRUST_CREATE result=%ld", (long)result);
+        console_marker("SETUP_FAIL stage=TRUST_CREATE result=%ld", (long)result);
+        exit_code = 4; setup_failed = 1; goto cleanup;
+    }
 
     memset(&credential_source, 0, sizeof(credential_source));
     credential_source.struct_size = sizeof(credential_source);
@@ -224,13 +320,27 @@ int main(int argc, char **argv)
     credential_source.certificate_der_size = cert_size;
     credential_source.private_key_der = key_data;
     credential_source.private_key_der_size = key_size;
-    if (pst_credentials_create(&credential_source, &credentials) != PST_RESULT_OK)
-        return 5;
+    timeline("CREDENTIAL_CREATE_BEGIN");
+    result = pst_credentials_create(&credential_source, &credentials);
+    timeline("CREDENTIAL_CREATE_END result=%ld", (long)result);
+    if (result != PST_RESULT_OK) {
+        timeline("SETUP_FAIL stage=CREDENTIAL_CREATE result=%ld", (long)result);
+        console_marker("SETUP_FAIL stage=CREDENTIAL_CREATE result=%ld", (long)result);
+        exit_code = 5; setup_failed = 1; goto cleanup;
+    }
     memset(key_data, 0, key_size);
     free(key_data);
     key_data = NULL;
 
-    if (pst_config_create(&config) != PST_RESULT_OK) return 6;
+    timeline("CONFIG_CREATE_BEGIN");
+    result = pst_config_create(&config);
+    timeline("CONFIG_CREATE_END result=%ld", (long)result);
+    if (result != PST_RESULT_OK) {
+        timeline("SETUP_FAIL stage=CONFIG_CREATE result=%ld", (long)result);
+        console_marker("SETUP_FAIL stage=CONFIG_CREATE result=%ld", (long)result);
+        exit_code = 6; setup_failed = 1; goto cleanup;
+    }
+
     memset(&identity, 0, sizeof(identity));
     identity.struct_size = sizeof(identity);
     identity.api_version = PST_API_VERSION;
@@ -240,50 +350,153 @@ int main(int argc, char **argv)
     identity.expected_hostname_size = strlen(argv[3]);
     identity.require_peer_authentication = 1;
     identity.require_client_authentication = 1;
-    if (pst_config_set_identity(config, &identity) != PST_RESULT_OK) return 7;
+    timeline("IDENTITY_CONFIG_BEGIN");
+    result = pst_config_set_identity(config, &identity);
+    timeline("IDENTITY_CONFIG_END result=%ld", (long)result);
+    if (result != PST_RESULT_OK) {
+        timeline("SETUP_FAIL stage=IDENTITY_CONFIG result=%ld", (long)result);
+        console_marker("SETUP_FAIL stage=IDENTITY_CONFIG result=%ld", (long)result);
+        exit_code = 7; setup_failed = 1; goto cleanup;
+    }
+
     memset(&policy, 0, sizeof(policy));
     policy.struct_size = sizeof(policy);
     policy.api_version = PST_API_VERSION;
     policy.minimum_version = (pst_u32)atoi(argv[7]);
     policy.maximum_version = policy.minimum_version;
+    timeline("ALPN_CONFIG_BEGIN");
     protocol.data = (const pst_u8 *)argv[8];
     protocol.size = strlen(argv[8]);
     policy.alpn_protocols = &protocol;
     policy.alpn_protocol_count = 1;
     policy.alpn_requirement = PST_FEATURE_REQUIRED;
     policy.early_data = PST_FEATURE_DISABLED;
-    if (pst_config_set_tls_policy(config, &policy) != PST_RESULT_OK ||
-        pst_config_freeze(config) != PST_RESULT_OK) return 8;
+    timeline("ALPN_CONFIG_END result=%ld", (long)PST_RESULT_OK);
+    timeline("TLS_POLICY_BEGIN");
+    result = pst_config_set_tls_policy(config, &policy);
+    if (result == PST_RESULT_OK) result = pst_config_freeze(config);
+    timeline("TLS_POLICY_END result=%ld", (long)result);
+    if (result != PST_RESULT_OK) {
+        timeline("SETUP_FAIL stage=TLS_POLICY result=%ld", (long)result);
+        console_marker("SETUP_FAIL stage=TLS_POLICY result=%ld", (long)result);
+        exit_code = 8; setup_failed = 1; goto cleanup;
+    }
 
-    if (pst_win32_register_retrozilla_nss() != PST_RESULT_OK) return 9;
+    timeline("BACKEND_REGISTER_BEGIN");
+    result = pst_win32_register_retrozilla_nss();
+    timeline("BACKEND_REGISTER_END result=%ld", (long)result);
+    if (result != PST_RESULT_OK) {
+        timeline("SETUP_FAIL stage=BACKEND_REGISTER result=%ld", (long)result);
+        console_marker("SETUP_FAIL stage=BACKEND_REGISTER result=%ld", (long)result);
+        exit_code = 9; setup_failed = 1; goto cleanup;
+    }
+
     memset(&runtime_options, 0, sizeof(runtime_options));
     runtime_options.struct_size = sizeof(runtime_options);
     runtime_options.api_version = PST_API_VERSION;
     runtime_options.selection = PST_BACKEND_SELECTION_EXACT;
     runtime_options.exact_backend_id = "retrozilla-nss";
-    if (pst_log_config_init(&log_config) != PST_RESULT_OK) return 10;
+    result = pst_log_config_init(&log_config);
+    if (result != PST_RESULT_OK) {
+        timeline("SETUP_FAIL stage=LOG_CONFIG result=%ld", (long)result);
+        console_marker("SETUP_FAIL stage=LOG_CONFIG result=%ld", (long)result);
+        exit_code = 10; setup_failed = 1; goto cleanup;
+    }
     log_config.level = (pst_u32)atoi(argv[10]);
     log_config.callback = capture_log;
     log_config.user_context = &log;
-    if (pst_runtime_create_with_logging(&runtime_options, &log_config,
-        &runtime, NULL) != PST_RESULT_OK) return 11;
+    timeline("RUNTIME_CREATE_BEGIN");
+    console_marker("RUNTIME_CREATE_BEGIN");
+    result = pst_runtime_create_with_logging(&runtime_options, &log_config,
+        &runtime, NULL);
+    timeline("RUNTIME_CREATE_END result=%ld", (long)result);
+    console_marker("RUNTIME_CREATE_END result=%ld", (long)result);
+    if (result != PST_RESULT_OK) {
+        timeline("SETUP_FAIL stage=RUNTIME_CREATE result=%ld", (long)result);
+        console_marker("SETUP_FAIL stage=RUNTIME_CREATE result=%ld", (long)result);
+        exit_code = 11; setup_failed = 1; goto cleanup;
+    }
 
-    if (WSAStartup(MAKEWORD(2, 0), &winsock) != 0 ||
-        !connect4(argv[1], (unsigned short)atoi(argv[2]), &native_socket))
-        return 12;
-    if (pst_win32_socket_transport_create((pst_size)native_socket,
-        &transport) != PST_RESULT_OK) return 13;
-    if (pst_connection_create(runtime, config, &connection) != PST_RESULT_OK)
-        return 14;
+    timeline("WINSOCK_STARTUP_BEGIN");
+    native_error = WSAStartup(MAKEWORD(2, 0), &winsock);
+    result = native_error == 0 ? PST_RESULT_OK : PST_RESULT_TRANSPORT_FAILURE;
+    timeline("WINSOCK_STARTUP_END result=%ld native_error=%d",
+        (long)result, native_error);
+    if (result != PST_RESULT_OK) {
+        timeline("SETUP_FAIL stage=WINSOCK_STARTUP result=%ld", (long)result);
+        console_marker("SETUP_FAIL stage=WINSOCK_STARTUP result=%ld", (long)result);
+        exit_code = 12; setup_failed = 1; goto cleanup;
+    }
+    winsock_started = 1;
+
+    timeline("SOCKET_CREATE_BEGIN");
+    native_socket = socket4_create(&native_error);
+    result = native_socket != INVALID_SOCKET ?
+        PST_RESULT_OK : PST_RESULT_TRANSPORT_FAILURE;
+    timeline("SOCKET_CREATE_END result=%ld native_error=%d",
+        (long)result, native_error);
+    if (result != PST_RESULT_OK) {
+        timeline("SETUP_FAIL stage=SOCKET_CREATE result=%ld", (long)result);
+        console_marker("SETUP_FAIL stage=SOCKET_CREATE result=%ld", (long)result);
+        exit_code = 12; setup_failed = 1; goto cleanup;
+    }
+
+    timeline("CONNECT_BEGIN");
+    console_marker("CONNECT_BEGIN");
+    if (!connect4(native_socket, argv[1], (unsigned short)atoi(argv[2]),
+        &native_error)) result = PST_RESULT_TRANSPORT_FAILURE;
+    else result = PST_RESULT_OK;
+    timeline("CONNECT_END result=%ld native_error=%d",
+        (long)result, native_error);
+    console_marker("CONNECT_END result=%ld native_error=%d",
+        (long)result, native_error);
+    if (result != PST_RESULT_OK) {
+        timeline("SETUP_FAIL stage=CONNECT result=%ld", (long)result);
+        console_marker("SETUP_FAIL stage=CONNECT result=%ld", (long)result);
+        exit_code = 12; setup_failed = 1; goto cleanup;
+    }
+
+    timeline("TRANSPORT_CREATE_BEGIN");
+    result = pst_win32_socket_transport_create((pst_size)native_socket,
+        &transport);
+    timeline("TRANSPORT_CREATE_END result=%ld", (long)result);
+    if (result != PST_RESULT_OK) {
+        timeline("SETUP_FAIL stage=TRANSPORT_CREATE result=%ld", (long)result);
+        console_marker("SETUP_FAIL stage=TRANSPORT_CREATE result=%ld", (long)result);
+        exit_code = 13; setup_failed = 1; goto cleanup;
+    }
+    native_socket = INVALID_SOCKET;
+
+    timeline("CONNECTION_CREATE_BEGIN");
+    console_marker("CONNECTION_CREATE_BEGIN");
+    result = pst_connection_create(runtime, config, &connection);
+    timeline("CONNECTION_CREATE_END result=%ld", (long)result);
+    console_marker("CONNECTION_CREATE_END result=%ld", (long)result);
+    if (result != PST_RESULT_OK) {
+        timeline("SETUP_FAIL stage=CONNECTION_CREATE result=%ld", (long)result);
+        console_marker("SETUP_FAIL stage=CONNECTION_CREATE result=%ld", (long)result);
+        exit_code = 14; setup_failed = 1; goto cleanup;
+    }
+
+    timeline("ATTACH_BEGIN");
+    console_marker("ATTACH_BEGIN");
     accepted = 0;
     result = pst_connection_attach(connection, transport,
         PST_OWNERSHIP_TRANSFERRED, &accepted);
-    if (result != PST_RESULT_OK || accepted != 1UL) return 15;
-    transport = NULL;
-    native_socket = INVALID_SOCKET;
+    timeline("ATTACH_END result=%ld ownership_accepted=%lu",
+        (long)result, (unsigned long)accepted);
+    console_marker("ATTACH_END result=%ld ownership_accepted=%lu",
+        (long)result, (unsigned long)accepted);
+    if (accepted == 1UL) transport = NULL;
+    if (result != PST_RESULT_OK || accepted != 1UL) {
+        timeline("SETUP_FAIL stage=ATTACH result=%ld", (long)result);
+        console_marker("SETUP_FAIL stage=ATTACH result=%ld", (long)result);
+        exit_code = 15; setup_failed = 1; goto cleanup;
+    }
 
     timeline("CONNECTION_ATTACHED OWNERSHIP_ACCEPTED=%lu HANDSHAKE_START",
         (unsigned long)accepted);
+    console_marker("HANDSHAKE_BEGIN MODE=%s", mode);
     established = 0;
     final_result = PST_RESULT_OK;
     final_close = PST_CLOSE_NONE;
@@ -311,6 +524,9 @@ int main(int argc, char **argv)
     timeline("LOOP=HANDSHAKE END STEPS=%d ELAPSED_MS=%lu ESTABLISHED=%d FINAL=%ld",
         step, (unsigned long)(loop_end - loop_start), established,
         (long)final_result);
+    console_marker("HANDSHAKE_END STEPS=%d ELAPSED_MS=%lu ESTABLISHED=%d FINAL=%ld",
+        step, (unsigned long)(loop_end - loop_start), established,
+        (long)final_result);
 
     mode_read = !strcmp(mode, "clean_close") ||
         !strcmp(mode, "abrupt_close") ||
@@ -327,9 +543,14 @@ int main(int argc, char **argv)
         loop_start = GetTickCount();
         timeline("LOOP=READ START STATE=ESTABLISHED TOTAL_READ=%lu",
             (unsigned long)total_read);
+        console_marker("READ_LOOP_BEGIN TOTAL_READ=%lu",
+            (unsigned long)total_read);
         for (step = 0; step < MAX_STEPS; ++step) {
             timeline("LOOP=READ STEP=%d BEFORE_READ STATE=ESTABLISHED TOTAL_READ=%lu",
                 step, (unsigned long)total_read);
+            if (step == 0)
+                console_marker("BEFORE_READ STEP=%d TOTAL_READ=%lu",
+                    step, (unsigned long)total_read);
             memset(&io, 0, sizeof(io));
             result = pst_connection_read(connection, received + total_read,
                 sizeof(received) - total_read, &io);
@@ -338,6 +559,13 @@ int main(int argc, char **argv)
                 step, (long)result, (unsigned long)io.operation,
                 (unsigned long)io.bytes_transferred, (unsigned long)total_read,
                 (unsigned long)io.close_kind, (long)io.error);
+            if (step == 0 || result != PST_RESULT_OK ||
+                io.operation == PST_OPERATION_CLOSED ||
+                io.operation == PST_OPERATION_FAILED)
+                console_marker("AFTER_READ STEP=%d RESULT=%ld OPERATION=%lu BYTES=%lu TOTAL_READ=%lu CLOSE_KIND=%lu",
+                    step, (long)result, (unsigned long)io.operation,
+                    (unsigned long)io.bytes_transferred,
+                    (unsigned long)total_read, (unsigned long)io.close_kind);
             if (result != PST_RESULT_OK) {
                 final_result = result;
                 break;
@@ -415,6 +643,7 @@ int main(int argc, char **argv)
         if (final_result == PST_RESULT_OK) {
             loop_start = GetTickCount();
             timeline("LOOP=SHUTDOWN START STATE=ESTABLISHED");
+            console_marker("SHUTDOWN_BEGIN STATE=ESTABLISHED");
             for (step = 0; step < MAX_STEPS; ++step) {
                 timeline("LOOP=SHUTDOWN STEP=%d BEFORE_SHUTDOWN STATE=SHUTTING_DOWN",
                     step);
@@ -438,6 +667,9 @@ int main(int argc, char **argv)
             }
             loop_end = GetTickCount();
             timeline("LOOP=SHUTDOWN END STEPS=%d ELAPSED_MS=%lu FINAL=%ld",
+                step, (unsigned long)(loop_end - loop_start),
+                (long)final_result);
+            console_marker("SHUTDOWN_END STEPS=%d ELAPSED_MS=%lu FINAL=%ld",
                 step, (unsigned long)(loop_end - loop_start),
                 (long)final_result);
         }
@@ -493,27 +725,66 @@ int main(int argc, char **argv)
         (unsigned long)diagnostic.operation, (unsigned long)log.total,
         (unsigned long)log.errors, (unsigned long)log.warnings, step, ok);
 
-    timeline("CLEANUP BEFORE_CONNECTION_RELEASE");
-    pst_connection_release(connection);
-    timeline("CLEANUP AFTER_CONNECTION_RELEASE BEFORE_CONFIG_RELEASE");
-    pst_config_release(config);
-    timeline("CLEANUP AFTER_CONFIG_RELEASE BEFORE_CREDENTIALS_RELEASE");
-    pst_credentials_release(credentials);
-    timeline("CLEANUP AFTER_CREDENTIALS_RELEASE BEFORE_TRUST_RELEASE");
-    pst_trust_release(trust);
-    timeline("CLEANUP AFTER_TRUST_RELEASE BEFORE_RUNTIME_RELEASE");
-    pst_runtime_release(runtime);
-    timeline("CLEANUP AFTER_RUNTIME_RELEASE");
-    if (transport != NULL) pst_transport_release(transport);
-    if (native_socket != INVALID_SOCKET) closesocket(native_socket);
-    WSACleanup();
+    exit_code = ok ? 0 : 20;
+
+cleanup:
+    timeline("CLEANUP_BEGIN SETUP_FAILED=%d", setup_failed);
+    console_marker("CLEANUP_BEGIN");
+    if (connection != NULL) {
+        timeline("CLEANUP BEFORE_CONNECTION_RELEASE");
+        pst_connection_release(connection);
+        timeline("CLEANUP AFTER_CONNECTION_RELEASE");
+    }
+    if (transport != NULL) {
+        timeline("CLEANUP BEFORE_TRANSPORT_RELEASE");
+        pst_transport_release(transport);
+        timeline("CLEANUP AFTER_TRANSPORT_RELEASE");
+    }
+    if (native_socket != INVALID_SOCKET) {
+        timeline("CLEANUP BEFORE_SOCKET_CLOSE");
+        closesocket(native_socket);
+        timeline("CLEANUP AFTER_SOCKET_CLOSE");
+    }
+    if (config != NULL) {
+        timeline("CLEANUP BEFORE_CONFIG_RELEASE");
+        pst_config_release(config);
+        timeline("CLEANUP AFTER_CONFIG_RELEASE");
+    }
+    if (credentials != NULL) {
+        timeline("CLEANUP BEFORE_CREDENTIALS_RELEASE");
+        pst_credentials_release(credentials);
+        timeline("CLEANUP AFTER_CREDENTIALS_RELEASE");
+    }
+    if (trust != NULL) {
+        timeline("CLEANUP BEFORE_TRUST_RELEASE");
+        pst_trust_release(trust);
+        timeline("CLEANUP AFTER_TRUST_RELEASE");
+    }
+    if (runtime != NULL) {
+        timeline("CLEANUP BEFORE_RUNTIME_RELEASE");
+        pst_runtime_release(runtime);
+        timeline("CLEANUP AFTER_RUNTIME_RELEASE");
+    }
+    if (winsock_started) {
+        timeline("CLEANUP BEFORE_WINSOCK_CLEANUP");
+        WSACleanup();
+        timeline("CLEANUP AFTER_WINSOCK_CLEANUP");
+    }
     free(ca_data);
     free(cert_data);
     if (key_data != NULL) {
         memset(key_data, 0, key_size);
         free(key_data);
     }
+    timeline("CLEANUP_END");
+    console_marker("CLEANUP_END");
     timeline("TOTAL_ELAPSED_MS=%lu EXIT_CODE=%d",
-        (unsigned long)(GetTickCount() - g_epoch), ok ? 0 : 20);
-    return ok ? 0 : 20;
+        (unsigned long)(GetTickCount() - g_epoch), exit_code);
+    if (g_client_log != NULL) {
+        fclose(g_client_log);
+        g_client_log = NULL;
+    }
+    console_marker("TOTAL_ELAPSED_MS=%lu EXIT_CODE=%d",
+        (unsigned long)(GetTickCount() - g_epoch), exit_code);
+    return exit_code;
 }

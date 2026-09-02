@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 #include "nss.h"
 #include "ssl.h"
 #include "sslerr.h"
@@ -60,6 +61,7 @@ typedef SECStatus (*pst_ssl_version_set_fn)(PRFileDesc *, const SSLVersionRange 
 typedef SECStatus (*pst_ssl_set_alpn_fn)(PRFileDesc *, const unsigned char *, unsigned int);
 typedef SECStatus (*pst_ssl_get_alpn_fn)(PRFileDesc *, SSLNextProtoState *, unsigned char *, unsigned int *, unsigned int);
 typedef int (*pst_ssl_data_pending_fn)(PRFileDesc *);
+typedef SECStatus (*pst_ssl_alert_received_callback_fn)(PRFileDesc *, SSLAlertCallback, void *);
 typedef CERTCertDBHandle *(*pst_cert_default_db_fn)(void);
 typedef CERTCertificate *(*pst_cert_new_temp_fn)(CERTCertDBHandle *, SECItem *, char *, PRBool, PRBool);
 typedef SECStatus (*pst_cert_change_trust_fn)(CERTCertDBHandle *, CERTCertificate *, CERTCertTrust *);
@@ -108,6 +110,7 @@ typedef struct pst_nss_backend_state {
     pst_ssl_set_alpn_fn ssl_set_alpn;
     pst_ssl_get_alpn_fn ssl_get_alpn;
     pst_ssl_data_pending_fn ssl_data_pending;
+    pst_ssl_alert_received_callback_fn ssl_alert_received_callback;
     pst_cert_default_db_fn cert_default_db;
     pst_cert_new_temp_fn cert_new_temp;
     pst_cert_change_trust_fn cert_change_trust;
@@ -138,12 +141,15 @@ typedef struct pst_nss_connection_state {
     char *expected_hostname;
     pst_u32 require_peer;
     int handshake_complete;
+    pst_u32 received_close_notify;
     pst_u32 minimum_version, maximum_version, alpn_requirement;
     pst_u8 *alpn; pst_size alpn_size;
 } pst_nss_connection_state;
 static int pst_nss_active;
 static DWORD pst_nss_trace_epoch;
 static int pst_nss_trace_epoch_set;
+static int pst_nss_trace_started;
+static int pst_nss_module_trace_started;
 void pst_backend_nss_trace_set_epoch(pst_u32 epoch)
 {
     pst_nss_trace_epoch = (DWORD)epoch;
@@ -155,10 +161,29 @@ static void pst_nss_trace_file(const char *environment, const char *event,
     char path[1024];
     DWORD length;
     FILE *file;
+    int *started;
+    const char *mode;
     length = GetEnvironmentVariableA(environment, path, sizeof(path));
     if (length == 0 || length >= sizeof(path)) return;
-    file = fopen(path, "a");
-    if (file == NULL) return;
+    started = strcmp(environment, "PST_NSS_MODULE_FILE") == 0 ?
+        &pst_nss_module_trace_started : &pst_nss_trace_started;
+    mode = *started ? "a" : "w";
+    errno = 0;
+    file = fopen(path, mode);
+    if (file == NULL) {
+        fprintf(stderr, "T_MS=%010lu TRACE_LOG_OPEN=0 ENV=%s FILE=%s ERRNO=%d\n",
+                (unsigned long)(GetTickCount() - pst_nss_trace_epoch),
+                environment, path, errno);
+        fflush(stderr);
+        return;
+    }
+    if (!*started) {
+        *started = 1;
+        printf("T_MS=%010lu TRACE_LOG_OPEN=1 ENV=%s FILE=%s ERRNO=0\n",
+               (unsigned long)(GetTickCount() - pst_nss_trace_epoch),
+               environment, path);
+        fflush(stdout);
+    }
     if (!pst_nss_trace_epoch_set) {
         pst_nss_trace_epoch = GetTickCount();
         pst_nss_trace_epoch_set = 1;
@@ -233,6 +258,7 @@ static int pst_nss_load(pst_nss_backend_state *s)
     s->ssl_set_alpn = (pst_ssl_set_alpn_fn)pst_nss_symbol(s->ssl_module, "SSL_SetNextProtoNego");
     s->ssl_get_alpn = (pst_ssl_get_alpn_fn)pst_nss_symbol(s->ssl_module, "SSL_GetNextProto");
     s->ssl_data_pending = (pst_ssl_data_pending_fn)pst_nss_symbol(s->ssl_module, "SSL_DataPending");
+    s->ssl_alert_received_callback = (pst_ssl_alert_received_callback_fn)pst_nss_symbol(s->ssl_module, "SSL_AlertReceivedCallback");
     s->cert_dup = (pst_cert_dup_fn)pst_nss_symbol(s->nss_module, "CERT_DupCertificate");
     s->pk11_get_slot = (pst_pk11_get_slot_fn)pst_nss_symbol(s->nss_module, "PK11_GetInternalKeySlot");
     s->pk11_free_slot = (pst_pk11_free_slot_fn)pst_nss_symbol(s->nss_module, "PK11_FreeSlot");
@@ -252,7 +278,8 @@ static int pst_nss_load(pst_nss_backend_state *s)
         s->ssl_auth_hook != NULL && s->ssl_auth_certificate != NULL &&
         s->ssl_channel_info != NULL && s->ssl_client_auth_hook != NULL &&
         s->ssl_peer_certificate != NULL && s->ssl_version_set != NULL &&
-        s->ssl_set_alpn != NULL && s->ssl_get_alpn != NULL && s->cert_dup != NULL &&
+        s->ssl_set_alpn != NULL && s->ssl_get_alpn != NULL &&
+        s->ssl_alert_received_callback != NULL &&
         s->pk11_get_slot != NULL && s->pk11_free_slot != NULL &&
         s->pk11_import_key != NULL && s->pk11_hash != NULL &&
         s->key_copy != NULL && s->key_destroy != NULL &&
@@ -306,6 +333,35 @@ PST_RESULT pst_backend_nss_normalize_error(pst_i32 error)
     if (IS_SSL_ERROR(error)) return PST_RESULT_PROTOCOL_FAILURE;
     if (IS_SEC_ERROR(error)) return PST_RESULT_BACKEND_FAILURE;
     return PST_RESULT_BACKEND_FAILURE;
+}
+int pst_backend_nss_is_close_notify_alert(pst_u32 description)
+{
+    return description == 0UL;
+}
+void pst_backend_nss_observe_alert(pst_u32 description, pst_u32 *observed)
+{
+    if (observed != NULL && pst_backend_nss_is_close_notify_alert(description))
+        *observed = 1UL;
+}
+PST_RESULT pst_backend_nss_classify_eof(pst_u32 received_close_notify,
+                                        PST_BACKEND_IO_RESULT *result)
+{
+    if (result == NULL) return PST_RESULT_INVALID_ARGUMENT;
+    result->bytes_transferred = 0;
+    if (received_close_notify != 0UL) {
+        result->operation = PST_BACKEND_OPERATION_CLOSED;
+        result->close_kind = PST_BACKEND_CLOSE_CLEAN;
+        result->error = PST_RESULT_OK;
+    } else {
+        result->operation = PST_BACKEND_OPERATION_FAILED;
+        result->close_kind = PST_BACKEND_CLOSE_TRUNCATED;
+        result->error = PST_RESULT_TRUNCATED;
+    }
+    return PST_RESULT_OK;
+}
+PST_RESULT pst_backend_nss_alert_registration_result(int succeeded)
+{
+    return succeeded ? PST_RESULT_OK : PST_RESULT_BACKEND_FAILURE;
 }
 static pst_u32 pst_nss_error_domain(pst_i32 error)
 {
@@ -508,6 +564,18 @@ static SECStatus PR_CALLBACK pst_nss_client_auth(void *arg, PRFileDesc *fd,
  if(*cert==NULL||*key==NULL){if(*cert)c->runtime->backend->cert_destroy(*cert);if(*key)c->runtime->backend->key_destroy(*key);*cert=NULL;*key=NULL;return SECFailure;}
  return SECSuccess;
 }
+static void PR_CALLBACK pst_nss_alert_received(const PRFileDesc *fd, void *arg,
+                                               const SSLAlert *alert)
+{
+    pst_nss_connection_state *c = (pst_nss_connection_state *)arg;
+    (void)fd;
+    if (c == NULL || alert == NULL) return;
+    if (pst_backend_nss_is_close_notify_alert((pst_u32)alert->description)) {
+        pst_backend_nss_observe_alert((pst_u32)alert->description,
+                                      &c->received_close_notify);
+        pst_nss_trace("TLS_alert", "close_notify_received=1");
+    }
+}
 static PST_RESULT pst_nss_configure_identity(void *state,const pst_config *config)
 {
  pst_nss_connection_state *c=(pst_nss_connection_state*)state;pst_nss_backend_state *s;
@@ -580,6 +648,17 @@ static PST_RESULT pst_nss_attach(void *state, void *transport, pst_u32 ownership
         return pst_backend_nss_normalize_error(c->last_error);
     }
     pst_nss_trace("SSL_ImportFD", "ok");
+    if (s->ssl_alert_received_callback(ssl_fd, pst_nss_alert_received, c) !=
+        SECSuccess) {
+        pst_nss_capture_error(s, &c->last_error);
+        pst_diagnostic_capture(&c->diagnostic, PST_RESULT_BACKEND_FAILURE,
+            PST_DIAGNOSTIC_PHASE_TRANSPORT_ATTACH, "retrozilla-nss",
+            PST_DIAGNOSTIC_DOMAIN_NSS, c->last_error, 0,
+            c->last_error == 0 ? 0UL : PST_DIAGNOSTIC_FLAG_NATIVE);
+        s->pr_close(ssl_fd);
+        return pst_backend_nss_alert_registration_result(0);
+    }
+    pst_nss_trace("SSL_AlertReceivedCallback", "ok");
     { SSLVersionRange range; range.min=(PRUint16)(c->minimum_version==PST_TLS_VERSION_1_3?SSL_LIBRARY_VERSION_TLS_1_3:SSL_LIBRARY_VERSION_TLS_1_2);range.max=(PRUint16)(c->maximum_version==PST_TLS_VERSION_1_3?SSL_LIBRARY_VERSION_TLS_1_3:SSL_LIBRARY_VERSION_TLS_1_2);if(s->ssl_version_set(ssl_fd,&range)!=SECSuccess||(c->alpn_size&&s->ssl_set_alpn(ssl_fd,c->alpn,(unsigned int)c->alpn_size)!=SECSuccess)){pst_nss_capture_error(s,&c->last_error);s->pr_close(ssl_fd);return pst_backend_nss_normalize_error(c->last_error);}}
     if (s->ssl_option_set(ssl_fd, SSL_SECURITY, PR_TRUE) != SECSuccess ||
         s->ssl_option_set(ssl_fd, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE) != SECSuccess ||
@@ -766,9 +845,18 @@ static PST_RESULT pst_nss_read(void *state, void *buffer, pst_size capacity,
         c->interest = PST_BACKEND_INTEREST_NONE; return PST_RESULT_OK;
     }
     if (amount == 0) {
-        result->operation = PST_BACKEND_OPERATION_CLOSED;
-        result->close_kind = PST_BACKEND_CLOSE_CLEAN;
-        pst_nss_trace("PR_Read_class", "CLOSED clean");
+        pst_backend_nss_classify_eof(c->received_close_notify, result);
+        if (c->received_close_notify != 0UL) {
+            pst_diagnostic_clear(&c->diagnostic);
+            pst_nss_trace("PR_Read_class",
+                          "CLOSED clean close_notify_received=1");
+        } else {
+            pst_diagnostic_capture(&c->diagnostic, PST_RESULT_TRUNCATED,
+                PST_DIAGNOSTIC_PHASE_READ, "retrozilla-nss",
+                PST_DIAGNOSTIC_DOMAIN_BACKEND, 0, 0, 0);
+            pst_nss_trace("PR_Read_class",
+                          "FAILED truncated close_notify_received=0");
+        }
         c->interest = PST_BACKEND_INTEREST_NONE; return PST_RESULT_OK;
     }
     if (pst_backend_nss_is_would_block(c->last_error)) {

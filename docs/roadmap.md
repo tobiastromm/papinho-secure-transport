@@ -52,7 +52,12 @@
     - 7.A closure audit: complete
   - 7.B Connection Failure Matrix: in progress
     - audit and readiness/wait defect correction: host complete
-    - deterministic functional fixtures: host executed; abrupt close classification blocker found
-    - targeted NT4 initial run: delayed failures observed; clean_close timeline diagnostic package ready
+    - deterministic functional fixtures: host complete
+    - real NT4 clean_close and data_then_close: complete
+    - real NT4 abrupt_close provider blocker reproduction: complete
+    - RetroZilla NSS close_notify observability audit: complete
+    - provider-local close_notify implementation and host validation: complete
+    - targeted NT4 clean/data/abrupt revalidation: pending
+    - shutdown-abort proof and 7.B closure audit: pending
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending
