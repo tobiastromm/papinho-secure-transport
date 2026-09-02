@@ -105,6 +105,6 @@
   - 8.D Schannel backend skeleton / modern Windows build: complete
   - 8.E Schannel TLS, readiness, shutdown and close semantics: complete
   - 8.F Schannel trust, identity, ALPN, mTLS and peer info: complete
-  - 8.G cross-backend interoperability and legacy regression: pending
+  - 8.G cross-backend interoperability and legacy regression: complete
   - 8.H Phase 8 closure audit: pending
 - Phase 9 - Release / ABI Stabilization: pending; not started
