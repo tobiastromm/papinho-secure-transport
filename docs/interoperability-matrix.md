@@ -2,7 +2,7 @@
 
 ## Status and scope
 
-Phase 7.F is in progress. This document is the canonical bounded interoperability matrix for the current release. `TESTED` means an execution is recorded, `SUPPORTED` is an explicit implemented contract, `EXPECTED` is architectural expectation without execution, `NOT TESTED` has no evidence, and `UNSUPPORTED` is explicitly unavailable.
+Phase 7.F Interoperability Matrix is complete. The formal closure audit found all 16 bounded mandatory gates satisfied. This document is the canonical interoperability matrix for the current release. `TESTED` means an execution is recorded, `SUPPORTED` is an explicit implemented contract, `EXPECTED` is architectural expectation without execution, `NOT TESTED` has no evidence, and `UNSUPPORTED` is explicitly unavailable.
 
 The current tested target is Win32 x86 with a VC6/C89 consumer, the RetroZilla NSS 3.42 Beta and NSPR 4.7.7 provider, the private Win32 socket adapter, and the versioned VC6 runtime. Tests cover a modern Windows development host and real Windows NT 4.0 SP6. Windows 2000, XP, 95/98, and Win32s are not inferred from NT4 evidence.
 
@@ -87,6 +87,7 @@ Negative control without intermediate: HANDSHAKE_FAIL=9 DIAG_RESULT=9 NO_RESURRE
 ```
 
 The normal mTLS/required-ALPN OpenSSL baselines also passed after the public cipher assertion: TLS 1.2 reported `0xc030`, TLS 1.3 reported `0x1302`, both with `WRITE=25 READ=25 CONTENT_MATCH=1`, `AUTH=True`, and `ALPN=fixture/1`.
+
 Generate the intermediate-chain assets from the repository root with:
 
 ```bat
@@ -117,7 +118,11 @@ All three bounded functional gaps are closed:
 2. positive root/intermediate/leaf chain in TLS 1.2 and TLS 1.3 plus negative omission control: PASS;
 3. public `cipher_suite != 0` assertion/reporting in TLS 1.2 and TLS 1.3: PASS.
 
-Phase 7.F remains in progress only for its separate closure audit. Multi-chunk real I/O is optional because partial I/O is already deterministic and large/long traffic belongs to Phase 7.H. Public Internet servers, Windows 2000/XP, a second PST backend, a second transport adapter, ECDSA coverage, exhaustive ciphers and long-run testing do not block 7.F.
+The formal closure audit found no mandatory gap. Phase 7.F is complete; Phase 7 remains in progress and 7.G is next but not started.
+
+## Deferred and non-blocking
+
+Windows 2000, Windows XP, Windows 95/98, Win32s/3.11, ECDSA, exhaustive cipher coverage, public Internet endpoints, HTTP/2 semantics, IDNA, uncontracted IP-literal behavior, a second transport adapter, a second PST backend, a Schannel TLS 1.3 fixture, and large-payload/stress traffic do not block 7.F. Additional backends and adapters belong to Phase 8; stress and long-run traffic belong to Phase 7.H. No support is inferred for untested platforms.
 
 ## Deferred housekeeping
 
