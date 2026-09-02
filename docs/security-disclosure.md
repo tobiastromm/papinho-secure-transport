@@ -1,6 +1,6 @@
 # Diagnostics and security disclosure matrix
 
-Status: Phase 7.G audit complete; Phase 7.G remains in progress pending focused functional logging/wire-equivalence revalidation and closure audit.
+Status: Phase 7.G complete. The disclosure audit, focused abuse matrix, functional logging equivalence, remote semantic equivalence, and formal closure audit all passed without production behavior or public ABI changes.
 
 ## Boundary
 
@@ -51,6 +51,12 @@ The negative case was required ALPN fixture/1 against a TLS 1.3 server offering 
 
 Logging therefore changed only local callback delivery. OFF preserved results, diagnostics, peer summary, ALPN, cipher and secure I/O. INFO remained a bounded three-event lifecycle set with no per-I/O/readiness flood. TRACE exposed only fields present in the fixed public event ABI, so it could not contain payload, hostname, ALPN text, DER, keys, trust material, native detail, paths, endpoints or handles. No raw TLS records were compared; semantic wire behavior was equivalent.
 
-The functional gate is complete. Phase 7.G remains in progress only for its formal closure audit.
+The functional gate is complete.
+
+## Phase 7.G closure
+
+The formal closure audit found every mandatory diagnostics/security-disclosure guarantee satisfied. Public diagnostics and log events remain fixed, structured, local, allocation-free value projections with absolute redaction. Native detail remains internal; functional peer data remains available only through explicit APIs; logging levels affect only callback delivery; INFO is bounded; TRACE carries only safe structured progress; normal progress is not WARN; and representative failures emit one logical ERROR. TLS 1.2, TLS 1.3, and required-ALPN failure runs proved semantic wire equivalence across logging levels. No production disclosure defect, ABI expansion, security-policy change, or mandatory untested surface remains.
+
+Phase 7.G is complete. Phase 7 remains in progress; Phase 7.H is next but is not started.
 
 API remains 1.2.0, library 0.3.0, SPI 2.3. Tests/docs-only changes require no NT4 retest.
