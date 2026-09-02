@@ -25,6 +25,16 @@ tools\build-modern-msvc.bat clean
 tools\build-modern-msvc.bat test
 ```
 
-Outputs are isolated under `build\win64-modern-msvc`. The test target compiles and links the common PST core for x64, runs a public-header-only consumer, and runs the Schannel skeleton lifecycle/selection/ownership matrix. `/W4` with zero warnings is required.
+Outputs are isolated under `build\win64-modern-msvc`. The test target compiles and links the common PST core for x64, runs a public-header-only consumer, and runs the Schannel lifecycle/selection/ownership matrix and deterministic TLS buffer/readiness tests. `/W4` with zero warnings is required.
 
 The modern target does not build RetroZilla NSS. The legacy target remains `tools\build-vc6.bat` and is documented separately in `docs\build-vc6.md`.
+
+## Schannel TLS integration
+
+After the normal `test` target builds the integration executable, run the local Python/OpenSSL TLS 1.2 gate with:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\run_schannel_runtime_integration.ps1 -TlsVersion 12 -Port 8476 -Exchanges 10
+```
+
+Use `-CloseMode peer-clean` or `-CloseMode peer-abrupt` for the close-classification gates. The runner temporarily adds and removes the exact test root under `CurrentUser/Root`. TLS 1.3 is not available from the currently validated Schannel runtime and is not advertised.

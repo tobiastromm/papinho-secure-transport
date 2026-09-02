@@ -1,6 +1,6 @@
 # Provider evolution
 
-Status: Phase 8.D Schannel backend skeleton and modern Windows x64 build complete. Phase 8.E Schannel TLS/readiness/close implementation is next and has not started.
+Status: Phase 8.E Schannel TLS 1.2, readiness, secure I/O, close classification, and shutdown complete. Phase 8.F Schannel trust/identity/ALPN/mTLS/peer-info parity is next and has not started.
 
 ## SPI 2.4 audit
 
@@ -93,7 +93,7 @@ The selected production provider must prove runtime/connection lifecycle, socket
 2. **8.B - Deterministic multi-backend core matrix:** complete; selection, fallback, concurrency, isolation, optional hooks, prefix compatibility and registry bounds are covered.
 3. **8.C - Backend metadata / production priority / transport genericization:** complete; internal metadata, SPI 2.4 prefix rules, target manifests, deterministic production order, and neutral Win32 transport are defined and tested.
 4. **8.D - Schannel skeleton / modern Windows build:** complete; generic Win32 transport ownership, honest capabilities, provider lifecycle, diagnostics, selection, x64 public-consumer build, and isolated modern output are proven. No TLS behavior is claimed.
-5. **8.E - Schannel TLS/readiness/close:** TLS 1.2/1.3 where OS supports them, ALPN, I/O, incremental SSPI state and clean/truncated classification.
+5. **8.E - Schannel TLS/readiness/close:** complete; TLS 1.2, incremental SSPI/WinSock readiness, secure I/O, stream buffering, close classification, and close-token shutdown are proven. TLS 1.3 is unavailable on the tested runtime and is not advertised.
 6. **8.F - Trust/identity/peer info:** system/custom trust decision, hostname, mTLS and normalized peer snapshot/diagnostics.
 7. **8.G - Cross-backend interoperability/regression:** selection and functional matrices while preserving the VC6/NT4 RetroZilla NSS provider.
 8. **8.H - Phase 8 closure audit.**
@@ -114,3 +114,11 @@ The `schannel` skeleton builds with the canonical Visual Studio Build Tools 2026
 The SPI-level matrix proves descriptor/metadata validation, exact and automatic selection, invalid transport rejection before ownership acceptance, accepted Win32 socket ownership and exactly-once close, diagnostic capture, unsupported handshake, runtime/connection lifecycle, and 100/100 initialize/shutdown cycles. The common core and a consumer including only the public header compile, link, and execute under x64 `/W4` with zero warnings. The VC6 portable and NSS unit regressions remain green with zero warnings. Schannel is excluded from VC6 and RetroZilla NSS is excluded from the modern target.
 
 Build details and clean-shell commands are frozen in `docs/build-modern-msvc.md`. Phase 8.E may implement incremental SSPI handshake/readiness/secure I/O; none of that behavior was started in 8.D.
+
+## Phase 8.E result
+
+The Schannel backend now uses `SCH_CREDENTIALS`, per-configured-connection credential handles, incremental `InitializeSecurityContext`, nonblocking WinSock send/recv, bounded `select`, `EncryptMessage`, `DecryptMessage`, `SECBUFFER_EXTRA`, plaintext remainder buffering, `SCHANNEL_SHUTDOWN`, and normalized diagnostic/close results. The implementation remains entirely modern-provider-local; no SPI or public API change was required.
+
+A Python 3.14/OpenSSL 3.5 local server using the existing root/intermediate/localhost test chain proved TLS 1.2, automatic system-store server validation, hostname input, ten 25-byte bidirectional exchanges, and incremental local shutdown. The runner adds the test root temporarily to `CurrentUser/Root` and removes only the exact added thumbprint. Separate runs proved authenticated peer close as `CLOSED/CLEAN` and raw EOF as `FAILED/TRUNCATED`.
+
+A real TLS 1.3 handshake attempt failed on this Windows Schannel runtime even though credential acquisition accepted the policy. Consequently runtime capabilities are `TLS_1_2 | SYSTEM_TRUST | HOSTNAME_VERIFY | NONBLOCKING | BACKEND_WAIT`; TLS 1.3 is absent. ALPN, client authentication, custom trust, and peer-info remain absent for Phase 8.F. See `docs/schannel-backend.md`.

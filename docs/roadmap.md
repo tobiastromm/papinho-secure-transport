@@ -103,8 +103,8 @@
   - 8.B deterministic multi-backend core and selection matrix: complete
   - 8.C backend metadata / production priority / transport genericization: complete
   - 8.D Schannel backend skeleton / modern Windows build: complete
-  - 8.E Schannel TLS, readiness, shutdown and close semantics: pending; next
-  - 8.F Schannel trust, identity, peer-info and mTLS: pending
+  - 8.E Schannel TLS, readiness, shutdown and close semantics: complete
+  - 8.F Schannel trust, identity, peer-info and mTLS: pending; next
   - 8.G cross-backend interoperability and legacy regression: pending
   - 8.H Phase 8 closure audit: pending
 - Phase 9 - Release / ABI Stabilization: pending; not started
