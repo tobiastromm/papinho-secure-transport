@@ -66,11 +66,12 @@
     - isolation, operation-transition, handshake and generic-shutdown coverage: complete
     - host TLS 1.2/TLS 1.3 and failure-fixture revalidation: complete
     - 7.C closure audit: complete
-  - 7.D TLS Policy Negative Matrix: in progress
+  - 7.D TLS Policy Negative Matrix: complete
     - existing policy surface and Phase 4/5/6/7 evidence audit: complete
     - canonical negative matrix and real-gap inventory: complete
     - focused deterministic policy coverage: complete
     - real NSS functional policy matrix: complete
-    - 7.D closure audit: pending; next
+    - 7.D closure audit: complete
+  - 7.E: pending; next
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending

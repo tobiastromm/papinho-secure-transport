@@ -2,7 +2,7 @@
 
 ## Status and scope
 
-Phase 7.D is in progress. This audit maps the current public policy contract, its enforcing layer, and evidence from Phases 4, 5, 6, 7.A, 7.B, and 7.C. `PROVED` means existing deterministic or recorded functional evidence establishes the result. `PARTIAL` means only part of the requested case is proved. `GAP` requires a focused test. Existing NT4 evidence is reused because this audit changes no production behavior.
+Phase 7.D is complete. The formal closure audit found every original mandatory TLS-policy goal satisfied by deterministic tests, real RetroZilla NSS fixtures, or preserved Phase 4/5/6/7 evidence. `PROVED` means existing deterministic, implementation-boundary, or recorded functional evidence establishes the contracted result. Existing NT4 evidence is reused because the 7.D production corrections affect only invalid oversized ALPN rejection and diagnostic observability, not valid TLS behavior or policy decisions.
 
 Versions remain API 1.2.0, library 0.3.0, and SPI 2.3.
 
@@ -43,17 +43,17 @@ A dash means the old evidence did not retain that artifact; it does not assert t
 | Wrong hostname | Peer auth, valid CA, wrong name | `HOSTNAME_MISMATCH` | authentication/failed | Phase 4/5 host, Phase 6 target | PASS | PROVED |
 | Required hostname missing | Peer auth, no hostname | `POLICY_VIOLATION` at freeze | configuration/no connection | `test_identity` | Portable PASS | PROVED |
 | Empty/embedded-NUL hostname | Empty or malformed input | Empty pointer/size form and embedded NUL rejected; missing fails freeze when required | configuration/no connection | `test_tls_policy` | - | PROVED |
-| Hostname lifetime/freeze | Copied name; mutate after freeze | Independent copy; `INVALID_STATE` | configuration/no connection | Implementation/partial tests | - | PARTIAL |
+| Hostname lifetime/freeze | Copied name; mutate after freeze | Independent copy; `INVALID_STATE` | configuration/no connection | Core owned-copy implementation; `test_identity`/`test_tls_policy` freeze tests | - | PROVED |
 | Valid custom CA | Fixture CA/peer | PASS, authenticated peer | authentication/established | Phase 4/5/6 | PASS | PROVED |
 | Untrusted CA | Unrelated CA | `AUTH_FAILURE`; no fallback | authentication/failed | Phase 4/5 host, Phase 6 target | PASS | PROVED |
-| Malformed trust | Empty custom data/system with data | `INVALID_ARGUMENT` | constructor/no connection | Partial identity coverage | - | PARTIAL |
+| Malformed trust | Empty custom data/system with data | `INVALID_ARGUMENT` | constructor/no connection | `test_identity`, `test_tls_policy`, constructor validation | - | PROVED |
 | System trust unsupported | System source on RetroZilla NSS | `UNSUPPORTED`; no hidden default | capability/no connection | NSS capability/selection tests | Unit PASS | PROVED |
 | Peer-info success | Trusted correct peer | Presence/chain/hostname/authentication true after success | authentication/established | Phase 4/5/6 | PASS | PROVED |
-| Peer-info after failure | Bad hostname/trust | Never expose authenticated operational peer | authentication/failed | Terminal failure; booleans not fully asserted | Failure PASS | PARTIAL |
+| Peer-info after failure | Bad hostname/trust | Never expose authenticated operational peer | authentication/failed | Getter requires `ESTABLISHED`; Phase 4/5/6 terminal negatives | Failure PASS | PROVED |
 | Valid mTLS | Valid credential; required server | PASS, server `AUTH=True` | handshake/established | Phase 4/5/6 | PASS | PROVED |
 | Missing client credential | No credential; required server | Handshake rejected, no bypass | handshake/failed | Phase 5/6 | PASS | PROVED |
 | Client-auth flag without credential | Flag set, no credential | `POLICY_VIOLATION` at freeze | configuration/no connection | `test_tls_policy` | - | PROVED |
-| Malformed credential | Incomplete cert/key pair | `INVALID_ARGUMENT` | constructor/no connection | One missing-key assertion | Unit PASS | PARTIAL |
+| Malformed credential | Incomplete cert/key pair | `INVALID_ARGUMENT` | constructor/no connection | `test_identity`, `test_tls_policy`, constructor validation | Unit PASS | PROVED |
 | Credential, server-auth only | Credential configured; server does not request it | TLS `0x0304`, ALPN and 25-byte echo pass; server `AUTH=False` | handshake/established | 7.D3 real NSS | - | PROVED |
 | TLS capability missing | Config needs absent backend version | `UNSUPPORTED` | capability/no connection | TLS 1.2-only and TLS 1.3-only mocks in `test_tls_policy` | - | PROVED |
 | ALPN capability missing | Required or optional configured ALPN; backend lacks it | `UNSUPPORTED` | capability/no connection | `test_tls_policy`; current contract requires capability for either mode | - | PROVED |
@@ -87,13 +87,13 @@ Version failures occur during TLS negotiation. Required-ALPN absent and mismatch
 The first required-ALPN runs exposed a diagnostic-only provider defect: terminal `POLICY_VIOLATION` was returned without capture. The NSS backend now captures that normalized result at phase ALPN. Result, state, logging count, TLS wire behavior, and enforcement did not change. Revalidation produced `DIAG_VALID=1`, `POLICY_VIOLATION`, operation CONFIGURATION, backend `retrozilla-nss`, and no native fields.
 
 After this provider-local correction, the clean build, regular suite, NSS unit, deterministic policy test, and runtime/failure integration builds passed with VC6 `/W4` and zero warnings. `clean_close`, `data_then_close` (29 bytes before clean close), and `abrupt_close` (truncated) passed. The 7.D2 oversized-ALPN rejection remains covered by `test_tls_policy`.
-## Evidence reused and real gaps
+## Closure audit
 
 Phases 4/5 prove host custom trust, mTLS, wrong hostname, untrusted CA, missing client credential, no downgrade, and required ALPN mismatch. Phase 6 proves on real Windows NT 4.0 SP6 TLS 1.2/1.3, mTLS, required ALPN, wrong hostname, untrusted CA, missing client credential, and no downgrade. Phase 7.A proves diagnostic/logging ABI and redaction, 7.B terminal failure/close classification, and 7.C readiness/progress; these are reused rather than duplicated.
 
-The audit and deterministic matrix are complete, but Phase 7.D is not. `tests/test_tls_policy.c` is part of the regular VC6 `/W4` suite and proves min/max validation and transactional rejection, ALPN validation/copy/order, identity/trust/credential edges, config-derived capability gating, capability-different selection, freeze, multi-config isolation, provider-policy terminal behavior, diagnostics, logging, and no resurrection.
+`tests/test_tls_policy.c` is part of the regular VC6 `/W4` suite and proves min/max validation and transactional rejection, ALPN validation/copy/order, identity/trust/credential edges, config-derived capability gating, capability-different selection, freeze, multi-config isolation, provider-policy terminal behavior, diagnostics, logging, and no resurrection.
 
-The deterministic and real NSS functional matrices are complete. The next task is the formal 7.D closure audit; do not start Phase 7.E before that audit.
+The deterministic and real NSS functional matrices are complete. The formal closure audit identified no untested mandatory 7.D requirement and no remaining blocker. Phase 7.D is complete; Phase 7 remains in progress and 7.E is next but was not started by this audit.
 
 The deterministic boundary test exposed one defensive production defect: the ALPN wire-size accumulator could overflow `pst_size` for an impossible-size public list before allocation. The core now rejects a count whose minimum encoding cannot fit and guards every addition. Rejection is transactional. Valid policy behavior, API/ABI, result model, diagnostic/logging ABI, SPI, and NSS behavior are unchanged. Host TLS 1.2 and TLS 1.3 mTLS/ALPN echoes passed after the correction. Because only invalid oversized input changed and the portable VC6 test exercises that branch, no NT4 rerun or version bump is required.
 
