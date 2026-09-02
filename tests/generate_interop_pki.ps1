@@ -70,4 +70,44 @@ Run-OpenSsl @("x509", "-req", "-sha256", "-days", "30", "-in", (Join-Path $outpu
 $chain = [IO.File]::ReadAllText((Join-Path $output "server.pem")) + [IO.File]::ReadAllText((Join-Path $output "intermediate.pem"))
 [IO.File]::WriteAllText((Join-Path $output "server-chain.pem"), $chain, [Text.Encoding]::ASCII)
 
-Write-Output "PKI_READY DIRECTORY=$output PROFILE=RSA2048_SHA256 CHAIN=ROOT_INTERMEDIATE_LEAF SAN=localhost"
+Write-Ascii "client.cnf" @"
+[req]
+distinguished_name=dn
+prompt=no
+[dn]
+CN=PST 8F TEST CLIENT
+"@
+Write-Ascii "client.ext" @"
+basicConstraints=critical,CA:false
+keyUsage=critical,digitalSignature,keyEncipherment
+extendedKeyUsage=clientAuth
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid,issuer
+"@
+Write-Ascii "wrong-root.cnf" @"
+[req]
+distinguished_name=dn
+x509_extensions=v3_ca
+prompt=no
+[dn]
+CN=PST 8F WRONG TEST ROOT CA
+[v3_ca]
+basicConstraints=critical,CA:true,pathlen:1
+keyUsage=critical,keyCertSign,cRLSign
+subjectKeyIdentifier=hash
+authorityKeyIdentifier=keyid:always,issuer
+"@
+Run-OpenSsl @("req", "-new", "-newkey", "rsa:2048", "-nodes", "-sha256", "-config", (Join-Path $output "client.cnf"), "-keyout", (Join-Path $output "client.key"), "-out", (Join-Path $output "client.csr"))
+Run-OpenSsl @("x509", "-req", "-sha256", "-days", "30", "-in", (Join-Path $output "client.csr"), "-CA", (Join-Path $output "root.pem"), "-CAkey", (Join-Path $output "root.key"), "-CAcreateserial", "-extfile", (Join-Path $output "client.ext"), "-out", (Join-Path $output "client.pem"))
+Run-OpenSsl @("x509", "-in", (Join-Path $output "client.pem"), "-outform", "DER", "-out", (Join-Path $output "client.der"))
+Run-OpenSsl @("pkcs8", "-topk8", "-nocrypt", "-in", (Join-Path $output "client.key"), "-outform", "DER", "-out", (Join-Path $output "client.pk8"))
+Run-OpenSsl @("req", "-x509", "-newkey", "rsa:2048", "-nodes", "-sha256", "-days", "30", "-config", (Join-Path $output "wrong-root.cnf"), "-keyout", (Join-Path $output "wrong-root.key"), "-out", (Join-Path $output "wrong-root.pem"))
+Run-OpenSsl @("x509", "-in", (Join-Path $output "wrong-root.pem"), "-outform", "DER", "-out", (Join-Path $output "wrong-root.der"))
+Run-OpenSsl @("req", "-new", "-newkey", "rsa:2048", "-nodes", "-sha256", "-config", (Join-Path $output "client.cnf"), "-keyout", (Join-Path $output "wrong-client.key"), "-out", (Join-Path $output "wrong-client.csr"))
+Run-OpenSsl @("x509", "-req", "-sha256", "-days", "30", "-in", (Join-Path $output "wrong-client.csr"), "-CA", (Join-Path $output "wrong-root.pem"), "-CAkey", (Join-Path $output "wrong-root.key"), "-CAcreateserial", "-extfile", (Join-Path $output "client.ext"), "-out", (Join-Path $output "wrong-client.pem"))
+Run-OpenSsl @("x509", "-in", (Join-Path $output "wrong-client.pem"), "-outform", "DER", "-out", (Join-Path $output "wrong-client.der"))
+Run-OpenSsl @("pkcs8", "-topk8", "-nocrypt", "-in", (Join-Path $output "wrong-client.key"), "-outform", "DER", "-out", (Join-Path $output "wrong-client.pk8"))
+$clientCa = [IO.File]::ReadAllText((Join-Path $output "intermediate.pem")) + [IO.File]::ReadAllText((Join-Path $output "root.pem"))
+[IO.File]::WriteAllText((Join-Path $output "client-ca.pem"), $clientCa, [Text.Encoding]::ASCII)
+
+Write-Output "PKI_READY DIRECTORY=$output PROFILE=RSA2048_SHA256 CHAIN=ROOT_INTERMEDIATE_LEAF SAN=localhost CLIENT=DER_PKCS8 WRONG_CLIENT=DER_PKCS8 WRONG_ROOT=DER"

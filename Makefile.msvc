@@ -38,15 +38,15 @@ $(BUILD)\test_public_header.exe: $(BUILD)\test_public_header.obj $(PSTLIB)
 $(BUILD)\test_backend_schannel.obj: tests\test_backend_schannel.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_backend_schannel.exe: $(BUILD)\test_backend_schannel.obj $(BUILD)\pst_backend_schannel.obj $(PSTLIB)
-	$(CC) /nologo /Fe$@ $** $(LDFLAGS) ws2_32.lib secur32.lib
+	$(CC) /nologo /Fe$@ $** $(LDFLAGS) ws2_32.lib secur32.lib crypt32.lib ncrypt.lib
 $(BUILD)\test_schannel_runtime_integration.obj: tests\test_schannel_runtime_integration.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_schannel_runtime_integration.exe: $(BUILD)\test_schannel_runtime_integration.obj $(BUILD)\pst_backend_schannel.obj $(PSTLIB)
-	$(CC) /nologo /Fe$@ $** $(LDFLAGS) ws2_32.lib secur32.lib
+	$(CC) /nologo /Fe$@ $** $(LDFLAGS) ws2_32.lib secur32.lib crypt32.lib ncrypt.lib
 $(BUILD)\test_schannel_buffers.obj: tests\test_schannel_buffers.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_schannel_buffers.exe: $(BUILD)\test_schannel_buffers.obj $(PSTLIB)
-	$(CC) /nologo /Fe$@ $** $(LDFLAGS) ws2_32.lib secur32.lib
+	$(CC) /nologo /Fe$@ $** $(LDFLAGS) ws2_32.lib secur32.lib crypt32.lib ncrypt.lib
 test: all
 	$(BUILD)\test_public_header.exe
 	$(BUILD)\test_backend_schannel.exe

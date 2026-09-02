@@ -1,6 +1,6 @@
 # Schannel backend
 
-Status: Phase 8.E TLS 1.2 handshake, readiness, secure I/O, close classification, and shutdown complete. Phase 8.F trust/identity/ALPN/mTLS/peer-info parity is not started.
+Status: Phase 8.E is complete. Phase 8.F is in progress. Explicit client identity and real mTLS now pass; bounded closure gates remain, including a system-trust positive fixture that does not inject a private root.
 
 ## Boundary and lifecycle
 
@@ -44,3 +44,28 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tests\run_schannel_runtime_i
 The same runner accepts `-CloseMode peer-clean` and `-CloseMode peer-abrupt`. It installs the existing test-only root only in `CurrentUser/Root`, remembers whether it added it, and removes that exact thumbprint in `finally`. Private keys and native errors are not logged.
 
 The deterministic provider test covers partial encrypted input, partial encrypted output with `WSAEWOULDBLOCK`, `SECBUFFER_EXTRA`, plaintext remainder, and fatal wait. The real fixture proves `NEED_WRITE -> NEED_READ` handshake progress, ten secure exchanges, clean peer close, truncated peer close, and incremental close-token output.
+## Phase 8.F partial validation (blocked)
+
+Schannel now requests manual credential validation. After `SEC_E_OK`, the provider obtains the remote `CERT_CONTEXT`, builds a server-auth chain with cache-only/AIA-disabled retrieval, and applies `CERT_CHAIN_POLICY_SSL` with the explicitly configured hostname. System trust uses the native chain engine. Custom trust uses a memory store and an exclusive-root chain engine, so it cannot fall back to an otherwise trusted system root. No production path mutates `CurrentUser\Root`.
+
+The real TLS 1.2 custom-trust chain `root -> intermediate -> leaf` passed with 25-byte secure echo. A wrong custom root returned `AUTH_FAILURE`, wrong hostname returned `HOSTNAME_MISMATCH`, and an omitted intermediate returned `AUTH_FAILURE`. The system-trust negative also returned `AUTH_FAILURE`. The required system-trust positive remains unproved: the local OpenSSL fixture uses a private CA, and installing that CA in `CurrentUser\Root` would violate the phase's no-injection gate.
+
+ALPN is supplied on the first ISC call through `SECBUFFER_APPLICATION_PROTOCOLS`. Real negotiation preserved offered order and selected `fixture/2` from `fixture/1,fixture/2`; required-with-no-selection returned `POLICY_VIOLATION`; optional-with-no-selection stayed established and returned `UNAVAILABLE`. These gates justify advertising `ALPN`.
+
+Peer info uses `SECPKG_ATTR_REMOTE_CERT_CONTEXT`, `SECPKG_ATTR_CIPHER_INFO`, and `CryptHashCertificate2(SHA256)`. The real snapshot reported TLS 1.2, standard cipher suite `0xC030`, validation/authentication flags, 32-byte SHA-256, and an owned 862-byte leaf DER. Summary and DER remained readable after connection destruction. These gates justify advertising `PEER_INFO`.
+
+The explicit PKCS#8 client-identity path now passes. `PKCS12_NO_PERSIST_KEY` produced an ephemeral key context that this Schannel runtime did not accept for `AcquireCredentialsHandle`; importing the in-memory PFX with `CRYPT_USER_KEYSET | PKCS12_ALWAYS_CNG_KSP` creates a uniquely named provider-visible temporary CNG key. The in-memory certificate exposes `CERT_KEY_PROV_INFO_PROP_ID`, stays alive for the credential/context lifetime, and is supplied through `SCH_CREDENTIALS.cCreds = 1` and `paCred`. `AcquireCredentialsHandle` returned `SEC_E_OK`, while `SCH_CRED_NO_DEFAULT_CREDS` remains enabled. Cleanup deletes the temporary key after the credential and certificate lifetimes, and enumeration reported `PST_MTLS_KEY_REMAINS=0`.
+
+A real TLS 1.2 mTLS exchange passed with 25-byte bidirectional I/O, exact client-certificate SHA-256 `MATCH=1`, ALPN `fixture/1`, authenticated peer information, and incremental shutdown. The no-client-credential case remains fail-closed as `AUTH_FAILURE`. These gates justify advertising `CLIENT_AUTH`. The explicit wrong-client identity, same-runtime configuration-isolation, and OFF/ERROR/TRACE client-auth logging gates remain for final 8.F completion.
+
+The PowerShell runner now emits bounded stage markers from `RUNNER_START` through `RUNNER_END`, preserves child output, and captures both process exit codes. Its first failure was an invalid direct conversion of `SwitchParameter` to `Int32`; after using `ClientAuth.IsPresent` and retaining the process handle, the custom-trust mTLS run ended with client/server exit code 0 and `SUCCESS=1`. Phase 8.F remains in progress because the system-trust positive, wrong-client, configuration-isolation, and logging gates are still open; Phase 9 and additional backends have not started.
+
+### Phase 8.F3 final-gate evidence
+
+A structurally valid client certificate and matching PKCS#8 key signed by a separate untrusted root reached `AcquireCredentialsHandle` successfully and was rejected during the real TLS handshake. Python/OpenSSL reported `CERTIFICATE_VERIFY_FAILED: unable to get local issuer certificate`; PST returned `AUTH_FAILURE`, retained a `schannel` diagnostic, and all handshake/read/write resurrection attempts were rejected. The no-credential case still returned `AUTH_FAILURE`, proving default Windows client-certificate selection remains disabled.
+
+The identical wrong-client scenario produced `LOG_EVENTS=0` at OFF, exactly one ERROR and no WARN at ERROR, and a bounded 12 events (eight TRACE progress plus exactly one ERROR) at TRACE. Public events contain only the provider-neutral fixed ABI; certificate/key bytes, identities, hostnames, ALPN strings, key-container names, native status, provider/store names, and handles are absent. A single transient run normalized the peer rejection/close race as `BACKEND_FAILURE`; bounded repetitions at ERROR and TRACE consistently returned `AUTH_FAILURE`, so this is recorded as fixture timing sensitivity rather than logging-dependent behavior.
+
+No deterministic local already-trusted server certificate and private key are available without relying on accidental machine state. The permitted environment-dependent probe therefore connected with SYSTEM trust to `www.microsoft.com:443`, sent no application bytes, completed TLS 1.2 with certificate/chain/hostname/authentication flags true, cipher `0xC030`, a 32-byte SHA-256 fingerprint and owned leaf DER, then completed shutdown. No trust store was modified.
+
+The required B-valid -> C-wrong -> A-system -> B-valid sequence within one `pst_runtime` is not proved by the existing one-connection-per-process fixtures. Separate-process results cannot honestly satisfy that requirement. Phase 8.F remains open solely for a dedicated same-runtime multi-connection integration harness and its final cleanup/diagnostic assertions.
