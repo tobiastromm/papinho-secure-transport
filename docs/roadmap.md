@@ -50,7 +50,7 @@
     - 7.A7 consumer-controlled logging/event sink design: complete
     - 7.A8 logging event ABI review and minimal public sink: complete
     - 7.A closure audit: complete
-  - 7.B Connection Failure Matrix: in progress
+  - 7.B Connection Failure Matrix: complete
     - audit and readiness/wait defect correction: host complete
     - deterministic functional fixtures: host complete
     - real NT4 clean_close and data_then_close: complete
@@ -59,6 +59,7 @@
     - provider-local close_notify implementation and host validation: complete
     - targeted NT4 clean/data/abrupt revalidation: complete
     - shutdown-abort contract proof: complete; pending-during-step is not observable with this provider
-    - 7.B closure audit: pending
+    - 7.B closure audit: complete
+  - 7.C: pending; next, not started
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending

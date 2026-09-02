@@ -1,6 +1,6 @@
 # Phase 7.B connection failure matrix
 
-Status: **in progress**. This audit does not start Phase 7.C.
+Status: **complete**. The closure audit does not start Phase 7.C.
 
 ## Architectural findings
 
@@ -20,23 +20,23 @@ The minimal correction makes non-OK backend wait terminal: CLOSED only for PST_R
 | TCP connect refused / no listener | consumer transport error; no PST result yet | no PST connection; consumer closes | no PST native disclosure | transport boundary audit | outside PST |
 | Attach before ownership acceptance | attach error | CREATED/retryable; caller owns | TRANSPORT operation | test_backend_spi and code audit | proved |
 | Attach after acceptance/import failure | normalized attach failure | FAILED; PST closes once | TRANSPORT operation | SPI/NSS ownership tests | proved |
-| Peer closes before TLS | never ESTABLISHED; native-normalized failure | FAILED; PST owns | HANDSHAKE | dedicated fixture required | pending |
-| Peer sends non-TLS bytes | normally PROTOCOL_FAILURE, fail closed | FAILED | HANDSHAKE | mapping audit | pending execution |
-| Abrupt close/reset during handshake | bounded failure | FAILED | HANDSHAKE | dedicated fixture required | pending |
+| Peer closes before TLS | never ESTABLISHED; TRANSPORT_FAILURE | FAILED; PST owns | HANDSHAKE, one ERROR | pre_tls_close fixture | PASS |
+| Peer sends non-TLS bytes | TRANSPORT_FAILURE in this provider, fail closed | FAILED | HANDSHAKE, one ERROR | non_tls fixture | PASS |
+| Abrupt close/reset during handshake | TRUNCATED, bounded | FAILED | HANDSHAKE, one ERROR | handshake_close/reset fixtures | PASS |
 | Wrong hostname | HOSTNAME_MISMATCH | FAILED | AUTHENTICATION | Phase 4/5 and real NT4 Phase 6 | reused PASS |
 | Untrusted CA | AUTH_FAILURE | FAILED | AUTHENTICATION | Phase 4/5 and real NT4 Phase 6 | reused PASS |
 | Missing required client credential | justified protocol/transport failure | FAILED | HANDSHAKE/AUTHENTICATION | real NT4 Phase 6 | reused PASS |
 | TLS 1.3 required vs TLS 1.2 only | PROTOCOL_FAILURE | FAILED; no downgrade | HANDSHAKE | Phase 5 and real NT4 Phase 6 | reused PASS |
 | Required ALPN mismatch | policy/protocol failure | FAILED; never operational | CONFIGURATION/HANDSHAKE | Phase 5 | reused PASS |
 | Normal established TLS I/O | OK | ESTABLISHED until shutdown | success clears stale failure | fresh TLS 1.2/1.3 echo | PASS |
-| Clean TLS close after read | CLOSED/CLEAN | CLOSED | normal close, not ERROR | backend audit; fixture required | pending execution |
-| Abrupt post-establish close/read | TRUNCATED | FAILED | READ | mapping test; fixture required | pending execution |
-| Close around write | reported partial bytes then failure | FAILED | WRITE | fixture required | pending |
+| Clean TLS close after read | CLOSED/CLEAN | CLOSED | normal close, not ERROR | clean/read_clean, modern and NT4 | PASS |
+| Abrupt post-establish close/read | TRUNCATED | FAILED | READ, one ERROR | abrupt/read_abrupt, modern and NT4 | PASS |
+| Close around write | accepted bytes then TRUNCATED on read | FAILED | READ, one ERROR | close_around_write fixture | PASS |
 | PR_Poll READ/WRITE | matching interest | operational | progress only | Phase 6 readiness tests | proved |
-| PR_Poll HUP or READ|HUP | OK + READ, then SSL read classifies | unchanged until read | progress | new NSS unit cases | host PASS; NT4 pending |
+| PR_Poll HUP or READ|HUP | OK + READ, then SSL read classifies | unchanged until read | progress | NSS unit plus modern/NT4 read gates | PASS |
 | PR_Poll ERR/NVAL | TRANSPORT_FAILURE | FAILED in core | WAIT | new NSS/core tests | PASS |
 | Backend wait failure | TRANSPORT_FAILURE | FAILED; no resurrection | WAIT snapshot | new test_backend_spi case | PASS |
-| Shutdown peer disappearance | bounded normalized failure | FAILED | SHUTDOWN | fixture required | pending |
+| Shutdown peer disappearance | local shutdown completes before remote loss is observable | CLOSED | no stale diagnostic/error | synchronized shutdown_abort fixture | NOT APPLICABLE during pending step; contract proved |
 | Release after failure | bounded and single close | destroyed | copied snapshot survives | SPI/diagnostic/lifecycle tests | proved |
 
 PR_CONNECT_RESET_ERROR and PR_END_OF_FILE_ERROR normalize to TRUNCATED. Selected connectivity errors normalize to TRANSPORT_FAILURE; SSL errors to PROTOCOL_FAILURE; certificate/trust errors to AUTH_FAILURE; bad certificate domain to HOSTNAME_MISMATCH; unknown SEC/native errors to BACKEND_FAILURE. Several native causes may correctly share one portable result.
@@ -53,9 +53,9 @@ Fresh host runs restricted PATH to third_party/retrozilla-nss/prebuilt/win32-x86
 - OFF logging: zero events.
 - Clean VC6 C89 /W4 suite and NSS unit test: PASS, zero warnings.
 
-## Remaining closure gates
+## Historical closure gates, now resolved
 
-Phase 7.B cannot close yet. Deterministic executions remain required for pre-TLS close, non-TLS bytes, abrupt handshake close/reset, clean and abrupt post-establish close/read, close around write, and shutdown failure. Because the correction changes NSS HUP/readiness behavior, a targeted real NT4 HUP/read classification regression is required. Historical Phase 6 success is not claimed as validation of this new behavior.
+The initial audit correctly kept Phase 7.B open for deterministic pre-TLS, non-TLS, handshake close/reset, established close/read/write, truncation, shutdown-contract and targeted NT4 evidence. Sections B2 through B4 record how every gate was subsequently resolved. This paragraph is retained as historical scope, not current status.
 ## Phase 7.B2 functional fixture results
 
 The single local fixture tests/connection_failure_server.py and VC6 public-API client tests/test_connection_failures.c use 80 operation steps, 125 ms waits and 10/12 second fixture/runner bounds.
@@ -163,3 +163,7 @@ Consequently, peer disappearance *during a pending shutdown step* is not observa
 On Windows 10 the final fully bounded clean-build proof completed shutdown in one call and 0 ms (`SHUTDOWN_MAX_STEPS=80`, `SHUTDOWN_WAIT_MS=125`), with each client control wait bounded to 2000 ms and the second server accept bounded to 10 seconds; both final control waits completed in 0 ms. A preceding repeat of the same binary measured 16 ms for shutdown and 15 ms for post-abort confirmation, still within the same bounds. The result was `PST_RESULT_CLOSED`, `CLOSED/CLEAN`, no diagnostic, no ERROR/WARN event, and zero events at logging OFF. Handshake, read, write, wait and repeated shutdown all returned `INVALID_STATE` after the server-side abort; release completed without hang or duplicate ownership action. Ownership remained accepted exactly once and the provider descriptor/native socket remained connection-owned until release.
 
 No PST source, API, SPI, backend behavior, timeout, readiness, ownership or shutdown semantics changed. The three-cycle clean lifecycle retained `SHUTDOWN_STEPS=1 SHUTDOWN_COMPLETE=1`, and clean_close, data_then_close and abrupt_close retained their expected classifications. Because only test orchestration and documentation changed, another NT4 execution is not required; the already completed real NT4 lifecycle and targeted close/data/abrupt evidence remain applicable. Phase 7.B stays in progress only for its closure audit.
+
+## Phase 7.B closure
+
+The formal closure audit found every original Connection Failure Matrix goal satisfied: failures remain fail-closed and bounded; terminal states do not resurrect; wait ERR/NVAL failures become FAILED; HUP preserves read progression; provider-observed close_notify distinguishes clean closure from truncation; ownership, diagnostics and logging remain coherent; and authenticated TLS 1.2/TLS 1.3 secure I/O remains intact. The final clean VC6 `/W4` suite, NSS unit test, all 11 modern failure modes and both TLS echo regressions passed with zero warnings. Real NT4 evidence covers the affected clean/data/abrupt provider path. Phase 7.B is complete; Phase 7 remains in progress and 7.C is next but not started.
