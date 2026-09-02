@@ -69,3 +69,12 @@ The identical wrong-client scenario produced `LOG_EVENTS=0` at OFF, exactly one 
 No deterministic local already-trusted server certificate and private key are available without relying on accidental machine state. The permitted environment-dependent probe therefore connected with SYSTEM trust to `www.microsoft.com:443`, sent no application bytes, completed TLS 1.2 with certificate/chain/hostname/authentication flags true, cipher `0xC030`, a 32-byte SHA-256 fingerprint and owned leaf DER, then completed shutdown. No trust store was modified.
 
 The required B-valid -> C-wrong -> A-system -> B-valid sequence within one `pst_runtime` is not proved by the existing one-connection-per-process fixtures. Separate-process results cannot honestly satisfy that requirement. Phase 8.F remains open solely for a dedicated same-runtime multi-connection integration harness and its final cleanup/diagnostic assertions.
+
+
+### Phase 8.F4 single-runtime isolation closure
+
+A dedicated modern integration harness executes B1 valid mTLS -> C wrong mTLS -> A SYSTEM/no-client-credential -> B2 valid mTLS in one process and one `pst_runtime`. It creates and destroys four independent frozen configurations/connections, releases the runtime once, and keeps runtime logging OFF while relying on the completed 8.F3 logging matrix.
+
+B1 and B2 each negotiated `fixture/1`, presented the exact expected explicit identity, exchanged the 25-byte payload, reported no diagnostic, and completed shutdown. C used the same custom trust, hostname, and ALPN policy with the structurally valid wrong identity; the server rejected its chain, PST returned terminal `AUTH_FAILURE`, and its copied diagnostic remained immutable after destruction. A used SYSTEM trust, `www.microsoft.com`, no ALPN, no client credential, and zero application bytes; authenticated chain and hostname validation passed without inheriting custom trust or identity state.
+
+The run reported `RUNTIME_CREATE_COUNT=1`, `RUNTIME_RELEASE_COUNT=1`, `CONNECTION_CREATE=4`, `CONNECTION_DESTROY=4`, `IDENTITY_SETUP=3`, `IDENTITY_CLEANUP=3`, `PST_MTLS_KEY_REMAINS=0` after every case, final capability mask `0x00000e7d`, and `ISOLATION_END PASS=1`. No production change was required. With the last configuration-isolation blocker closed, Phase 8.F is complete.

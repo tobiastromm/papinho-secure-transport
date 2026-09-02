@@ -5,7 +5,7 @@ LDFLAGS=/link
 CFLAGS=/nologo /W4 /O2 /TC /MD /DWIN32_LEAN_AND_MEAN /D_CRT_SECURE_NO_WARNINGS /Iinclude /Isrc
 CORE=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_diagnostic.obj $(BUILD)\pst_log.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj $(BUILD)\pst_transport_win32.obj
 PSTLIB=$(BUILD)\papinho_secure_transport.lib
-all: dirs $(PSTLIB) $(BUILD)\test_public_header.exe $(BUILD)\test_backend_schannel.exe $(BUILD)\test_schannel_runtime_integration.exe $(BUILD)\test_schannel_buffers.exe
+all: dirs $(PSTLIB) $(BUILD)\test_public_header.exe $(BUILD)\test_backend_schannel.exe $(BUILD)\test_schannel_runtime_integration.exe $(BUILD)\test_schannel_runtime_isolation.exe $(BUILD)\test_schannel_buffers.exe
 dirs:
 	@if not exist build mkdir build
 	@if not exist $(BUILD) mkdir $(BUILD)
@@ -42,6 +42,10 @@ $(BUILD)\test_backend_schannel.exe: $(BUILD)\test_backend_schannel.obj $(BUILD)\
 $(BUILD)\test_schannel_runtime_integration.obj: tests\test_schannel_runtime_integration.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_schannel_runtime_integration.exe: $(BUILD)\test_schannel_runtime_integration.obj $(BUILD)\pst_backend_schannel.obj $(PSTLIB)
+	$(CC) /nologo /Fe$@ $** $(LDFLAGS) ws2_32.lib secur32.lib crypt32.lib ncrypt.lib
+$(BUILD)\test_schannel_runtime_isolation.obj: tests\test_schannel_runtime_isolation.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_schannel_runtime_isolation.exe: $(BUILD)\test_schannel_runtime_isolation.obj $(BUILD)\pst_backend_schannel.obj $(PSTLIB)
 	$(CC) /nologo /Fe$@ $** $(LDFLAGS) ws2_32.lib secur32.lib crypt32.lib ncrypt.lib
 $(BUILD)\test_schannel_buffers.obj: tests\test_schannel_buffers.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
