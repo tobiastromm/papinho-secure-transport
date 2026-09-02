@@ -711,7 +711,7 @@ static PST_RESULT pst_nss_handshake(void *state, pst_u32 *operation, PST_RESULT 
             (unsigned long)(handshake_end - handshake_start));
     pst_nss_trace("SSL_ForceHandshake", detail);
     if (handshake_status == SECSuccess) {
-        if(c->alpn_requirement==PST_FEATURE_REQUIRED){unsigned char value[256];unsigned int n=0;SSLNextProtoState st;char alpn_detail[64];SECStatus ar=s->ssl_get_alpn(c->ssl_fd,&st,value,&n,sizeof(value));sprintf(alpn_detail,"status=%d state=%d length=%u",(int)ar,(int)st,n);pst_nss_trace("ALPN",alpn_detail);if(ar!=SECSuccess||(st!=SSL_NEXT_PROTO_NEGOTIATED&&st!=SSL_NEXT_PROTO_SELECTED)){c->interest=PST_BACKEND_INTEREST_NONE;*operation=PST_BACKEND_OPERATION_FAILED;*error=PST_RESULT_POLICY_VIOLATION;return PST_RESULT_OK;}}
+        if(c->alpn_requirement==PST_FEATURE_REQUIRED){unsigned char value[256];unsigned int n=0;SSLNextProtoState st;char alpn_detail[64];SECStatus ar=s->ssl_get_alpn(c->ssl_fd,&st,value,&n,sizeof(value));sprintf(alpn_detail,"status=%d state=%d length=%u",(int)ar,(int)st,n);pst_nss_trace("ALPN",alpn_detail);if(ar!=SECSuccess||(st!=SSL_NEXT_PROTO_NEGOTIATED&&st!=SSL_NEXT_PROTO_SELECTED)){pst_diagnostic_capture(&c->diagnostic,PST_RESULT_POLICY_VIOLATION,PST_DIAGNOSTIC_PHASE_ALPN,"retrozilla-nss",PST_DIAGNOSTIC_DOMAIN_NONE,0,0,0);c->interest=PST_BACKEND_INTEREST_NONE;*operation=PST_BACKEND_OPERATION_FAILED;*error=PST_RESULT_POLICY_VIOLATION;return PST_RESULT_OK;}}
         c->interest = PST_BACKEND_INTEREST_NONE;
         *operation = PST_BACKEND_OPERATION_COMPLETE; *error = PST_RESULT_OK;
         c->handshake_complete = 1;

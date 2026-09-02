@@ -70,7 +70,7 @@
     - existing policy surface and Phase 4/5/6/7 evidence audit: complete
     - canonical negative matrix and real-gap inventory: complete
     - focused deterministic policy coverage: complete
-    - missing real NSS policy combinations: pending; next
-    - 7.D closure audit: pending
+    - real NSS functional policy matrix: complete
+    - 7.D closure audit: pending; next
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending
