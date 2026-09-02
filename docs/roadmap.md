@@ -69,7 +69,8 @@
   - 7.D TLS Policy Negative Matrix: in progress
     - existing policy surface and Phase 4/5/6/7 evidence audit: complete
     - canonical negative matrix and real-gap inventory: complete
-    - focused deterministic policy coverage: pending; next
-    - missing functional policy combinations and closure audit: pending
+    - focused deterministic policy coverage: complete
+    - missing real NSS policy combinations: pending; next
+    - 7.D closure audit: pending
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending

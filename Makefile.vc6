@@ -11,7 +11,7 @@ NSS_CFLAGS=$(CFLAGS) /I$(NSS_DIST)\include\nspr /I$(NSS_DIST)\public\nss
 BUILD=build\vc6
 LIB=$(BUILD)\papinho_secure_transport.lib
 OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_diagnostic.obj $(BUILD)\pst_log.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj
-all: dirs $(LIB) $(BUILD)\test_foundation.exe $(BUILD)\test_identity.exe $(BUILD)\test_backend_spi.exe $(BUILD)\test_diagnostic.exe $(BUILD)\test_diagnostic_transport.exe $(BUILD)\test_diagnostic_creation.exe $(BUILD)\test_public_diagnostic.exe $(BUILD)\test_public_header.exe $(BUILD)\test_logging.exe
+all: dirs $(LIB) $(BUILD)\test_foundation.exe $(BUILD)\test_identity.exe $(BUILD)\test_backend_spi.exe $(BUILD)\test_tls_policy.exe $(BUILD)\test_diagnostic.exe $(BUILD)\test_diagnostic_transport.exe $(BUILD)\test_diagnostic_creation.exe $(BUILD)\test_public_diagnostic.exe $(BUILD)\test_public_header.exe $(BUILD)\test_logging.exe
 dirs:
 	@if not exist build mkdir build
 	@if not exist $(BUILD) mkdir $(BUILD)
@@ -45,6 +45,10 @@ $(BUILD)\test_backend_spi.obj: tests\test_backend_spi.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_backend_spi.exe: $(BUILD)\test_backend_spi.obj $(LIB)
 	$(CC) /nologo /Fe$@ $(BUILD)\test_backend_spi.obj $(LIB) $(LDFLAGS)
+$(BUILD)\test_tls_policy.obj: tests\test_tls_policy.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_tls_policy.exe: $(BUILD)\test_tls_policy.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_tls_policy.obj $(LIB) $(LDFLAGS)
 $(BUILD)\test_diagnostic.obj: tests\test_diagnostic.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_diagnostic.exe: $(BUILD)\test_diagnostic.obj $(LIB)
@@ -104,6 +108,7 @@ test: all
 	$(BUILD)\test_foundation.exe
 	$(BUILD)\test_identity.exe
 	$(BUILD)\test_backend_spi.exe
+	$(BUILD)\test_tls_policy.exe
 	$(BUILD)\test_diagnostic.exe
 	$(BUILD)\test_diagnostic_transport.exe
 	$(BUILD)\test_diagnostic_creation.exe
