@@ -1,4 +1,4 @@
-﻿# Diagnostics and security disclosure matrix
+# Diagnostics and security disclosure matrix
 
 Status: Phase 7.G audit complete; Phase 7.G remains in progress pending focused functional logging/wire-equivalence revalidation and closure audit.
 
@@ -41,6 +41,16 @@ Existing evidence covers every result string, both ABI layouts, explicit project
 
 Focused 7.G tests place password, token, path, hostname, ALPN, certificate-like bytes, payload, format tokens, termination boundaries, and native codes adjacent to richer inputs and prove that only approved fields cross. No production defect or behavior change was required.
 
-Before closure-audit recommendation, run existing TLS 1.2 and 1.3 integrations at OFF, INFO, TRACE plus one negative policy fixture at OFF/ERROR/TRACE, confirming identical results and server-observed behavior. No new runner or wire semantics is needed.
+## Phase 7.G2 functional equivalence
+
+The existing real RetroZilla NSS fixture was run with identical non-logging inputs at every level. TLS 1.2 reported cipher 0xc030, WRITE=25, READ=25, CONTENT_MATCH=1, authenticated peer state, and ALPN fixture/1 at OFF, INFO, and TRACE. Event totals were respectively 0, 3, and 15; INFO emitted exactly three INFO events, while TRACE emitted three INFO, two DEBUG, and ten TRACE events. The server observed TLS 1.2, AUTH=True, ALPN fixture/1, RECV=25, SEND=25, and CONTENT_MATCH=True in every run.
+
+TLS 1.3 reported cipher 0x1302 and the same successful I/O, authentication, and ALPN values at all three levels. Event totals were 0, 3, and 17; INFO again emitted exactly three INFO events, while TRACE emitted three INFO, two DEBUG, and twelve TRACE events. The server observed TLS 1.3, AUTH=True, ALPN fixture/1, RECV=25, SEND=25, and CONTENT_MATCH=True in every run.
+
+The negative case was required ALPN fixture/1 against a TLS 1.3 server offering no ALPN. OFF, ERROR, and TRACE all returned POLICY_VIOLATION in terminal FAILED state with valid diagnostic result POLICY_VIOLATION, public operation CONFIGURATION, backend ID retrozilla-nss, and no resurrection. Event totals were 0, 1, and 6. ERROR and TRACE each contained exactly one ERROR; TRACE additionally contained one INFO, two DEBUG, and two safe structured progress events, with zero WARN. The server observed the same TLS 1.3/no-ALPN connection and the same local-abort Win32 10053 category in all three runs. No application payload was sent.
+
+Logging therefore changed only local callback delivery. OFF preserved results, diagnostics, peer summary, ALPN, cipher and secure I/O. INFO remained a bounded three-event lifecycle set with no per-I/O/readiness flood. TRACE exposed only fields present in the fixed public event ABI, so it could not contain payload, hostname, ALPN text, DER, keys, trust material, native detail, paths, endpoints or handles. No raw TLS records were compared; semantic wire behavior was equivalent.
+
+The functional gate is complete. Phase 7.G remains in progress only for its formal closure audit.
 
 API remains 1.2.0, library 0.3.0, SPI 2.3. Tests/docs-only changes require no NT4 retest.

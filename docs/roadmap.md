@@ -90,7 +90,7 @@
     - existing surface and disclosure-boundary audit: complete
     - canonical cross-surface disclosure matrix: complete
     - focused malicious-memory and fixed-buffer regressions: complete
-    - functional logging/wire-equivalence revalidation: pending
+    - functional logging/wire-equivalence revalidation: complete
     - 7.G closure audit: pending
   - 7.H Stress / Long-run Stability: pending
 - Phase 8 - Additional Backends: pending
