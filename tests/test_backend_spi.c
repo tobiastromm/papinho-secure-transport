@@ -452,6 +452,14 @@ int main(void)
     CHECK(pst_connection_write(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,162);
     CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[1]==3UL,163);
 
+    g_readiness_scenario=5;g_scenario_write_calls=0;g_scenario_wait_calls=0;
+    CHECK(pst_connection_write(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,191);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK,192);
+    CHECK(pst_connection_write(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,193);
+    g_readiness_scenario=1;g_scenario_read_calls=0;g_scenario_wait_calls=0;
+    CHECK(pst_connection_read(public_connection,buffer,sizeof(buffer),&public_io)==PST_RESULT_OK,194);
+    CHECK(pst_connection_wait(public_connection,250,&public_wait)==PST_RESULT_OK&&g_wait_interests[0]==3UL,195);
+
     public_connection_b=NULL;CHECK(pst_connection_create(public_runtime,public_config,&public_connection_b)==PST_RESULT_OK,164);
     public_accepted=0UL;CHECK(pst_connection_attach(public_connection_b,&public_transport,PST_OWNERSHIP_TRANSFERRED,&public_accepted)==PST_RESULT_OK,165);
     g_readiness_scenario=0;g_next_operation=PST_BACKEND_OPERATION_COMPLETE;

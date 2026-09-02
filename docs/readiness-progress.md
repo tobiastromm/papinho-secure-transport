@@ -1,6 +1,6 @@
 # Readiness and progress audit
 
-Phase 7.C is in progress. This document records the audit baseline before any
+Phase 7.C is complete. This document records the audit baseline and closure evidence; no
 readiness or progress behavior is changed. Public API 1.2.0, library 0.3.0 and
 SPI 2.3 remain unchanged.
 
@@ -186,3 +186,24 @@ fixture/1 and the intended close mechanism for every mode.
 
 No production change was required. Existing Phase 6 and 7.B real-NT4 evidence
 remains applicable. Phase 7.C is ready for its separate closure audit.
+## Phase 7.C closure audit
+
+The formal closure audit found every original readiness/progress goal satisfied.
+The guard remains private per connection and symmetric for application READ and
+WRITE. Deterministic requested-interest assertions prove READ and WRITE
+auxiliary suppression, timeout re-enable, positive partial-I/O reset,
+READ|WRITE-to-single-interest adaptation, both READ-to-WRITE and WRITE-to-READ
+operation transitions, two-connection isolation, alternating handshake
+readiness, pending-shutdown entry reset, fatal wait and terminal
+no-resurrection.
+
+Provider tests retain HUP-to-READ progression and fatal ERR/NVAL precedence.
+Phase 7.B close_notify classification remains unchanged. Phase 7.C3 proved real
+TLS 1.2/TLS 1.3 authenticated ALPN echo and clean/data/abrupt closure behavior
+through the canonical runtime. The final clean VC6 C89 /W4 suite and NSS unit
+test passed with zero warnings; integration runners rebuilt successfully.
+
+No production, API, ABI, SPI, security-policy, trust, hostname, ALPN,
+authentication or downgrade behavior changed. Existing Phase 6 and 7.B NT4
+evidence is valid and no new NT4 run is required. Phase 7.C is complete; Phase 7
+remains in progress and 7.D is next but not started.

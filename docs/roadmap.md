@@ -60,11 +60,12 @@
     - targeted NT4 clean/data/abrupt revalidation: complete
     - shutdown-abort contract proof: complete; pending-during-step is not observable with this provider
     - 7.B closure audit: complete
-  - 7.C Readiness / Progress Hardening: in progress
+  - 7.C Readiness / Progress Hardening: complete
     - audit and operation/interest matrix: complete
     - deterministic READ/WRITE, timeout, partial-I/O and interest-change coverage: complete
     - isolation, operation-transition, handshake and generic-shutdown coverage: complete
     - host TLS 1.2/TLS 1.3 and failure-fixture revalidation: complete
-    - 7.C closure audit: next
+    - 7.C closure audit: complete
+  - 7.D: pending; next, not started
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending
