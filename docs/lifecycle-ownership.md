@@ -112,6 +112,31 @@ Logging delivery is synchronous. The event pointer is valid only during the call
 
 These are bounded semantic tests, not long-run stress. Large cycle counts and process-memory observation belong to Phase 7.H. Real NSS revalidation follows deterministic closure; a new NT4 run is required only if production ownership/lifecycle code changes.
 
+## Phase 7.E2 deterministic counter matrix
+
+`test_lifecycle_ownership` is part of the regular VC6 `/W4` suite. Every scenario finishes with exact deltas; `RT+C/RT-D` and `Conn+C/Conn-D` mean provider runtime and connection create/destroy callbacks.
+
+| Scenario | Init | Shut | RT+C | RT-D | Conn+C | Conn-D | Attach | Accept | Provider close | Caller close |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| CREATED release | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 0 | 0 |
+| ATTACHED release | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 |
+| HANDSHAKING release | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 |
+| ESTABLISHED direct release | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 |
+| SHUTTING release | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 |
+| CLOSED release | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 |
+| FAILED release | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 |
+| pre-accept attach failure | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 | 0 | 1 |
+| post-accept attach failure | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 |
+| early runtime release, final totals | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 1 | 0 |
+| two connections, mixed outcomes | 1 | 1 | 1 | 1 | 2 | 2 | 2 | 2 | 2 | 0 |
+
+The early runtime release has intermediate `RT-D=0` and `Shut=0`; after child release, the required final runtime release produces exactly one of each. Connection-configuration failure performs two total diagnostic copies in its complete scenario (successful runtime snapshot, then failing live connection snapshot); the second copy has a lower sequence number than the sole connection destroy. Backend initialize, provider runtime-create, and provider connection-create failures leave public outputs NULL, perform their layer-owned temporary cleanup once, preserve diagnostics, and allow a later successful creation.
+
+Release itself never increments handshake, wait, read, write, or shutdown-step counters. No destructor emits a log event. Two connections inherit the same synchronous sink; releasing A leaves B usable, final runtime release produces no callback, and the consumer context is never owned by PST. The focused lifecycle test mutates caller-owned hostname, ALPN, certificate, private-key, and CA buffers and confirms the retained copies. Existing identity tests retain the peer DER snapshot proof, and the credentials cleanup path structurally retains the volatile private-key wipe proof.
+
+The directed NSS lifecycle test passed with the canonical versioned runtime: runtime A succeeded, runtime B was rejected while A held the process-global NSS/NSPR state, A was released, and runtime C then succeeded. Real TLS 1.2 and TLS 1.3 each authenticated mTLS/`fixture/1` and completed `WRITE=25 READ=25 CONTENT_MATCH=1`. A TLS 1.3-only client against TLS 1.2-only server failed terminally with `PROTOCOL_FAILURE`, a valid HANDSHAKE diagnostic, one ERROR, and `NO_RESURRECTION=1`. The existing lifecycle runner completed three TLS 1.3 cycles, each with 25-byte echo, one-step shutdown, and `SNAPSHOT_AFTER_DESTROY=1`.
+
+All seven deterministic gaps are closed. No production defect was reproduced and no production source changed. Phase 7.E remains in progress only for its separate closure audit; no new NT4 run is required.
 ## Deferred housekeeping
 
 Preserving exact RetroZilla NSS source/provenance so `C:\PSTW` becomes disposable remains a separate future task and does not block this audit.

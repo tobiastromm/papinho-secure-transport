@@ -11,7 +11,7 @@ NSS_CFLAGS=$(CFLAGS) /I$(NSS_DIST)\include\nspr /I$(NSS_DIST)\public\nss
 BUILD=build\vc6
 LIB=$(BUILD)\papinho_secure_transport.lib
 OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_diagnostic.obj $(BUILD)\pst_log.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj
-all: dirs $(LIB) $(BUILD)\test_foundation.exe $(BUILD)\test_identity.exe $(BUILD)\test_backend_spi.exe $(BUILD)\test_tls_policy.exe $(BUILD)\test_diagnostic.exe $(BUILD)\test_diagnostic_transport.exe $(BUILD)\test_diagnostic_creation.exe $(BUILD)\test_public_diagnostic.exe $(BUILD)\test_public_header.exe $(BUILD)\test_logging.exe
+all: dirs $(LIB) $(BUILD)\test_foundation.exe $(BUILD)\test_identity.exe $(BUILD)\test_backend_spi.exe $(BUILD)\test_tls_policy.exe $(BUILD)\test_diagnostic.exe $(BUILD)\test_diagnostic_transport.exe $(BUILD)\test_diagnostic_creation.exe $(BUILD)\test_public_diagnostic.exe $(BUILD)\test_public_header.exe $(BUILD)\test_logging.exe $(BUILD)\test_lifecycle_ownership.exe
 dirs:
 	@if not exist build mkdir build
 	@if not exist $(BUILD) mkdir $(BUILD)
@@ -73,6 +73,10 @@ $(BUILD)\test_logging.obj: tests\test_logging.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_logging.exe: $(BUILD)\test_logging.obj $(LIB)
 	$(CC) /nologo /Fe$@ $(BUILD)\test_logging.obj $(LIB) $(LDFLAGS)
+$(BUILD)\test_lifecycle_ownership.obj: tests\test_lifecycle_ownership.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_lifecycle_ownership.exe: $(BUILD)\test_lifecycle_ownership.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_lifecycle_ownership.obj $(LIB) $(LDFLAGS)
 $(BUILD)\pst_backend_nss.obj: src\backends\nss\pst_backend_nss.c
 	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
 	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
@@ -115,6 +119,7 @@ test: all
 	$(BUILD)\test_public_diagnostic.exe
 	$(BUILD)\test_public_header.exe
 	$(BUILD)\test_logging.exe
+	$(BUILD)\test_lifecycle_ownership.exe
 test-nss-unit: dirs $(LIB) $(BUILD)\test_backend_nss.exe
 	$(BUILD)\test_backend_nss.exe
 nss-integration: dirs $(LIB) $(BUILD)\test_backend_nss_integration.exe

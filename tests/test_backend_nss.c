@@ -23,6 +23,7 @@ int main(void)
     PST_RUNTIME_OPTIONS options;
     PST_RUNTIME_INFO runtime_info;
     pst_runtime *public_runtime;
+    pst_runtime *public_runtime_b;
     const char *preferences[2];
     pst_backend_registry_reset();
     descriptor = pst_backend_nss_descriptor();
@@ -126,7 +127,12 @@ int main(void)
         CHECK(pst_runtime_create(&options,&public_runtime)==PST_RESULT_OK,34);
         memset(&runtime_info,0,sizeof(runtime_info));runtime_info.struct_size=sizeof(runtime_info);runtime_info.api_version=PST_API_VERSION;
         CHECK(pst_runtime_get_info(public_runtime,&runtime_info)==PST_RESULT_OK,35);
-        CHECK(strcmp(runtime_info.backend_id,"retrozilla-nss")==0,36);pst_runtime_release(public_runtime);
+        CHECK(strcmp(runtime_info.backend_id,"retrozilla-nss")==0,36);
+        public_runtime_b=(pst_runtime*)1;
+        CHECK(pst_runtime_create(&options,&public_runtime_b)==PST_RESULT_UNSUPPORTED&&public_runtime_b==NULL,67);
+        pst_runtime_release(public_runtime);public_runtime=NULL;
+        CHECK(pst_runtime_create(&options,&public_runtime)==PST_RESULT_OK,68);
+        pst_runtime_release(public_runtime);public_runtime=NULL;
         preferences[0]="missing";preferences[1]="retrozilla-nss";options.selection=PST_BACKEND_SELECTION_ORDERED;options.preferred_backend_ids=preferences;options.preferred_backend_count=2;
         CHECK(pst_runtime_create(&options,&public_runtime)==PST_RESULT_OK,37);pst_runtime_release(public_runtime);
         options.selection=PST_BACKEND_SELECTION_AUTOMATIC;options.required_capabilities=0;

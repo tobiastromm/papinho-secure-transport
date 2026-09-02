@@ -75,9 +75,9 @@
   - 7.E Lifecycle / Ownership Hardening: in progress
     - existing lifecycle and ownership evidence audit: complete
     - canonical object graph and cleanup rules: complete
-    - focused deterministic lifecycle/counter matrix: pending; next
-    - real NSS lifecycle revalidation: pending
-    - 7.E closure audit: pending
+    - focused deterministic lifecycle/counter matrix: complete
+    - real NSS lifecycle revalidation: complete
+    - 7.E closure audit: pending; next
   - 7.F Interoperability Matrix: pending
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending
