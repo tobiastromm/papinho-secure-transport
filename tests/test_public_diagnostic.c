@@ -162,12 +162,30 @@ static int check_result_consistency(void)
 
 static int check_redaction_abuse(void)
 {
-    struct fixture { char path[24]; pst_internal_diagnostic internal; char secret[32]; } fixture;
+    struct fixture {
+        char password[24];
+        char token[24];
+        char path[32];
+        char hostname[24];
+        char alpn[24];
+        unsigned char certificate[16];
+        pst_internal_diagnostic internal;
+        char payload[32];
+    } fixture;
     PST_DIAGNOSTIC_INFO out; PST_DIAGNOSTIC_INFO saved;
-    memset(&fixture,0,sizeof(fixture));strcpy(fixture.path,"C:\\private\\fixture.key");strcpy(fixture.secret,"token=application-payload");
+    memset(&fixture,0,sizeof(fixture));
+    strcpy(fixture.password,"password=secret-value");
+    strcpy(fixture.token,"token=credential-value");
+    strcpy(fixture.path,"C:\\private\\fixture.key");
+    strcpy(fixture.hostname,"private.example.test");
+    strcpy(fixture.alpn,"peer-controlled-alpn");
+    memcpy(fixture.certificate,"DER-CERT-BYTES",14UL);
+    strcpy(fixture.payload,"application-payload-bytes");
     pst_diagnostic_capture(&fixture.internal,PST_RESULT_AUTH_FAILURE,PST_DIAGNOSTIC_PHASE_HOSTNAME_VERIFY,"retrozilla-nss",PST_DIAGNOSTIC_DOMAIN_NSS,-8179,-12286,PST_DIAGNOSTIC_FLAG_NATIVE|PST_DIAGNOSTIC_FLAG_SECONDARY);
     CHECK(pst_diagnostic_info_init(&out)==PST_RESULT_OK,70);CHECK(pst_diagnostic_export_public(&fixture.internal,&out)==PST_RESULT_OK,71);
-    CHECK(!public_contains(&out,"private")&&!public_contains(&out,"token")&&!public_contains(&out,"payload"),72);
+    CHECK(!public_contains(&out,"password")&&!public_contains(&out,"secret-value")&&!public_contains(&out,"token"),72);
+    CHECK(!public_contains(&out,"private")&&!public_contains(&out,"example.test")&&!public_contains(&out,"peer-controlled"),77);
+    CHECK(!public_contains(&out,"DER-CERT")&&!public_contains(&out,"payload"),78);
     CHECK(!public_contains(&out,"-8179")&&!public_contains(&out,"-12286"),73);
     saved=out;pst_diagnostic_clear(&fixture.internal);
     CHECK(saved.valid&&saved.normalized_result==PST_RESULT_AUTH_FAILURE&&!strcmp(saved.backend_id,"retrozilla-nss"),74);

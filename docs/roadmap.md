@@ -86,7 +86,12 @@
     - negotiated-cipher functional assertion: complete
     - bounded functional gap closure: complete
     - 7.F closure audit: complete
-  - 7.G Diagnostics / Security Disclosure: pending; next
+  - 7.G Diagnostics / Security Disclosure: in progress
+    - existing surface and disclosure-boundary audit: complete
+    - canonical cross-surface disclosure matrix: complete
+    - focused malicious-memory and fixed-buffer regressions: complete
+    - functional logging/wire-equivalence revalidation: pending
+    - 7.G closure audit: pending
   - 7.H Stress / Long-run Stability: pending
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending

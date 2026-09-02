@@ -85,6 +85,27 @@ static int check_config(void)
     CHECK(!strcmp(sink.last.backend_id,"logging-mock"),43);
     return 0;
 }
+static int event_contains(const PST_LOG_EVENT *event,const char *text)
+{
+    const unsigned char *bytes; pst_size i,length;
+    bytes=(const unsigned char*)event;length=strlen(text);
+    for(i=0;i+length<=sizeof(*event);++i)if(memcmp(bytes+i,text,length)==0)return 1;
+    return 0;
+}
+static int check_redaction_abuse(void)
+{
+    struct fixture { char backend_id[32];char secret[96]; } fixture;
+    pst_log_state state;test_sink sink;pst_size i;
+    memset(&fixture,0,sizeof(fixture));strcpy(fixture.backend_id,"safe-backend");
+    strcpy(fixture.secret,"%s%s%s password token C:\\private\\key.der peer.example payload");
+    memset(&sink,0,sizeof(sink));state.level=PST_LOG_LEVEL_TRACE;state.callback=sink_callback;state.user_context=&sink;
+    pst_log_emit(&state,PST_LOG_LEVEL_TRACE,PST_LOG_EVENT_OPERATION_PROGRESS,PST_LOG_CATEGORY_IO,PST_RESULT_OK,PST_DIAGNOSTIC_OPERATION_READ,fixture.backend_id);
+    CHECK(sink.count==1UL&&!strcmp(sink.last.backend_id,"safe-backend"),46);
+    CHECK(!event_contains(&sink.last,"%s%s%s")&&!event_contains(&sink.last,"password")&&!event_contains(&sink.last,"token"),47);
+    CHECK(!event_contains(&sink.last,"private")&&!event_contains(&sink.last,"example")&&!event_contains(&sink.last,"payload"),48);
+    for(i=strlen(sink.last.backend_id)+1UL;i<sizeof(sink.last.backend_id);++i)CHECK(sink.last.backend_id[i]=='\0',49);
+    return 0;
+}
 static int check_runtime(void)
 {
     PST_RUNTIME_OPTIONS o;PST_LOG_CONFIG log_a,log_b,log_off,log_null;PST_DIAGNOSTIC_INFO d_off,d_error;
@@ -122,6 +143,7 @@ int main(void)
 {
     int result;pst_backend_registry_reset();CHECK(pst_backend_register(&descriptor)==PST_RESULT_OK,80);
     result=check_abi();if(result)return result;result=check_matrix();if(result)return result;
-    result=check_config();if(result)return result;result=check_runtime();if(result)return result;
+    result=check_config();if(result)return result;result=check_redaction_abuse();if(result)return result;
+    result=check_runtime();if(result)return result;
     pst_backend_registry_reset();printf("test_logging: PASS\n");return 0;
 }
