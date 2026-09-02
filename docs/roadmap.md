@@ -98,5 +98,13 @@
     - bounded soak implementation and execution: complete
     - 7.H closure audit: complete
   - Phase 7 overall closure audit: complete
-- Phase 8 - Multiple Backends / Provider Evolution: next; not started
+- Phase 8 - Multiple Backends / Provider Evolution: in progress
+  - 8.A SPI and provider-neutral architecture audit: complete
+  - 8.B deterministic multi-backend core and selection matrix: pending; next
+  - 8.C backend metadata and automatic-priority contract: pending
+  - 8.D provider-neutral transport routing and Schannel skeleton: pending
+  - 8.E Schannel TLS, readiness, shutdown and close semantics: pending
+  - 8.F Schannel trust, identity, peer-info and mTLS: pending
+  - 8.G cross-backend interoperability and legacy regression: pending
+  - 8.H Phase 8 closure audit: pending
 - Phase 9 - Release / ABI Stabilization: pending; not started
