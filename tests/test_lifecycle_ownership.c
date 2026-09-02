@@ -277,6 +277,8 @@ int main(void)
     CHECK(test_config_copy_lifetimes() == 0);
     for (i = 0; i < 7; ++i) CHECK(test_release_state(i) == 0);
     CHECK(test_attach_failures() == 0); CHECK(test_creation_failures() == 0); CHECK(test_early_runtime_release() == 0); CHECK(test_two_connections_logging() == 0);
+    for (i = 0; i < 500; ++i) CHECK(test_release_state(3) == 0);
+    printf("STRESS_MOCK_CYCLES=500 BALANCED_CYCLES=500 PASS=1\n");
     CHECK(pst_backend_unregister("lifecycle-mock") == PST_RESULT_OK);
     printf("test_lifecycle_ownership: PASS\n"); return 0;
 }

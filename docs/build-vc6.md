@@ -108,6 +108,9 @@ build\vc6\test_tls_runtime_integration.exe 127.0.0.1 8443 localhost build\nt4-va
 
 Use another free port and replace all three `12` values with `13` for TLS 1.3. The required gate is `WRITE=25 READ=25 CONTENT_MATCH=1`; the server must report authenticated `fixture/1` and `RECV=25 SEND=25 CONTENT_MATCH=True`.
 
+## Bounded stress integration
+
+Phase 7.H keeps the expensive soak runner outside the regular quick suite. Build it with tools\build-vc6.bat stress-integration. The resulting build\vc6\test_stress_stability.exe exposes bounded modes documented in stress-stability.md. Soak artifacts belong under build\phase7h and the normal NSS runtime-only PATH rule remains mandatory.
 ## Outputs and target identity
 
 The current Makefile writes the Win32 x86 VC6 legacy-compatible target under `build\vc6`. This housekeeping task does not restructure existing outputs. Future architectures, toolchains, configurations, or modern NSS backends must use distinct output directories and must not mix artifacts into `build\vc6`.

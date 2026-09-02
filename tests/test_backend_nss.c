@@ -132,7 +132,20 @@ int main(void)
         CHECK(pst_runtime_create(&options,&public_runtime_b)==PST_RESULT_UNSUPPORTED&&public_runtime_b==NULL,67);
         pst_runtime_release(public_runtime);public_runtime=NULL;
         CHECK(pst_runtime_create(&options,&public_runtime)==PST_RESULT_OK,68);
-        pst_runtime_release(public_runtime);public_runtime=NULL;
+        pst_runtime_release(public_runtime);public_runtime=NULL;        {
+            int stress_cycle;
+            for(stress_cycle=0;stress_cycle<20;++stress_cycle){
+                CHECK(pst_runtime_create(&options,&public_runtime)==PST_RESULT_OK,69);
+                public_runtime_b=(pst_runtime*)1;
+                CHECK(pst_runtime_create(&options,&public_runtime_b)==PST_RESULT_UNSUPPORTED&&public_runtime_b==NULL,70);
+                pst_runtime_release(public_runtime);public_runtime=NULL;
+                CHECK(pst_runtime_create(&options,&public_runtime)==PST_RESULT_OK,71);
+                pst_runtime_release(public_runtime);public_runtime=NULL;
+            }
+            CHECK(pst_runtime_create(&options,&public_runtime)==PST_RESULT_OK,72);
+            pst_runtime_release(public_runtime);public_runtime=NULL;
+            printf("NSS_ABC_CYCLES=20 FINAL_RUNTIME=PASS PASS=1\n");
+        }
         preferences[0]="missing";preferences[1]="retrozilla-nss";options.selection=PST_BACKEND_SELECTION_ORDERED;options.preferred_backend_ids=preferences;options.preferred_backend_count=2;
         CHECK(pst_runtime_create(&options,&public_runtime)==PST_RESULT_OK,37);pst_runtime_release(public_runtime);
         options.selection=PST_BACKEND_SELECTION_AUTOMATIC;options.required_capabilities=0;

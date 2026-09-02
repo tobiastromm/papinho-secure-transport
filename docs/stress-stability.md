@@ -62,3 +62,35 @@ Outputs belong under build/phase7h. Exact RetroZilla NSS source/provenance prese
 ## Versions and closure path
 
 API remains 1.2.0, library 0.3.0, SPI 2.3. Implementation adds only tests, fixture support, Makefile target, and docs unless a deterministic defect appears. Next: implement runner/server mode, execute matrix with versioned NSS runtime, run official clean VC6 /W4 regressions with zero warnings, then request 7.H closure audit. Phase 8 must not start automatically.
+
+
+## Phase 7.H2 observed results
+
+The bounded matrix executed on the modern Windows host with the versioned RetroZilla NSS runtime. Artifacts are under build/phase7h and the concise manifest is build/phase7h/summary.txt.
+
+| Gate | Observed result |
+|---|---|
+| TLS 1.2 sequential | 100/100; 6400 bytes each direction; max handshake/read/write/wait/shutdown 3/3/1/2/1; 266 ms |
+| TLS 1.3 sequential | 100/100; 6400 bytes each direction; maxima 2/5/1/4/1; 1688 ms |
+| One-connection I/O | 1000/1000 records; 64000 bytes each direction; 110 ms |
+| Runtime lifecycle | 50/50 complete runtime/TLS/I/O/release cycles; server 50/50 |
+| NSS A/B/C | 20/20 patterns and final runtime reusable |
+| Required ALPN absent | 100/100 POLICY_VIOLATION/CONFIGURATION/no-resurrection; 2188 ms |
+| Abrupt truncation | 50/50 TRUNCATED/READ; server abrupt=50 |
+| Clean close | 50/50 CLOSED/CLEAN; server clean=50 |
+| Mixed | 80/80 in one runtime: 50 success, 10 wrong-hostname, 10 truncation, 10 ALPN-policy failure |
+| Mock lifecycle | 500 balanced cycles |
+| OFF | 100 connections, zero events |
+| INFO | 50 connections, 101 INFO, zero ERROR/WARN |
+| TRACE | 20 connections, 241 events: INFO=41, DEBUG=40, TRACE=160, zero ERROR/WARN |
+| Final chain | TLS 1.2 success, TLS 1.3 success, truncation, TLS 1.3 success in one runtime; server 4/4 |
+
+The INFO planning estimate of 150 assumed one runtime per session. With one runtime shared by 50 connections, the correct structural count is one RUNTIME_READY plus two per connection: 1 + 2*50 = 101. TRACE has the same INFO basis: 1 + 2*20 = 41. This is linear bounded behavior.
+
+GetProcessHandleCount was resolved dynamically. Samples were 99 at baseline, 101 after 25/50/75/100 connections, and 86 after runtime release. There was no monotonic growth. Working-set/private-byte sampling was not added because it is secondary and would require disproportionate PSAPI infrastructure; exact mock balances, server/client counts, handles, and final recovery are primary.
+
+Server/client byte and client totals matched. Python unwrap completion varied in ordinary echo modes because the provider performs local PR_Shutdown without waiting for reciprocal shutdown, as already documented. The dedicated server-initiated clean-close classification passed 50/50. No production behavior changed.
+
+No operation approached 200 steps; maxima were 3/5/1/4/1. Batch timings did not degrade monotonically. Failures retained per-connection diagnostics and later successes passed, including the same-process recovery chain.
+
+No production defect was found. Changes are tests, existing fixture, Makefile, artifacts and docs only. API remains 1.2.0, library 0.3.0, SPI 2.3. No NT4 rerun is mandatory. Phase 7.H remains in progress only for closure audit; Phase 8 is not started.
