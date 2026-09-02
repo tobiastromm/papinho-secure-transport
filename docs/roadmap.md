@@ -57,7 +57,8 @@
     - real NT4 abrupt_close provider blocker reproduction: complete
     - RetroZilla NSS close_notify observability audit: complete
     - provider-local close_notify implementation and host validation: complete
-    - targeted NT4 clean/data/abrupt revalidation: pending
-    - shutdown-abort proof and 7.B closure audit: pending
+    - targeted NT4 clean/data/abrupt revalidation: complete
+    - shutdown-abort contract proof: complete; pending-during-step is not observable with this provider
+    - 7.B closure audit: pending
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending

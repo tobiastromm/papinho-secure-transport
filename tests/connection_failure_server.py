@@ -103,11 +103,39 @@ try:
         fd = tls.detach()
         socket.socket(fileno=fd).close()
         print("CLOSE TYPE=TCP_FIN_NO_CLOSE_NOTIFY", flush=True)
-    elif mode in ("close_around_write", "shutdown_abort"):
+    elif mode == "close_around_write":
         data = tls.recv(len(CLIENT_WRITE))
         print("RECV=%d CONTENT_MATCH=%s" % (len(data), data == CLIENT_WRITE), flush=True)
         abort_tls(tls)
         print("CLOSE TYPE=TCP_RST_NO_CLOSE_NOTIFY", flush=True)
+    elif mode == "shutdown_abort":
+        data = tls.recv(len(CLIENT_WRITE))
+        print("RECV=%d CONTENT_MATCH=%s" % (len(data), data == CLIENT_WRITE), flush=True)
+        listener.settimeout(OPERATION_TIMEOUT_SECONDS)
+        print("CONTROL_ACCEPT_BOUND_SECONDS=%d" % OPERATION_TIMEOUT_SECONDS, flush=True)
+        control, control_address = listener.accept()
+        control.settimeout(OPERATION_TIMEOUT_SECONDS)
+        marker = control.recv(1)
+        print("CONTROL_ACCEPT PEER=%s MARKER=%s" % (
+            control_address, marker == b"C"
+        ), flush=True)
+        control.sendall(b"R")
+        print("CONTROL_READY", flush=True)
+        try:
+            closed = tls.recv(1)
+            print("CLIENT_SHUTDOWN_OBSERVED TYPE=TLS_EOF CLOSE_NOTIFY=%s" % (
+                closed == b""
+            ), flush=True)
+        except (ConnectionResetError, ssl.SSLError, OSError) as error:
+            print("CLIENT_SHUTDOWN_OBSERVED TYPE=%s TEXT=%s" % (
+                type(error).__name__,
+                str(error).replace("\r", " ").replace("\n", " ")
+            ), flush=True)
+        abort_tls(tls)
+        print("CLOSE TYPE=SERVER_ABORT_AFTER_CLIENT_SHUTDOWN", flush=True)
+        control.sendall(b"A")
+        control.close()
+        print("CONTROL_ABORT_CONFIRMED", flush=True)
 except socket.timeout as error:
     if not accepted:
         print("FIXTURE_TIMEOUT STAGE=ACCEPT REASON=NO_CLIENT "
