@@ -81,10 +81,11 @@
   - 7.F Interoperability Matrix: in progress
     - bounded scope and existing-evidence audit: complete
     - canonical interoperability matrix: complete
-    - independent non-OpenSSL server proof: pending; next
-    - intermediate certificate-chain proof: pending
-    - negotiated-cipher functional assertion: pending
-    - 7.F closure audit: pending
+    - independent non-OpenSSL server proof: complete
+    - intermediate certificate-chain proof: complete
+    - negotiated-cipher functional assertion: complete
+    - bounded functional gap closure: complete
+    - 7.F closure audit: pending; next
   - 7.G Diagnostics / Security Disclosure: pending
   - 7.H Stress / Long-run Stability: pending
 - Phase 8 - Additional Backends: pending

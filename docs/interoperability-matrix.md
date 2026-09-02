@@ -41,9 +41,9 @@ The current tested target is Win32 x86 with a VC6/C89 consumer, the RetroZilla N
 | Close semantics | host and NT4 | RetroZilla NSS | 1.3 representative | Python `ssl` fixture | authenticated | Win32 socket adapter | clean close, data+clean close, truncated FIN classification | Phase 7.B | real | TESTED/PASS | provider-local close-notify adaptation |
 | Repeated lifecycle | host and NT4 | RetroZilla NSS | 1.3 | Python `ssl` | mTLS, required ALPN | fresh Win32 socket per cycle | three create/I/O/shutdown/destroy cycles | lifecycle integration, Phase 6/7.E | real | TESTED/PASS | not stress/concurrency |
 | Representative failures | host and NT4 where recorded | RetroZilla NSS | mixed | Python `ssl` plus non-TLS fixture | non-TLS, mismatch, wrong host, bad CA, missing client credential, ALPN mismatch, truncation | Win32 socket adapter | terminal normalized failure, no resurrection | Phase 6/7.B/7.D | mock + real | TESTED/PASS | full native taxonomy not duplicated |
-| Independent TLS server | modern Windows | RetroZilla NSS | at least 1.2; 1.3 if fixture supports it | non-OpenSSL engine, preferred Schannel | server-auth; echo/content validation | loopback Win32 socket | successful deterministic handshake and echo | not yet implemented | real, host | NOT TESTED | mandatory bounded 7.F gap; one implementation only |
-| Intermediate chain | modern Windows | RetroZilla NSS | 1.2 or 1.3 | deterministic local fixture | root to intermediate to RSA leaf; custom root trust | Win32 socket adapter | chain validates, hostname authenticates, echo succeeds | no existing chain-length greater than one fixture found | real, host | NOT TESTED | mandatory bounded 7.F gap |
-| Negotiated cipher | modern Windows | RetroZilla NSS | 1.2 and 1.3 | deterministic fixture | normal positive cases | Win32 socket adapter | `PST_PEER_INFO_SUMMARY.cipher_suite != 0` | backend populates from `SSLChannelInfo`; current functional runner does not assert it | implementation plus pending assertion | SUPPORTED/NOT TESTED | mandatory cheap functional assertion; no cipher-suite matrix |
+| Independent TLS server | Windows 10 19045 host, VC6 PST client | RetroZilla NSS | 1.2 | PowerShell 5.1/.NET Framework `SslStream` over Schannel | server-auth, no ALPN, temporary self-signed RSA custom anchor | loopback Win32 socket | deterministic handshake and exact echo | `schannel_tls_server.ps1`, runtime integration | real, host | TESTED/PASS | `CIPHER=0xc030`, 25/25 match; identity removed by exact thumbprint; Schannel TLS 1.3 not executed on this host fixture |
+| Intermediate chain | modern Windows, VC6 x86 | RetroZilla NSS | 1.2 and 1.3 | Python 3.14.7/OpenSSL 3.5.7 | root to intermediate to RSA leaf, custom root, localhost | Win32 socket adapter | chain validates, hostname authenticates, echo succeeds | generated PKI plus runtime integration | real, host | TESTED/PASS | TLS 1.2 `0xc030`, TLS 1.3 `0x1302`; missing-intermediate control returned `AUTH_FAILURE` |
+| Negotiated cipher | modern Windows, VC6 x86 | RetroZilla NSS | 1.2 and 1.3 | Schannel and OpenSSL-backed fixtures | public peer summary | Win32 socket adapter | `PST_PEER_INFO_SUMMARY.cipher_suite != 0` | `test_tls_runtime_integration` public assertion/output | real, host | TESTED/PASS | TLS 1.2 `0xc030`; TLS 1.3 `0x1302`; IDs are observations, not frozen policy |
 
 ## Platform matrix
 
@@ -64,19 +64,60 @@ The only implemented PST backend is `retrozilla-nss`. The tested lineage is Retr
 
 The current server fixture is a SHA-256-with-RSA certificate with a 2048-bit RSA public key, DNS SAN `localhost`, issued directly by the test root. It proves only this certificate/key profile and a root-to-leaf chain. ECDSA and an algorithm matrix are not mandatory for the current release. One deterministic intermediate-chain case is mandatory because chain validation is part of the current authentication contract and direct issuance does not exercise chain building.
 
-Python 3.14.7 reports OpenSSL 3.5.7 for the existing server fixtures. Running `openssl s_server` would therefore not provide an independent engine. One bounded non-OpenSSL server is mandatory if practical; a minimal local Schannel server is the preferred audit result. It should prove server-auth and echo on TLS 1.2, plus TLS 1.3 only if the host Schannel configuration supports it, without turning the fixture into a reusable TLS framework.
+Python 3.14.7 reports OpenSSL 3.5.7 for the existing server fixtures. Running `openssl s_server` would therefore not provide an independent engine. The bounded independent fixture uses PowerShell 5.1/.NET Framework `SslStream`, whose Windows provider is Schannel. It passed TLS 1.2 server-auth and exact echo. The Windows 10/.NET Framework fixture does not expose a readily usable deterministic TLS 1.3 server mode, so independent TLS 1.3 was not executed and does not block 7.F; TLS 1.3 remains proven against OpenSSL on the host and real NT4.
 
-## Mandatory closure set and gaps
+## Phase 7.F2 functional evidence
+
+`tests/generate_interop_pki.ps1` locates only the OpenSSL distributed with the existing Git installation and generates RSA-2048/SHA-256 test-only assets under `build/fixtures/interoperability-pki`. The positive chain is root, intermediate and `localhost` leaf; the server presents leaf plus intermediate while PST receives only root DER. Structural verification succeeds with the intermediate and fails without it.
+
+`tests/schannel_tls_server.ps1` creates a temporary test identity through `New-SelfSignedCertificate`, exports only its public DER for PST custom trust, listens with a 120-second bounded accept, performs Schannel TLS 1.2, validates and echoes exactly 25 bytes, and removes only its exact thumbprint from `CurrentUser/My` and any Windows-created `CurrentUser/CA` copy in `finally`. It installs no persistent trust anchor and logs no private key. The real result was:
+
+```text
+PST:      TLS=0x0303 CIPHER=0xc030 WRITE=25 READ=25 CONTENT_MATCH=1 AUTH=2
+Schannel: TLS=Tls12 CIPHER=Aes256 STRENGTH=256 RECV=25 SEND=25 CONTENT_MATCH=TRUE PASS
+Cleanup:  STORE_REMAINING=0
+```
+
+The real intermediate-chain results were:
+
+```text
+TLS 1.2: TLS=0x0303 CIPHER=0xc030 WRITE=25 READ=25 CONTENT_MATCH=1 AUTH=2
+TLS 1.3: TLS=0x0304 CIPHER=0x1302 WRITE=25 READ=25 CONTENT_MATCH=1 AUTH=2
+Negative control without intermediate: HANDSHAKE_FAIL=9 DIAG_RESULT=9 NO_RESURRECTION=1
+```
+
+The normal mTLS/required-ALPN OpenSSL baselines also passed after the public cipher assertion: TLS 1.2 reported `0xc030`, TLS 1.3 reported `0x1302`, both with `WRITE=25 READ=25 CONTENT_MATCH=1`, `AUTH=True`, and `ALPN=fixture/1`.
+Generate the intermediate-chain assets from the repository root with:
+
+```bat
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\generate_interop_pki.ps1
+```
+
+Start the independent TLS 1.2 fixture in one shell:
+
+```bat
+powershell -NoProfile -ExecutionPolicy Bypass -File tests\schannel_tls_server.ps1 -BindAddress 127.0.0.1 -Port 8462 -CertificateOutputPath build\fixtures\schannel\server.der -AcceptTimeoutSeconds 120
+```
+
+After `READY`, run the public PST client from a bootstrapped shell with the canonical runtime-only `PATH`:
+
+```bat
+build\vc6\test_tls_runtime_integration.exe 127.0.0.1 8462 localhost build\fixtures\schannel\server.der - - 12 12 - disabled
+```
+
+For the intermediate-chain gate, use `tests\nt4_tls_server.py` with `server-chain.pem`, `server.key`, and `root.pem`; pass only `root.der` to the PST client. For the negative control, replace `server-chain.pem` with `server.pem` while retaining root-only PST trust.
+
+## Mandatory closure set
 
 The existing evidence already passes VC6 public-header consumption, host and NT4 TLS 1.2/1.3, server authentication, mTLS, ALPN, custom CA, hostname verification, nonblocking progress, clean/truncated closure, repeated lifecycle and representative fail-closed peers.
 
-Phase 7.F remains open for exactly these bounded functional gaps:
+All three bounded functional gaps are closed:
 
-1. one deterministic non-OpenSSL server implementation;
-2. one positive root/intermediate/leaf chain fixture;
-3. functional assertion and reporting of a nonzero negotiated cipher for TLS 1.2 and TLS 1.3.
+1. deterministic Schannel TLS 1.2 server-auth and echo: PASS;
+2. positive root/intermediate/leaf chain in TLS 1.2 and TLS 1.3 plus negative omission control: PASS;
+3. public `cipher_suite != 0` assertion/reporting in TLS 1.2 and TLS 1.3: PASS.
 
-A separate TLS 1.3 server-auth-only row may be collected while exercising those fixtures, but it is not a new credential-format or platform requirement. Multi-chunk real I/O is optional because partial I/O is already deterministic and large/long traffic belongs to Phase 7.H. Public Internet servers, Windows 2000/XP, a second PST backend, a second transport adapter, ECDSA coverage, exhaustive ciphers and long-run testing do not block 7.F.
+Phase 7.F remains in progress only for its separate closure audit. Multi-chunk real I/O is optional because partial I/O is already deterministic and large/long traffic belongs to Phase 7.H. Public Internet servers, Windows 2000/XP, a second PST backend, a second transport adapter, ECDSA coverage, exhaustive ciphers and long-run testing do not block 7.F.
 
 ## Deferred housekeeping
 
