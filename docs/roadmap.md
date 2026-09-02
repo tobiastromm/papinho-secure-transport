@@ -64,7 +64,7 @@
     - audit and operation/interest matrix: complete
     - deterministic READ/WRITE, timeout, partial-I/O and interest-change coverage: complete
     - isolation, operation-transition, handshake and generic-shutdown coverage: complete
-    - host TLS 1.2/TLS 1.3 and failure-fixture revalidation: pending
-    - 7.C closure audit: blocked on host revalidation
+    - host TLS 1.2/TLS 1.3 and failure-fixture revalidation: complete
+    - 7.C closure audit: next
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending

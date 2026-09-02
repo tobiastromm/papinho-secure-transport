@@ -163,5 +163,26 @@ The completed matrix also proves two-connection isolation, READ-to-WRITE
 transition reset, alternating handshake readiness, and stale-guard clearing on
 entry to generic pending shutdown. Existing fatal-wait, provider HUP/ERR/NVAL
 classification and no-resurrection tests remain passing. No production behavior
-changed, so existing NT4 evidence remains applicable. Fresh host TLS 1.2/TLS
-1.3 and failure-fixture execution remains mandatory before the closure audit.
+changed, so existing NT4 evidence remains applicable. Fresh host TLS 1.2/TLS 1.3 and failure-fixture execution passed in Phase 7.C3.
+## Phase 7.C3 host functional revalidation
+
+Using the canonical versioned RetroZilla NSS runtime only, TLS 1.2 on port 18443
+passed with TLS=0x0303, WRITE=25, READ=25, CONTENT_MATCH=1, ALPN=9 and AUTH=2.
+TLS 1.3 on port 18444 passed with TLS=0x0304 and the same secure-I/O,
+authentication and ALPN results. Both servers independently reported AUTH=True,
+ALPN=fixture/1, RECV=25, SEND=25 and CONTENT_MATCH=True.
+
+The real provider exercised incremental readiness naturally. TLS 1.2 read
+returned NEED_READ_WRITE with zero bytes, waited first on WRITE and then READ,
+and completed with 25 bytes. TLS 1.3 exercised repeated WRITE/READ readiness,
+including a 32 ms real wait, before completing with 25 bytes.
+
+The existing clean_close, data_then_close and abrupt_close fixtures passed on
+ports 18445, 18446 and 18447. Client exit was zero for every mode. Clean close
+ended CLOSED/CLEAN; data_then_close delivered 29 matching bytes before
+CLOSED/CLEAN; abrupt close ended FAILED/TRUNCATED with diagnostic result
+TRUNCATED and operation READ. Server output confirmed TLS 1.3, authenticated
+fixture/1 and the intended close mechanism for every mode.
+
+No production change was required. Existing Phase 6 and 7.B real-NT4 evidence
+remains applicable. Phase 7.C is ready for its separate closure audit.
