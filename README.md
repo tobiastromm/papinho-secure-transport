@@ -1,6 +1,6 @@
 # PapinhoSecureTransport
 
-Phase 6 legacy-platform validation is complete and Phase 7 interoperability/hardening is in progress. Phase 7.A8 adds an optional consumer-controlled structured logging sink while retaining normalized PST_RESULT and diagnostic snapshots as authoritative state. See [docs/logging-design.md](docs/logging-design.md), [docs/error-diagnostics.md](docs/error-diagnostics.md), and [docs/diagnostic-api-design.md](docs/diagnostic-api-design.md).
+Phase 7 interoperability/hardening is complete. Phase 8, Multiple Backends / Provider Evolution, is next but has not started. Phase 7.A8 added an optional consumer-controlled structured logging sink while retaining normalized PST_RESULT and diagnostic snapshots as authoritative state. See [docs/phase7-closure.md](docs/phase7-closure.md), [docs/logging-design.md](docs/logging-design.md), [docs/error-diagnostics.md](docs/error-diagnostics.md), and [docs/diagnostic-api-design.md](docs/diagnostic-api-design.md).
 
 PapinhoSecureTransport is an independent secure-transport abstraction project. Its direction is portable C, initially focused on TLS through mature cryptographic/TLS backends. It will not implement cryptography, certificate validation, or a TLS state machine of its own.
 

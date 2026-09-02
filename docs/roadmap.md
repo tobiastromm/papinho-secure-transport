@@ -39,7 +39,7 @@
   - Static VC6/PE/import compatibility audit: complete
   - Windows NT 4.0 SP6 real execution: complete
   - Repeated full TLS lifecycle, bounded shutdown and peer snapshot lifetime: complete
-- Phase 7 - Interoperability / Hardening: in progress
+- Phase 7 - Interoperability / Hardening: complete
   - 7.A Error & Diagnostic Model Hardening: complete
     - 7.A1 internal diagnostic snapshot: complete
     - 7.A2 internal diagnostic transport, copy and redaction: complete
@@ -97,6 +97,6 @@
     - bounded soak plan and closure matrix: complete
     - bounded soak implementation and execution: complete
     - 7.H closure audit: complete
-  - Phase 7 overall closure audit: pending; next
-- Phase 8 - Additional Backends: pending
-- Phase 9 - Public Library / Release: pending
+  - Phase 7 overall closure audit: complete
+- Phase 8 - Multiple Backends / Provider Evolution: next; not started
+- Phase 9 - Release / ABI Stabilization: pending; not started

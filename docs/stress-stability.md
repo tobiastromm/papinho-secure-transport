@@ -1,6 +1,6 @@
 # Stress and long-run stability
 
-Status: Phase 7.H stress and long-run stability complete. All frozen mandatory gates passed; the overall Phase 7 closure audit is next. Phase 8 is not started.
+Status: Phase 7.H stress and long-run stability complete. All frozen mandatory gates passed; the overall Phase 7 closure audit is complete. Phase 8 is next but has not started.
 
 ## Scope and existing evidence
 
@@ -103,4 +103,4 @@ The observed global step maxima were 3 handshake, 5 read, 1 write, 4 wait, and 1
 
 The varying Python `unwrap` completion in generic echo modes remains the documented provider-local shutdown contract, not a stress failure; the dedicated server-initiated clean-close gate passed 50/50. Diagnostics and logging remained connection-local, bounded, and free of payload, hostname, DER, key, trust, native-error, endpoint, handle, and pointer disclosure. No PST production bug or unresolved blocker was found, and `src/` and `include/` were unchanged.
 
-Phase 7.H is complete. Phase 7 remains in progress pending its overall formal closure audit. Phase 8 has not started.
+Phase 7.H is complete. Phase 7 is complete after its overall formal closure audit. Phase 8 is next but has not started.
