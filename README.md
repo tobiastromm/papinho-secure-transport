@@ -1,6 +1,6 @@
 # PapinhoSecureTransport
 
-Phase 7 interoperability/hardening is complete. Phase 8, Multiple Backends / Provider Evolution, is in progress with its provider-neutral audit, deterministic multi-backend matrix, metadata, production priority, and transport genericization complete; the Schannel skeleton and separate modern Windows build are next. See [docs/provider-evolution.md](docs/provider-evolution.md) and [docs/phase7-closure.md](docs/phase7-closure.md).
+Phase 7 interoperability/hardening is complete. Phase 8, Multiple Backends / Provider Evolution, is in progress through the completed Schannel skeleton and separate modern Windows x64 build; Schannel TLS/readiness implementation is next and has not started. See [docs/provider-evolution.md](docs/provider-evolution.md) and [docs/phase7-closure.md](docs/phase7-closure.md).
 
 PapinhoSecureTransport is an independent secure-transport abstraction project. Its direction is portable C, initially focused on TLS through mature cryptographic/TLS backends. It will not implement cryptography, certificate validation, or a TLS state machine of its own.
 
@@ -8,7 +8,7 @@ The public API remains C89/VC6-compatible and backend-neutral. API 1.2.0/library
 
 Project licensing is pending a decision. Third-party files retain their own licenses under `third_party/`.
 
-The canonical VC6 environment, clean-build, regression, NSS SDK, and runtime-DLL instructions are in [docs/build-vc6.md](docs/build-vc6.md). Quick start:
+The canonical VC6 environment, clean-build, regression, NSS SDK, and runtime-DLL instructions are in [docs/build-vc6.md](docs/build-vc6.md). The separate modern MSVC x64 bootstrap is documented in [docs/build-modern-msvc.md](docs/build-modern-msvc.md). VC6 quick start:
 
 ```bat
 tools\build-vc6.bat clean

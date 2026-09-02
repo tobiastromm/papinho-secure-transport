@@ -1,6 +1,6 @@
 # Provider evolution
 
-Status: Phase 8.C backend metadata, production priority, and transport genericization complete. Schannel is not implemented. Phase 8.D Schannel skeleton / modern Windows build is next.
+Status: Phase 8.D Schannel backend skeleton and modern Windows x64 build complete. Phase 8.E Schannel TLS/readiness/close implementation is next and has not started.
 
 ## SPI 2.4 audit
 
@@ -92,7 +92,7 @@ The selected production provider must prove runtime/connection lifecycle, socket
 1. **8.A - SPI/provider-neutral audit:** this document; complete.
 2. **8.B - Deterministic multi-backend core matrix:** complete; selection, fallback, concurrency, isolation, optional hooks, prefix compatibility and registry bounds are covered.
 3. **8.C - Backend metadata / production priority / transport genericization:** complete; internal metadata, SPI 2.4 prefix rules, target manifests, deterministic production order, and neutral Win32 transport are defined and tested.
-4. **8.D - Schannel skeleton / modern Windows build:** next; preserve generic ownership and use a separate modern build output; no TLS behavior claim yet.
+4. **8.D - Schannel skeleton / modern Windows build:** complete; generic Win32 transport ownership, honest capabilities, provider lifecycle, diagnostics, selection, x64 public-consumer build, and isolated modern output are proven. No TLS behavior is claimed.
 5. **8.E - Schannel TLS/readiness/close:** TLS 1.2/1.3 where OS supports them, ALPN, I/O, incremental SSPI state and clean/truncated classification.
 6. **8.F - Trust/identity/peer info:** system/custom trust decision, hostname, mTLS and normalized peer snapshot/diagnostics.
 7. **8.G - Cross-backend interoperability/regression:** selection and functional matrices while preserving the VC6/NT4 RetroZilla NSS provider.
@@ -106,3 +106,11 @@ RetroZilla NSS remains first-class: every Phase 8 production step must preserve 
 
 Phase 9 retains final ABI freeze, packaging, certification and semantic-version policy. Separate RetroZilla NSS source/revision/patchset/build provenance work should happen before Phase 8 closure, ideally before broad second-provider integration makes the lineage harder to isolate; it is not part of 8.A or a blocker for 8.B.
 
+
+## Phase 8.D result
+
+The `schannel` skeleton builds with the canonical Visual Studio Build Tools 2026/MSVC 14.51 x64 environment and Windows SDK 10.0.26100.0. It advertises only nonblocking transport support; TLS, trust, ALPN, peer information, secure I/O, and shutdown capabilities remain unadvertised and unsupported until their real implementations exist. Public connection creation therefore correctly rejects a normal TLS configuration at capability validation in this skeleton phase.
+
+The SPI-level matrix proves descriptor/metadata validation, exact and automatic selection, invalid transport rejection before ownership acceptance, accepted Win32 socket ownership and exactly-once close, diagnostic capture, unsupported handshake, runtime/connection lifecycle, and 100/100 initialize/shutdown cycles. The common core and a consumer including only the public header compile, link, and execute under x64 `/W4` with zero warnings. The VC6 portable and NSS unit regressions remain green with zero warnings. Schannel is excluded from VC6 and RetroZilla NSS is excluded from the modern target.
+
+Build details and clean-shell commands are frozen in `docs/build-modern-msvc.md`. Phase 8.E may implement incremental SSPI handshake/readiness/secure I/O; none of that behavior was started in 8.D.

@@ -1,12 +1,19 @@
 #include "papinho_secure_transport_win32.h"
 #include "pst_transport_internal.h"
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 #if defined(_MSC_VER) && _MSC_VER <= 1200
 #pragma warning(push)
 #pragma warning(disable:4115 4201 4514)
 #endif
+#include <windows.h>
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+#pragma warning(disable:4201 4514)
+#endif
 #include <winsock2.h>
 #if defined(_MSC_VER) && _MSC_VER <= 1200
-#pragma warning(pop)
+#pragma warning(disable:4201 4514)
 #endif
 #include <stdlib.h>
 typedef struct pst_win32_transport { pst_transport base; PST_NATIVE_TRANSPORT native; } pst_win32_transport;
