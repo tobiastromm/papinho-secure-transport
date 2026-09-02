@@ -60,6 +60,8 @@
     - targeted NT4 clean/data/abrupt revalidation: complete
     - shutdown-abort contract proof: complete; pending-during-step is not observable with this provider
     - 7.B closure audit: complete
-  - 7.C: pending; next, not started
+  - 7.C Readiness / Progress Hardening: in progress
+    - audit and operation/interest matrix: complete
+    - deterministic coverage gaps: identified; implementation pending
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending
