@@ -92,6 +92,10 @@
     - focused malicious-memory and fixed-buffer regressions: complete
     - functional logging/wire-equivalence revalidation: complete
     - 7.G closure audit: complete
-  - 7.H Stress / Long-run Stability: pending; next
+  - 7.H Stress / Long-run Stability: in progress
+    - existing repetition/resource evidence audit: complete
+    - bounded soak plan and closure matrix: complete
+    - bounded soak implementation and execution: pending; next
+    - 7.H closure audit: pending
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending
