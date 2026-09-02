@@ -1,6 +1,6 @@
 # Provider evolution
 
-Status: Phase 8.A architecture audit complete. No second production backend, API change, or SPI change was implemented. Phase 8.B deterministic multi-backend core and selection coverage is next.
+Status: Phase 8.B deterministic multi-backend core and selection matrix complete. No second production backend, public API change, or SPI version change was implemented. Phase 8.C backend metadata / production priority / transport genericization is next.
 
 ## SPI 2.3 audit
 
@@ -28,7 +28,17 @@ Exact selection performs one stable-ID lookup. Ordered selection follows the cal
 
 The registry is a fixed-capacity, pointer-retaining setup-time array. It is intentionally not thread-safe and must not mutate while runtimes use descriptors. Static/known providers remain the Phase 8 model; dynamic provider DLL loading is not required.
 
-Each runtime owns its own descriptor, backend state, provider runtime state, capabilities, diagnostics and logger. Therefore backend A and B can be active simultaneously in the generic core. RetroZilla NSS's one-active-state rule lives inside its initializer and must not constrain other providers. A dedicated mock matrix is still required to prove simultaneous A/B connections, release isolation, diagnostics and logging.
+Each runtime owns its own descriptor, backend state, provider runtime state, capabilities, diagnostics and logger. Therefore backend A and B can be active simultaneously in the generic core. RetroZilla NSS's one-active-state rule lives inside its initializer and must not constrain other providers. The Phase 8.B matrix proves simultaneous A/B/C runtimes, two runtimes of one backend, release isolation, provider-local singleton failure, diagnostics, logging, ownership, readiness, shutdown, close classification and peer snapshots.
+
+## Phase 8.B deterministic matrix
+
+The VC6 test test_multi_backend registers three providers with distinct capabilities. It proves exact, ordered, and automatic selection; missing/incompatible candidates; initialization and runtime-create fallback; all-candidate failure; and no reselection after connection failure. AUTOMATIC selects the first compatible provider in registration order. Production priority remains an explicit 8.C decision.
+
+It also covers three simultaneous providers, two runtimes of one provider, provider-local singleton failure, target subsets, the eight-entry registry bound, duplicate/invalid IDs, larger descriptors, minimum vtable rejection, absent diagnostic_copy, and a valid legacy vtable prefix. The prefix case exposed an unconditional read of appended identity, peer, and ALPN hooks. The core now checks size, capability, and null hooks and reports UNSUPPORTED when optional service is absent. This restores SPI 2.x prefix compatibility without a version bump.
+
+Isolation covers separate log sinks, copied rejected-candidate diagnostics, ownership counters, different readiness and shutdown progressions, clean versus truncated close, and provider-distinct peer snapshots. Mismatched transport/backend IDs remain rejected without ownership transfer. Win32 transport genericization remains for 8.C/8.D.
+
+VC6 C89 /W4 completed with zero warnings. The portable, SPI, NSS, TLS policy, diagnostic, logging, lifecycle, and multi-backend tests pass. NSS runtime, failure, and lifecycle integrations build. Existing NT4 evidence is reused because NSS behavior did not change.
 
 ## Provider-neutral boundaries and gaps
 
@@ -64,15 +74,15 @@ The selected production provider must prove runtime/connection lifecycle, socket
 ## Phase 8 plan
 
 1. **8.A - SPI/provider-neutral audit:** this document; complete.
-2. **8.B - Deterministic multi-backend core matrix:** mock A/B/C with different capabilities; exact, ordered and automatic selection; all incompatible; simultaneous runtimes/connections; release, failure, diagnostic and logging isolation; freeze automatic priority.
-3. **8.C - Backend metadata and priority contract:** design first, then add only justified size/versioned API or SPI extensions with version bumps.
+2. **8.B - Deterministic multi-backend core matrix:** complete; selection, fallback, concurrency, isolation, optional hooks, prefix compatibility and registry bounds are covered.
+3. **8.C - Backend metadata / production priority / transport genericization:** next; design first, then add only justified size/versioned API or SPI extensions with version bumps.
 4. **8.D - Transport routing and Schannel skeleton:** preserve generic ownership; introduce separate modern build output; no TLS behavior claim yet.
 5. **8.E - Schannel TLS/readiness/close:** TLS 1.2/1.3 where OS supports them, ALPN, I/O, incremental SSPI state and clean/truncated classification.
 6. **8.F - Trust/identity/peer info:** system/custom trust decision, hostname, mTLS and normalized peer snapshot/diagnostics.
 7. **8.G - Cross-backend interoperability/regression:** selection and functional matrices while preserving the VC6/NT4 RetroZilla NSS provider.
 8. **8.H - Phase 8 closure audit.**
 
-Current versions remain API 1.2.0, library 0.3.0 and SPI 2.3. Documentation-only 8.A causes no bump. A public additive metadata record requires an API/library minor bump; an appended backend hook/descriptor contract requires an SPI minor bump; internal tests or a provider implementation behind 2.3 require neither automatically.
+Current versions remain API 1.2.0, library 0.3.0 and SPI 2.3. The internal Phase 8.B matrix and prefix-safety correction cause no bump. A public additive metadata record requires an API/library minor bump; an appended backend hook/descriptor contract requires an SPI minor bump; internal tests or a provider implementation behind 2.3 require neither automatically.
 
 Keep current `build/vc6` outputs unchanged. New providers/toolchains must use non-overlapping provider/platform directories, for example `build/win64-modern-msvc` for Schannel. Do not reorganize existing artifacts for aesthetics.
 
