@@ -72,12 +72,12 @@
     - focused deterministic policy coverage: complete
     - real NSS functional policy matrix: complete
     - 7.D closure audit: complete
-  - 7.E Lifecycle / Ownership Hardening: in progress
+  - 7.E Lifecycle / Ownership Hardening: complete
     - existing lifecycle and ownership evidence audit: complete
     - canonical object graph and cleanup rules: complete
     - focused deterministic lifecycle/counter matrix: complete
     - real NSS lifecycle revalidation: complete
-    - 7.E closure audit: pending; next
-  - 7.F Interoperability Matrix: pending
+    - 7.E closure audit: complete
+  - 7.F Interoperability Matrix: pending; next
 - Phase 8 - Additional Backends: pending
 - Phase 9 - Public Library / Release: pending

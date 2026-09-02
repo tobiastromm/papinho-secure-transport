@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 7.E lifecycle/ownership audit is complete. Existing Phase 4/5/6/7 evidence proves the normal lifecycle, but focused deterministic gaps remain before 7.E can close. No public API, ABI, SPI, or production behavior changed in this audit.
+Phase 7.E Lifecycle / Ownership Hardening is complete. The focused deterministic matrix, real NSS lifecycle revalidation, and formal closure audit satisfy every mandatory 7.E contract. No public API, ABI, SPI, or production behavior changed.
 
 ## Object graph
 
@@ -100,7 +100,7 @@ Logging delivery is synchronous. The event pointer is valid only during the call
 - Phase 5/6 real fixtures: TLS 1.2/1.3, mTLS, ALPN, I/O and shutdown; Phase 6 includes three complete NT4 cycles and peer snapshot lifetime.
 - Phase 7.B/7.C/7.D: clean/truncated failure release, shutdown boundedness, readiness isolation and terminal policy failures.
 
-## Deterministic gaps before closure
+## Deterministic gaps closed
 
 1. Add a single lifecycle mock with exact initialize/shutdown, runtime create/destroy, connection create/destroy, and transport close counters.
 2. Release connections from CREATED, ATTACHED, HANDSHAKING, ESTABLISHED, SHUTTING, CLOSED, and FAILED and assert exactly-once deltas.
@@ -136,7 +136,7 @@ Release itself never increments handshake, wait, read, write, or shutdown-step c
 
 The directed NSS lifecycle test passed with the canonical versioned runtime: runtime A succeeded, runtime B was rejected while A held the process-global NSS/NSPR state, A was released, and runtime C then succeeded. Real TLS 1.2 and TLS 1.3 each authenticated mTLS/`fixture/1` and completed `WRITE=25 READ=25 CONTENT_MATCH=1`. A TLS 1.3-only client against TLS 1.2-only server failed terminally with `PROTOCOL_FAILURE`, a valid HANDSHAKE diagnostic, one ERROR, and `NO_RESURRECTION=1`. The existing lifecycle runner completed three TLS 1.3 cycles, each with 25-byte echo, one-step shutdown, and `SNAPSHOT_AFTER_DESTROY=1`.
 
-All seven deterministic gaps are closed. No production defect was reproduced and no production source changed. Phase 7.E remains in progress only for its separate closure audit; no new NT4 run is required.
+All seven deterministic gaps are closed. No production defect was reproduced and no production source changed. The formal closure audit found no mandatory untested lifecycle contract. Phase 7.E is complete; Phase 7 remains in progress and 7.F is next but not started. No new NT4 run is required.
 ## Deferred housekeeping
 
 Preserving exact RetroZilla NSS source/provenance so `C:\PSTW` becomes disposable remains a separate future task and does not block this audit.
