@@ -1,0 +1,46 @@
+CC=cl
+LIBTOOL=lib
+BUILD=build\win64-modern-msvc
+LDFLAGS=/link /LIBPATH:"$(VCToolsInstallDir)lib\x64" /LIBPATH:"$(UniversalCRTSdkDir)Lib\$(UCRTVersion)\ucrt\x64" /LIBPATH:"$(WindowsSdkDir)Lib\$(WindowsSdkVersion)um\x64"
+CFLAGS=/nologo /W4 /O2 /TC /MT /DWIN32_LEAN_AND_MEAN /D_CRT_SECURE_NO_WARNINGS /Iinclude /Isrc
+CORE=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_diagnostic.obj $(BUILD)\pst_log.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj $(BUILD)\pst_transport_win32.obj
+LIB=$(BUILD)\papinho_secure_transport.lib
+all: dirs $(LIB) $(BUILD)\test_public_header.exe $(BUILD)\test_backend_schannel.exe
+dirs:
+	@if not exist build mkdir build
+	@if not exist $(BUILD) mkdir $(BUILD)
+$(BUILD)\pst_version.obj: src\pst_version.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\pst_result.obj: src\pst_result.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\pst_diagnostic.obj: src\pst_diagnostic.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\pst_log.obj: src\pst_log.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\pst_validation.obj: src\pst_validation.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\pst_identity.obj: src\pst_identity.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\pst_backend.obj: src\pst_backend.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\pst_runtime.obj: src\pst_runtime.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\pst_transport_win32.obj: src\platform\win32\pst_transport_win32.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\pst_backend_schannel.obj: src\backends\schannel\pst_backend_schannel.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(LIB): $(CORE)
+	$(LIBTOOL) /nologo /out:$@ $(CORE)
+$(BUILD)\test_public_header.obj: tests\test_public_header.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_public_header.exe: $(BUILD)\test_public_header.obj $(LIB)
+	$(CC) /nologo /Fe$@ $** $(LDFLAGS)
+$(BUILD)\test_backend_schannel.obj: tests\test_backend_schannel.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_backend_schannel.exe: $(BUILD)\test_backend_schannel.obj $(BUILD)\pst_backend_schannel.obj $(LIB)
+	$(CC) /nologo /Fe$@ $** $(LDFLAGS) ws2_32.lib secur32.lib
+test: all
+	$(BUILD)\test_public_header.exe
+	$(BUILD)\test_backend_schannel.exe
+clean:
+	@if exist $(BUILD) rmdir /s /q $(BUILD)

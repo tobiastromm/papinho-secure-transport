@@ -10,7 +10,7 @@ NSS_DIST=
 NSS_CFLAGS=$(CFLAGS) /I$(NSS_DIST)\include\nspr /I$(NSS_DIST)\public\nss
 BUILD=build\vc6
 LIB=$(BUILD)\papinho_secure_transport.lib
-OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_diagnostic.obj $(BUILD)\pst_log.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj
+OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_diagnostic.obj $(BUILD)\pst_log.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj $(BUILD)\pst_transport_win32.obj
 all: dirs $(LIB) $(BUILD)\test_foundation.exe $(BUILD)\test_identity.exe $(BUILD)\test_backend_spi.exe $(BUILD)\test_multi_backend.exe $(BUILD)\test_tls_policy.exe $(BUILD)\test_diagnostic.exe $(BUILD)\test_diagnostic_transport.exe $(BUILD)\test_diagnostic_creation.exe $(BUILD)\test_public_diagnostic.exe $(BUILD)\test_public_header.exe $(BUILD)\test_logging.exe $(BUILD)\test_lifecycle_ownership.exe
 dirs:
 	@if not exist build mkdir build
@@ -30,6 +30,8 @@ $(BUILD)\pst_identity.obj: src\pst_identity.c
 $(BUILD)\pst_backend.obj: src\pst_backend.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\pst_runtime.obj: src\pst_runtime.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\pst_transport_win32.obj: src\platform\win32\pst_transport_win32.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(LIB): $(OBJS)
 	$(LIBTOOL) /nologo /out:$@ $(OBJS)
