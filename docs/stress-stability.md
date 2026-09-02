@@ -1,6 +1,6 @@
 # Stress and long-run stability
 
-Status: Phase 7.H1 audit and bounded soak plan complete. Phase 7.H remains in progress; implementation and execution are next. Phase 8 is not started.
+Status: Phase 7.H stress and long-run stability complete. All frozen mandatory gates passed; the overall Phase 7 closure audit is next. Phase 8 is not started.
 
 ## Scope and existing evidence
 
@@ -22,7 +22,7 @@ Those proofs establish correctness but not sustained volume. Remaining gaps are 
 | Clean-close soak | 50 connections | one runtime/config | CLOSED/CLEAN; no stale truncation | 10 s/client, 10 min overall |
 | Mixed sequence | 10 repetitions (80 connections) | one runtime where permitted | success, success, policy failure, success, truncation, success, clean close, success | 10 s/client, 15 min overall |
 | Logging OFF soak | TLS 1.3 100-connection run | same positive soak | zero events; identical network results | same positive bound |
-| INFO soak | 50 successful TLS 1.3 connections | one runtime | exactly 3 INFO/session, 150 total; no DEBUG/TRACE | 10 min overall |
+| INFO soak | 50 successful TLS 1.3 connections | one shared runtime | exactly 1 RUNTIME_READY + 2 INFO/connection, 101 total; no DEBUG/TRACE | 10 min overall |
 | TRACE mini-soak | 20 connections plus 200 I/O exchanges | one runtime/connection as applicable | bounded coherent counts, no ERROR/WARN, no corruption or secret fields | 10 min overall |
 | Counter-balance mock soak | 500 mixed lifecycle cycles | mock backend | initialize=shutdown, runtime create=destroy, connection create=destroy, ownership accept=provider close | 2 min overall |
 | Final regression chain | TLS 1.2 success, TLS 1.3 success, truncation, final TLS 1.3 success | fresh final state | canonical 25/25 matches, correct truncation, reusable provider | 5 min overall |
@@ -93,4 +93,14 @@ Server/client byte and client totals matched. Python unwrap completion varied in
 
 No operation approached 200 steps; maxima were 3/5/1/4/1. Batch timings did not degrade monotonically. Failures retained per-connection diagnostics and later successes passed, including the same-process recovery chain.
 
-No production defect was found. Changes are tests, existing fixture, Makefile, artifacts and docs only. API remains 1.2.0, library 0.3.0, SPI 2.3. No NT4 rerun is mandatory. Phase 7.H remains in progress only for closure audit; Phase 8 is not started.
+No production defect was found. Changes are tests, existing fixture, Makefile, artifacts and docs only. API remains 1.2.0, library 0.3.0, SPI 2.3. No NT4 rerun is mandatory.
+
+## Phase 7.H closure audit
+
+All 16 frozen mandatory gates passed. The results prove bounded sequential TLS 1.2/TLS 1.3 stability, sustained application I/O, runtime and NSS process-global reuse, repeated policy/clean/truncated cleanup, mixed-outcome isolation, balanced mock ownership, bounded logging, resource and anti-spin stability, and final same-process recovery. Client/server counts and positive-mode byte totals agreed.
+
+The observed global step maxima were 3 handshake, 5 read, 1 write, 4 wait, and 1 shutdown step against the hard limit of 200. Handle samples were 99, 101, 101, 101, 101, and 86, with no monotonic growth. Working-set/private-byte sampling, the NT4 mini-soak, and simultaneous interleaving remain optional and were not executed; none is a frozen closure gate.
+
+The varying Python `unwrap` completion in generic echo modes remains the documented provider-local shutdown contract, not a stress failure; the dedicated server-initiated clean-close gate passed 50/50. Diagnostics and logging remained connection-local, bounded, and free of payload, hostname, DER, key, trust, native-error, endpoint, handle, and pointer disclosure. No PST production bug or unresolved blocker was found, and `src/` and `include/` were unchanged.
+
+Phase 7.H is complete. Phase 7 remains in progress pending its overall formal closure audit. Phase 8 has not started.
