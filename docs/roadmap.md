@@ -101,8 +101,8 @@
 - Phase 8 - Multiple Backends / Provider Evolution: in progress
   - 8.A SPI and provider-neutral architecture audit: complete
   - 8.B deterministic multi-backend core and selection matrix: complete
-  - 8.C backend metadata / production priority / transport genericization: pending; next
-  - 8.D provider-neutral transport routing and Schannel skeleton: pending
+  - 8.C backend metadata / production priority / transport genericization: complete
+  - 8.D Schannel backend skeleton / modern Windows build: pending; next
   - 8.E Schannel TLS, readiness, shutdown and close semantics: pending
   - 8.F Schannel trust, identity, peer-info and mTLS: pending
   - 8.G cross-backend interoperability and legacy regression: pending

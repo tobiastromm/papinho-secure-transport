@@ -1,12 +1,12 @@
 # Provider evolution
 
-Status: Phase 8.B deterministic multi-backend core and selection matrix complete. No second production backend, public API change, or SPI version change was implemented. Phase 8.C backend metadata / production priority / transport genericization is next.
+Status: Phase 8.C backend metadata, production priority, and transport genericization complete. Schannel is not implemented. Phase 8.D Schannel skeleton / modern Windows build is next.
 
-## SPI 2.3 audit
+## SPI 2.4 audit
 
 | SPI surface | Classification | Finding |
 |---|---|---|
-| descriptor ID/name/capabilities | generic; future limitation | Stable ID and capability snapshot are sufficient for selection; implementation/TLS-library version metadata is absent. |
+| descriptor ID/name/capabilities/metadata | generic | Stable ID and capabilities remain directly available; optional immutable adapter and provider-component metadata is appended under SPI 2.4. |
 | initialize/shutdown | generic | Provider-global acquisition/release; the core does not impose NSS single-instance behavior. |
 | runtime create/destroy | generic | Per-runtime state supports different providers concurrently; no core singleton exists. |
 | query/validate capabilities | generic | Separates provider ability from consumer requirements. Dynamic query can refine descriptor claims. |
@@ -20,7 +20,7 @@ Status: Phase 8.B deterministic multi-backend core and selection matrix complete
 | peer info | generic | TLS version, cipher, authentication flags, fingerprint and leaf DER are provider-neutral snapshots. Full chain remains out of scope. |
 | diagnostic copy | generic, optional | Struct-size guarded value copy; provider-native domains remain private. |
 
-SPI compatibility is major-compatible today: descriptor and vtable major 2 are accepted, required prefixes are size checked, and the diagnostic hook is read only when the full appended layout is present. The existing `PST_BACKEND_DESCRIPTOR_MIN_SIZE` uses the current whole descriptor size, so a future append must freeze the old prefix with an offset-based minimum. SPI 2.3 is sufficient for 8.B and an initial second-backend skeleton. No concrete SPI 2.4 hook is yet required.
+SPI compatibility remains major-compatible: descriptor and vtable major 2 are accepted, required prefixes are size checked, and optional fields are read only when their complete appended layout is present. The descriptor minimum is frozen at the legacy field `vtable` using `offsetof + sizeof`; metadata is the optional SPI 2.4 tail.
 
 ## Selection, registration and lifecycle
 
@@ -32,11 +32,11 @@ Each runtime owns its own descriptor, backend state, provider runtime state, cap
 
 ## Phase 8.B deterministic matrix
 
-The VC6 test test_multi_backend registers three providers with distinct capabilities. It proves exact, ordered, and automatic selection; missing/incompatible candidates; initialization and runtime-create fallback; all-candidate failure; and no reselection after connection failure. AUTOMATIC selects the first compatible provider in registration order. Production priority remains an explicit 8.C decision.
+The VC6 test test_multi_backend registers three providers with distinct capabilities. It proves exact, ordered, and automatic selection; missing/incompatible candidates; initialization and runtime-create fallback; all-candidate failure; and no reselection after connection failure. AUTOMATIC selects the first compatible provider in registration order. Production built-in priority is now defined by the explicit target manifest order; future changes require review.
 
 It also covers three simultaneous providers, two runtimes of one provider, provider-local singleton failure, target subsets, the eight-entry registry bound, duplicate/invalid IDs, larger descriptors, minimum vtable rejection, absent diagnostic_copy, and a valid legacy vtable prefix. The prefix case exposed an unconditional read of appended identity, peer, and ALPN hooks. The core now checks size, capability, and null hooks and reports UNSUPPORTED when optional service is absent. This restores SPI 2.x prefix compatibility without a version bump.
 
-Isolation covers separate log sinks, copied rejected-candidate diagnostics, ownership counters, different readiness and shutdown progressions, clean versus truncated close, and provider-distinct peer snapshots. Mismatched transport/backend IDs remain rejected without ownership transfer. Win32 transport genericization remains for 8.C/8.D.
+Isolation covers separate log sinks, copied rejected-candidate diagnostics, ownership counters, different readiness and shutdown progressions, clean versus truncated close, and provider-distinct peer snapshots. Transport wrappers are no longer associated by backend ID; the selected provider validates the neutral native transport type before ownership transfer.
 
 VC6 C89 /W4 completed with zero warnings. The portable, SPI, NSS, TLS policy, diagnostic, logging, lifecycle, and multi-backend tests pass. NSS runtime, failure, and lifecycle integrations build. Existing NT4 evidence is reused because NSS behavior did not change.
 
@@ -52,9 +52,25 @@ Trust source kinds already express custom CA and system trust. Credentials curre
 
 ## Metadata recommendation
 
-Keep these concepts separate: PST API version, PST library version, SPI version, stable backend ID, backend implementation version, and underlying TLS library/OS provider version. Add no arbitrary version string now. In 8.C design a size/versioned runtime metadata record with bounded copied fields and structured numeric components plus explicit availability flags. For an OS provider, underlying version may be unavailable or represented as OS-backed rather than fabricated.
+Keep these concepts separate: PST API version, PST library version, SPI version, stable backend ID, backend implementation version, and underlying TLS library/OS provider version. SPI 2.4 metadata uses structured numeric components, bounded labels/qualifiers and explicit availability. An OS provider may report an unavailable numeric provider version rather than fabricate one.
 
 Do not rename `retrozilla-nss`. Future IDs should be stable implementation identities such as `schannel`, `openssl`, `bearssl`, and a distinct modern NSS ID. If a naming migration is ever required, use an explicit alias/deprecation policy rather than silently changing selection identity.
+
+## Phase 8.C decisions
+
+Metadata is internal to SPI 2.4 for now. Consumers already obtain selected backend ID and capabilities through PST_RUNTIME_INFO; exposing adapter/runtime component versions is useful for support but not required before the second provider exists. A public fixed-copy metadata API is deferred to the Phase 9 ABI review, avoiding an unjustified API/library bump. The immutable descriptor now optionally points to a size/versioned PST_BACKEND_METADATA record. It carries a numeric adapter implementation version plus up to two bounded, inline named provider components, each with explicit availability, numeric major/minor/patch, and a bounded qualifier. RetroZilla NSS records adapter 1.0.0, NSS 3.42.0 Beta, and NSPR 4.7.7. PST API/library versions remain separate global version data; SPI version remains on the descriptor/vtable.
+
+The backend ID retrozilla-nss is stable. A future Schannel descriptor should use schannel. Aliases or deprecations require an explicit future policy; none is implemented.
+
+Availability and priority are separate. Each build has an explicit compile-time source/descriptor set; it registers available built-ins in a reviewable target manifest order. AUTOMATIC chooses the first compatible registered descriptor. Exact and ordered consumer choices override that order. No absent-provider placeholder, runtime DLL probing, capability-count/version ranking, or link-order self-registration is allowed. The legacy VC6/NT4 manifest contains only retrozilla-nss. A modern Windows manifest should prefer schannel before retrozilla-nss only when both are deliberately compiled; packaging Schannel alone is valid. A future POSIX manifest contains only its intentionally built portable providers.
+
+The internal transport envelope now describes a versioned native transport kind, currently WIN32_SOCKET, independently of TLS backend identity. pst_win32_socket_transport_create no longer labels the wrapper retrozilla-nss, and the core no longer compares transport and backend strings. The selected backend receives the neutral native record and validates kind/version/size before accepting ownership. NSS still performs FIONBIO and PR_ImportTCPSocket privately. Diagnostics and logs obtain backend_id solely from the selected runtime descriptor. The native socket remains internal; no SOCKET or HANDLE entered the public API.
+
+Ownership is unchanged: caller/core retains the wrapper until ownership_accepted, then the provider owns the socket and the wrapper is destroyed as consumed on connection release. The native record layout and NSS import/close path are unchanged. The source change removes only false provider identity/routing, so existing NT4 functional evidence remains applicable; no target retest is required.
+
+The descriptor minimum is now frozen with offsetof(vtable)+sizeof(vtable), the complete required 2.3 prefix. Optional metadata is read only when descriptor struct_size reaches that appended field. Larger descriptors are accepted; the legacy minimum and absent metadata are accepted; malformed present metadata is rejected. This actual append-only field advances SPI to 2.4. Vtable optional hooks retain their existing offsetof/size guards.
+
+Build outputs remain build/vc6 for legacy x86. The first Schannel proof should target modern Windows x64 with a current MSVC toolchain in build/win64-modern-msvc: it has highest practical value and avoids forcing modern SDK headers through VC6. Target-specific source lists must exclude Schannel from VC6 and need not include RetroZilla NSS in the modern build.
 
 ## Candidate assessment
 
@@ -75,14 +91,14 @@ The selected production provider must prove runtime/connection lifecycle, socket
 
 1. **8.A - SPI/provider-neutral audit:** this document; complete.
 2. **8.B - Deterministic multi-backend core matrix:** complete; selection, fallback, concurrency, isolation, optional hooks, prefix compatibility and registry bounds are covered.
-3. **8.C - Backend metadata / production priority / transport genericization:** next; design first, then add only justified size/versioned API or SPI extensions with version bumps.
-4. **8.D - Transport routing and Schannel skeleton:** preserve generic ownership; introduce separate modern build output; no TLS behavior claim yet.
+3. **8.C - Backend metadata / production priority / transport genericization:** complete; internal metadata, SPI 2.4 prefix rules, target manifests, deterministic production order, and neutral Win32 transport are defined and tested.
+4. **8.D - Schannel skeleton / modern Windows build:** next; preserve generic ownership and use a separate modern build output; no TLS behavior claim yet.
 5. **8.E - Schannel TLS/readiness/close:** TLS 1.2/1.3 where OS supports them, ALPN, I/O, incremental SSPI state and clean/truncated classification.
 6. **8.F - Trust/identity/peer info:** system/custom trust decision, hostname, mTLS and normalized peer snapshot/diagnostics.
 7. **8.G - Cross-backend interoperability/regression:** selection and functional matrices while preserving the VC6/NT4 RetroZilla NSS provider.
 8. **8.H - Phase 8 closure audit.**
 
-Current versions remain API 1.2.0, library 0.3.0 and SPI 2.3. The internal Phase 8.B matrix and prefix-safety correction cause no bump. A public additive metadata record requires an API/library minor bump; an appended backend hook/descriptor contract requires an SPI minor bump; internal tests or a provider implementation behind 2.3 require neither automatically.
+Current versions are API 1.2.0, library 0.3.0 and SPI 2.4. The internal metadata field is an actual append-only SPI extension; the public API and library ABI did not change. A public additive metadata record requires an API/library minor bump; an appended backend hook/descriptor contract requires an SPI minor bump; internal tests or a provider implementation behind 2.3 require neither automatically.
 
 Keep current `build/vc6` outputs unchanged. New providers/toolchains must use non-overlapping provider/platform directories, for example `build/win64-modern-msvc` for Schannel. Do not reorganize existing artifacts for aesthetics.
 

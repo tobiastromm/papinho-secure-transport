@@ -29,6 +29,12 @@ PST_RESULT pst_backend_validate(const PST_BACKEND_DESCRIPTOR *d)
         return PST_RESULT_INCOMPATIBLE_API;
     if (!pst_backend_id_valid(d->id) || d->vtable == NULL)
         return PST_RESULT_INVALID_ARGUMENT;
+    if (d->struct_size >= (pst_u32)(offsetof(PST_BACKEND_DESCRIPTOR, metadata) + sizeof(d->metadata)) && d->metadata != NULL) {
+        if (d->metadata->struct_size < PST_BACKEND_METADATA_MIN_SIZE ||
+            d->metadata->version != PST_BACKEND_METADATA_VERSION ||
+            d->metadata->component_count > PST_BACKEND_METADATA_COMPONENT_CAPACITY)
+            return PST_RESULT_INVALID_ARGUMENT;
+    }
     v = d->vtable;
     if (v->struct_size < PST_BACKEND_VTABLE_MIN_SIZE)
         return PST_RESULT_INVALID_ARGUMENT;

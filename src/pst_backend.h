@@ -3,8 +3,8 @@
 #include "papinho_secure_transport.h"
 #include "pst_diagnostic.h"
 #define PST_BACKEND_SPI_VERSION_MAJOR 2UL
-#define PST_BACKEND_SPI_VERSION_MINOR 3UL
-#define PST_BACKEND_SPI_VERSION 0x00020003UL
+#define PST_BACKEND_SPI_VERSION_MINOR 4UL
+#define PST_BACKEND_SPI_VERSION 0x00020004UL
 #define PST_BACKEND_CAP_TLS_1_2 0x00000001UL
 #define PST_BACKEND_CAP_TLS_1_3 0x00000002UL
 #define PST_BACKEND_CAP_CLIENT_AUTH 0x00000004UL
@@ -69,6 +69,23 @@ typedef struct PST_BACKEND_VTABLE {
     PST_RESULT (*connection_get_alpn)(void *connection_state,pst_u8 *buffer,pst_size capacity,pst_size *out_size);
     void (*diagnostic_copy)(const void *state,pst_internal_diagnostic *out);
 } PST_BACKEND_VTABLE;
+#define PST_BACKEND_METADATA_VERSION 0x00010000UL
+#define PST_BACKEND_METADATA_COMPONENT_CAPACITY 2UL
+#define PST_BACKEND_METADATA_NAME_CAPACITY 24UL
+#define PST_BACKEND_METADATA_QUALIFIER_CAPACITY 16UL
+#define PST_BACKEND_VERSION_AVAILABLE 0x00000001UL
+typedef struct PST_BACKEND_COMPONENT_VERSION {
+    pst_u32 flags; pst_u32 major; pst_u32 minor; pst_u32 patch;
+    char name[PST_BACKEND_METADATA_NAME_CAPACITY];
+    char qualifier[PST_BACKEND_METADATA_QUALIFIER_CAPACITY];
+} PST_BACKEND_COMPONENT_VERSION;
+typedef struct PST_BACKEND_METADATA {
+    pst_u32 struct_size; pst_u32 version;
+    PST_BACKEND_COMPONENT_VERSION implementation;
+    pst_u32 component_count;
+    PST_BACKEND_COMPONENT_VERSION components[PST_BACKEND_METADATA_COMPONENT_CAPACITY];
+} PST_BACKEND_METADATA;
+#define PST_BACKEND_METADATA_MIN_SIZE ((pst_u32)(offsetof(PST_BACKEND_METADATA, components)+sizeof(((PST_BACKEND_METADATA *)0)->components)))
 typedef struct PST_BACKEND_DESCRIPTOR {
     pst_u32 struct_size;
     pst_u32 spi_version;
@@ -76,9 +93,10 @@ typedef struct PST_BACKEND_DESCRIPTOR {
     const char *name;
     pst_u32 capabilities;
     const PST_BACKEND_VTABLE *vtable;
+    const PST_BACKEND_METADATA *metadata;
 } PST_BACKEND_DESCRIPTOR;
 #define PST_BACKEND_VTABLE_MIN_SIZE ((pst_u32)offsetof(PST_BACKEND_VTABLE, connection_configure_identity))
-#define PST_BACKEND_DESCRIPTOR_MIN_SIZE ((pst_u32)sizeof(PST_BACKEND_DESCRIPTOR))
+#define PST_BACKEND_DESCRIPTOR_MIN_SIZE ((pst_u32)(offsetof(PST_BACKEND_DESCRIPTOR, vtable)+sizeof(((PST_BACKEND_DESCRIPTOR *)0)->vtable)))
 PST_RESULT pst_backend_validate(const PST_BACKEND_DESCRIPTOR *descriptor);
 PST_RESULT pst_backend_register(const PST_BACKEND_DESCRIPTOR *descriptor);
 PST_RESULT pst_backend_unregister(const char *id);

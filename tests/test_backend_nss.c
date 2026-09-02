@@ -20,6 +20,7 @@ int main(void)
     pst_u32 ready_interest;
     pst_u32 close_notify_observed;
     PST_BACKEND_IO_RESULT io_result;
+    PST_NATIVE_TRANSPORT invalid_transport;
     PST_RUNTIME_OPTIONS options;
     PST_RUNTIME_INFO runtime_info;
     pst_runtime *public_runtime;
@@ -39,6 +40,8 @@ int main(void)
     CHECK(descriptor->vtable->wait != NULL, 5);
     CHECK(descriptor->vtable->peer_info_create != NULL, 6);
     CHECK(descriptor->vtable->connection_configure_identity != NULL, 31);
+    CHECK(descriptor->metadata != NULL && descriptor->metadata->implementation.major == 1UL, 80);
+    CHECK(descriptor->metadata->component_count == 2UL && strcmp(descriptor->metadata->components[0].name,"NSS") == 0 && strcmp(descriptor->metadata->components[1].name,"NSPR") == 0, 81);
     CHECK(pst_backend_nss_is_would_block(PR_WOULD_BLOCK_ERROR), 7);
     CHECK(!pst_backend_nss_is_would_block(PR_CONNECT_RESET_ERROR), 8);
     CHECK(pst_backend_nss_classify_poll_flags(1, 0, 0, 0, 0,
@@ -115,6 +118,8 @@ int main(void)
         CHECK(descriptor->vtable->attach_transport(connection_state, NULL,
             PST_BACKEND_OWNERSHIP_TRANSFERRED, &accepted) == PST_RESULT_INVALID_ARGUMENT, 26);
         CHECK(accepted == 0UL, 27);
+        memset(&invalid_transport,0,sizeof(invalid_transport)); invalid_transport.struct_size=sizeof(invalid_transport); invalid_transport.version=PST_NATIVE_TRANSPORT_VERSION; invalid_transport.kind=999UL; accepted=9UL;
+        CHECK(descriptor->vtable->attach_transport(connection_state,&invalid_transport,PST_BACKEND_OWNERSHIP_TRANSFERRED,&accepted)==PST_RESULT_INVALID_ARGUMENT&&accepted==0UL,82);
         descriptor->vtable->connection_destroy(connection_state);
         descriptor->vtable->runtime_destroy(runtime_state);
         descriptor->vtable->shutdown(backend_state);

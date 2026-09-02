@@ -1011,6 +1011,13 @@ static const PST_BACKEND_VTABLE pst_nss_vtable = {
     pst_nss_peer_info_destroy, pst_nss_configure_identity, pst_nss_get_alpn,
     pst_nss_diagnostic_copy
 };
+static const PST_BACKEND_METADATA pst_nss_metadata = {
+    sizeof(PST_BACKEND_METADATA), PST_BACKEND_METADATA_VERSION,
+    {PST_BACKEND_VERSION_AVAILABLE,1UL,0UL,0UL,"pst-retrozilla-nss",""},
+    2UL,
+    {{PST_BACKEND_VERSION_AVAILABLE,3UL,42UL,0UL,"NSS","Beta"},
+     {PST_BACKEND_VERSION_AVAILABLE,4UL,7UL,7UL,"NSPR",""}}
+};
 static const PST_BACKEND_DESCRIPTOR pst_nss_descriptor = {
     sizeof(PST_BACKEND_DESCRIPTOR), PST_BACKEND_SPI_VERSION,
     "retrozilla-nss", "RetroZilla NSS/NSPR",
@@ -1018,7 +1025,7 @@ static const PST_BACKEND_DESCRIPTOR pst_nss_descriptor = {
     PST_BACKEND_CAP_HOSTNAME_VERIFY | PST_BACKEND_CAP_NONBLOCKING |
     PST_BACKEND_CAP_BACKEND_WAIT | PST_BACKEND_CAP_CLIENT_AUTH |
     PST_BACKEND_CAP_CUSTOM_TRUST | PST_BACKEND_CAP_PEER_INFO |
-    PST_BACKEND_CAP_ALPN, &pst_nss_vtable
+    PST_BACKEND_CAP_ALPN, &pst_nss_vtable, &pst_nss_metadata
 };
 const PST_BACKEND_DESCRIPTOR *pst_backend_nss_descriptor(void)
 {
@@ -1031,4 +1038,4 @@ PST_RESULT pst_backend_nss_register(void)
 typedef struct pst_win32_transport { pst_transport base; PST_NSS_NATIVE_TRANSPORT native; } pst_win32_transport;
 static void pst_win32_transport_destroy(pst_transport *base,int consumed){pst_win32_transport *t=(pst_win32_transport*)base;if(!consumed)closesocket((SOCKET)t->native.native_socket);free(t);}
 PST_RESULT PST_CALL pst_win32_register_retrozilla_nss(void){PST_RESULT r=pst_backend_nss_register();return r==PST_RESULT_INVALID_STATE?PST_RESULT_OK:r;}
-PST_RESULT PST_CALL pst_win32_socket_transport_create(pst_size socket_value,pst_transport **out){pst_win32_transport *t;if(!out)return PST_RESULT_INVALID_ARGUMENT;*out=NULL;t=(pst_win32_transport*)calloc(1,sizeof(*t));if(!t)return PST_RESULT_OUT_OF_MEMORY;t->base.backend_id="retrozilla-nss";t->base.native=&t->native;t->base.destroy=pst_win32_transport_destroy;t->native.struct_size=sizeof(t->native);t->native.version=PST_NSS_NATIVE_TRANSPORT_VERSION;t->native.kind=PST_NSS_NATIVE_TRANSPORT_KIND_WIN32_SOCKET;t->native.native_socket=socket_value;*out=&t->base;return PST_RESULT_OK;}
+PST_RESULT PST_CALL pst_win32_socket_transport_create(pst_size socket_value,pst_transport **out){pst_win32_transport *t;if(!out)return PST_RESULT_INVALID_ARGUMENT;*out=NULL;t=(pst_win32_transport*)calloc(1,sizeof(*t));if(!t)return PST_RESULT_OUT_OF_MEMORY;t->base.backend_id=NULL;t->base.native=&t->native;t->base.destroy=pst_win32_transport_destroy;t->native.struct_size=sizeof(t->native);t->native.version=PST_NSS_NATIVE_TRANSPORT_VERSION;t->native.kind=PST_NSS_NATIVE_TRANSPORT_KIND_WIN32_SOCKET;t->native.native_socket=socket_value;*out=&t->base;return PST_RESULT_OK;}
