@@ -1,6 +1,6 @@
 # OpenSSL provider extension
 
-Status: **OSSL-D custom trust / hostname / ALPN / mTLS / peer info complete**. OSSL-E has not started. This is a deliberate post-Phase-8 provider extension; Phase 8 remains complete and Phase 9 has not started.
+Status: **OSSL-E failure / close / diagnostics / logging / lifecycle hardening complete**. OSSL-F has not started. This is a deliberate post-Phase-8 provider extension; Phase 8 remains complete and Phase 9 has not started.
 
 ## Frozen baseline and provenance
 
@@ -145,4 +145,8 @@ The earlier OSSL-D blocked state was closed by `test_openssl_runtime_isolation.e
 
 The same process then kept two OpenSSL runtimes alive. R1 completed TLS 1.3, R2 produced a deliberate trust failure, R1 completed another TLS 1.3 connection, R1 was released, and R2 still completed TLS 1.3 before its own release. Both runtime contexts were destroyed exactly once and the OpenSSL error queue was empty after the cross-runtime failure.
 
-The combined selection model registered `schannel` then `openssl` using the real masks `0x00000e7d` and `0x00000e5f`. Automatic common TLS 1.2 selected Schannel; TLS 1.3 plus custom trust/hostname selected OpenSSL; system trust selected Schannel; exact OpenSSL succeeded; exact Schannel TLS 1.3 was unsupported; ordered `[openssl, schannel]` selected OpenSSL; and an all-incompatible early-data requirement returned UNSUPPORTED with the expected diagnostic behavior. OSSL-D is complete. OSSL-E remains next and unstarted.
+The combined selection model registered `schannel` then `openssl` using the real masks `0x00000e7d` and `0x00000e5f`. Automatic common TLS 1.2 selected Schannel; TLS 1.3 plus custom trust/hostname selected OpenSSL; system trust selected Schannel; exact OpenSSL succeeded; exact Schannel TLS 1.3 was unsupported; ordered `[openssl, schannel]` selected OpenSSL; and an all-incompatible early-data requirement returned UNSUPPORTED with the expected diagnostic behavior. OSSL-D is complete.
+
+## OSSL-E hardening closure
+
+The canonical failure/result matrix is recorded in `docs/openssl-failure-hardening.md`. Fresh real tests cover plaintext and exact-version protocol failures, clean and truncated closure, established-session RST, fatal wait, incremental shutdown, 4 MiB backpressure and 100 repeated TLS 1.3 echoes. Existing OSSL-D/D2 identity, logging, lifecycle, same-runtime recovery, dual-runtime isolation, independent Schannel server, coexistence and selection proofs remain applicable. No production or public ABI change was required. OSSL-E is complete; OSSL-F remains unstarted.

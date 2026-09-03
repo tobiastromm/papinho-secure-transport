@@ -5,7 +5,7 @@ param(
     [string]$ServerMaximumTls="",
     [int]$Port=8480,
     [int]$Exchanges=1,
-    [ValidateSet("client","peer-clean","data-then-close","peer-abrupt")][string]$CloseMode="client",
+    [ValidateSet("client","peer-clean","data-then-close","peer-abrupt","peer-reset","wait-fatal")][string]$CloseMode="client",
     [ValidateSet("OK","PROTOCOL","AUTH","TRUNCATED")][string]$Expected="OK",
     [int]$PayloadSize=25,
     [string]$CaseName="manual"

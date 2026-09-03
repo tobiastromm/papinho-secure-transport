@@ -1,5 +1,6 @@
 import socket
 import ssl
+import struct
 import sys
 import time
 
@@ -51,7 +52,14 @@ try:
                 for offset in range(0, payload_size, 3):
                     tls.sendall(data[offset:offset + 3])
                 print("EXCHANGE=%d RECV=%d SEND=%d CONTENT_MATCH=1" % (index + 1, len(data), len(data)), flush=True)
-            if close_mode == "peer-abrupt":
+            if close_mode == "peer-reset":
+                descriptor = tls.detach()
+                reset_socket = socket.socket(fileno=descriptor)
+                reset_socket.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER,
+                                        struct.pack("hh", 1, 0))
+                reset_socket.close()
+                print("CLOSE=RESET", flush=True)
+            elif close_mode == "peer-abrupt":
                 descriptor = tls.detach()
                 socket.socket(fileno=descriptor).close()
                 print("CLOSE=ABRUPT", flush=True)
@@ -60,7 +68,7 @@ try:
                     tls.unwrap()
                     print("CLOSE=CLEAN", flush=True)
                 except (ssl.SSLError, OSError) as error:
-                    if close_mode in ("peer-clean", "data-then-close"):
+                    if close_mode in ("peer-clean", "data-then-close", "wait-fatal"):
                         print("CLOSE=NOTIFY_SENT", flush=True)
                     else:
                         raise error
