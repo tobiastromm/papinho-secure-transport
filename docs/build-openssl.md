@@ -17,7 +17,7 @@ nmake install_sw
 
 The validated build used OpenSSL 3.5.8, Perl 5.42.2, NASM 3.02, MSVC 19.51.36256 x64, linker 14.51.36256.0, SDK 10.0.26100.0, and `/MD`. The mandatory upstream suite passed 4137 tests across 346 test files. Do not replace the retained prebuilt directory unless the exact source hash, complete upstream test gate, staging audit, and manifests are regenerated.
 
-## PST skeleton target
+## PST OpenSSL target
 
 ```bat
 tools\build-modern-msvc-openssl.bat clean
@@ -26,4 +26,4 @@ tools\build-modern-msvc-openssl.bat test
 
 `Makefile.openssl.msvc` writes only to `build\win64-modern-msvc-openssl`, compiles PST code with `/MD /W4`, links only the retained OpenSSL import library, and copies the exact retained DLLs next to the test executable. The target registers only `openssl`. Its public-header consumer includes only `papinho_secure_transport.h`.
 
-The skeleton deliberately has no TLS capability. It implements isolated library contexts, explicit default-provider loading, lifecycle, Win32 socket attachment/nonblocking ownership, and safe unsupported TLS operations. OSSL-C owns handshake and secure I/O work.
+The target implements OSSL-C TLS 1.2/TLS 1.3, nonblocking handshake, secure I/O, bounded readiness and shutdown. Run `tools\build-modern-msvc-openssl.bat runtime-integration` to build the functional client; the canonical PowerShell runner is `tests\run_openssl_runtime_integration.ps1`. Real evidence is written under ignored `build\phase-ossl-c`. Full public trust, hostname, ALPN, mTLS and peer information remain OSSL-D.

@@ -1,6 +1,6 @@
 # OpenSSL provider extension
 
-Status: **OSSL-B backend skeleton / registration / modern build integration complete**. OSSL-C has not started. This is a deliberate post-Phase-8 provider extension; Phase 8 remains complete and Phase 9 has not started.
+Status: **OSSL-C TLS 1.2 / TLS 1.3 / readiness / secure I/O complete**. OSSL-D has not started. This is a deliberate post-Phase-8 provider extension; Phase 8 remains complete and Phase 9 has not started.
 
 ## Frozen baseline and provenance
 
@@ -51,7 +51,7 @@ Each connection uses a nonblocking socket and private `SSL`. `SSL_do_handshake` 
 
 `SSL_get_error` must be called immediately on the same operation/thread with its return value. `SSL_pending`/`SSL_has_pending` can permit immediate read progress without waiting for socket readability, but must obey existing anti-spin and bounded-progress rules. Provider wait maps the current normalized interest to bounded socket readiness; buffered TLS work remains provider-private.
 
-TLS policy uses `SSL_CTX_set_min_proto_version` and `SSL_CTX_set_max_proto_version` for exact TLS 1.2, exact TLS 1.3, or the 1.2-1.3 range. SSLv2/v3 and TLS 1.0/1.1 are never enabled, and negotiated protocol is verified against the frozen range. OpenSSL TLS 1.3 on Windows 10 x64 is a mandatory future functional gate, alongside TLS 1.2.
+TLS policy uses `SSL_CTX_set_min_proto_version` and `SSL_CTX_set_max_proto_version` for exact TLS 1.2, exact TLS 1.3, or the 1.2-1.3 range. SSLv2/v3 and TLS 1.0/1.1 are never enabled, and negotiated protocol is verified against the frozen range. OpenSSL TLS 1.3 and TLS 1.2 are functionally validated on Windows 10 x64.
 
 Reads/writes use the `_ex` APIs where appropriate and preserve partial-I/O semantics. No plaintext fallback exists. Secure defaults are retained; PST does not invent a restrictive cipher list or pin fixture ciphers. Session resumption and early data/0-RTT remain unsupported and unadvertised.
 
@@ -105,14 +105,26 @@ Initial same-family Python/OpenSSL fixtures may accelerate development, but cann
 5. **OSSL-E - Failure / Close / Diagnostics / Logging / Lifecycle Hardening:** truncation, error precedence/queue isolation, multiple runtimes and security disclosure.
 6. **OSSL-F - NSS/Schannel/OpenSSL Cross-Provider Validation and Extension Closure:** combined target, capability-driven selection and independent-engine proof.
 
-No existing provider or production source changed in OSSL-A. OSSL-B is complete; OSSL-C is the next task and has not started.
+No NSS, Schannel, public API, generic SPI, or portable core behavior changed in OSSL-C. OSSL-C is complete; OSSL-D is next and has not started.
 
 ## OSSL-B implementation result
 
 The exact official 3.5.8 archive is retained and hash-verified. The shared `VC-WIN64A` build used `no-legacy no-fips no-autoload-config`; `nmake`, all 4137 mandatory upstream tests, and `nmake install_sw` passed. Canonical generated headers, import libraries, and the two required DLLs are retained under `third_party/openssl/prebuilt/win64-msvc-3.5.8`, with SHA-256 manifests. No external OpenSSL from PATH is consumed.
 
-The `openssl` backend now supplies an SPI 2.4 skeleton with adapter metadata 0.1.0 and OpenSSL component metadata 3.5.8 LTS. Its only advertised capability is `NONBLOCKING`, which is implemented by its private Win32 socket attachment. Each PST runtime owns an independent `OSSL_LIB_CTX` and explicitly loaded built-in default provider. Tests prove 100 initialize/shutdown cycles, two simultaneous runtimes with independent release, exact and automatic selection, error-queue cleanup, invalid/valid transport behavior, and exactly-one socket close.
+At OSSL-B, the `openssl` backend supplied an SPI 2.4 skeleton with adapter metadata 0.1.0 and OpenSSL component metadata 3.5.8 LTS. Its only advertised capability is `NONBLOCKING`, which is implemented by its private Win32 socket attachment. Each PST runtime owns an independent `OSSL_LIB_CTX` and explicitly loaded built-in default provider. Tests prove 100 initialize/shutdown cycles, two simultaneous runtimes with independent release, exact and automatic selection, error-queue cleanup, invalid/valid transport behavior, and exactly-one socket close.
 
-Handshake, secure read/write, shutdown, peer identity, trust, hostname, ALPN, client authentication, and TLS version capabilities remain explicitly unsupported. A future BIO will be created with `BIO_NOCLOSE`; the OpenSSL connection destructor remains the single native-socket close root. OSSL-C must implement and prove TLS/readiness/I/O before any TLS capability is advertised.
+At that milestone, handshake, secure read/write and shutdown were unsupported; OSSL-C subsequently implemented them. Peer identity, complete trust/hostname semantics, ALPN and client authentication remain OSSL-D. The OpenSSL connection destructor remains the single native-socket close root.
 
 The isolated test sets `OPENSSL_CONF` and `OPENSSL_MODULES` to nonexistent locations. Runtime creation still loads `default`; an explicit audit finds `legacy` and `fips` unavailable. No OpenSSL error code or string enters PST public diagnostics.
+
+## OSSL-C implementation and functional evidence
+
+Each connection owns an isolated `SSL_CTX` because TLS min/max and the narrow fixture trust store are frozen connection policy. It also owns exactly one client-mode `SSL`. `SSL_set_fd` uses the socket BIO without transferring the native close root to OpenSSL; `SSL_free`/`SSL_CTX_free` run before the PST OpenSSL connection performs the single `closesocket`.
+
+The provider maps PST 12/13 to exact OpenSSL TLS 1.2/1.3 bounds, clears `SSL_MODE_AUTO_RETRY`, partial-write and moving-buffer modes, and reports application consumption only when `SSL_write_ex` succeeds. `SSL_get_error` is called immediately after each failed handshake/read/write/shutdown operation. WANT_READ and WANT_WRITE become PST readiness, provider-local `select` is bounded, and `SSL_pending`/`SSL_has_pending` prevent unnecessary socket waits when OpenSSL has buffered work. `SSL_OP_IGNORE_UNEXPECTED_EOF` is explicitly absent so authenticated `close_notify` is CLOSED/CLEAN and raw EOF is FAILED/TRUNCATED.
+
+OSSL-C intentionally uses only a provider-private DER root for its deterministic fixtures with `SSL_VERIFY_PEER`. It does not advertise CUSTOM_TRUST, HOSTNAME_VERIFY, ALPN, CLIENT_AUTH, SYSTEM_TRUST or PEER_INFO; those complete public semantics remain OSSL-D. Advertised capabilities are TLS1.2, TLS1.3, NONBLOCKING and BACKEND_WAIT (`0x00000c03`).
+
+Real gates passed with canonical OpenSSL 3.5.8 on Microsoft Windows 10 Pro x64 10.0.19045: exact TLS 1.2 and TLS 1.3, 1.2-1.3 range selecting both endpoints, both exact-version mismatch failures without widening/downgrade, 10 x 25-byte TLS 1.2 and TLS 1.3 exchanges, fragmented input/output, a 4 MiB backpressure case with observed WANT_WRITE and exact content, incremental local shutdown, clean peer close, data then close, abrupt EOF as truncation, and a plaintext peer failing closed. The independent-engine gate used the repository Schannel TLS 1.2 server and passed handshake plus 25-byte secure echo. The same machine reports Schannel TLS 1.3 unavailable/not advertised while OpenSSL TLS 1.3 passes.
+
+The canonical copied DLL hashes match the staged runtime manifest: `libcrypto-3-x64.dll` `09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044`; `libssl-3-x64.dll` `3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed`. Functional artifacts are under ignored `build/phase-ossl-c`.

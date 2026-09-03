@@ -1,0 +1,8 @@
+#include "papinho_secure_transport.h"
+#include "backends/schannel/pst_backend_schannel.h"
+#include "backends/openssl/pst_backend_openssl.h"
+#include <stdio.h>
+#include <string.h>
+
+static void exact_options(PST_RUNTIME_OPTIONS *options,const char *id){memset(options,0,sizeof(*options));options->struct_size=sizeof(*options);options->api_version=PST_API_VERSION;options->selection=PST_BACKEND_SELECTION_EXACT;options->exact_backend_id=id;}
+int main(void){PST_RUNTIME_OPTIONS options;pst_runtime *schannel=NULL,*openssl=NULL;PST_RUNTIME_INFO info;if(pst_backend_schannel_register()!=PST_RESULT_OK||pst_backend_openssl_register()!=PST_RESULT_OK)return 1;exact_options(&options,"schannel");if(pst_runtime_create(&options,&schannel)!=PST_RESULT_OK)return 2;exact_options(&options,"openssl");if(pst_runtime_create(&options,&openssl)!=PST_RESULT_OK)return 3;memset(&info,0,sizeof(info));info.struct_size=sizeof(info);info.api_version=PST_API_VERSION;if(pst_runtime_get_info(schannel,&info)!=PST_RESULT_OK||strcmp(info.backend_id,"schannel"))return 4;memset(&info,0,sizeof(info));info.struct_size=sizeof(info);info.api_version=PST_API_VERSION;if(pst_runtime_get_info(openssl,&info)!=PST_RESULT_OK||strcmp(info.backend_id,"openssl"))return 5;pst_runtime_release(schannel);pst_runtime_release(openssl);printf("SAME_PROCESS SCHANNEL=ALIVE OPENSSL=ALIVE INDEPENDENT_RELEASE=PASS\n");printf("test_modern_provider_coexistence: PASS\n");return 0;}
