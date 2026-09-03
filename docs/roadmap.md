@@ -115,4 +115,9 @@
   - OSSL-D trust / hostname / ALPN / mTLS / peer info: complete
   - OSSL-E failure / close / diagnostics / logging / lifecycle hardening: complete
   - OSSL-F three-provider validation and extension closure: complete
+  - OSSL-ST Windows SYSTEM_TRUST follow-up: in progress
+    - OSSL-ST-A architecture / policy audit: complete
+    - OSSL-ST-B provider-local Win32 implementation: pending
+    - OSSL-ST-C functional and isolation matrix: pending
+    - OSSL-ST-D hardening / closure audit: pending
 - Phase 9 - Release / ABI Stabilization: pending; not started

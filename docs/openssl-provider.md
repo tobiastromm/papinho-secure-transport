@@ -2,6 +2,8 @@
 
 Status: **OSSL-F and the post-Phase-8 OpenSSL provider extension complete**. This is a deliberate post-Phase-8 provider extension; Phase 8 remains complete and Phase 9 has not started.
 
+Follow-up status: **OSSL-ST-A Windows SYSTEM_TRUST architecture/policy ready**. Production implementation has not started and the OpenSSL capability mask remains `0x00000e5f`.
+
 ## Frozen baseline and provenance
 
 The initial baseline is **OpenSSL 3.5.8 LTS**, released 2026-08-25. The OpenSSL 3.5 line is supported through 2030-04-08. Official release source: `https://github.com/openssl/openssl/releases/download/openssl-3.5.8/openssl-3.5.8.tar.gz`; published SHA-256: `a8f84a39918ec6415ce765d9b429d313ba97b8143169c172e734b9514464f5b2`. The official source/signature and published digest must be verified before import.
@@ -153,3 +155,5 @@ The canonical failure/result matrix is recorded in `docs/openssl-failure-hardeni
 ## OSSL-F extension closure
 
 The formal NSS/Schannel/OpenSSL comparison and SYSTEM_TRUST follow-up analysis are recorded in `docs/openssl-extension-closure.md`. The three providers remain first-class on their deliberate targets, common semantics agree across the exact capability intersection, and capability differences remain explicit. OSSL-F and the OpenSSL extension are complete. Phase 9 remains unstarted.
+
+The selected SYSTEM_TRUST design is documented in `docs/openssl-system-trust.md`: Windows chain-engine trust and usage policy, OpenSSL TLS and hostname verification, live per-connection evaluation, no CUSTOM_TRUST union and no hidden AIA/revocation network access in the initial implementation. Capability advertisement remains gated on functional proof.
