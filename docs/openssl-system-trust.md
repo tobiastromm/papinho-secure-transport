@@ -1,6 +1,6 @@
 # OpenSSL on Windows system-trust architecture
 
-Status: OSSL-ST-B private Win32 adapter implemented and structurally tested. `SYSTEM_TRUST` remains capability-hidden until ST-C functional/isolation gates pass; Phase 9 has not started.
+Status: OSSL-ST-C functional and isolation matrix complete. The OpenSSL provider now advertises `SYSTEM_TRUST` with capability mask `0x00000e7f`; ST-D and Phase 9 have not started.
 
 ## Contract
 
@@ -37,7 +37,7 @@ The private adapter is `src/backends/openssl/platform/win32/pst_openssl_system_t
 
 The focused test proves malformed DER rejection and the private-root negative without installing a root. In that negative, `CertGetCertificateChain` and `CertVerifyCertificateChainPolicy` both execute successfully, but chain/policy errors remain present, so the adapter rejects. This specifically proves that a true policy-call BOOL cannot override nonzero `dwError`. No persistent store is opened for writes; the only certificate addition targets the temporary memory store. Trust refresh is `PER_CONNECTION_WINDOWS_CHAIN_EVALUATION`, with no runtime-global CryptoAPI object or cache.
 
-ST-B keeps `PST_CAP_SYSTEM_TRUST` absent (`0x00000e5f`) and selection behavior unchanged. ST-C owns real system-trusted TLS positives, wrong-hostname and isolation sequences; its runner may reuse the existing identity integration interface after capability advertisement. No full ST-C matrix was executed here.
+ST-B kept `PST_CAP_SYSTEM_TRUST` absent at `0x00000e5f` until the initial ST-C gates passed. ST-C then added only that capability, producing `0x00000e7f`.
 ## Options scorecard
 
 Scores are relative: 5 is strongest/best except complexity and security risk, where 1 is lowest.
@@ -76,8 +76,20 @@ tests/test_openssl_system_trust.c
 tests/run_openssl_system_trust.ps1
 ```
 
-The generic OpenSSL file owns TLS integration and normalized state; the Win32 adapter alone includes CryptoAPI types and links `crypt32.lib`. A future POSIX adapter may implement its own system-trust semantics. No public API or SPI change is expected: `PST_TRUST_SOURCE_SYSTEM` and `PST_CAP_SYSTEM_TRUST` already exist. The capability mask remains `0x00000e5f` until positive, negative, isolation, disclosure and cleanup gates pass.
+The generic OpenSSL file owns TLS integration and normalized state; the Win32 adapter alone includes CryptoAPI types and links `crypt32.lib`. A future POSIX adapter may implement its own system-trust semantics. No public API or SPI change is expected: `PST_TRUST_SOURCE_SYSTEM` and `PST_CAP_SYSTEM_TRUST` already exist. The capability mask remained `0x00000e5f` through ST-B; after the positive, negative, isolation, disclosure and cleanup gates passed in ST-C, only `PST_CAP_SYSTEM_TRUST` was added, producing `0x00000e7f`.
 
 Refined plan: ST-A policy/architecture (this document); ST-B bounded provider-local Win32 implementation; ST-C real TLS 1.2/1.3, negative, isolation and store-safety matrix; ST-D hardening and closure. Current versions remain API 1.2.0, library 0.3.0 and SPI 2.4. CryptoAPI is OS-provided, so there is no new third-party redistribution license.
 
 The consumer motivation includes PapinhoBrowser through PapinhoAccelerator to arbitrary public TLS 1.3 sites, but PST remains generic. The same policy is useful for enterprise/LAN applications whose corporate roots are installed through effective Windows policy.
+
+## ST-C functional and isolation evidence
+
+On Windows 10 build 19045, the production OpenSSL descriptor completed SYSTEM-trust-only handshakes with no custom CA, credentials, ALPN requirement, HTTP request, or application payload. `www.cloudflare.com` passed exact TLS 1.2 (`0x0303`, cipher `0xcca9`) and TLS 1.3 (`0x0304`, cipher `0x1302`); `www.google.com` independently passed both versions with the same normalized trust/hostname result. Each snapshot reported certificate present, chain validated, hostname validated, peer authenticated, nonzero cipher, SHA-256 length 32, owned leaf DER, and validity after connection destruction. Shutdown was bounded; these public peers closed transport after the client alert without a reciprocal authenticated close, which is recorded separately from the already successful handshake.
+
+The same Google peer with configured `wrong.invalid` retained Windows trust success but failed specifically as `HOSTNAME_MISMATCH`, with logging OFF, immutable diagnostic, and no resurrection. The repository private root was not installed: SYSTEM mode returned `AUTH_FAILURE`, while the same root/intermediate/leaf immediately passed CUSTOM mode with TLS 1.3 and exact 25-byte echo. `SYSTEM_STORE_MUTATION=NONE`, `AIA_NETWORK_FETCH=DISABLED`, `AUTH_ROOT_AUTO_UPDATE_NETWORK=DISABLED`, `REVOCATION_POLICY=NOT_PERFORMED`, and `TRUST_REFRESH=PER_CONNECTION_WINDOWS_CHAIN_EVALUATION` remain true.
+
+One runtime completed `S1 public SYSTEM success -> C1 private CUSTOM success -> S2 private SYSTEM AUTH_FAILURE -> C2 private CUSTOM success -> S3 public SYSTEM success`. The copied S2 diagnostic remained valid after destruction; C2/S3 had no diagnostic and the OpenSSL ERR queue was empty. Two simultaneous runtimes then proved R1 public SYSTEM success, R2 private CUSTOM success, R1 SYSTEM recovery, R1 release, and continued R2 CUSTOM success. Nine created connections and three runtimes were destroyed exactly once.
+
+With registration order Schannel then OpenSSL, TLS 1.2 plus SYSTEM trust selects Schannel automatically; TLS 1.3 plus SYSTEM trust selects OpenSSL; exact OpenSSL succeeds; exact Schannel TLS 1.3 remains `UNSUPPORTED`; ordered `[openssl, schannel]` with TLS 1.2 selects OpenSSL. Schannel and NSS masks are unchanged. Enterprise and Group Policy trust are `STRUCTURALLY_SUPPORTED_BY_WINDOWS_CHAIN_ENGINE`; `RUNTIME_DOMAIN_TEST=NOT_PERFORMED`.
+
+The public runner accepts endpoint overrides and is opt-in because it depends on DNS/network state. Defaults are test conveniences, not production dependencies. The PapinhoBrowser-specific PapinhoAccelerator may use PST/OpenSSL for public TLS 1.3 with Windows SYSTEM trust; this is an example consumer path, not generic PST infrastructure. The same trust mode also recognizes enterprise/private CAs installed through effective Windows policy.

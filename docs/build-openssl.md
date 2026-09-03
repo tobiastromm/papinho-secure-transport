@@ -32,3 +32,13 @@ The target implements OSSL-C TLS 1.2/TLS 1.3, nonblocking handshake, secure I/O,
 ## OSSL-D identity integration
 
 The build also produces `test_openssl_identity_integration.exe` for custom-trust, hostname, ALPN, mTLS and peer-snapshot gates. Server PEM files are fixture-only; the PST client consumes trust, certificate and PKCS#8 DER exclusively from memory. Evidence is stored under ignored `build\phase-ossl-d`.
+
+## Windows SYSTEM_TRUST integration
+
+The default `test` target remains offline and includes the deterministic Win32 adapter test. Public SYSTEM trust is an explicit environment-dependent target:
+
+```bat
+tools\build-modern-msvc-openssl.bat system-trust-integration
+```
+
+It invokes `tests\run_openssl_system_trust_integration.ps1`. Override its configurable endpoint list with `-Endpoints`; DNS, reachability and remote-policy failures are reported separately from a PST trust failure. The runner sends no application payload and does not configure a custom CA.

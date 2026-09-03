@@ -118,6 +118,6 @@
   - OSSL-ST Windows SYSTEM_TRUST follow-up: in progress
     - OSSL-ST-A architecture / policy audit: complete
     - OSSL-ST-B provider-local Win32 implementation: complete
-    - OSSL-ST-C functional and isolation matrix: pending
+    - OSSL-ST-C functional and isolation matrix: complete
     - OSSL-ST-D hardening / closure audit: pending
 - Phase 9 - Release / ABI Stabilization: pending; not started

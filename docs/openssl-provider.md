@@ -2,7 +2,7 @@
 
 Status: **OSSL-F and the post-Phase-8 OpenSSL provider extension complete**. This is a deliberate post-Phase-8 provider extension; Phase 8 remains complete and Phase 9 has not started.
 
-Follow-up status: **OSSL-ST-B Windows SYSTEM_TRUST private adapter implemented**. Capability advertisement and public functional support remain gated on ST-C; the OpenSSL capability mask remains `0x00000e5f`.
+Follow-up status: **OSSL-ST-C Windows SYSTEM_TRUST functional/isolation matrix complete**. The capability is advertised at `0x00000e7f`; ST-D and Phase 9 have not started.
 
 ## Frozen baseline and provenance
 
@@ -163,3 +163,7 @@ The selected SYSTEM_TRUST design is documented in `docs/openssl-system-trust.md`
 The Windows-only adapter now builds an effective `HCCE_CURRENT_USER` server-auth chain from an owned leaf plus peer-supplied intermediates in a temporary memory store. It disables AIA, URL retrieval and automatic root update, requests no online revocation, requires both successful policy execution and a zero policy error, and never imports Windows roots into OpenSSL. The synchronous OpenSSL certificate-verification callback blocks handshake completion until Windows trust and OpenSSL hostname validation both succeed. CUSTOM trust remains unchanged and exclusive.
 
 The adapter unit gate rejects the repository private chain with `CHAIN_API=1`, `CHAIN_ERROR=1`, `POLICY_API=1`, and `POLICY_ERROR=1`, proving the BOOL-versus-`dwError` rule without system-store mutation. Fresh CUSTOM trust TLS 1.2 and TLS 1.3 echoes passed with 25-byte bidirectional content matches. The capability remains hidden at `0x00000e5f`; public SYSTEM trust and ST-C functional/isolation claims have not begun.
+
+## OSSL-ST-C capability advertisement
+
+Real Windows 10 build 19045 handshakes proved exact TLS 1.2 and TLS 1.3 with Windows SYSTEM trust against two configurable public endpoints, without custom CA or application payload. Private-root rejection, same-root CUSTOM success, specific hostname mismatch, peer snapshot lifetime, same-runtime SYSTEM/CUSTOM alternation, two-runtime release isolation, diagnostics, ERR queue discipline and combined selection all passed. SYSTEM_TRUST is the only new capability bit (`0x00000e5f` to `0x00000e7f`). The opt-in runner is `tests/run_openssl_system_trust_integration.ps1`; the default fast suite remains offline.

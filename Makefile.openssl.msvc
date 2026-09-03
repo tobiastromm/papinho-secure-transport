@@ -67,6 +67,8 @@ $(BUILD)\test_openssl_identity_integration.obj: tests\test_openssl_identity_inte
 	$(CC) $(OSSL_CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_openssl_identity_integration.exe: $(BUILD)\test_openssl_identity_integration.obj $(BUILD)\pst_backend_openssl.obj $(OSSL_SYSTEM_TRUST) $(PSTLIB)
 	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib crypt32.lib
+$(BUILD)\test_openssl_system_trust_integration.exe: $(BUILD)\test_openssl_identity_integration.obj $(BUILD)\pst_backend_openssl.obj $(OSSL_SYSTEM_TRUST) $(PSTLIB)
+	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib crypt32.lib
 
 $(BUILD)\pst_backend_schannel.obj: src\backends\schannel\pst_backend_schannel.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
@@ -87,6 +89,10 @@ $(BUILD)\libssl-3-x64.dll: $(OPENSSL_RUNTIME)\libssl-3-x64.dll
 
 runtime-integration: all
 	@echo OpenSSL runtime integration executable ready: $(BUILD)\test_openssl_runtime_integration.exe
+
+system-trust-integration: dirs $(PSTLIB) $(BUILD)\test_openssl_system_trust_integration.exe $(BUILD)\libcrypto-3-x64.dll $(BUILD)\libssl-3-x64.dll
+	@echo Running environment-dependent public OpenSSL SYSTEM_TRUST integration
+	powershell -NoProfile -ExecutionPolicy Bypass -File tests\run_openssl_system_trust_integration.ps1
 
 test: all
 	$(BUILD)\test_public_header.exe
