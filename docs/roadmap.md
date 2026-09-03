@@ -110,7 +110,7 @@
   - 8.H Phase 8 closure audit: complete
 - Post-Phase-8 OpenSSL provider extension: in progress
   - OSSL-A architecture / version / build / provenance: complete
-  - OSSL-B backend skeleton / registration / modern build integration: pending
+  - OSSL-B backend skeleton / registration / modern build integration: complete
   - OSSL-C TLS 1.2 / TLS 1.3 / readiness / secure I/O: pending
   - OSSL-D trust / hostname / ALPN / mTLS / peer info: pending
   - OSSL-E failure / close / diagnostics / logging / lifecycle hardening: pending

@@ -1,6 +1,6 @@
 # OpenSSL provider extension
 
-Status: **OSSL-A architecture/version/build/provenance complete**. OSSL-B has not started. This is a deliberate post-Phase-8 provider extension; Phase 8 remains complete and Phase 9 has not started.
+Status: **OSSL-B backend skeleton / registration / modern build integration complete**. OSSL-C has not started. This is a deliberate post-Phase-8 provider extension; Phase 8 remains complete and Phase 9 has not started.
 
 ## Frozen baseline and provenance
 
@@ -105,4 +105,14 @@ Initial same-family Python/OpenSSL fixtures may accelerate development, but cann
 5. **OSSL-E - Failure / Close / Diagnostics / Logging / Lifecycle Hardening:** truncation, error precedence/queue isolation, multiple runtimes and security disclosure.
 6. **OSSL-F - NSS/Schannel/OpenSSL Cross-Provider Validation and Extension Closure:** combined target, capability-driven selection and independent-engine proof.
 
-No existing provider or production source changed in OSSL-A. The next task is OSSL-B and must be started explicitly.
+No existing provider or production source changed in OSSL-A. OSSL-B is complete; OSSL-C is the next task and has not started.
+
+## OSSL-B implementation result
+
+The exact official 3.5.8 archive is retained and hash-verified. The shared `VC-WIN64A` build used `no-legacy no-fips no-autoload-config`; `nmake`, all 4137 mandatory upstream tests, and `nmake install_sw` passed. Canonical generated headers, import libraries, and the two required DLLs are retained under `third_party/openssl/prebuilt/win64-msvc-3.5.8`, with SHA-256 manifests. No external OpenSSL from PATH is consumed.
+
+The `openssl` backend now supplies an SPI 2.4 skeleton with adapter metadata 0.1.0 and OpenSSL component metadata 3.5.8 LTS. Its only advertised capability is `NONBLOCKING`, which is implemented by its private Win32 socket attachment. Each PST runtime owns an independent `OSSL_LIB_CTX` and explicitly loaded built-in default provider. Tests prove 100 initialize/shutdown cycles, two simultaneous runtimes with independent release, exact and automatic selection, error-queue cleanup, invalid/valid transport behavior, and exactly-one socket close.
+
+Handshake, secure read/write, shutdown, peer identity, trust, hostname, ALPN, client authentication, and TLS version capabilities remain explicitly unsupported. A future BIO will be created with `BIO_NOCLOSE`; the OpenSSL connection destructor remains the single native-socket close root. OSSL-C must implement and prove TLS/readiness/I/O before any TLS capability is advertised.
+
+The isolated test sets `OPENSSL_CONF` and `OPENSSL_MODULES` to nonexistent locations. Runtime creation still loads `default`; an explicit audit finds `legacy` and `fips` unavailable. No OpenSSL error code or string enters PST public diagnostics.
