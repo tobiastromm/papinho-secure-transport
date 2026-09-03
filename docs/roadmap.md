@@ -114,5 +114,5 @@
   - OSSL-C TLS 1.2 / TLS 1.3 / readiness / secure I/O: complete
   - OSSL-D trust / hostname / ALPN / mTLS / peer info: complete
   - OSSL-E failure / close / diagnostics / logging / lifecycle hardening: complete
-  - OSSL-F three-provider validation and extension closure: pending
+  - OSSL-F three-provider validation and extension closure: complete
 - Phase 9 - Release / ABI Stabilization: pending; not started

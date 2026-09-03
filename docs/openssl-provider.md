@@ -1,6 +1,6 @@
 # OpenSSL provider extension
 
-Status: **OSSL-E failure / close / diagnostics / logging / lifecycle hardening complete**. OSSL-F has not started. This is a deliberate post-Phase-8 provider extension; Phase 8 remains complete and Phase 9 has not started.
+Status: **OSSL-F and the post-Phase-8 OpenSSL provider extension complete**. This is a deliberate post-Phase-8 provider extension; Phase 8 remains complete and Phase 9 has not started.
 
 ## Frozen baseline and provenance
 
@@ -150,3 +150,6 @@ The combined selection model registered `schannel` then `openssl` using the real
 ## OSSL-E hardening closure
 
 The canonical failure/result matrix is recorded in `docs/openssl-failure-hardening.md`. Fresh real tests cover plaintext and exact-version protocol failures, clean and truncated closure, established-session RST, fatal wait, incremental shutdown, 4 MiB backpressure and 100 repeated TLS 1.3 echoes. Existing OSSL-D/D2 identity, logging, lifecycle, same-runtime recovery, dual-runtime isolation, independent Schannel server, coexistence and selection proofs remain applicable. No production or public ABI change was required. OSSL-E is complete; OSSL-F remains unstarted.
+## OSSL-F extension closure
+
+The formal NSS/Schannel/OpenSSL comparison and SYSTEM_TRUST follow-up analysis are recorded in `docs/openssl-extension-closure.md`. The three providers remain first-class on their deliberate targets, common semantics agree across the exact capability intersection, and capability differences remain explicit. OSSL-F and the OpenSSL extension are complete. Phase 9 remains unstarted.
