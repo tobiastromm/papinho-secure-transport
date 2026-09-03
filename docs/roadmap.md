@@ -120,7 +120,15 @@
     - OSSL-ST-B provider-local Win32 implementation: complete
     - OSSL-ST-C functional and isolation matrix: complete
     - OSSL-ST-D hardening / closure audit: complete
-- Phase 9 - Release / ABI Stabilization: pending; not started
+- Phase 9 - Release / ABI Stabilization: in progress
+  - 9.A Release scope / version policy / canonical inventory: complete
+  - 9.B Public API / ABI freeze audit: next; not started
+  - 9.C SPI / provider contract freeze: not started
+  - 9.D Documentation / community / examples: not started
+  - 9.E Packaging / dependencies / licenses / provenance: not started
+  - 9.F Release validation kit: not started
+  - 9.G Release candidate / clean-machine validation: not started
+  - 9.H Final closure / release baseline: not started
   - documentation handoff: concise root README linking complete English and pt-BR paths, written for non-experts
   - scope wording: PST is generic secure transport for Internet, LAN, and private/corporate networks; PapinhoBrowser/PapinhoAccelerator are examples only
   - future-transport note: TLS is the current implementation; DTLS, QUIC, Noise, or other transports require future study and are not claims of SPI 2.4
