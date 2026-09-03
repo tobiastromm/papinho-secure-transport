@@ -1,6 +1,6 @@
 # OpenSSL provider extension
 
-Status: **OSSL-C TLS 1.2 / TLS 1.3 / readiness / secure I/O complete**. OSSL-D has not started. This is a deliberate post-Phase-8 provider extension; Phase 8 remains complete and Phase 9 has not started.
+Status: **OSSL-D custom trust / hostname / ALPN / mTLS / peer info in progress**. Functional feature gates pass; same-runtime and two-runtime functional isolation remain closure evidence. This is a deliberate post-Phase-8 provider extension; Phase 8 remains complete and Phase 9 has not started.
 
 ## Frozen baseline and provenance
 
@@ -128,3 +128,13 @@ OSSL-C intentionally uses only a provider-private DER root for its deterministic
 Real gates passed with canonical OpenSSL 3.5.8 on Microsoft Windows 10 Pro x64 10.0.19045: exact TLS 1.2 and TLS 1.3, 1.2-1.3 range selecting both endpoints, both exact-version mismatch failures without widening/downgrade, 10 x 25-byte TLS 1.2 and TLS 1.3 exchanges, fragmented input/output, a 4 MiB backpressure case with observed WANT_WRITE and exact content, incremental local shutdown, clean peer close, data then close, abrupt EOF as truncation, and a plaintext peer failing closed. The independent-engine gate used the repository Schannel TLS 1.2 server and passed handshake plus 25-byte secure echo. The same machine reports Schannel TLS 1.3 unavailable/not advertised while OpenSSL TLS 1.3 passes.
 
 The canonical copied DLL hashes match the staged runtime manifest: `libcrypto-3-x64.dll` `09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044`; `libssl-3-x64.dll` `3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed`. Functional artifacts are under ignored `build/phase-ossl-c`.
+
+## OSSL-D implementation progress
+
+The OpenSSL connection now uses an exclusive connection-local `X509_STORE`, `SSL_VERIFY_PEER`, `SSL_set1_host` for certificate verification, and an independent SNI value from the same frozen DNS hostname. It never loads system/default trust paths, `SSL_CERT_FILE`, or `SSL_CERT_DIR`. ALPN consumes the core-validated PST wire encoding through `SSL_set_alpn_protos`, preserves offer order, verifies the selected value belongs to the offer, and enforces required versus optional absence.
+
+Explicit client identity is decoded entirely in memory: exact single-certificate DER through `d2i_X509`, exact PKCS#8/private-key DER through the OpenSSL EVP decoder, followed by `SSL_CTX_check_private_key`. No certificate/key temp file, Windows store, callback, or implicit identity lookup exists. Peer snapshots copy the exact leaf DER, SHA-256, normalized TLS version, standard cipher-suite ID and authentication flags before the connection is destroyed.
+
+Real TLS 1.2/TLS 1.3 gates pass for root-intermediate-leaf, correct hostname, required/optional/multiple ALPN, and explicit mTLS. Wrong root and missing intermediate map to AUTH_FAILURE; wrong hostname maps to HOSTNAME_MISMATCH; required ALPN absence maps to POLICY_VIOLATION; missing/wrong client identity maps to AUTH_FAILURE; local cert/key mismatch fails during connection creation. TLS 1.3 mTLS server fingerprint comparison proves the exact configured client identity. OSSL-C readiness, 4 MiB WANT_WRITE, clean/data close, truncation and shutdown regressions pass, as does the independent Schannel TLS 1.2 server gate.
+
+The implemented capability mask is `0x00000e5f`: TLS1.2, TLS1.3, CUSTOM_TRUST, HOSTNAME_VERIFY, ALPN, CLIENT_AUTH, PEER_INFO, NONBLOCKING and BACKEND_WAIT. SYSTEM_TRUST remains absent. OSSL-D is not yet marked complete because the required real B-C-A-B sequence within one runtime and functional two-runtime isolation runner have not yet been executed.

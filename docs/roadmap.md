@@ -112,7 +112,7 @@
   - OSSL-A architecture / version / build / provenance: complete
   - OSSL-B backend skeleton / registration / modern build integration: complete
   - OSSL-C TLS 1.2 / TLS 1.3 / readiness / secure I/O: complete
-  - OSSL-D trust / hostname / ALPN / mTLS / peer info: pending
+  - OSSL-D trust / hostname / ALPN / mTLS / peer info: in progress
   - OSSL-E failure / close / diagnostics / logging / lifecycle hardening: pending
   - OSSL-F three-provider validation and extension closure: pending
 - Phase 9 - Release / ABI Stabilization: pending; not started

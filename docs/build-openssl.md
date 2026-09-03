@@ -27,3 +27,8 @@ tools\build-modern-msvc-openssl.bat test
 `Makefile.openssl.msvc` writes only to `build\win64-modern-msvc-openssl`, compiles PST code with `/MD /W4`, links only the retained OpenSSL import library, and copies the exact retained DLLs next to the test executable. The target registers only `openssl`. Its public-header consumer includes only `papinho_secure_transport.h`.
 
 The target implements OSSL-C TLS 1.2/TLS 1.3, nonblocking handshake, secure I/O, bounded readiness and shutdown. Run `tools\build-modern-msvc-openssl.bat runtime-integration` to build the functional client; the canonical PowerShell runner is `tests\run_openssl_runtime_integration.ps1`. Real evidence is written under ignored `build\phase-ossl-c`. Full public trust, hostname, ALPN, mTLS and peer information remain OSSL-D.
+
+
+## OSSL-D identity integration
+
+The build also produces `test_openssl_identity_integration.exe` for custom-trust, hostname, ALPN, mTLS and peer-snapshot gates. Server PEM files are fixture-only; the PST client consumes trust, certificate and PKCS#8 DER exclusively from memory. Evidence is stored under ignored `build\phase-ossl-d`.
