@@ -1,6 +1,6 @@
 # OpenSSL on Windows system-trust architecture
 
-Status: OSSL-ST-A architecture and policy ready. Production implementation has not started, `SYSTEM_TRUST` is not advertised, and Phase 9 has not started.
+Status: OSSL-ST-B private Win32 adapter implemented and structurally tested. `SYSTEM_TRUST` remains capability-hidden until ST-C functional/isolation gates pass; Phase 9 has not started.
 
 ## Contract
 
@@ -15,7 +15,7 @@ Windows documents logical ROOT, CA and Trust stores across CurrentUser, LocalMac
 1. OpenSSL performs TLS 1.2/1.3 negotiation and supplies the peer leaf and server-provided intermediates.
 2. A Windows-only OpenSSL trust adapter converts those certificates to temporary `CERT_CONTEXT` objects and places intermediates in a connection-local memory store.
 3. `CertGetCertificateChain(HCCE_CURRENT_USER, ...)` builds a server-auth chain with `szOID_PKIX_KP_SERVER_AUTH`, the memory store as the additional untrusted store, and current time.
-4. `CertVerifyCertificateChainPolicy(CERT_CHAIN_POLICY_SSL, ...)` checks the resulting Windows policy without ignore flags. Its return value means the call executed; `CERT_CHAIN_POLICY_STATUS.dwError` determines success.
+4. `CertVerifyCertificateChainPolicy(CERT_CHAIN_POLICY_BASE, ...)` checks the resulting Windows chain policy without duplicating hostname semantics. Its return value means the call executed; both chain trust status and `CERT_CHAIN_POLICY_STATUS.dwError` must be zero.
 5. Independently, OpenSSL checks the configured hostname using its supported hostname API against the leaf certificate. Windows trust success never bypasses hostname validation.
 6. All `CERT_CONTEXT`, chain-context and memory-store objects are released on every path. Native status remains provider-private and is normalized once.
 
@@ -23,12 +23,21 @@ This is a hybrid architecture: Windows is authoritative for chain construction, 
 
 ## Deterministic network and revocation policy
 
-The first implementation must not introduce hidden network traffic inside an incremental handshake. Set `CERT_CHAIN_DISABLE_AIA`, `CERT_CHAIN_CACHE_ONLY_URL_RETRIEVAL`, and `CERT_CHAIN_DISABLE_AUTH_ROOT_AUTO_UPDATE`. Normal servers must send sufficient intermediates; locally cached/system CA certificates may participate. Missing intermediates fail authentication rather than triggering AIA.
+The implementation does not introduce hidden network traffic inside an incremental handshake. It sets `CERT_CHAIN_DISABLE_AIA`, `CERT_CHAIN_CACHE_ONLY_URL_RETRIEVAL`, and `CERT_CHAIN_DISABLE_AUTH_ROOT_AUTO_UPDATE`. Normal servers must send sufficient intermediates; locally cached/system CA certificates may participate. Missing intermediates fail authentication rather than triggering AIA.
 
 PST currently does not promise revocation checking. ST-B must therefore request no online CRL/OCSP revocation flag and must not use policy flags that ignore otherwise detected chain errors. Cached Windows explicit distrust remains authoritative. Online revocation is a separate future policy feature because it needs public semantics, timeout/cancellation behavior and failure-mode decisions. This is an intentionally documented bounded subset of Windows online chain behavior, while retaining effective installed roots, enterprise policy and explicit distrust.
 
 Trust is evaluated live per connection, not copied at runtime creation and not cached process-wide. Store and distrust updates affect newly validated connections; an established connection is not retroactively revalidated. This preserves multiple `OSSL_LIB_CTX` runtimes and avoids cross-connection contamination.
 
+## ST-B implementation evidence
+
+The private adapter is `src/backends/openssl/platform/win32/pst_openssl_system_trust_win32.c`; its header contains only copied DER inputs and normalized private outcomes. For each OpenSSL verification callback, the provider copies the leaf and each non-leaf peer certificate to owned DER, creates a temporary memory store for intermediates, and calls the adapter. The adapter builds with `HCCE_CURRENT_USER`, current time, server-auth EKU, and the three no-network flags above. It requests no revocation flag (`REVOCATION_POLICY=NOT_PERFORMED`) and releases the leaf context, chain context, memory store, and all temporary DER on every exit.
+
+`SSL_CTX_set_cert_verify_callback` is installed only for SYSTEM trust while `SSL_VERIFY_PEER` remains enabled. The callback is synchronous inside `SSL_do_handshake`; it requires Windows trust and then `X509_check_host` before returning success. Therefore PST cannot report handshake completion or expose application I/O before both checks pass. CUSTOM trust continues through its exclusive connection-local OpenSSL `X509_STORE`; the two paths are never unioned or used as fallbacks.
+
+The focused test proves malformed DER rejection and the private-root negative without installing a root. In that negative, `CertGetCertificateChain` and `CertVerifyCertificateChainPolicy` both execute successfully, but chain/policy errors remain present, so the adapter rejects. This specifically proves that a true policy-call BOOL cannot override nonzero `dwError`. No persistent store is opened for writes; the only certificate addition targets the temporary memory store. Trust refresh is `PER_CONNECTION_WINDOWS_CHAIN_EVALUATION`, with no runtime-global CryptoAPI object or cache.
+
+ST-B keeps `PST_CAP_SYSTEM_TRUST` absent (`0x00000e5f`) and selection behavior unchanged. ST-C owns real system-trusted TLS positives, wrong-hostname and isolation sequences; its runner may reuse the existing identity integration interface after capability advertisement. No full ST-C matrix was executed here.
 ## Options scorecard
 
 Scores are relative: 5 is strongest/best except complexity and security risk, where 1 is lowest.

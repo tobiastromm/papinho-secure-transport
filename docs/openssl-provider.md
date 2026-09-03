@@ -2,7 +2,7 @@
 
 Status: **OSSL-F and the post-Phase-8 OpenSSL provider extension complete**. This is a deliberate post-Phase-8 provider extension; Phase 8 remains complete and Phase 9 has not started.
 
-Follow-up status: **OSSL-ST-A Windows SYSTEM_TRUST architecture/policy ready**. Production implementation has not started and the OpenSSL capability mask remains `0x00000e5f`.
+Follow-up status: **OSSL-ST-B Windows SYSTEM_TRUST private adapter implemented**. Capability advertisement and public functional support remain gated on ST-C; the OpenSSL capability mask remains `0x00000e5f`.
 
 ## Frozen baseline and provenance
 
@@ -157,3 +157,9 @@ The canonical failure/result matrix is recorded in `docs/openssl-failure-hardeni
 The formal NSS/Schannel/OpenSSL comparison and SYSTEM_TRUST follow-up analysis are recorded in `docs/openssl-extension-closure.md`. The three providers remain first-class on their deliberate targets, common semantics agree across the exact capability intersection, and capability differences remain explicit. OSSL-F and the OpenSSL extension are complete. Phase 9 remains unstarted.
 
 The selected SYSTEM_TRUST design is documented in `docs/openssl-system-trust.md`: Windows chain-engine trust and usage policy, OpenSSL TLS and hostname verification, live per-connection evaluation, no CUSTOM_TRUST union and no hidden AIA/revocation network access in the initial implementation. Capability advertisement remains gated on functional proof.
+
+## OSSL-ST-B private system-trust adapter
+
+The Windows-only adapter now builds an effective `HCCE_CURRENT_USER` server-auth chain from an owned leaf plus peer-supplied intermediates in a temporary memory store. It disables AIA, URL retrieval and automatic root update, requests no online revocation, requires both successful policy execution and a zero policy error, and never imports Windows roots into OpenSSL. The synchronous OpenSSL certificate-verification callback blocks handshake completion until Windows trust and OpenSSL hostname validation both succeed. CUSTOM trust remains unchanged and exclusive.
+
+The adapter unit gate rejects the repository private chain with `CHAIN_API=1`, `CHAIN_ERROR=1`, `POLICY_API=1`, and `POLICY_ERROR=1`, proving the BOOL-versus-`dwError` rule without system-store mutation. Fresh CUSTOM trust TLS 1.2 and TLS 1.3 echoes passed with 25-byte bidirectional content matches. The capability remains hidden at `0x00000e5f`; public SYSTEM trust and ST-C functional/isolation claims have not begun.
