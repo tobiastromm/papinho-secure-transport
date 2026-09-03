@@ -123,8 +123,12 @@
 - Phase 9 - Release / ABI Stabilization: in progress
   - 9.A Release scope / version policy / canonical inventory: complete
   - 9.B Public API / ABI freeze audit: complete
-  - 9.C SPI / provider contract freeze: next; not started
-  - 9.D Documentation / community / examples: not started
+  - 9.C SPI / provider contract freeze: complete
+    - descriptor/vtable prefix and x86/x64 ABI baseline: complete
+    - provider ID, capability, registration, selection and lifecycle contract: complete
+    - provider-neutral transport/readiness/I/O/diagnostic/metadata freeze: complete
+    - append-only optional-hook gate and bounded-ID defects fixed: complete
+  - 9.D Documentation / community / examples: next; not started
   - 9.E Packaging / dependencies / licenses / provenance: not started
   - 9.F Release validation kit: not started
   - 9.G Release candidate / clean-machine validation: not started

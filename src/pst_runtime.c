@@ -6,7 +6,7 @@
 #include <string.h>
 struct pst_runtime { const PST_BACKEND_DESCRIPTOR *backend;void *backend_state,*runtime_state;pst_u32 capabilities,connections; pst_internal_diagnostic diagnostic; pst_log_state log; };
 struct pst_connection { pst_runtime *runtime;pst_config *config;void *backend_state;pst_transport *transport;pst_u32 state,pending_io,pending_interest,last_wait_ready,suppressed_interest;int wait_observed; pst_internal_diagnostic diagnostic; };
-static void diagnostic_pull(const PST_BACKEND_DESCRIPTOR *d,const void *state,pst_internal_diagnostic *out){if(d->vtable->struct_size>=(pst_u32)sizeof(PST_BACKEND_VTABLE)&&d->vtable->diagnostic_copy)d->vtable->diagnostic_copy(state,out);}
+static void diagnostic_pull(const PST_BACKEND_DESCRIPTOR *d,const void *state,pst_internal_diagnostic *out){if(d->vtable->struct_size>=PST_BACKEND_VTABLE_FIELD_SIZE(diagnostic_copy)&&d->vtable->diagnostic_copy)d->vtable->diagnostic_copy(state,out);}
 static void diagnostic_core(pst_connection *c,PST_RESULT result,pst_u32 phase){pst_diagnostic_capture(&c->diagnostic,result,phase,c->runtime->backend->id,PST_DIAGNOSTIC_DOMAIN_NONE,0,0,0);}
 static void log_connection_failure(pst_connection *c,PST_RESULT result,pst_u32 operation,pst_u32 category){pst_u32 event_id;if(!c)return;event_id=(result==PST_RESULT_AUTH_FAILURE||result==PST_RESULT_HOSTNAME_MISMATCH)?PST_LOG_EVENT_AUTHENTICATION_FAILURE:PST_LOG_EVENT_CONNECTION_FAILURE;if(event_id==PST_LOG_EVENT_AUTHENTICATION_FAILURE)category=PST_LOG_CATEGORY_AUTHENTICATION;pst_log_emit(&c->runtime->log,PST_LOG_LEVEL_ERROR,event_id,category,result,operation,c->runtime->backend->id);}
 void pst_internal_operation_context_initialize(pst_internal_operation_context *context){if(context)pst_diagnostic_initialize(&context->diagnostic);}

@@ -6,14 +6,16 @@ static pst_size pst_backend_registry_count;
 static int pst_backend_id_valid(const char *id)
 {
     const unsigned char *p;
+    pst_size length;
     if (id == NULL || id[0] == '\0') return 0;
     p = (const unsigned char *)id;
-    while (*p != 0) {
+    length = 0;
+    while (length + 1UL < PST_BACKEND_ID_CAPACITY && *p != 0) {
         if (!((*p >= 'a' && *p <= 'z') || (*p >= '0' && *p <= '9') ||
               *p == '-' || *p == '_' || *p == '.')) return 0;
-        ++p;
+        ++p; ++length;
     }
-    return 1;
+    return *p == 0;
 }
 static int pst_backend_spi_compatible(pst_u32 version)
 {
@@ -58,11 +60,11 @@ PST_RESULT pst_backend_validate(const PST_BACKEND_DESCRIPTOR *d)
     if ((d->capabilities & (PST_BACKEND_CAP_CLIENT_AUTH |
                             PST_BACKEND_CAP_CUSTOM_TRUST |
                             PST_BACKEND_CAP_HOSTNAME_VERIFY)) != 0UL &&
-        (v->struct_size < (pst_u32)sizeof(PST_BACKEND_VTABLE) ||
+        (v->struct_size < PST_BACKEND_VTABLE_FIELD_SIZE(connection_configure_identity) ||
          v->connection_configure_identity == NULL))
         return PST_RESULT_INVALID_ARGUMENT;
     if ((d->capabilities & PST_BACKEND_CAP_ALPN) != 0UL &&
-        (v->struct_size < (pst_u32)sizeof(PST_BACKEND_VTABLE) ||
+        (v->struct_size < PST_BACKEND_VTABLE_FIELD_SIZE(connection_get_alpn) ||
          v->connection_get_alpn == NULL)) return PST_RESULT_INVALID_ARGUMENT;
     return PST_RESULT_OK;
 }
