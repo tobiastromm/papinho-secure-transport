@@ -1,6 +1,6 @@
 # Cross-backend validation
 
-Status: Phase 8.G complete. This matrix compares public PST semantics, not provider implementation details.
+Status: Phase 8.G complete, with the post-Phase-8 OpenSSL SYSTEM_TRUST follow-up incorporated. This matrix compares public PST semantics, not provider implementation details.
 
 ## Capability boundary
 
@@ -8,9 +8,10 @@ Status: Phase 8.G complete. This matrix compares public PST semantics, not provi
 |---|---:|---|
 | RetroZilla NSS | `0x00000e5f` | TLS 1.2, TLS 1.3, client auth, ALPN, custom trust, hostname verification, peer info, nonblocking, backend wait |
 | Schannel | `0x00000e7d` | TLS 1.2, client auth, ALPN, custom trust, system trust, hostname verification, peer info, nonblocking, backend wait |
-| Intersection | `0x00000e5d` | TLS 1.2, client auth, ALPN, custom trust, hostname verification, peer info, nonblocking, backend wait |
+| OpenSSL | `0x00000e7f` | TLS 1.2, TLS 1.3, client auth, ALPN, custom trust, system trust, hostname verification, peer info, nonblocking, backend wait |
+| Three-provider intersection | `0x00000e5d` | TLS 1.2, client auth, ALPN, custom trust, hostname verification, peer info, nonblocking, backend wait |
 
-TLS 1.3 is NSS-only in current runtime evidence. System trust is Schannel-only. Exact selection rejects an unavailable or capability-incompatible provider without substitution; ordered and automatic selection retain the frozen generic-core rules.
+TLS 1.3 is shared by NSS and OpenSSL. System trust is shared by the two modern Windows providers, Schannel and OpenSSL, but is not a three-provider common capability because NSS does not advertise it. Exact selection rejects an unavailable or capability-incompatible provider without substitution; ordered and automatic selection retain the frozen generic-core rules.
 
 ## Canonical semantic matrix
 
@@ -38,7 +39,7 @@ TLS 1.3 is NSS-only in current runtime evidence. System trust is Schannel-only. 
 | Ownership | caller until accepted; provider afterward | same | COMMON / TESTED / EQUIVALENT |
 | Peer info | normalized TLS/cipher/auth/cert fields | same normalized fields | COMMON / TESTED / EQUIVALENT |
 | TLS 1.3 requirement | supported and real PASS | rejected before handshake | CAPABILITY-DIFFERENT |
-| System trust requirement | unsupported | positive and negative real evidence | CAPABILITY-DIFFERENT |
+| System trust requirement | unsupported | positive and negative real evidence | CAPABILITY-DIFFERENT; OpenSSL also passes post-Phase-8 SYSTEM evidence |
 | NSS process singleton | provider-local restriction | not imposed | BACKEND-SPECIFIC |
 
 ## Fresh common baseline
@@ -55,7 +56,7 @@ Both providers expose ESTABLISHED after success, CLOSED/CLEAN after authenticate
 
 OFF emits zero events. INFO/TRACE provide bounded structured progress, and representative failures emit one logical ERROR. Exact progress counts differ. Fixed public events disclose no hostname, ALPN text, DER, key, trust data, native code/string, endpoint, payload, pointer, handle or provider key-container. Logging does not alter remote security outcome.
 
-Schannel's B1/C/A/B2 single-runtime sequence and NSS lifecycle/stress evidence prove failure-then-success isolation. Generic same-process multi-provider registry isolation is covered with mocks because the production target builds deliberately do not bundle legacy NSS with modern Schannel. NSS's provider singleton is not elevated into a generic PST restriction.
+Schannel's B1/C/A/B2 single-runtime sequence and NSS lifecycle/stress evidence prove failure-then-success isolation. Generic same-process multi-provider registry isolation is covered with mocks. The modern combined tests also prove Schannel/OpenSSL selection and independent release; production target packaging remains deliberate. NSS's provider singleton is not elevated into a generic PST restriction.
 
 ## Schannel alert/close race
 

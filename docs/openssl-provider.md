@@ -2,7 +2,7 @@
 
 Status: **OSSL-F and the post-Phase-8 OpenSSL provider extension complete**. This is a deliberate post-Phase-8 provider extension; Phase 8 remains complete and Phase 9 has not started.
 
-Follow-up status: **OSSL-ST-C Windows SYSTEM_TRUST functional/isolation matrix complete**. The capability is advertised at `0x00000e7f`; ST-D and Phase 9 have not started.
+Follow-up status: **OSSL-ST-A through OSSL-ST-D Windows SYSTEM_TRUST complete**. The capability is advertised at `0x00000e7f`; Phase 9 has not started.
 
 ## Frozen baseline and provenance
 
@@ -167,3 +167,7 @@ The adapter unit gate rejects the repository private chain with `CHAIN_API=1`, `
 ## OSSL-ST-C capability advertisement
 
 Real Windows 10 build 19045 handshakes proved exact TLS 1.2 and TLS 1.3 with Windows SYSTEM trust against two configurable public endpoints, without custom CA or application payload. Private-root rejection, same-root CUSTOM success, specific hostname mismatch, peer snapshot lifetime, same-runtime SYSTEM/CUSTOM alternation, two-runtime release isolation, diagnostics, ERR queue discipline and combined selection all passed. SYSTEM_TRUST is the only new capability bit (`0x00000e5f` to `0x00000e7f`). The opt-in runner is `tests/run_openssl_system_trust_integration.ps1`; the default fast suite remains offline.
+
+## OSSL-ST-D formal closure
+
+The hardening matrix passed without a production-code change. Public TLS 1.2/1.3, wrong hostname, private SYSTEM rejection, private CUSTOM success, same-runtime and two-runtime recovery, adapter BOOL/status checks, diagnostics, logging, cleanup, selection, legacy separation, and all canonical builds are green. The public runner now performs a bounded TCP preflight so endpoint unavailability is classified as ENVIRONMENT_FAILURE; the default OpenSSL suite remains offline. Full policy and limitations are frozen in docs/openssl-system-trust.md. Phase 9 remains not started.

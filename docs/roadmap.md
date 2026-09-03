@@ -115,9 +115,15 @@
   - OSSL-D trust / hostname / ALPN / mTLS / peer info: complete
   - OSSL-E failure / close / diagnostics / logging / lifecycle hardening: complete
   - OSSL-F three-provider validation and extension closure: complete
-  - OSSL-ST Windows SYSTEM_TRUST follow-up: in progress
+  - OSSL-ST Windows SYSTEM_TRUST follow-up: complete
     - OSSL-ST-A architecture / policy audit: complete
     - OSSL-ST-B provider-local Win32 implementation: complete
     - OSSL-ST-C functional and isolation matrix: complete
-    - OSSL-ST-D hardening / closure audit: pending
+    - OSSL-ST-D hardening / closure audit: complete
 - Phase 9 - Release / ABI Stabilization: pending; not started
+  - documentation handoff: concise root README linking complete English and pt-BR paths, written for non-experts
+  - scope wording: PST is generic secure transport for Internet, LAN, and private/corporate networks; PapinhoBrowser/PapinhoAccelerator are examples only
+  - future-transport note: TLS is the current implementation; DTLS, QUIC, Noise, or other transports require future study and are not claims of SPI 2.4
+  - community/contribution handoff: contribution guide, retrocomputing relevance, and invitation for old-Windows TLS 1.3/NSS/NSPR contributors
+  - dependency handoff: provider/library contributions require license and provenance review; document vendored and external dependency models
+  - release handoff: integration examples, release-validation BATs, NT4/NSS to OpenSSL TLS 1.3, and NT4/NSS to Schannel TLS 1.2 validation

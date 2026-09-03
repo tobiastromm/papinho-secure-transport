@@ -1,6 +1,6 @@
 # OpenSSL on Windows system-trust architecture
 
-Status: OSSL-ST-C functional and isolation matrix complete. The OpenSSL provider now advertises `SYSTEM_TRUST` with capability mask `0x00000e7f`; ST-D and Phase 9 have not started.
+Status: OSSL-ST-A through OSSL-ST-D complete. The OpenSSL provider advertises `SYSTEM_TRUST` with capability mask `0x00000e7f`. Phase 9 has not started.
 
 ## Contract
 
@@ -38,6 +38,7 @@ The private adapter is `src/backends/openssl/platform/win32/pst_openssl_system_t
 The focused test proves malformed DER rejection and the private-root negative without installing a root. In that negative, `CertGetCertificateChain` and `CertVerifyCertificateChainPolicy` both execute successfully, but chain/policy errors remain present, so the adapter rejects. This specifically proves that a true policy-call BOOL cannot override nonzero `dwError`. No persistent store is opened for writes; the only certificate addition targets the temporary memory store. Trust refresh is `PER_CONNECTION_WINDOWS_CHAIN_EVALUATION`, with no runtime-global CryptoAPI object or cache.
 
 ST-B kept `PST_CAP_SYSTEM_TRUST` absent at `0x00000e5f` until the initial ST-C gates passed. ST-C then added only that capability, producing `0x00000e7f`.
+
 ## Options scorecard
 
 Scores are relative: 5 is strongest/best except complexity and security risk, where 1 is lowest.
@@ -93,3 +94,41 @@ One runtime completed `S1 public SYSTEM success -> C1 private CUSTOM success -> 
 With registration order Schannel then OpenSSL, TLS 1.2 plus SYSTEM trust selects Schannel automatically; TLS 1.3 plus SYSTEM trust selects OpenSSL; exact OpenSSL succeeds; exact Schannel TLS 1.3 remains `UNSUPPORTED`; ordered `[openssl, schannel]` with TLS 1.2 selects OpenSSL. Schannel and NSS masks are unchanged. Enterprise and Group Policy trust are `STRUCTURALLY_SUPPORTED_BY_WINDOWS_CHAIN_ENGINE`; `RUNTIME_DOMAIN_TEST=NOT_PERFORMED`.
 
 The public runner accepts endpoint overrides and is opt-in because it depends on DNS/network state. Defaults are test conveniences, not production dependencies. The PapinhoBrowser-specific PapinhoAccelerator may use PST/OpenSSL for public TLS 1.3 with Windows SYSTEM trust; this is an example consumer path, not generic PST infrastructure. The same trust mode also recognizes enterprise/private CAs installed through effective Windows policy.
+
+## ST-D hardening and formal closure
+
+The canonical result matrix is frozen as follows:
+
+| Case | Expected PST result | Final evidence |
+|---|---|---|
+| Public TLS 1.2 under SYSTEM | `OK` | PASS; TLS `0x0303`, chain/hostname/authenticated true, no application bytes |
+| Public TLS 1.3 under SYSTEM | `OK` | PASS; TLS `0x0304`, chain/hostname/authenticated true, no application bytes |
+| Trusted chain, wrong hostname | `HOSTNAME_MISMATCH` | PASS; terminal, immutable diagnostic, no resurrection |
+| Private PST PKI under SYSTEM | `AUTH_FAILURE` | PASS; no CUSTOM anchor leakage |
+| Same private PKI under CUSTOM | `OK` | PASS; TLS 1.3 and exact 25-byte echo |
+| Same-runtime S1/C1/S2/C2/S3 | mixed as specified | PASS; recovery, immutable failure snapshot, empty ERR queue |
+| Two-runtime isolation | `OK` | PASS; R2 remains functional after R1 release |
+| Adapter policy-error path | certificate rejected / `AUTH_FAILURE` at provider boundary | PASS; API BOOL true does not override chain or policy error |
+| Public endpoint unavailable | `ENVIRONMENT_FAILURE` | Runner distinguishes DNS, no IPv4, and bounded TCP-unreachable failures from `PST_SYSTEM_TRUST_FAILURE` |
+| Clean connection destruction | `OK` | PASS; peer snapshot remains owned after connection destruction |
+| Failure destruction | preserved root result | PASS; failure snapshot remains valid and cleanup does not overwrite it |
+
+The final public revalidation on Windows 10 build 19045 passed `www.cloudflare.com` and `www.google.com` at TLS 1.2 and TLS 1.3. Every connection reported capability mask `0x00000e7f`, `CERT=1`, `CHAIN=1`, `HOSTNAME=1`, `AUTH=1`, nonzero cipher, SHA-256 length 32, owned leaf DER, and zero application bytes. DNS and TCP reachability are bounded environment preflights; there is no automatic endpoint retry. A remote endpoint that is reachable but then produces a PST handshake or policy failure is reported separately as `PST_SYSTEM_TRUST_FAILURE`.
+
+Failure precedence is frozen: a Windows certificate-policy rejection maps to `AUTH_FAILURE`; after Windows trust succeeds, OpenSSL hostname evidence maps to `HOSTNAME_MISMATCH`; an adapter operational failure without a certificate-policy conclusion maps to `BACKEND_FAILURE`. Terminal connection state preserves that first reliable cause. Malformed DER is certificate rejection. Allocation, memory-store, chain-call, and policy-call operational failures are reviewed paths but are not forced by production test hooks; no synthetic internal-failure claim is made.
+
+Adapter acceptance requires all four conditions: `CertGetCertificateChain` succeeds, `TrustStatus.dwErrorStatus == 0`, `CertVerifyCertificateChainPolicy` returns true, and `CERT_CHAIN_POLICY_STATUS.dwError == 0`. The memory store contains only server-supplied untrusted intermediates. It is never an anchor store and no intermediate is promoted to root. Production opens no system ROOT, CA, or Disallowed store for mutation: `SYSTEM_STORE_MUTATION=NONE`. Explicit distrust is delegated to the effective Windows chain engine.
+
+Network and refresh statements are deliberately bounded: `AIA_NETWORK_FETCH=DISABLED`, automatic root-update retrieval is disabled for this chain operation, and `REVOCATION_POLICY=NOT_PERFORMED`. PST does not freeze or administer Windows roots globally. `TRUST_REFRESH=PER_CONNECTION_WINDOWS_CHAIN_EVALUATION`; current effective policy is evaluated for each new connection. Enterprise and Group Policy behavior is `STRUCTURALLY_SUPPORTED_BY_WINDOWS_CHAIN_ENGINE`, while `RUNTIME_DOMAIN_TEST=NOT_PERFORMED`. `HCCE_CURRENT_USER` means the effective chain-engine view for the caller, including applicable inherited machine and policy stores; it does not mean manual enumeration of CurrentUser ROOT.
+
+OpenSSL remains the sole hostname authority and the adapter requests server-auth EKU with `USAGE_MATCH_TYPE_AND`; there is no ANY_EKU broadening. The synchronous verify callback runs inside `SSL_do_handshake`, creates no worker and cannot outlive connection state. Temporary DER copies, `CERT_CONTEXT`, memory store, chain context, OpenSSL `X509`, `SSL`, `SSL_CTX`, and socket ownership follow exactly-once cleanup. Release without explicit shutdown is bounded local destruction and performs no new trust evaluation.
+
+Logging and disclosure gates passed. OFF produced zero events for public success and private failure. A representative private trust failure at ERROR produced exactly one logical ERROR and no WARN. TRACE failure produced six bounded events, including one ERROR and two TRACE events. A public authenticated SYSTEM success followed by the endpoint's known non-reciprocal shutdown produced nine bounded events, including four TRACE events and one terminal shutdown ERROR; trust/hostname success remained unchanged. Public diagnostics/logs expose normalized result, operation, and `backend_id=openssl`, never Windows/OpenSSL native codes or strings, certificate identity/material, hostname/endpoint text, handles, pointers, or socket values. Peer certificate information remains available only through the explicit owned peer-info API. The OpenSSL ERR queue was empty after failure/recovery; Windows native status is consumed immediately within the synchronous adapter and never persisted publicly.
+
+The final capability mask decodes to TLS 1.2 (`0x1`), TLS 1.3 (`0x2`), client auth (`0x4`), ALPN (`0x8`), custom trust (`0x10`), system trust (`0x20`), hostname verification (`0x40`), peer info (`0x200`), nonblocking (`0x400`), and backend wait (`0x800`): `0x00000e7f`. SYSTEM_TRUST is the sole delta from `0x00000e5f`. Registration order Schannel then OpenSSL selects Schannel for TLS 1.2 plus SYSTEM, OpenSSL for TLS 1.3 plus SYSTEM, and Schannel for the common TLS 1.2 custom policy. Exact OpenSSL TLS 1.3 SYSTEM succeeds; exact Schannel rejects it as `UNSUPPORTED`; ordered `[openssl, schannel]` TLS 1.2 SYSTEM selects OpenSSL.
+
+Known limitations are explicit: no online revocation check, no PST-driven AIA retrieval, no PST-driven automatic root-update retrieval, no domain-joined runtime certification, OpenSSL hostname checking, and effective Windows trust evaluated at connection time. SYSTEM_TRUST remains host-OS policy. A possible future portable/updatable Papinho trust store would be a CUSTOM_TRUST source and is a separate project.
+
+PapinhoAccelerator on Windows 10 using PST/OpenSSL for TLS 1.3 plus Windows SYSTEM trust is an example consumer path specific to PapinhoBrowser, not part of PST architecture. The same feature also serves enterprise, LAN, and private services whose corporate CA is trusted by effective Windows policy.
+
+OSSL-ST-A through ST-D are coherent and complete: architecture, provider-local implementation, real functional/isolation proof, selection, hardening, and documentation agree. No public API or SPI surface changed; versions remain API 1.2.0, library 0.3.0, and SPI 2.4. Phase 9 remains not started.

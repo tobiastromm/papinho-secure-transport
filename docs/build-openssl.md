@@ -41,4 +41,4 @@ The default `test` target remains offline and includes the deterministic Win32 a
 tools\build-modern-msvc-openssl.bat system-trust-integration
 ```
 
-It invokes `tests\run_openssl_system_trust_integration.ps1`. Override its configurable endpoint list with `-Endpoints`; DNS, reachability and remote-policy failures are reported separately from a PST trust failure. The runner sends no application payload and does not configure a custom CA.
+It invokes `tests\run_openssl_system_trust_integration.ps1`. Override its configurable endpoint list with `-Endpoints`; DNS, missing IPv4 and a bounded 10-second TCP preflight are reported as `ENVIRONMENT_FAILURE`, separately from a reachable endpoint that produces `PST_SYSTEM_TRUST_FAILURE`. The runner sends no application payload, performs no automatic retry, and does not configure a custom CA.
