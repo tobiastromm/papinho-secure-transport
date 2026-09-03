@@ -122,8 +122,8 @@
     - OSSL-ST-D hardening / closure audit: complete
 - Phase 9 - Release / ABI Stabilization: in progress
   - 9.A Release scope / version policy / canonical inventory: complete
-  - 9.B Public API / ABI freeze audit: next; not started
-  - 9.C SPI / provider contract freeze: not started
+  - 9.B Public API / ABI freeze audit: complete
+  - 9.C SPI / provider contract freeze: next; not started
   - 9.D Documentation / community / examples: not started
   - 9.E Packaging / dependencies / licenses / provenance: not started
   - 9.F Release validation kit: not started
