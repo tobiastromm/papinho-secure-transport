@@ -1,0 +1,6 @@
+UPSTREAM_REVISION  2f274574d3c6ee8769914046920d649bbae9f81b
+SOURCE_SNAPSHOT  ../source/retrozilla-2f274574d3c6ee8769914046920d649bbae9f81b-patched.zip
+SOURCE_SNAPSHOT_KIND  post-patch exact build tree
+PATCH_ORDER  0001-win32-secure-rng-fail-closed-nt4.patch
+883cefc465fc0b1ad6875688f36f74c6933c1943d3368eaa879aea47a257e176  0001-win32-secure-rng-fail-closed-nt4.patch
+PATCHED_TARGET_SHA256  security/nss/lib/freebl/win_rand.c  4dddc83482544c3757e81ffbfebe1fa96fcee0ff5205c00a0ce2a93d19b304d4

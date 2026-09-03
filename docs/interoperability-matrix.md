@@ -126,4 +126,4 @@ Windows 2000, Windows XP, Windows 95/98, Win32s/3.11, ECDSA, exhaustive cipher c
 
 ## Deferred housekeeping
 
-Preserving the exact RetroZilla NSS source lineage, revision, patchset, VC6 build process, SDK/dist and prebuilt runtime provenance so `C:\PSTW` becomes disposable remains separate and does not block Phase 7.F.
+The later RetroZilla NSS provenance housekeeping preserved the exact source lineage, revision, patchset, VC6 procedure, SDK and runtime, making the historical `C:\PSTW` workspace disposable.

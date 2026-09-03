@@ -97,4 +97,4 @@ The deterministic and real NSS functional matrices are complete. The formal clos
 
 The deterministic boundary test exposed one defensive production defect: the ALPN wire-size accumulator could overflow `pst_size` for an impossible-size public list before allocation. The core now rejects a count whose minimum encoding cannot fit and guards every addition. Rejection is transactional. Valid policy behavior, API/ABI, result model, diagnostic/logging ABI, SPI, and NSS behavior are unchanged. Host TLS 1.2 and TLS 1.3 mTLS/ALPN echoes passed after the correction. Because only invalid oversized input changed and the portable VC6 test exercises that branch, no NT4 rerun or version bump is required.
 
-The separate RetroZilla NSS source/provenance preservation task remains deferred so `C:\PSTW` can eventually be disposable. It is not part of 7.D.
+The separate RetroZilla NSS source/provenance preservation task was subsequently completed; `C:\PSTW` is now disposable. It was not part of 7.D.

@@ -57,7 +57,7 @@ Every runner ends with all objects released, backend shutdown, no expected socke
 
 An NT4 mini-soak of 10 sequential TLS 1.3 connections is optional if the existing package supports it without new infrastructure. It is not a blocker when production is unchanged. Interleaved connections are optional. Excluded: multithreaded same-connection access, worker pools, locks, Schannel long soak, packet chaos, bandwidth benchmarking, multi-day runs, and Phase 8 work.
 
-Outputs belong under build/phase7h. Exact RetroZilla NSS source/provenance preservation needed to make C:\PSTW disposable remains separate housekeeping.
+Outputs belong under build/phase7h. The later RetroZilla NSS provenance housekeeping made the historical C:\PSTW workspace disposable.
 
 ## Versions and closure path
 

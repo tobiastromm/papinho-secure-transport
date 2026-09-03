@@ -40,13 +40,13 @@ No separate Windows/Platform SDK path is used by the current build. VC6 supplies
 
 ## RetroZilla NSS SDK and runtime
 
-NSS compilation needs a RetroZilla `dist` tree containing `include\nspr\prio.h` and `public\nss\ssl.h`. Override the SDK location without editing tracked files:
+NSS compilation uses the repository-contained generated SDK at `third_party\retrozilla-nss\prebuilt\win32-x86-vc6\sdk`, containing `include\nspr\prio.h` and `public\nss\ssl.h`. Override the SDK location without editing tracked files only when deliberately testing another rebuilt SDK:
 
 ```bat
 set PST_NSS_DIST=D:\path\to\retrozilla\dist
 ```
 
-On the current development machine the bootstrap recognizes `C:\PSTW\pr\projects\RetroZilla\obj-rzSuite-release\dist`. It exports the selected path as `NSS_DIST`, which `Makefile.vc6` already consumes.
+By default the bootstrap exports the absolute repository SDK path as `NSS_DIST`, which `Makefile.vc6` consumes. The build has no active dependency on `C:\PSTW`. See `docs/build-retrozilla-nss.md` for third-party reconstruction.
 
 Build-time headers/library paths and runtime DLL discovery are separate. TLS/NSS processes must prepend only this canonical runtime to their process `PATH`:
 
@@ -119,7 +119,7 @@ The current Makefile writes the Win32 x86 VC6 legacy-compatible target under `bu
 
 - Missing VC6: set `PST_VC6_ROOT`; do not search the whole disk or switch compilers.
 - `LNK1104` for `LIBC.lib`: use the bootstrap; it supplies the two explicit `/LIBPATH:` switches.
-- `NSS_DIST is required`: set `PST_NSS_DIST` to the RetroZilla `dist` directory.
+- Missing NSS headers: verify the repository SDK manifest, or set `PST_NSS_DIST` to a deliberate rebuilt RetroZilla `dist` directory.
 - NSS DLL load failure: restrict the test process `PATH` to `PST_NSS_RUNTIME` plus Windows system directories.
 
 If the documented bootstrap fails, report the exact missing file/path before broader environment discovery.

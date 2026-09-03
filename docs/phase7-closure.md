@@ -44,7 +44,7 @@ Current non-blocking provider limitations are system-trust unavailability, one a
 
 Phase 8 does not need to exist to validate Phase 7; it owns multiple backends/provider evolution. Phase 9 owns release packaging, ABI stabilization and final compatibility/version policy. Neither was started here.
 
-Separate housekeeping remains: preserve the exact RetroZilla NSS source lineage, revision, patchset and build provenance so `C:\PSTW` becomes disposable. This is important but is not a Phase 7 blocker.
+The separate RetroZilla NSS provenance housekeeping was subsequently completed: exact source lineage, revision, patchset and build provenance are repository-contained, so `C:\PSTW` is disposable.
 
 ## Closure decision
 

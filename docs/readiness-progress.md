@@ -143,7 +143,7 @@ Because this audit changes documentation only, existing real-NT4 Phase 6 and
 progress behavior, a targeted real-NT4 regression becomes mandatory.
 
 Deferred housekeeping remains unchanged: preserve and vendor the exact
-RetroZilla NSS source/provenance so `C:\PSTW` can eventually be disposable. It
+The later housekeeping preserved RetroZilla NSS source/provenance, so `C:\PSTW` is disposable. It
 is not part of this audit.
 ## Phase 7.C2 deterministic regression matrix
 

@@ -10,11 +10,11 @@ call "%PST_VC6_ROOT%\VC98\Bin\VCVARS32.BAT"
 if errorlevel 1 goto vc6_setup_failed
 set LIB=%PST_VC6_ROOT%\VC98\Lib;%PST_VC6_ROOT%\VC98\MFC\Lib
 set LDFLAGS=/link /LIBPATH:%PST_VC6_ROOT%\VC98\Lib /LIBPATH:%PST_VC6_ROOT%\VC98\MFC\Lib
-if not "%PST_NSS_DIST%"=="" goto nss_dist_set
-if exist C:\PSTW\pr\projects\RetroZilla\obj-rzSuite-release\dist\public\nss\ssl.h set PST_NSS_DIST=C:\PSTW\pr\projects\RetroZilla\obj-rzSuite-release\dist
-:nss_dist_set
-if not "%PST_NSS_DIST%"=="" set NSS_DIST=%PST_NSS_DIST%
 for %%I in ("%~dp0..") do set PST_REPO_ROOT=%%~fI
+if not "%PST_NSS_DIST%"=="" goto nss_dist_set
+set PST_NSS_DIST=%PST_REPO_ROOT%\third_party\retrozilla-nss\prebuilt\win32-x86-vc6\sdk
+:nss_dist_set
+set NSS_DIST=%PST_NSS_DIST%
 set PST_NSS_RUNTIME=%PST_REPO_ROOT%\third_party\retrozilla-nss\prebuilt\win32-x86-vc6\runtime
 ver >nul
 goto end

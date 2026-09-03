@@ -1,6 +1,6 @@
 # Provider evolution
 
-Status: Phase 8.E Schannel TLS 1.2, readiness, secure I/O, close classification, and shutdown complete. Phase 8.F Schannel trust/identity/ALPN/mTLS/peer-info parity is next and has not started.
+Status: Phase 8.A through 8.G complete. RetroZilla NSS provenance/reproducibility housekeeping is complete. Phase 8.H closure audit is pending and has not started.
 
 ## SPI 2.4 audit
 
@@ -104,7 +104,7 @@ Keep current `build/vc6` outputs unchanged. New providers/toolchains must use no
 
 RetroZilla NSS remains first-class: every Phase 8 production step must preserve VC6/NT4, TLS 1.2/1.3, mTLS, ALPN, readiness, close classification and lifecycle regressions. Platform-specific providers are valid and need not run on NT4.
 
-Phase 9 retains final ABI freeze, packaging, certification and semantic-version policy. Separate RetroZilla NSS source/revision/patchset/build provenance work should happen before Phase 8 closure, ideally before broad second-provider integration makes the lineage harder to isolate; it is not part of 8.A or a blocker for 8.B.
+Phase 9 retains final ABI freeze, packaging, certification and semantic-version policy. Separate RetroZilla NSS source/revision/patchset/build provenance housekeeping is complete. The exact post-patch source snapshot, generated SDK, canonical runtime, manifests, original notices and build procedure are repository-contained; active builds no longer depend on the historical `C:\PSTW` workspace. See `third_party/retrozilla-nss/PROVENANCE.md`.
 
 
 ## Phase 8.D result

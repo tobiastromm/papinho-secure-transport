@@ -139,4 +139,4 @@ The directed NSS lifecycle test passed with the canonical versioned runtime: run
 All seven deterministic gaps are closed. No production defect was reproduced and no production source changed. The formal closure audit found no mandatory untested lifecycle contract. Phase 7.E is complete; Phase 7 remains in progress and 7.F is next but not started. No new NT4 run is required.
 ## Deferred housekeeping
 
-Preserving exact RetroZilla NSS source/provenance so `C:\PSTW` becomes disposable remains a separate future task and does not block this audit.
+The later RetroZilla NSS provenance housekeeping preserved the exact source and build record; `C:\PSTW` is no longer required.
