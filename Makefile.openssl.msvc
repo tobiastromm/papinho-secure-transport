@@ -10,7 +10,7 @@ CFLAGS=/nologo /W4 /O2 /TC /MD /DWIN32_LEAN_AND_MEAN /D_CRT_SECURE_NO_WARNINGS /
 OSSL_CFLAGS=$(CFLAGS) /I$(OPENSSL_INCLUDE)
 CORE=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_diagnostic.obj $(BUILD)\pst_log.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj $(BUILD)\pst_transport_win32.obj
 PSTLIB=$(BUILD)\papinho_secure_transport.lib
-all: dirs $(PSTLIB) $(BUILD)\test_public_header.exe $(BUILD)\test_backend_openssl.exe $(BUILD)\test_openssl_runtime_integration.exe $(BUILD)\test_openssl_identity_integration.exe $(BUILD)\test_modern_provider_coexistence.exe $(BUILD)\libcrypto-3-x64.dll $(BUILD)\libssl-3-x64.dll
+all: dirs $(PSTLIB) $(BUILD)\test_public_header.exe $(BUILD)\test_backend_openssl.exe $(BUILD)\test_openssl_runtime_integration.exe $(BUILD)\test_openssl_identity_integration.exe $(BUILD)\test_openssl_runtime_isolation.exe $(BUILD)\test_modern_provider_coexistence.exe $(BUILD)\libcrypto-3-x64.dll $(BUILD)\libssl-3-x64.dll
 
 dirs:
 	@if not exist build mkdir build
@@ -53,6 +53,12 @@ $(BUILD)\test_openssl_runtime_integration.exe: $(BUILD)\test_openssl_runtime_int
 	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib
 
 
+
+
+$(BUILD)\test_openssl_runtime_isolation.obj: tests\test_openssl_runtime_isolation.c
+	$(CC) $(OSSL_CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_openssl_runtime_isolation.exe: $(BUILD)\test_openssl_runtime_isolation.obj $(BUILD)\pst_backend_schannel.obj $(BUILD)\pst_backend_openssl.obj $(PSTLIB)
+	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib secur32.lib crypt32.lib ncrypt.lib
 
 $(BUILD)\test_openssl_identity_integration.obj: tests\test_openssl_identity_integration.c
 	$(CC) $(OSSL_CFLAGS) /Fo$@ /c $**

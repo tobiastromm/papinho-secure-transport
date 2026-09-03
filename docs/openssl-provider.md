@@ -1,6 +1,6 @@
 # OpenSSL provider extension
 
-Status: **OSSL-D custom trust / hostname / ALPN / mTLS / peer info in progress**. Functional feature gates pass; same-runtime and two-runtime functional isolation remain closure evidence. This is a deliberate post-Phase-8 provider extension; Phase 8 remains complete and Phase 9 has not started.
+Status: **OSSL-D custom trust / hostname / ALPN / mTLS / peer info complete**. OSSL-E has not started. This is a deliberate post-Phase-8 provider extension; Phase 8 remains complete and Phase 9 has not started.
 
 ## Frozen baseline and provenance
 
@@ -138,3 +138,11 @@ Explicit client identity is decoded entirely in memory: exact single-certificate
 Real TLS 1.2/TLS 1.3 gates pass for root-intermediate-leaf, correct hostname, required/optional/multiple ALPN, and explicit mTLS. Wrong root and missing intermediate map to AUTH_FAILURE; wrong hostname maps to HOSTNAME_MISMATCH; required ALPN absence maps to POLICY_VIOLATION; missing/wrong client identity maps to AUTH_FAILURE; local cert/key mismatch fails during connection creation. TLS 1.3 mTLS server fingerprint comparison proves the exact configured client identity. OSSL-C readiness, 4 MiB WANT_WRITE, clean/data close, truncation and shutdown regressions pass, as does the independent Schannel TLS 1.2 server gate.
 
 The implemented capability mask is `0x00000e5f`: TLS1.2, TLS1.3, CUSTOM_TRUST, HOSTNAME_VERIFY, ALPN, CLIENT_AUTH, PEER_INFO, NONBLOCKING and BACKEND_WAIT. SYSTEM_TRUST remains absent. OSSL-D is not yet marked complete because the required real B-C-A-B sequence within one runtime and functional two-runtime isolation runner have not yet been executed.
+
+## OSSL-D2 isolation closure
+
+The earlier OSSL-D blocked state was closed by `test_openssl_runtime_isolation.exe`, a single-process, real-TLS harness. Process 20108 executed B1-C-A-B2 in one OpenSSL runtime: TLS 1.3/custom trust/hostname/required ALPN/mTLS, wrong-root AUTH_FAILURE with immutable diagnostic and empty ERR queue, distinct TLS 1.2 server-auth without ALPN/client identity, then the original strong TLS 1.3 configuration again. All eight connections were created and destroyed exactly once; B1 peer state survived the full sequence and B2 had no stale diagnostic. Server-side evidence confirmed the exact client fingerprint for B1 and B2.
+
+The same process then kept two OpenSSL runtimes alive. R1 completed TLS 1.3, R2 produced a deliberate trust failure, R1 completed another TLS 1.3 connection, R1 was released, and R2 still completed TLS 1.3 before its own release. Both runtime contexts were destroyed exactly once and the OpenSSL error queue was empty after the cross-runtime failure.
+
+The combined selection model registered `schannel` then `openssl` using the real masks `0x00000e7d` and `0x00000e5f`. Automatic common TLS 1.2 selected Schannel; TLS 1.3 plus custom trust/hostname selected OpenSSL; system trust selected Schannel; exact OpenSSL succeeded; exact Schannel TLS 1.3 was unsupported; ordered `[openssl, schannel]` selected OpenSSL; and an all-incompatible early-data requirement returned UNSUPPORTED with the expected diagnostic behavior. OSSL-D is complete. OSSL-E remains next and unstarted.
