@@ -1,6 +1,6 @@
 # Schannel backend
 
-Status: Phase 8.E is complete. Phase 8.F is in progress. Explicit client identity and real mTLS now pass; bounded closure gates remain, including a system-trust positive fixture that does not inject a private root.
+Status: Phase 8 Schannel work is complete. TLS 1.2, system/custom trust, hostname, ALPN, explicit mTLS, peer info, readiness, close, shutdown and same-runtime isolation passed; TLS 1.3 is unavailable and not advertised on the tested runtime.
 
 ## Boundary and lifecycle
 

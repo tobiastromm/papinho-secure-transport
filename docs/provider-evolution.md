@@ -1,6 +1,6 @@
 # Provider evolution
 
-Status: Phase 8.A through 8.G complete. RetroZilla NSS provenance/reproducibility housekeeping is complete. Phase 8.H closure audit is pending and has not started.
+Status: Phase 8 complete. RetroZilla NSS and Schannel are first-class target-specific providers; see `docs/phase8-closure.md`. Phase 9 has not started.
 
 ## SPI 2.4 audit
 
@@ -122,3 +122,6 @@ The Schannel backend now uses `SCH_CREDENTIALS`, per-configured-connection crede
 A Python 3.14/OpenSSL 3.5 local server using the existing root/intermediate/localhost test chain proved TLS 1.2, automatic system-store server validation, hostname input, ten 25-byte bidirectional exchanges, and incremental local shutdown. The runner adds the test root temporarily to `CurrentUser/Root` and removes only the exact added thumbprint. Separate runs proved authenticated peer close as `CLOSED/CLEAN` and raw EOF as `FAILED/TRUNCATED`.
 
 A real TLS 1.3 handshake attempt failed on this Windows Schannel runtime even though credential acquisition accepted the policy. Consequently runtime capabilities are `TLS_1_2 | SYSTEM_TRUST | HOSTNAME_VERIFY | NONBLOCKING | BACKEND_WAIT`; TLS 1.3 is absent. ALPN, client authentication, custom trust, and peer-info remain absent for Phase 8.F. See `docs/schannel-backend.md`.
+## Post-Phase-8 OpenSSL provider extension
+
+Phase 8 remains complete. OSSL-A freezes OpenSSL 3.5.8 LTS as the source-based Windows x64 baseline, backend ID `openssl`, dedicated OpenSSL/combined build outputs, SPI 2.4 reuse, custom-trust-first scope and the OSSL-A through OSSL-F roadmap. See `docs/openssl-provider.md`. OSSL-B has not started and Phase 9 remains unstarted.

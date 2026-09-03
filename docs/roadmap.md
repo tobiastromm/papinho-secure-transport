@@ -98,7 +98,7 @@
     - bounded soak implementation and execution: complete
     - 7.H closure audit: complete
   - Phase 7 overall closure audit: complete
-- Phase 8 - Multiple Backends / Provider Evolution: in progress
+- Phase 8 - Multiple Backends / Provider Evolution: complete
   - 8.A SPI and provider-neutral architecture audit: complete
   - 8.B deterministic multi-backend core and selection matrix: complete
   - 8.C backend metadata / production priority / transport genericization: complete
@@ -107,5 +107,12 @@
   - 8.F Schannel trust, identity, ALPN, mTLS and peer info: complete
   - 8.G cross-backend interoperability and legacy regression: complete
   - RetroZilla NSS provenance/reproducibility housekeeping: complete
-  - 8.H Phase 8 closure audit: pending
+  - 8.H Phase 8 closure audit: complete
+- Post-Phase-8 OpenSSL provider extension: in progress
+  - OSSL-A architecture / version / build / provenance: complete
+  - OSSL-B backend skeleton / registration / modern build integration: pending
+  - OSSL-C TLS 1.2 / TLS 1.3 / readiness / secure I/O: pending
+  - OSSL-D trust / hostname / ALPN / mTLS / peer info: pending
+  - OSSL-E failure / close / diagnostics / logging / lifecycle hardening: pending
+  - OSSL-F three-provider validation and extension closure: pending
 - Phase 9 - Release / ABI Stabilization: pending; not started

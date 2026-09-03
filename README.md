@@ -1,6 +1,6 @@
 # PapinhoSecureTransport
 
-Phase 7 interoperability/hardening is complete. Phase 8, Multiple Backends / Provider Evolution, is in progress through completed cross-backend validation. RetroZilla NSS provenance/reproducibility housekeeping is complete; the Phase 8 closure audit remains pending. See [docs/provider-evolution.md](docs/provider-evolution.md) and [docs/phase7-closure.md](docs/phase7-closure.md).
+Phase 7 interoperability/hardening is complete. Phase 8, Multiple Backends / Provider Evolution, is complete. RetroZilla NSS and Schannel are first-class target-specific providers. The deliberate post-Phase-8 OpenSSL extension is at OSSL-A complete, with OpenSSL 3.5.8 LTS architecture/provenance frozen; OSSL-B and Phase 9 have not started. See [docs/provider-evolution.md](docs/provider-evolution.md), [docs/openssl-provider.md](docs/openssl-provider.md), [docs/phase8-closure.md](docs/phase8-closure.md), and [docs/phase7-closure.md](docs/phase7-closure.md).
 
 PapinhoSecureTransport is an independent secure-transport abstraction project. Its direction is portable C, initially focused on TLS through mature cryptographic/TLS backends. It will not implement cryptography, certificate validation, or a TLS state machine of its own.
 
