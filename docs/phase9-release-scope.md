@@ -78,7 +78,7 @@ This is an inventory, not legal advice. Before release, 9.E must select the PST 
 
 ## Versions and proposed policy
 
-Current values remain API **1.2.0**, library **0.3.0**, and SPI **2.4**. They evolve independently:
+After the public-bootstrap addendum, current values are API **1.3.0**, library **0.3.0**, and SPI **2.4**. They evolve independently:
 
 - The API version identifies the public consumer contract and accepted structure/version families. Patch means compatible clarification/fix with no ABI layout or behavior break; minor means compatible additions using guarded tails/new symbols; major means an intentionally incompatible public contract. 9.B must validate these proposed rules before calling the ABI frozen.
 - The library version identifies the shipped implementation/release. Patch means compatible defect/documentation/build correction; minor means meaningful compatible implementation/provider capability growth; major means a maturity/compatibility commitment justified by the full release, not merely a phase number.

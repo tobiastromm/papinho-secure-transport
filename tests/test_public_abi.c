@@ -105,7 +105,7 @@ static int constants_frozen(void)
 {
     volatile pst_u32 value;
     volatile PST_RESULT result;
-    value = PST_API_VERSION; if (value != 0x00010200UL) return 0;
+    value = PST_API_VERSION; if (value != 0x00010300UL) return 0;
     value = PST_LIBRARY_VERSION; if (value != 0x00000300UL) return 0;
     result = PST_RESULT_OK; if (result != 0) return 0;
     result = PST_RESULT_INCOMPATIBLE_API; if (result != 15) return 0;

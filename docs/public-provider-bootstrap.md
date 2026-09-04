@@ -1,6 +1,6 @@
 # Public built-in provider bootstrap architecture
 
-Status: Phase 9.D0-B implementation and validation complete. Phase 9.D remains paused pending the limited 9.B additive API addendum. API 1.2.0 is retained provisionally; SPI 2.4 and library 0.3.0 are unchanged.
+Status: Phase 9.D0-A architecture, 9.D0-B implementation/validation, and the limited 9.B public-bootstrap addendum are complete. API 1.3.0 is frozen; SPI 2.4 and library 0.3.0 are unchanged. Phase 9.D is ready to resume only when explicitly requested.
 
 ## Problem and boundary
 
@@ -127,4 +127,4 @@ The private registry batch performs full descriptor/conflict/capacity preflight,
 
 Public-only consumers include only `papinho_secure_transport.h` and `papinho_secure_transport_win32.h`. VC6, Schannel, OpenSSL and combined x64 builds pass `/W4` with zero warnings. Real gates passed: NSS TLS 1.2 against the independent Schannel server (`WRITE=25 READ=25 CONTENT_MATCH=1`), Schannel TLS 1.2 (`WRITE=25 READ=25 CONTENT_MATCH=1`), and OpenSSL TLS 1.3 with public SYSTEM_TRUST against Cloudflare and Google. The isolated combined public consumer proves TLS1.2+SYSTEM AUTOMATIC selects Schannel, TLS1.3+SYSTEM AUTOMATIC selects OpenSSL, EXACT behavior, and caller-ordered OpenSSL-first selection.
 
-No SPI shape, ABI layout, existing enum/value, provider behavior, or existing public signature changed. The additive API symbol remains provisional under API 1.2.0 until the required limited 9.B addendum inventories the function and freezes API 1.3.0. A small real NT4 public-bootstrap smoke/TLS run is recommended for the release-validation kit because the symbol is intended for the NT4 SDK; the already validated NSS descriptor and TLS path are unchanged.
+No SPI shape, ABI layout, existing enum/value, provider behavior, or existing public signature changed. The additive API symbol is frozen by the limited 9.B addendum under API 1.3.0; the corrected inventory is 41 prior functions plus this one symbol, for 42 total. A small real NT4 public-bootstrap smoke/TLS run is recommended for the release-validation kit because the symbol is intended for the NT4 SDK; the already validated NSS descriptor and TLS path are unchanged.

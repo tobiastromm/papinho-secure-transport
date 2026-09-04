@@ -197,7 +197,7 @@ static int check_redaction_abuse(void)
 int main(void)
 {
     int result; volatile pst_u32 constant;
-    constant=PST_API_VERSION;CHECK(constant==0x00010200UL,50);
+    constant=PST_API_VERSION;CHECK(constant==0x00010300UL,50);
     constant=PST_LIBRARY_VERSION;CHECK(constant==0x00000300UL,51);
     constant=PST_DIAGNOSTIC_BACKEND_ID_CAPACITY;CHECK(constant==32UL,52);
     constant=PST_DIAGNOSTIC_INFO_MIN_SIZE;CHECK(constant==56UL,55);

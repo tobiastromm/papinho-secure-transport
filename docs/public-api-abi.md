@@ -1,6 +1,6 @@
 # Public API and ABI baseline
 
-Status: **Phase 9.B complete**. This document freezes the public API/ABI baseline at API 1.2.0 and library 0.3.0. SPI 2.4 remains internal and Phase 9.C has not started.
+Status: **Phase 9.B and the public-bootstrap addendum complete**. This document freezes the additive public API/ABI baseline at API 1.3.0 and library 0.3.0. SPI 2.4 remains internal and frozen by Phase 9.C.
 
 ## Public-header boundary
 
@@ -77,7 +77,7 @@ Initializers deterministically zero their known record and set current size/vers
 
 ## Public function inventory
 
-All 40 declarations have matching implementations in the applicable target build; no duplicate, obsolete, or experimental public declaration was found. Historical compatible constructors remain.
+All 42 declarations have matching implementations in the applicable target build: 39 portable functions and 3 Win32 functions. Recounting the original 9.B headers found 41 rather than the previously written 40; the old table itself contained those 41 functions. API 1.3 adds exactly one declaration, `pst_win32_register_builtin_providers`, producing the verified 41-to-42 delta. No duplicate, obsolete, or experimental declaration was found. Historical compatible constructors remain.
 
 | Domain | Functions | Ownership, state, and failure contract |
 |---|---|---|
@@ -91,7 +91,7 @@ All 40 declarations have matching implementations in the applicable target build
 | progress/I/O | `pst_connection_handshake`, `pst_connection_get_interest`, `pst_connection_wait`, `pst_connection_read`, `pst_connection_write`, `pst_connection_shutdown` | bounded incremental calls; deterministic outputs; readiness is not progress; terminal states do not resurrect |
 | negotiated data | `pst_connection_get_peer_info`, `pst_connection_get_negotiated_alpn` | only established state; owned peer handle or copied ALPN; outputs reset on failure |
 | transport | `pst_transport_release` | accepts NULL; releases only caller-owned/unaccepted transport |
-| Win32 adapter | `pst_win32_register_retrozilla_nss`, `pst_win32_socket_transport_create` | target-specific factory/registration; socket represented without exposing a native type; output NULL on failure |
+| Win32 adapter | `pst_win32_register_retrozilla_nss`, `pst_win32_register_builtin_providers`, `pst_win32_socket_transport_create` | explicit target-manifest registration and socket factory; no discovery or native type leakage; output NULL on failure |
 
 API 1.0 established versions/results, opaque handles, configuration/runtime/connection/transport, TLS policy, readiness and I/O. API 1.1 added structured diagnostics and compatible `_ex` constructors. API 1.2 added consumer logging and `pst_runtime_create_with_logging`. Exact per-symbol introduction metadata before those recorded milestones is historical documentation, not a runtime dispatch mechanism.
 
@@ -155,8 +155,16 @@ The test deliberately excludes compiler-specific debug records, object timestamp
 
 ## Threading and release decision
 
-PST makes no general thread-safety guarantee in API 1.2.0. Registry setup is caller-serialized; a connection and its configuration/lifecycle must not be concurrently mutated; callbacks are synchronous. Independent provider/runtime behavior is only guaranteed where explicitly tested and documented. This avoids inventing locking or reentrancy promises during an ABI freeze.
+PST makes no general thread-safety guarantee in API 1.3.0. Registry setup is caller-serialized; a connection and its configuration/lifecycle must not be concurrently mutated; callbacks are synchronous. Independent provider/runtime behavior is only guaranteed where explicitly tested and documented. This avoids inventing locking or reentrancy promises during an ABI freeze.
 
-Phase 9.B found one release-blocking deterministic-output defect and fixed it at the portable core boundary. The correction initializes outputs only on invalid/pre-provider paths and does not alter successful calls, structure layout, ownership, readiness, TLS, provider behavior, or wire behavior. API remains 1.2.0, library 0.3.0, SPI 2.4.
+Phase 9.B found one release-blocking deterministic-output defect and fixed it at the portable core boundary. The public-bootstrap addendum freezes API 1.3.0 as a strictly additive evolution of API 1.2.0: all prior layouts, values, signatures and semantics remain unchanged, while one explicit Win32 target-manifest bootstrap is added. Library remains 0.3.0 and SPI remains 2.4.
 
 The public source/ABI baseline is frozen for the two canonical target/toolchain pairs above. Phase 9.C, the internal SPI/provider contract freeze, is next but remains not started until explicitly requested.
+
+## API 1.3 public-bootstrap addendum
+
+`pst_win32_register_builtin_providers(void)` is frozen with `PST_API`, `PST_CALL` (`__cdecl` on MSVC), C linkage, and no parameters. It is declared only in the self-contained Win32 public header. The function explicitly registers the target-defined built-in set and does not discover providers, initialize TLS implicitly, or change EXACT, ORDERED, AUTOMATIC, or no-post-selection-fallback semantics.
+
+Before the first runtime-create attempt it is idempotent for identical canonical descriptors. A same-ID/different-descriptor conflict returns `PST_RESULT_INVALID_STATE`. Full preflight protects descriptor validity and capacity; injected unexpected failure rolls back only additions from that call. The first runtime-create attempt, successful or unsuccessful, seals registration. Empty manifests return `PST_RESULT_UNAVAILABLE`; capacity exhaustion returns `PST_RESULT_RESOURCE_FAILURE`. The existing NSS-specific helper remains available.
+
+The frozen target manifests are VC6/NT4 NSS, modern Schannel, modern OpenSSL, and deliberate combined Schannel-then-OpenSSL. The built-in set is a package property. Public-only VC6 x86 and modern x64 consumers, real NSS TLS 1.2, Schannel TLS 1.2, OpenSSL TLS 1.3 SYSTEM_TRUST, and combined selection passed. API 1.2 consumers retain their canonical x86/x64 layouts and numeric contracts; this is not a cross-architecture or arbitrary-compiler ABI promise.
