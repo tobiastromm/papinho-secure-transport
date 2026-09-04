@@ -1,0 +1,6 @@
+#include "papinho_secure_transport.h"
+#include "papinho_secure_transport_win32.h"
+#include <stdio.h>
+#include <string.h>
+static void init(PST_RUNTIME_OPTIONS*o,pst_u32 mode,pst_u32 caps){memset(o,0,sizeof(*o));o->struct_size=sizeof(*o);o->api_version=PST_API_VERSION;o->selection=mode;o->required_capabilities=caps;}
+int main(void){PST_RUNTIME_OPTIONS o;const char*ordered[]={"openssl","schannel"};pst_runtime*r=NULL;PST_RUNTIME_INFO info;if(pst_win32_register_builtin_providers()!=PST_RESULT_OK)return 1;init(&o,PST_BACKEND_SELECTION_AUTOMATIC,PST_CAP_TLS_1_3|PST_CAP_SYSTEM_TRUST);if(pst_runtime_create(&o,&r)==PST_RESULT_OK){memset(&info,0,sizeof(info));info.struct_size=sizeof(info);info.api_version=PST_API_VERSION;if(pst_runtime_get_info(r,&info)==PST_RESULT_OK)printf("AUTOMATIC selected %s\n",info.backend_id);pst_runtime_release(r);}init(&o,PST_BACKEND_SELECTION_EXACT,PST_CAP_TLS_1_3|PST_CAP_SYSTEM_TRUST);o.exact_backend_id="openssl";init(&o,PST_BACKEND_SELECTION_ORDERED,PST_CAP_TLS_1_2|PST_CAP_SYSTEM_TRUST);o.preferred_backend_ids=ordered;o.preferred_backend_count=2;printf("EXACT never falls back; ORDERED follows caller order; AUTOMATIC follows target order filtered by capabilities.\n");return 0;}

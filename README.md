@@ -1,20 +1,23 @@
 # PapinhoSecureTransport
 
-Phases 0 through 8, the OpenSSL provider extension, and its Windows SYSTEM_TRUST follow-up are complete. Phase 9 release and ABI stabilization is in progress; its 9.A release-scope audit is complete. RetroZilla NSS, Schannel, and OpenSSL are first-class target-specific providers. See [docs/roadmap.md](docs/roadmap.md), [docs/phase9-release-scope.md](docs/phase9-release-scope.md), [docs/openssl-provider.md](docs/openssl-provider.md), and [docs/phase8-closure.md](docs/phase8-closure.md).
+PapinhoSecureTransport (PST) is a small C library for secure connections without coupling an application to one TLS engine or one Windows generation. It serves public-Internet, LAN, private/corporate, legacy-to-modern, and modern-to-modern software. HTTP, SMTP, IMAP, ERP protocols, and custom application protocols run above PST; PST does not implement them.
 
-PapinhoSecureTransport is an independent secure-transport abstraction project. Its direction is portable C, initially focused on TLS through mature cryptographic/TLS backends. It will not implement cryptography, certificate validation, or a TLS state machine of its own.
+Today PST implements TLS through three real providers: RetroZilla NSS for the Windows NT 4.0 target, Schannel for modern Windows, and OpenSSL 3.5.8. TLS is the current secure transport—not a promise that SPI 2.4 already supports DTLS, QUIC, Noise, or other future designs.
 
-The public API remains C89/VC6-compatible and backend-neutral. API 1.2.0/library 0.3.0 retain the diagnostic ABI and add Papinho Logging Levels v1 plus an immutable runtime-level structured sink. PST supplies no console/file logger, worker, queue, arbitrary message, payload, peer text, native error code, secret, path, endpoint, or backend pointer through this interface.
+## Start here
 
-Project licensing is pending a decision. Third-party files retain their own licenses under `third_party/`.
+- [English documentation](docs/en/README.md)
+- [Documentação em Português (Brasil)](docs/pt-BR/README.md)
+- [English Getting Started](docs/en/getting-started.md)
+- [Primeiros passos em português](docs/pt-BR/primeiros-passos.md)
+- [Examples](examples/README.md)
+- [Build overview](docs/en/build.md)
+- [Contributing](docs/en/contributing.md) · [Como contribuir](docs/pt-BR/como-contribuir.md)
 
-The canonical VC6 environment, clean-build, regression, repository-contained NSS SDK, and runtime-DLL instructions are in [docs/build-vc6.md](docs/build-vc6.md). Historical NSS/NSPR source reproduction is documented in [docs/build-retrozilla-nss.md](docs/build-retrozilla-nss.md) and [third_party/retrozilla-nss/PROVENANCE.md](third_party/retrozilla-nss/PROVENANCE.md). The separate modern MSVC x64 bootstrap is documented in [docs/build-modern-msvc.md](docs/build-modern-msvc.md). VC6 quick start:
+A normal Win32 program calls `pst_win32_register_builtin_providers()`, selects a runtime, configures authenticated TLS, attaches a connected socket, and drives bounded incremental operations.
 
-```bat
-tools\build-vc6.bat clean
-tools\build-vc6.bat test test-nss-unit
-```
+## Why legacy support matters
 
-The public entry point is `include/papinho_secure_transport.h`. Generated objects, the static library, and the test executable are placed under `build/vc6/`.
+Preserving old computers should not require modern servers to re-enable obsolete cryptography. PST explores moving modern, fail-closed secure transport toward legacy applications where technically feasible. PapinhoBrowser and PapinhoLegacyMail are example consumers. PapinhoAccelerator is specific to PapinhoBrowser; it is not PST infrastructure and is not a PST or LegacyMail dependency.
 
-See [architecture](docs/architecture.md), [roadmap](docs/roadmap.md), and [legacy NSS provenance](docs/legacy-nss-provenance.md).
+API 1.3.0 and internal provider SPI 2.4 are frozen for the Phase-9 baseline; Library 0.3.0 remains current. Packaging and release validation are still in progress; this is not yet the final Phase-9 release. PST's own license is under review for Phase 9.E. Dependency notices and provenance remain authoritative in `third_party/` and the linked engineering records.
