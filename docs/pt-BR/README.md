@@ -4,7 +4,7 @@
 
 Quando dois programas se comunicam por uma rede, os dados passam por um caminho que nem sempre está sob o controle de quem desenvolveu a aplicação.
 
-Sem proteção adequada, alguém com acesso ao caminho da comunicação pode tentar ler, alterar ou se passar por uma das partes envolvidas. É por isso que existem protocolos de transporte seguro como o **TLS**: eles permitem criptografar a comunicação e verificar com quem o programa está falando.
+Sem proteção adequada, alguém com acesso ao caminho da comunicação pode tentar ler, alterar ou se passar por uma das partes envolvidas. É por isso que existem protocolos de transporte seguro como o **TLS**: eles permitem criptografar a comunicação e verificar, por meio de certificados digitais, se o programa está se comunicando com quem realmente deveria, ajudando a garantir que as informações não sejam lidas, alteradas ou entregues à pessoa ou ao sistema errado.
 
 O problema para o desenvolvedor é que usar TLS normalmente significa integrar diretamente alguma implementação específica, como OpenSSL, Schannel ou NSS.
 
@@ -35,7 +35,7 @@ Aplicação ligada diretamente a uma implementação
 
 Isso pode funcionar muito bem hoje.
 
-Mas sistemas operacionais mudam. Bibliotecas mudam. Versões de TLS mudam. Aquilo que hoje é atual um dia também será legado.
+Mas sistemas operacionais mudam. Bibliotecas mudam. Versões de TLS mudam. Aquilo que hoje é atual passa a ser legado.
 
 O **PapinhoSecureTransport (PST)** foi criado para colocar uma fronteira entre a aplicação e essas implementações.
 
@@ -68,11 +68,13 @@ O **PapinhoSecureTransport (PST)** foi criado para colocar uma fronteira entre a
           sistema operacional / rede
 ```
 
-A aplicação passa a dizer **do que precisa**.
+A aplicação passa a dizer **do que precisa**, sem precisar conhecer os detalhes de NSS, Schannel ou OpenSSL.
 
-O provider cuida de **como aquilo é realizado** usando a implementação de segurança disponível naquele target.
+O **PST fica entre a aplicação e essas implementações**. Ele oferece o contrato comum que a aplicação utiliza, verifica quais capacidades são necessárias e encaminha o trabalho para um provider compatível disponível naquele target.
 
-Isso reduz a quantidade de código específico de NSS, Schannel ou OpenSSL que precisa se espalhar pela aplicação principal.
+O provider cuida de **como aquilo é realizado** usando a implementação de segurança à qual está integrado.
+
+Dessa forma, detalhes específicos de NSS, Schannel ou OpenSSL ficam concentrados atrás da fronteira do PST, em vez de se espalharem pelo código principal da aplicação.
 
 ---
 
@@ -114,7 +116,8 @@ A camada de segurança começa a fazer parte da implementação do próprio sist
 Com PST:
 
 ```text
-       CLIENTE DA LOJA
+       APLICAÇÃO CLIENTE
+            NA LOJA
               │
               │
       protocolo do estoque
@@ -131,22 +134,19 @@ Com PST:
            rede/LAN
               │
              TLS
-              │
-     ┌────────▼────────┐
-     │       PST       │
-     └────────┬────────┘
-              │
-      protocolo do estoque
-              │
               ▼
-        SERVIDOR CENTRAL
+     ┌─────────────────┐
+     │ SERVIDOR CENTRAL│
+     │                 │
+     │   servidor TLS  │
+     └─────────────────┘
 ```
 
 O PST não sabe o que significa `ATUALIZAR_ESTOQUE`.
 
 Ele não precisa saber.
 
-O protocolo empresarial continua pertencendo à aplicação. O PST cuida da parte responsável por estabelecer e manter a comunicação segura.
+O protocolo empresarial continua pertencendo à aplicação. O PST não precisa entender as mensagens trocadas: ele cuida da camada que estabelece a conexão TLS, protege os dados durante a comunicação e trata seu encerramento seguro.
 
 E isso vale tanto para uma conexão pela Internet quanto para computadores dentro de uma LAN ou de uma rede corporativa privada.
 
@@ -183,13 +183,10 @@ Com PST, essas diferenças ficam atrás de uma fronteira comum:
           └─────────────┼─────────────┘
                         │
                         ▼
-          Windows NT 4.0 / Windows 10 /
-       outras versões e sistemas suportados
+               plataforma suportada
 ```
 
-Trocar ou acrescentar um provider compatível continua podendo exigir um novo build, um novo target ou trabalho de integração no PST.
-
-O que muda é que **a lógica principal da aplicação não precisa ser reescrita para conhecer a API nativa daquele provider**.
+Trocar ou acrescentar um provider compatível ainda pode exigir um novo build, um novo target ou trabalho de integração no PST, mas essa mudança fica concentrada na camada de transporte seguro, sem exigir que a lógica principal da aplicação seja reescrita para conhecer a API nativa do novo provider.
 
 Esse desacoplamento é uma das razões mais importantes para a existência do projeto.
 
@@ -197,13 +194,9 @@ Esse desacoplamento é uma das razões mais importantes para a existência do pr
 
 # Segurança também é uma questão de longevidade
 
-O PST não foi pensado apenas para computadores que **já são antigos**.
+O PST também foi pensado para **reduzir o quanto um programa criado hoje fica preso às escolhas feitas para sua camada de segurança**, porque as bibliotecas, os sistemas operacionais e os padrões de segurança que hoje consideramos atuais também envelhecem.
 
-Ele também tenta reduzir o quanto um programa criado **hoje** fica preso às escolhas tecnológicas disponíveis hoje.
-
-Windows 10 já é um bom exemplo dessa passagem do tempo: durante anos foi uma plataforma atual; progressivamente passa a ocupar o lugar de uma plataforma legada.
-
-O mesmo acontecerá com sistemas que hoje consideramos novos.
+Na prática, essa separação permite que a aplicação continue utilizando o mesmo contrato do PST enquanto a implementação responsável pela segurança pode evoluir ao longo do tempo:
 
 ```text
 HOJE
@@ -233,6 +226,8 @@ Se o novo provider implementa as capacidades de que aquela aplicação precisa, 
 Essa separação não torna software automaticamente eterno, nem garante que qualquer provider futuro possa substituir qualquer outro sem trabalho.
 
 Mas reduz um tipo importante de acoplamento que costuma tornar aplicações mais difíceis de manter à medida que segurança, sistemas operacionais e bibliotecas evoluem.
+
+**E esse benefício pode crescer com a comunidade**: à medida que mais projetos utilizem e contribuam com o PST, novos providers e novas plataformas podem ser desenvolvidos uma única vez e aproveitados por diferentes aplicações. Um trabalho de compatibilidade que talvez fosse inviável para o desenvolvedor de um único programa passa a poder ser compartilhado por todos os projetos que utilizam o mesmo contrato.
 
 ---
 
@@ -304,7 +299,7 @@ Entre as capacidades comprovadas estão:
 
 Foi validado inclusive no Windows NT 4.0.
 
-A versão utilizada pelo PST possui provenance documentada e deriva da linhagem RetroZilla NSS/NSPR.
+A versão utilizada pelo PST deriva da linhagem RetroZilla NSS/NSPR, e o projeto preserva e documenta sua origem, versões, modificações, processo de build e licenças.
 
 O provider atual não oferece `SYSTEM_TRUST` pelo contrato PST e possui uma limitação de singleton própria de sua implementação.
 
@@ -441,27 +436,25 @@ Providers do target:
 2. OpenSSL
 ```
 
-Pedido:
+Pedido A:
 
 ```text
 TLS 1.2 + SYSTEM_TRUST
 ```
 
-Schannel consegue atender:
+Schannel possui as capacidades necessárias e, como aparece primeiro na ordem do target, é selecionado:
 
 ```text
 → Schannel
 ```
 
-Pedido:
+Pedido B:
 
 ```text
 TLS 1.3 + SYSTEM_TRUST
 ```
 
-No ambiente Windows 10 atualmente validado, Schannel não anuncia TLS 1.3.
-
-OpenSSL anuncia:
+No ambiente Windows 10 validado pelo projeto, o provider Schannel não possui suporte a TLS 1.3 comprovado pelo PST. O provider OpenSSL possui as duas capacidades necessárias:
 
 ```text
 Schannel  ✗ TLS 1.3
@@ -469,6 +462,8 @@ OpenSSL   ✓ TLS 1.3 + SYSTEM_TRUST
 
 → OpenSSL
 ```
+
+Assim, o PST ignora o primeiro provider por ele não atender a todos os requisitos daquele pedido e seleciona o próximo provider compatível
 
 ## EXACT
 
@@ -554,7 +549,7 @@ Também precisam ser considerados:
 - licença;
 - possibilidade de redistribuição;
 - obrigações de código-fonte e notices;
-- provenance;
+- origem e histórico das dependências (provenance);
 - capacidade de reproduzir o build;
 - testes independentes de interoperabilidade.
 
@@ -608,10 +603,6 @@ Seria muito valioso para a comunidade ver pessoas interessadas em:
 - versões antigas do Windows;
 
 estudando como manter, atualizar ou criar uma linhagem reproduzível e mantida dessas tecnologias para plataformas antigas.
-
-Esse trabalho não precisaria beneficiar apenas o PST.
-
-Poderia ser útil para navegadores, clientes de e-mail e inúmeros outros projetos de preservação e retrocomputação.
 
 O PST não promete criar ou manter sozinho essa futura linhagem. É justamente uma área onde **colaboração externa pode ampliar aquilo que o projeto consegue alcançar**.
 
@@ -670,7 +661,7 @@ Eles aparecem apenas para mostrar o tipo de software que pode utilizar a camada 
 
 ---
 
-# Projetos Papinho que podem utilizar PST
+# PST no ecossistema Papinho
 
 O PST é um projeto independente.
 
@@ -678,11 +669,11 @@ Alguns projetos do ecossistema Papinho ajudam a ilustrar usos diferentes.
 
 ### PapinhoBrowser
 
-Pode usar PST como camada segura abaixo de HTTP/HTTPS.
+Usa o PST como camada segura abaixo de HTTP/HTTPS.
 
 ### PapinhoLegacyMail
 
-Pode usar PST abaixo de SMTP e IMAP.
+Usa o PST abaixo de SMTP e IMAP.
 
 OAuth, contas, providers de e-mail, XOAUTH2 e os próprios protocolos de e-mail continuam responsabilidade do PapinhoLegacyMail.
 
@@ -690,59 +681,9 @@ OAuth, contas, providers de e-mail, XOAUTH2 e os próprios protocolos de e-mail 
 
 PapinhoAccelerator é um componente **específico do PapinhoBrowser**.
 
-Ele não faz parte da arquitetura genérica do PST e não é requisito para outros consumidores.
+Usa o PST para estabelecer a conexão segura entre o PapinhoBrowser e o PapinhoAccelerator, protegendo os dados trocados entre eles.
 
----
-
-# O que o PST não tenta fazer?
-
-PST não é:
-
-- um navegador;
-- um cliente de e-mail;
-- um proxy HTTP;
-- uma implementação SMTP/IMAP;
-- uma implementação de protocolo empresarial;
-- um gerenciador de contas;
-- uma autoridade certificadora;
-- um substituto para NSS, Schannel ou OpenSSL.
-
-Ele ocupa a fronteira responsável pelo **transporte seguro**.
-
----
-
-# Como contribuir
-
-Há espaço para contribuições em várias direções.
-
-Você não precisa ser especialista em criptografia.
-
-São úteis contribuições em:
-
-- documentação;
-- português e inglês;
-- outras traduções;
-- testes em máquinas reais;
-- Windows legado;
-- VC6 e C89;
-- Windows 11 e Windows Server;
-- reprodução de builds;
-- NSS/NSPR;
-- Schannel;
-- OpenSSL;
-- TLS moderno em plataformas antigas;
-- novos providers;
-- novos sistemas operacionais;
-- exemplos de integração;
-- aplicações corporativas;
-- navegadores;
-- e-mail;
-- mensageria;
-- protocolos próprios;
-- provenance;
-- análise de licenças.
-
-E, se houver pessoas interessadas em pesquisar novas famílias de transporte seguro, esse trabalho também pode ser discutido — sem que isso implique que tais tecnologias já sejam suportadas pelo PST.
+Dependendo da configuração, o Accelerator também pode realizar conexões externas em nome do Browser, utilizando novamente o PST como camada de transporte seguro.
 
 ---
 
@@ -762,29 +703,3 @@ O PST possui atualmente:
 A preparação da primeira distribuição pública estabilizada ainda está em andamento.
 
 Por isso, algumas plataformas e formatos de pacote ainda aparecem como **pendentes de validação**, em vez de serem apresentados como suporte já garantido.
-
----
-
-# Comece por aqui
-
-- **Primeiros passos**
-- **Providers e capacidades**
-- **Compilação**
-- **Segurança, certificados e trust**
-- **Exemplos**
-- **Como contribuir**
-- **API pública**
-- **SPI para criação de providers**
-- **Plataformas validadas e limitações**
-
-> Os links acima serão apontados para a estrutura definitiva dos documentos quando fecharmos a reorganização da documentação.
-
----
-
-## Uma última observação de linguagem
-
-Eu manteria **provider** como termo técnico do projeto, explicando na primeira ocorrência. “Provedor” em português pode soar como “provedor de Internet”; depois que a pessoa entende “provider = implementação que liga PST a NSS/Schannel/OpenSSL”, o termo fica natural.
-
-E esta versão, para mim, finalmente junta as coisas que estavam aparecendo separadamente: **segurança básica → problema do desenvolvedor → desacoplamento → longevidade → TLS 1.2/1.3 real → providers → extensibilidade por colaboração → dimensão histórica/retrocomputação**.
-
-Não mandaria isso ainda para o Codex. Primeiro fecharia essa apresentação com você; depois usamos **este texto como fonte canônica**, em vez de pedir que ele “interprete a essência do projeto” novamente.
