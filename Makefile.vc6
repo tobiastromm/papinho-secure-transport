@@ -10,8 +10,8 @@ NSS_DIST=
 NSS_CFLAGS=$(CFLAGS) /I$(NSS_DIST)\include\nspr /I$(NSS_DIST)\public\nss
 BUILD=build\vc6
 LIB=$(BUILD)\papinho_secure_transport.lib
-OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_diagnostic.obj $(BUILD)\pst_log.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj $(BUILD)\pst_transport_win32.obj
-all: dirs $(LIB) $(BUILD)\test_foundation.exe $(BUILD)\test_identity.exe $(BUILD)\test_backend_spi.exe $(BUILD)\test_provider_spi_abi.exe $(BUILD)\test_multi_backend.exe $(BUILD)\test_tls_policy.exe $(BUILD)\test_diagnostic.exe $(BUILD)\test_diagnostic_transport.exe $(BUILD)\test_diagnostic_creation.exe $(BUILD)\test_public_diagnostic.exe $(BUILD)\test_public_header.exe $(BUILD)\test_public_abi.exe $(BUILD)\test_public_win32_header.obj $(BUILD)\test_logging.exe $(BUILD)\test_lifecycle_ownership.exe
+OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_diagnostic.obj $(BUILD)\pst_log.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj $(BUILD)\pst_transport_win32.obj $(BUILD)\pst_builtin_manifest.obj $(BUILD)\pst_backend_nss.obj
+all: dirs $(LIB) $(BUILD)\test_foundation.exe $(BUILD)\test_identity.exe $(BUILD)\test_backend_spi.exe $(BUILD)\test_provider_spi_abi.exe $(BUILD)\test_multi_backend.exe $(BUILD)\test_tls_policy.exe $(BUILD)\test_diagnostic.exe $(BUILD)\test_diagnostic_transport.exe $(BUILD)\test_diagnostic_creation.exe $(BUILD)\test_public_diagnostic.exe $(BUILD)\test_public_header.exe $(BUILD)\test_public_abi.exe $(BUILD)\test_public_win32_header.obj $(BUILD)\test_public_builtin_bootstrap.exe $(BUILD)\test_logging.exe $(BUILD)\test_lifecycle_ownership.exe
 dirs:
 	@if not exist build mkdir build
 	@if not exist $(BUILD) mkdir $(BUILD)
@@ -33,6 +33,8 @@ $(BUILD)\pst_runtime.obj: src\pst_runtime.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\pst_transport_win32.obj: src\platform\win32\pst_transport_win32.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\pst_builtin_manifest.obj: src\platform\win32\pst_builtin_manifest.c
+	$(CC) $(CFLAGS) /DPST_BUILTIN_RETROZILLA_NSS /Fo$@ /c $**
 $(LIB): $(OBJS)
 	$(LIBTOOL) /nologo /out:$@ $(OBJS)
 $(BUILD)\test_foundation.obj: tests\test_foundation.c
@@ -99,34 +101,34 @@ $(BUILD)\pst_backend_nss.obj: src\backends\nss\pst_backend_nss.c
 $(BUILD)\test_backend_nss.obj: tests\test_backend_nss.c
 	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
 	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
-$(BUILD)\test_backend_nss.exe: $(BUILD)\test_backend_nss.obj $(BUILD)\pst_backend_nss.obj $(LIB)
-	$(CC) /nologo /Fe$@ $(BUILD)\test_backend_nss.obj $(BUILD)\pst_backend_nss.obj $(LIB) wsock32.lib $(LDFLAGS)
+$(BUILD)\test_backend_nss.exe: $(BUILD)\test_backend_nss.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_backend_nss.obj $(LIB) wsock32.lib $(LDFLAGS)
 $(BUILD)\test_backend_nss_integration.obj: tests\test_backend_nss_integration.c
 	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
 	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
-$(BUILD)\test_backend_nss_integration.exe: $(BUILD)\test_backend_nss_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB)
-	$(CC) /nologo /Fe$@ $(BUILD)\test_backend_nss_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB) wsock32.lib $(LDFLAGS)
+$(BUILD)\test_backend_nss_integration.exe: $(BUILD)\test_backend_nss_integration.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_backend_nss_integration.obj $(LIB) wsock32.lib $(LDFLAGS)
 $(BUILD)\test_tls_runtime_integration.obj: tests\test_tls_runtime_integration.c
 	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
 	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
-$(BUILD)\test_tls_runtime_integration.exe: $(BUILD)\test_tls_runtime_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB)
-	$(CC) /nologo /Fe$@ $(BUILD)\test_tls_runtime_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB) wsock32.lib $(LDFLAGS)
+$(BUILD)\test_tls_runtime_integration.exe: $(BUILD)\test_tls_runtime_integration.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_tls_runtime_integration.obj $(LIB) wsock32.lib $(LDFLAGS)
 $(BUILD)\test_stress_stability.obj: tests\test_stress_stability.c
 	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
 	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
-$(BUILD)\test_stress_stability.exe: $(BUILD)\test_stress_stability.obj $(BUILD)\pst_backend_nss.obj $(LIB)
-	$(CC) /nologo /Fe$@ $(BUILD)\test_stress_stability.obj $(BUILD)\pst_backend_nss.obj $(LIB) wsock32.lib $(LDFLAGS)
+$(BUILD)\test_stress_stability.exe: $(BUILD)\test_stress_stability.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_stress_stability.obj $(LIB) wsock32.lib $(LDFLAGS)
 stress-integration: dirs $(LIB) $(BUILD)\test_stress_stability.exe
 $(BUILD)\test_connection_failures.obj: tests\test_connection_failures.c
 	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
 	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
-$(BUILD)\test_connection_failures.exe: $(BUILD)\test_connection_failures.obj $(BUILD)\pst_backend_nss.obj $(LIB)
-	$(CC) /nologo /Fe$@ $(BUILD)\test_connection_failures.obj $(BUILD)\pst_backend_nss.obj $(LIB) wsock32.lib $(LDFLAGS)
+$(BUILD)\test_connection_failures.exe: $(BUILD)\test_connection_failures.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_connection_failures.obj $(LIB) wsock32.lib $(LDFLAGS)
 $(BUILD)\test_nt4_lifecycle_integration.obj: tests\test_nt4_lifecycle_integration.c
 	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
 	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
-$(BUILD)\test_nt4_lifecycle_integration.exe: $(BUILD)\test_nt4_lifecycle_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB)
-	$(CC) /nologo /Fe$@ $(BUILD)\test_nt4_lifecycle_integration.obj $(BUILD)\pst_backend_nss.obj $(LIB) wsock32.lib $(LDFLAGS)
+$(BUILD)\test_nt4_lifecycle_integration.exe: $(BUILD)\test_nt4_lifecycle_integration.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_nt4_lifecycle_integration.obj $(LIB) wsock32.lib $(LDFLAGS)
 lifecycle-integration: dirs $(LIB) $(BUILD)\test_nt4_lifecycle_integration.exe
 runtime-integration: dirs $(LIB) $(BUILD)\test_tls_runtime_integration.exe
 failure-integration: dirs $(LIB) $(BUILD)\test_connection_failures.exe
@@ -155,3 +157,8 @@ test-nss-integration: nss-integration
 	$(BUILD)\test_backend_nss_integration.exe $(NSS_TEST_HOST) $(NSS_TEST_PORT) $(NSS_TEST_NAME)
 clean:
 	@if exist $(BUILD) rmdir /s /q $(BUILD)
+
+$(BUILD)\test_public_builtin_bootstrap.obj: tests\test_public_builtin_bootstrap.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_public_builtin_bootstrap.exe: $(BUILD)\test_public_builtin_bootstrap.obj $(LIB)
+	$(CC) /nologo /Fe$@ $** wsock32.lib $(LDFLAGS)

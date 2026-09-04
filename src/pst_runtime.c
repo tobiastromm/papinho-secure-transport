@@ -32,6 +32,7 @@ static const PST_BACKEND_DESCRIPTOR *select_backend(const PST_RUNTIME_OPTIONS *o
 PST_RESULT pst_runtime_create_internal(const PST_RUNTIME_OPTIONS *o,pst_runtime **out,pst_internal_operation_context *context)
 {
     pst_runtime *r; const PST_BACKEND_DESCRIPTOR *d; PST_RESULT x; pst_size i,limit;
+    pst_backend_registry_seal();
     pst_internal_operation_context_initialize(context);
     if(!out){operation_capture(context,PST_RESULT_INVALID_ARGUMENT,PST_DIAGNOSTIC_PHASE_RUNTIME_CREATE,NULL);return PST_RESULT_INVALID_ARGUMENT;}
     *out=NULL;

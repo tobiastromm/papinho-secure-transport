@@ -1,6 +1,6 @@
 # Public built-in provider bootstrap architecture
 
-Status: Phase 9.D0-A complete. Phase 9.D remains blocked pending 9.D0-B implementation/validation and the limited 9.B addendum. No public header or production source changed in this architecture round.
+Status: Phase 9.D0-B implementation and validation complete. Phase 9.D remains paused pending the limited 9.B additive API addendum. API 1.2.0 is retained provisionally; SPI 2.4 and library 0.3.0 are unchanged.
 
 ## Problem and boundary
 
@@ -118,3 +118,13 @@ Generic gates:
 The closure gate is a real executable compiled with only `include/`, the target public library and documented system/runtime libraries. It must call the public bootstrap, create a runtime and complete at least one real TLS connection without any include or symbol under `src/`.
 
 Only after 9.D0-B passes and the limited 9.B addendum freezes API 1.3.0 may Phase 9.D documentation/examples resume.
+
+## 9.D0-B implementation and evidence
+
+The public Win32 bootstrap is implemented by `src/platform/win32/pst_builtin_manifest.c`. Each build defines the manifest from its source set: VC6 links only RetroZilla NSS, the canonical modern build links only Schannel, the OpenSSL build links only OpenSSL, and the isolated combined build links Schannel followed by OpenSSL. Provider descriptors are now members of their public static libraries; bootstrap performs no discovery.
+
+The private registry batch performs full descriptor/conflict/capacity preflight, accepts only identical canonical descriptor pointers, and rolls back exactly the entries added by a failed call. Registration is sealed at the beginning of the first runtime-create attempt, including an invalid or unsupported attempt. Focused mock coverage proves empty manifest, idempotency, identity conflict, capacity preservation, injected mid-batch rollback, and sealing after failed and successful runtime creation. The legacy NSS helper followed by built-in bootstrap is idempotent.
+
+Public-only consumers include only `papinho_secure_transport.h` and `papinho_secure_transport_win32.h`. VC6, Schannel, OpenSSL and combined x64 builds pass `/W4` with zero warnings. Real gates passed: NSS TLS 1.2 against the independent Schannel server (`WRITE=25 READ=25 CONTENT_MATCH=1`), Schannel TLS 1.2 (`WRITE=25 READ=25 CONTENT_MATCH=1`), and OpenSSL TLS 1.3 with public SYSTEM_TRUST against Cloudflare and Google. The isolated combined public consumer proves TLS1.2+SYSTEM AUTOMATIC selects Schannel, TLS1.3+SYSTEM AUTOMATIC selects OpenSSL, EXACT behavior, and caller-ordered OpenSSL-first selection.
+
+No SPI shape, ABI layout, existing enum/value, provider behavior, or existing public signature changed. The additive API symbol remains provisional under API 1.2.0 until the required limited 9.B addendum inventories the function and freezes API 1.3.0. A small real NT4 public-bootstrap smoke/TLS run is recommended for the release-validation kit because the symbol is intended for the NT4 SDK; the already validated NSS descriptor and TLS path are unchanged.

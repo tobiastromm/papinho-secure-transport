@@ -1,6 +1,6 @@
 CC=cl
 LIBTOOL=lib
-BUILD=build\win64-modern-msvc-openssl
+BUILD=build\win64-modern-msvc-combined
 OPENSSL_ROOT=third_party\openssl\prebuilt\win64-msvc-3.5.8
 OPENSSL_INCLUDE=$(OPENSSL_ROOT)\include
 OPENSSL_LIB=$(OPENSSL_ROOT)\lib
@@ -8,10 +8,10 @@ OPENSSL_RUNTIME=$(OPENSSL_ROOT)\runtime
 LDFLAGS=/link
 CFLAGS=/nologo /W4 /O2 /TC /MD /DWIN32_LEAN_AND_MEAN /D_CRT_SECURE_NO_WARNINGS /Iinclude /Isrc
 OSSL_CFLAGS=$(CFLAGS) /I$(OPENSSL_INCLUDE)
-CORE=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_diagnostic.obj $(BUILD)\pst_log.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj $(BUILD)\pst_transport_win32.obj $(BUILD)\pst_builtin_manifest.obj $(BUILD)\pst_backend_openssl.obj $(OSSL_SYSTEM_TRUST)
+CORE=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_diagnostic.obj $(BUILD)\pst_log.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj $(BUILD)\pst_transport_win32.obj $(BUILD)\pst_builtin_manifest.obj $(BUILD)\pst_backend_schannel.obj $(BUILD)\pst_backend_openssl.obj $(OSSL_SYSTEM_TRUST)
 OSSL_SYSTEM_TRUST=$(BUILD)\pst_openssl_system_trust_win32.obj
 PSTLIB=$(BUILD)\papinho_secure_transport.lib
-all: dirs $(PSTLIB) $(BUILD)\test_public_header.exe $(BUILD)\test_public_builtin_bootstrap.exe $(BUILD)\test_backend_openssl.exe $(BUILD)\test_openssl_runtime_integration.exe $(BUILD)\test_openssl_identity_integration.exe $(BUILD)\test_openssl_runtime_isolation.exe $(BUILD)\test_modern_provider_coexistence.exe $(BUILD)\test_openssl_system_trust_win32.exe $(BUILD)\libcrypto-3-x64.dll $(BUILD)\libssl-3-x64.dll
+all: dirs $(PSTLIB) $(BUILD)\test_public_combined_selection.exe $(BUILD)\libcrypto-3-x64.dll $(BUILD)\libssl-3-x64.dll
 
 dirs:
 	@if not exist build mkdir build
@@ -36,7 +36,7 @@ $(BUILD)\pst_runtime.obj: src\pst_runtime.c
 $(BUILD)\pst_transport_win32.obj: src\platform\win32\pst_transport_win32.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\pst_builtin_manifest.obj: src\platform\win32\pst_builtin_manifest.c
-	$(CC) $(CFLAGS) /DPST_BUILTIN_OPENSSL /Fo$@ /c $**
+	$(CC) $(CFLAGS) /DPST_BUILTIN_SCHANNEL /DPST_BUILTIN_OPENSSL /Fo$@ /c $**
 $(BUILD)\pst_backend_openssl.obj: src\backends\openssl\pst_backend_openssl.c
 	$(CC) $(OSSL_CFLAGS) /Fo$@ /c $**
 $(OSSL_SYSTEM_TRUST): src\backends\openssl\platform\win32\pst_openssl_system_trust_win32.c
@@ -54,7 +54,7 @@ $(BUILD)\test_backend_openssl.exe: $(BUILD)\test_backend_openssl.obj $(PSTLIB)
 
 $(BUILD)\test_openssl_runtime_integration.obj: tests\test_openssl_runtime_integration.c
 	$(CC) $(OSSL_CFLAGS) /Fo$@ /c $**
-$(BUILD)\test_openssl_runtime_integration.exe: $(BUILD)\test_openssl_runtime_integration.obj $(BUILD)\pst_backend_openssl.obj $(OSSL_SYSTEM_TRUST) $(PSTLIB)
+$(BUILD)\test_openssl_runtime_integration.exe: $(BUILD)\test_openssl_runtime_integration.obj $(BUILD)\pst_backend_schannel.obj $(BUILD)\pst_backend_openssl.obj $(OSSL_SYSTEM_TRUST) $(PSTLIB)
 	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib crypt32.lib
 
 
@@ -62,7 +62,7 @@ $(BUILD)\test_openssl_runtime_integration.exe: $(BUILD)\test_openssl_runtime_int
 
 $(BUILD)\test_openssl_runtime_isolation.obj: tests\test_openssl_runtime_isolation.c
 	$(CC) $(OSSL_CFLAGS) /Fo$@ /c $**
-$(BUILD)\test_openssl_runtime_isolation.exe: $(BUILD)\test_openssl_runtime_isolation.obj $(BUILD)\pst_backend_schannel.obj $(BUILD)\pst_backend_openssl.obj $(OSSL_SYSTEM_TRUST) $(PSTLIB)
+$(BUILD)\test_openssl_runtime_isolation.exe: $(BUILD)\test_openssl_runtime_isolation.obj $(BUILD)\pst_backend_schannel.obj $(BUILD)\pst_backend_schannel.obj $(BUILD)\pst_backend_openssl.obj $(OSSL_SYSTEM_TRUST) $(PSTLIB)
 	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib secur32.lib crypt32.lib ncrypt.lib
 
 $(BUILD)\test_openssl_identity_integration.obj: tests\test_openssl_identity_integration.c
@@ -76,7 +76,7 @@ $(BUILD)\pst_backend_schannel.obj: src\backends\schannel\pst_backend_schannel.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_modern_provider_coexistence.obj: tests\test_modern_provider_coexistence.c
 	$(CC) $(OSSL_CFLAGS) /Fo$@ /c $**
-$(BUILD)\test_modern_provider_coexistence.exe: $(BUILD)\test_modern_provider_coexistence.obj $(BUILD)\pst_backend_schannel.obj $(BUILD)\pst_backend_openssl.obj $(OSSL_SYSTEM_TRUST) $(PSTLIB)
+$(BUILD)\test_modern_provider_coexistence.exe: $(BUILD)\test_modern_provider_coexistence.obj $(BUILD)\pst_backend_schannel.obj $(BUILD)\pst_backend_schannel.obj $(BUILD)\pst_backend_openssl.obj $(OSSL_SYSTEM_TRUST) $(PSTLIB)
 	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib secur32.lib crypt32.lib ncrypt.lib
 
 $(BUILD)\test_openssl_system_trust_win32.obj: tests\test_openssl_system_trust_win32.c
@@ -109,3 +109,10 @@ $(BUILD)\test_public_builtin_bootstrap.obj: tests\test_public_builtin_bootstrap.
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_public_builtin_bootstrap.exe: $(BUILD)\test_public_builtin_bootstrap.obj $(PSTLIB)
 	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib crypt32.lib
+
+$(BUILD)\test_public_combined_selection.obj: tests\test_public_combined_selection.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_public_combined_selection.exe: $(BUILD)\test_public_combined_selection.obj $(PSTLIB)
+	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib secur32.lib crypt32.lib ncrypt.lib
+combined-test: all
+	$(BUILD)\test_public_combined_selection.exe

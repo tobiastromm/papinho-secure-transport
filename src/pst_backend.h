@@ -101,6 +101,10 @@ typedef struct PST_BACKEND_DESCRIPTOR {
 #define PST_BACKEND_DESCRIPTOR_MIN_SIZE ((pst_u32)(offsetof(PST_BACKEND_DESCRIPTOR, vtable)+sizeof(((PST_BACKEND_DESCRIPTOR *)0)->vtable)))
 PST_RESULT pst_backend_validate(const PST_BACKEND_DESCRIPTOR *descriptor);
 PST_RESULT pst_backend_register(const PST_BACKEND_DESCRIPTOR *descriptor);
+PST_RESULT pst_backend_register_manifest(const PST_BACKEND_DESCRIPTOR *const *descriptors,pst_size count);
+void pst_backend_registry_seal(void);
+int pst_backend_registry_is_sealed(void);
+void pst_backend_test_manifest_fail_after(pst_size count);
 PST_RESULT pst_backend_unregister(const char *id);
 const PST_BACKEND_DESCRIPTOR *pst_backend_find(const char *id);
 const PST_BACKEND_DESCRIPTOR *pst_backend_find_by_index(pst_size index);

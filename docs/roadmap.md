@@ -128,10 +128,10 @@
     - provider ID, capability, registration, selection and lifecycle contract: complete
     - provider-neutral transport/readiness/I/O/diagnostic/metadata freeze: complete
     - append-only optional-hook gate and bounded-ID defects fixed: complete
-  - 9.D Documentation / community / examples: current; blocked pending public built-in bootstrap
+  - 9.D Documentation / community / examples: paused pending limited 9.B additive API addendum
     - 9.D0-A public built-in provider bootstrap architecture: complete
-    - 9.D0-B public built-in provider bootstrap implementation / validation: next; not started
-    - limited 9.B additive API addendum: pending after 9.D0-B
+    - 9.D0-B public built-in provider bootstrap implementation / validation: complete
+    - limited 9.B additive API addendum: next
   - 9.E Packaging / dependencies / licenses / provenance: not started
   - 9.F Release validation kit: not started
   - 9.G Release candidate / clean-machine validation: not started

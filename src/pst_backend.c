@@ -3,6 +3,8 @@
 #define PST_BACKEND_REGISTRY_CAPACITY 8
 static const PST_BACKEND_DESCRIPTOR *pst_backend_registry[PST_BACKEND_REGISTRY_CAPACITY];
 static pst_size pst_backend_registry_count;
+static int pst_backend_registry_sealed;
+static pst_size pst_backend_manifest_fail_after = (pst_size)-1;
 static int pst_backend_id_valid(const char *id)
 {
     const unsigned char *p;
@@ -72,6 +74,7 @@ PST_RESULT pst_backend_register(const PST_BACKEND_DESCRIPTOR *d)
 {
     PST_RESULT r;
     pst_size i;
+    if (pst_backend_registry_sealed) return PST_RESULT_INVALID_STATE;
     r = pst_backend_validate(d);
     if (r != PST_RESULT_OK) return r;
     for (i = 0; i < pst_backend_registry_count; ++i)
@@ -81,6 +84,62 @@ PST_RESULT pst_backend_register(const PST_BACKEND_DESCRIPTOR *d)
         return PST_RESULT_RESOURCE_FAILURE;
     pst_backend_registry[pst_backend_registry_count++] = d;
     return PST_RESULT_OK;
+}
+PST_RESULT pst_backend_register_manifest(const PST_BACKEND_DESCRIPTOR *const *descriptors,pst_size count)
+{
+    const PST_BACKEND_DESCRIPTOR *snapshot[PST_BACKEND_REGISTRY_CAPACITY];
+    const PST_BACKEND_DESCRIPTOR *found;
+    PST_RESULT result;
+    pst_size snapshot_count;
+    pst_size missing;
+    pst_size added;
+    pst_size i;
+    pst_size j;
+    if (pst_backend_registry_sealed) return PST_RESULT_INVALID_STATE;
+    if (count == 0) return PST_RESULT_UNAVAILABLE;
+    if (descriptors == NULL) return PST_RESULT_INVALID_ARGUMENT;
+    missing = 0;
+    for (i = 0; i < count; ++i) {
+        result = pst_backend_validate(descriptors[i]);
+        if (result != PST_RESULT_OK) return result;
+        for (j = 0; j < i; ++j)
+            if (strcmp(descriptors[j]->id,descriptors[i]->id) == 0)
+                return PST_RESULT_INVALID_STATE;
+        found = pst_backend_find(descriptors[i]->id);
+        if (found != NULL && found != descriptors[i])
+            return PST_RESULT_INVALID_STATE;
+        if (found == NULL) ++missing;
+    }
+    if (missing > PST_BACKEND_REGISTRY_CAPACITY - pst_backend_registry_count)
+        return PST_RESULT_RESOURCE_FAILURE;
+    snapshot_count = pst_backend_registry_count;
+    for (i = 0; i < snapshot_count; ++i) snapshot[i] = pst_backend_registry[i];
+    added = 0;
+    for (i = 0; i < count; ++i) {
+        if (pst_backend_find(descriptors[i]->id) != NULL) continue;
+        if (added == pst_backend_manifest_fail_after) {
+            result = PST_RESULT_BACKEND_FAILURE;
+            goto rollback;
+        }
+        result = pst_backend_register(descriptors[i]);
+        if (result != PST_RESULT_OK) goto rollback;
+        ++added;
+    }
+    pst_backend_manifest_fail_after = (pst_size)-1;
+    return PST_RESULT_OK;
+rollback:
+    for (i = 0; i < snapshot_count; ++i) pst_backend_registry[i] = snapshot[i];
+    for (i = snapshot_count; i < pst_backend_registry_count; ++i)
+        pst_backend_registry[i] = NULL;
+    pst_backend_registry_count = snapshot_count;
+    pst_backend_manifest_fail_after = (pst_size)-1;
+    return result;
+}
+void pst_backend_registry_seal(void) { pst_backend_registry_sealed = 1; }
+int pst_backend_registry_is_sealed(void) { return pst_backend_registry_sealed; }
+void pst_backend_test_manifest_fail_after(pst_size count)
+{
+    pst_backend_manifest_fail_after = count;
 }
 PST_RESULT pst_backend_unregister(const char *id)
 {
@@ -115,4 +174,6 @@ void pst_backend_registry_reset(void)
     for (i = 0; i < pst_backend_registry_count; ++i)
         pst_backend_registry[i] = NULL;
     pst_backend_registry_count = 0;
+    pst_backend_registry_sealed = 0;
+    pst_backend_manifest_fail_after = (pst_size)-1;
 }

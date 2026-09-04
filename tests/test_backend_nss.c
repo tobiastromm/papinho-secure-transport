@@ -1,4 +1,5 @@
 #include "backends/nss/pst_backend_nss.h"
+#include "papinho_secure_transport_win32.h"
 #include "prerr.h"
 #include "sslerr.h"
 #include "secerr.h"
@@ -99,7 +100,8 @@ int main(void)
     CHECK(pst_backend_nss_normalize_error(SSL_ERROR_NO_CYPHER_OVERLAP) == PST_RESULT_PROTOCOL_FAILURE, 13);
     CHECK(pst_backend_nss_normalize_error(SEC_ERROR_LIBRARY_FAILURE) == PST_RESULT_BACKEND_FAILURE, 14);
     CHECK(pst_backend_nss_last_error(NULL) == 0, 15);
-    CHECK(pst_backend_nss_register() == PST_RESULT_OK, 16);
+    CHECK(pst_win32_register_retrozilla_nss() == PST_RESULT_OK, 16);
+    CHECK(pst_win32_register_builtin_providers() == PST_RESULT_OK, 67);
     found = pst_backend_find("retrozilla-nss"); CHECK(found == descriptor, 17);
     CHECK(pst_backend_nss_register() == PST_RESULT_INVALID_STATE, 18);
     CHECK(pst_backend_unregister("retrozilla-nss") == PST_RESULT_OK, 19);
