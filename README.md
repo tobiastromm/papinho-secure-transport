@@ -1,23 +1,32 @@
 # PapinhoSecureTransport
 
-PapinhoSecureTransport (PST) is a small C library for secure connections without coupling an application to one TLS engine or one Windows generation. It serves public-Internet, LAN, private/corporate, legacy-to-modern, and modern-to-modern software. HTTP, SMTP, IMAP, ERP protocols, and custom application protocols run above PST; PST does not implement them.
+**PapinhoSecureTransport (PST)** gives applications a common interface for secure communication without tying their main code to a single TLS/security implementation or a single generation of operating system.
 
-Today PST implements TLS through three real providers: RetroZilla NSS for the Windows NT 4.0 target, Schannel for modern Windows, and OpenSSL 3.5.8. TLS is the current secure transport—not a promise that SPI 2.4 already supports DTLS, QUIC, Noise, or other future designs.
+TLS is the secure-transport protocol implemented by PST today. Current providers include **RetroZilla NSS**, **Windows Schannel**, and **OpenSSL**, with validated scenarios ranging from Windows NT 4.0 to Windows 10.
 
-## Start here
+PST is designed for more than Internet software: it can sit underneath browsers, e-mail clients, business client/server applications, LAN services, and custom protocols while keeping application logic separate from provider-specific TLS code.
 
-- [English documentation](docs/en/README.md)
-- [Documentação em Português (Brasil)](docs/pt-BR/README.md)
-- [English Getting Started](docs/en/getting-started.md)
-- [Primeiros passos em português](docs/pt-BR/primeiros-passos.md)
-- [Examples](examples/README.md)
-- [Build overview](docs/en/build.md)
-- [Contributing](docs/en/contributing.md) · [Como contribuir](docs/pt-BR/como-contribuir.md)
+A longer project introduction is currently available in Portuguese. The full English version will be prepared after that text is finalized.
 
-A normal Win32 program calls `pst_win32_register_builtin_providers()`, selects a runtime, configures authenticated TLS, attaches a connected socket, and drives bounded incremental operations.
+## Documentation
 
-## Why legacy support matters
+- 🇧🇷 [Português (Brasil) — apresentação completa do projeto](README.pt-BR.md)
+- 🇬🇧 Full English documentation — coming after the Portuguese text is finalized
 
-Preserving old computers should not require modern servers to re-enable obsolete cryptography. PST explores moving modern, fail-closed secure transport toward legacy applications where technically feasible. PapinhoBrowser and PapinhoLegacyMail are example consumers. PapinhoAccelerator is specific to PapinhoBrowser; it is not PST infrastructure and is not a PST or LegacyMail dependency.
+## Current highlights
 
-API 1.3.0 and internal provider SPI 2.4 are frozen for the Phase-9 baseline; Library 0.3.0 remains current. Packaging and release validation are still in progress; this is not yet the final Phase-9 release. PST's own license is under review for Phase 9.E. Dependency notices and provenance remain authoritative in `third_party/` and the linked engineering records.
+- TLS 1.2 validated with all three current providers
+- TLS 1.3 validated with RetroZilla NSS and OpenSSL
+- Windows NT 4.0 SP6 x86 validation with RetroZilla NSS
+- Windows 10 build 19045 x64 validation with Schannel and OpenSSL
+- Public API 1.3.0
+- Provider SPI 2.4
+- Explicit built-in provider bootstrap through `pst_win32_register_builtin_providers()`
+
+The project is still preparing its first stabilized public distribution. Platform validation, packaging, and documentation are still being completed.
+
+## Contributing
+
+Contributions are welcome in documentation, real-hardware testing, legacy Windows, NSS/NSPR research, Schannel, OpenSSL, modern TLS on older systems, new providers, platform ports, examples, provenance, licensing review, and — when there is a real use case and community interest — research into other secure-transport families.
+
+See the full Portuguese introduction above for the project’s motivation and architecture.
