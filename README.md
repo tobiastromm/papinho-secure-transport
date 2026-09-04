@@ -1,17 +1,22 @@
 # PapinhoSecureTransport
 
-**PapinhoSecureTransport (PST)** gives applications a common interface for secure communication without tying their main code to a single TLS/security implementation or a single generation of operating system.
+**PapinhoSecureTransport (PST)** gives applications a common interface for secure communication while keeping provider-specific security code out of the application’s main logic.
 
-TLS is the secure-transport protocol implemented by PST today. Current providers include **RetroZilla NSS**, **Windows Schannel**, and **OpenSSL**, with validated scenarios ranging from Windows NT 4.0 to Windows 10.
+Instead of making an application depend directly on the APIs, types, lifecycle, and particular behavior of a specific TLS implementation, PST places a common boundary between the application and compatible security providers.
 
-PST is designed for more than Internet software: it can sit underneath browsers, e-mail clients, business client/server applications, LAN services, and custom protocols while keeping application logic separate from provider-specific TLS code.
+TLS is the secure-transport protocol implemented by PST today. Current providers include **RetroZilla NSS**, **Windows Schannel**, and **OpenSSL**.
 
-A longer project introduction is currently available in Portuguese. The full English version will be prepared after that text is finalized.
+Validated scenarios currently include **TLS 1.2 and TLS 1.3 on Windows NT 4.0 SP6 x86 through RetroZilla NSS**, and Schannel/OpenSSL targets validated on **Windows 10 build 19045 x64**.
+
+PST is not limited to Internet software. It can sit underneath browsers, e-mail clients, business client/server applications, LAN services, messaging systems, and custom protocols. HTTP, SMTP, IMAP, ERP protocols, and other application protocols remain outside PST.
+
+The same separation can also help software age more gracefully: as operating systems, security libraries, and standards evolve, provider-specific changes can remain concentrated in the secure-transport layer instead of spreading throughout the application.
 
 ## Documentation
 
 - 🇧🇷 [Português (Brasil) — apresentação completa do projeto](docs/pt-BR/README.md)
-- 🇬🇧 Full English documentation — coming after the Portuguese text is finalized
+- 🇧🇷 [Português (Brasil) — guia prático: build, integração e exemplos](docs/pt-BR/getting-started.md)
+- 🇬🇧 Full English documentation — in preparation
 
 ## Current highlights
 
@@ -23,10 +28,14 @@ A longer project introduction is currently available in Portuguese. The full Eng
 - Provider SPI 2.4
 - Explicit built-in provider bootstrap through `pst_win32_register_builtin_providers()`
 
-The project is still preparing its first stabilized public distribution. Platform validation, packaging, and documentation are still being completed.
+The project is still preparing its first stabilized public distribution. Additional platform validation, packaging, licensing review, and release preparation are still in progress.
 
 ## Contributing
 
-Contributions are welcome in documentation, real-hardware testing, legacy Windows, NSS/NSPR research, Schannel, OpenSSL, modern TLS on older systems, new providers, platform ports, examples, provenance, licensing review, and — when there is a real use case and community interest — research into other secure-transport families.
+Contributions are welcome in documentation, real-hardware testing, legacy Windows, NSS/NSPR research, Schannel, OpenSSL, modern TLS on older systems, new providers, platform ports, examples, dependency origin and reproducibility, and licensing review.
 
-See the full Portuguese introduction above for the project’s motivation and architecture.
+**TLS is the only secure-transport protocol implemented by PST today.** If there is a real use case, an appropriate architecture, and community interest, contributors may also explore other secure-transport families in the future.
+
+A particularly valuable area of research is maintaining or developing reproducible NSS/NSPR-based paths capable of bringing modern TLS to older operating systems.
+
+See the [full Portuguese introduction](docs/pt-BR/README.md) for the project’s motivation, architecture, provider model, trust concepts, retrocomputing perspective, and community goals.
