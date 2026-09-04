@@ -10,7 +10,7 @@ A longer project introduction is currently available in Portuguese. The full Eng
 
 ## Documentation
 
-- 🇧🇷 [Português (Brasil) — apresentação completa do projeto](README.pt-BR.md)
+- 🇧🇷 [Português (Brasil) — apresentação completa do projeto](docs/pt-BR/README.md)
 - 🇬🇧 Full English documentation — coming after the Portuguese text is finalized
 
 ## Current highlights
