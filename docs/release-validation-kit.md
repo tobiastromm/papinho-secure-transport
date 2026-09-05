@@ -57,11 +57,11 @@ Transfer the unmodified NSS ZIP and its externally recorded SHA-256 to Windows N
 
 The real package-derived run was performed on Windows NT 4.0 SP6 x86. The modern fixture was 172.16.0.1 and the NT4 client was 172.16.0.11. TLS 1.2 negotiated 0x0303 and TLS 1.3 negotiated 0x0304. Both runs reported WRITE=25, READ=25, CONTENT_MATCH=1, ALPN=9, AUTH=2, and the release-specific PASS marker. Both servers reported AUTH=True, ALPN=fixture/1, RECV=25, SEND=25, and CONTENT_MATCH=True. The supplied captures also showed incremental readiness and provider shutdown. NSS/NSPR DLLs remained beside the executable; none was installed in SYSTEM32. Evidence files produced on NT4 were tls12-client.log, tls13-client.log, tls12-modules.log, and tls13-modules.log.
 
-The host-side isolated run is not a clean-machine result and is not a substitute for this NT4 gate. Phase 9.G has not started.
+The host-side isolated run is not a clean-machine result and is not a substitute for this NT4 gate.
 
 ## Current closure decision
 
-The package hashes, extraction, internal hashes, licensing/source boundaries, four minimal public consumers, NSS host and real NT4 TLS 1.2/TLS 1.3, Schannel TLS 1.2, OpenSSL TLS 1.2/TLS 1.3, online OpenSSL TLS 1.3 SYSTEM_TRUST, Combined public selection, and DLL provenance are PASS. Clean-machine x64 execution was not performed and is explicitly deferred to Phase 9.G; isolated-package validation is not described as clean-machine validation. No package or production source was modified, and Phase 9.G remains NOT STARTED.
+The package hashes, extraction, internal hashes, licensing/source boundaries, four minimal public consumers, NSS host and real NT4 TLS 1.2/TLS 1.3, Schannel TLS 1.2, OpenSSL TLS 1.2/TLS 1.3, online OpenSSL TLS 1.3 SYSTEM_TRUST, Combined public selection, and DLL provenance are PASS. Clean-machine x64 execution was not performed; isolated-package validation is not described as clean-machine validation. No package or production source was modified, and Phase 9.G is BLOCKED pending real clean-machine x64 execution and a canonical package-creation procedure.
 ## X64 package execution evidence
 
 All functional consumers were compiled with /MD /W4 from test sources in the extracted source ZIP, using public headers and static libraries only from the applicable extracted SDK. The initial commands produced C4996 warnings for legacy CRT calls; recompilation used the build policy _CRT_SECURE_NO_WARNINGS and completed with zero warnings. No build output or dist/staging path was an input.
@@ -75,3 +75,6 @@ OpenSSL TLS 1.3 SYSTEM_TRUST passed online against www.cloudflare.com at 104.16.
 The Combined public matrix passed: TLS 1.2 SYSTEM_TRUST AUTOMATIC selected schannel; TLS 1.3 SYSTEM_TRUST AUTOMATIC selected openssl; EXACT openssl TLS 1.3 passed; EXACT schannel TLS 1.3 returned UNSUPPORTED; ORDERED openssl then schannel for TLS 1.2 selected openssl.
 
 With PATH restricted to the executable directory and Windows system directories, the loaded paths were dist/validation/0.4.0/x64-openssl/libssl-3-x64.dll and libcrypto-3-x64.dll. Their SHA-256 values matched the extracted SDK files: libssl 3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed and libcrypto 09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044. Dumpbin showed no OpenSSL dependency for Schannel and the expected OpenSSL dependencies for OpenSSL and Combined.
+## Phase 9.G clean-machine status
+
+Phase 9.G revalidated all five immutable ZIP hashes and every offline archive, internal-hash, license, and corresponding-source gate. The available Windows 10 build 19045 x64 host contains the PST checkout and a developer PATH. No usable Windows Sandbox, Hyper-V, VMware, VirtualBox, Docker, or Podman clean environment was available. Consequently `CLEAN_MACHINE_RUNTIME=NOT_PERFORMED`; the earlier isolated-package results remain PASS but are not relabeled as clean-machine evidence. Phase 9.G and Phase 9 remain blocked only on real clean-machine x64 execution of the Schannel, OpenSSL, and Combined package gates.

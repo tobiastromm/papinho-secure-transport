@@ -138,7 +138,7 @@
     - 9.E-H repository/source-package hygiene: complete
     - Combined Schannel/OpenSSL: official optional binary SDK candidate; not default or recommended
   - 9.F Release validation kit: complete; extracted-package, real NT4, x64 provider, online system-trust, Combined selection and provenance gates pass; clean-machine execution deferred to 9.G
-  - 9.G Release candidate / clean-machine validation: not started
+  - 9.G Release candidate / clean-machine validation: blocked; offline closure gates pass, but real clean-machine Windows x64 Schannel/OpenSSL/Combined execution is not performed
   - 9.H Final closure / release baseline: not started
   - documentation handoff: concise root README linking complete English and pt-BR paths, written for non-experts
   - scope wording: PST is generic secure transport for Internet, LAN, and private/corporate networks; PapinhoBrowser/PapinhoAccelerator are examples only
