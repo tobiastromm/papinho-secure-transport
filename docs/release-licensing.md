@@ -4,11 +4,11 @@ This is a technical inventory, not legal advice.
 
 ## Blocking project decision
 
-PST has no root `LICENSE`, no selected SPDX identifier, and no package license declaration. Public headers do not grant a project-wide license. The README says that the project license is under review. Therefore public redistribution of a PST source or binary release is **BLOCKED ON PST LICENSE DECISION**.
+PST has no root `LICENSE`, no operative SPDX identifier, and no package license declaration. Public headers do not grant a project-wide license. Public redistribution of a PST source or binary release therefore remains **BLOCKED ON EXPLICIT PST LICENSE APPROVAL AND APPLICATION**.
 
-The project owner must explicitly select and approve a license. Options to review include permissive licenses such as MIT, BSD-2-Clause, BSD-3-Clause, or Apache-2.0, and reciprocal licenses such as MPL-2.0. The choice affects notice, patent, source/modification, and compatibility expectations; no option is selected here.
+The owner's candidate, MPL-2.0, has completed a technical compatibility audit with the result **confirmed with conditions**. The recommended form is the standard unmodified MPL 2.0 without Exhibit B, preserving its Secondary Licenses mechanism. The audit found it compatible with the static-only NSS, Schannel, and OpenSSL SDK model, provided file-level source, notice, third-party separation, ownership, and corresponding-source conditions are met. See `docs/mpl-2.0-license-audit.md`.
 
-After selection, add the authoritative root license, copyright holder/year policy, header policy if desired, README declaration, package metadata, and a compatibility review against every redistributed dependency.
+This audit is not authorization to apply the candidate. After explicit owner approval, add the authoritative root license, establish the project-owned file notice policy, update package metadata and notices, and execute the audit's source/package gates. Third-party files retain their existing terms and must not be relicensed as PST code.
 
 ## Third-party classification
 
