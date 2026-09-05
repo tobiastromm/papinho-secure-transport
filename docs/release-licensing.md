@@ -1,21 +1,23 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Release licensing audit
 
 This is a technical inventory, not legal advice.
 
-## Blocking project decision
+## Applied project license
 
-PST has no root `LICENSE`, no operative SPDX identifier, and no package license declaration. Public headers do not grant a project-wide license. Public redistribution of a PST source or binary release therefore remains **BLOCKED ON EXPLICIT PST LICENSE APPROVAL AND APPLICATION**.
+PapinhoSecureTransport project-authored files are licensed under the standard Mozilla Public License 2.0 without an Exhibit B incompatibility notice. The authoritative unmodified text is in the root LICENSE file; short SPDX identifiers identify covered project files.
 
-The owner's candidate, MPL-2.0, has completed a technical compatibility audit with the result **confirmed with conditions**. The recommended form is the standard unmodified MPL 2.0 without Exhibit B, preserving its Secondary Licenses mechanism. The audit found it compatible with the static-only NSS, Schannel, and OpenSSL SDK model, provided file-level source, notice, third-party separation, ownership, and corresponding-source conditions are met. See `docs/mpl-2.0-license-audit.md`.
+The authority audit found only Tobias Tromm and tobiastromm with the same email identity in the history of the project-owned trees, and no external notices outside third_party. No known authority blocker remains. This is a repository-evidence conclusion, not legal advice.
 
-This audit is not authorization to apply the candidate. After explicit owner approval, add the authoritative root license, establish the project-owned file notice policy, update package metadata and notices, and execute the audit's source/package gates. Third-party files retain their existing terms and must not be relicensed as PST code.
+The four static SDKs preserve file-level source availability through papinho-secure-transport-0.4.0-src.zip. Third-party files retain their independent terms and are not relicensed as PST code.
 
 ## Third-party classification
 
-| Component | Evidence | Package treatment | Status before public release |
+| Component | Evidence | Package treatment | Release status |
 |---|---|---|---|
-| RetroZilla/NSS 3.42 Beta/NSPR 4.7.7 lineage | `third_party/retrozilla-nss/licenses/`, `PROVENANCE.md`, source/binary manifests and ordered patch | legacy SDK carries preserved license evidence and runtime binaries | REVIEW REQUIRED |
-| OpenSSL 3.5.8 LTS | Apache-2.0 text, source/prebuilt manifests and provenance | OpenSSL SDK carries license text, import libraries and two runtime DLLs | VERIFIED evidence; final combined-distribution review required |
+| RetroZilla/NSS 3.42 Beta/NSPR 4.7.7 lineage | `third_party/retrozilla-nss/licenses/`, `PROVENANCE.md`, source/binary manifests and ordered patch | legacy SDK carries preserved license evidence and runtime binaries | SOURCE/NOTICE PRESERVED |
+| OpenSSL 3.5.8 LTS | Apache-2.0 text, source/prebuilt manifests and provenance | OpenSSL SDK carries license text, import libraries and two runtime DLLs | LICENSE/PROVENANCE PRESERVED |
 | Windows Schannel/CryptoAPI/Winsock/CNG and CRT/UCRT | supplied by Windows or Microsoft redistributable/toolchain | not copied by PST staging | NOT REDISTRIBUTED |
 
 RetroZilla/NSS/NSPR files contain historical MPL and tri-license notices. Preserving texts is necessary but is not itself a conclusion about every source or modification obligation. The fail-closed RNG patch and source/build records remain linked from provenance.

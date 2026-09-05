@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #include "pst_backend.h"
 #include "pst_internal.h"
 #include "pst_transport_internal.h"

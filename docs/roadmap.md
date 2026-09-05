@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Roadmap
 
 - Phase 0 - Scope, Provenance & Architecture: complete
@@ -132,7 +134,7 @@
     - 9.D0-A public built-in provider bootstrap architecture: complete
     - 9.D0-B public built-in provider bootstrap implementation / validation: complete
     - limited 9.B additive API addendum / API 1.3.0 freeze: complete
-  - 9.E Packaging / dependencies / licenses / provenance: in progress; blocked until 9.E-L2 applies the approved standard MPL-2.0 without Exhibit B and closes remaining gates
+  - 9.E Packaging / dependencies / licenses / provenance: complete; standard MPL-2.0 without Exhibit B applied; Library/Package 0.4.0 and five local package candidates validated
     - 9.E-H repository/source-package hygiene: complete
     - Combined Schannel/OpenSSL: official optional binary SDK candidate; not default or recommended
   - 9.F Release validation kit: not started

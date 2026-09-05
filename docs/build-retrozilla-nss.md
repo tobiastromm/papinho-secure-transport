@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Rebuilding the historical RetroZilla NSS/NSPR runtime
 
 This is a third-party reproduction procedure, separate from the normal PST build. It reconstructs the environment formerly staged under `C:\PSTW`; that path is not required.

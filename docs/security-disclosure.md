@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Diagnostics and security disclosure matrix
 
 Status: Phase 7.G complete. The disclosure audit, focused abuse matrix, functional logging equivalence, remote semantic equivalence, and formal closure audit all passed without production behavior or public ABI changes.

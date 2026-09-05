@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # PapinhoSecureTransport
 
 ## Secure communication without tying your application to a single security library
@@ -422,3 +424,7 @@ Windows NT 4.0 and Windows 10 build 19045.
 The first stabilized public distribution is still being prepared, so
 some platforms and packaging formats remain **pending validation**
 rather than being presented as guaranteed support.
+
+## License
+
+PapinhoSecureTransport is licensed under the [Mozilla Public License 2.0](../../LICENSE). Redistributed dependencies retain their own terms; see [Third-party notices](../../THIRD_PARTY_NOTICES.md).

@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # PapinhoSecureTransport
 
 ## Comunicação segura sem prender sua aplicação a uma única biblioteca de segurança
@@ -703,3 +705,6 @@ O PST possui atualmente:
 A preparação da primeira distribuição pública estabilizada ainda está em andamento.
 
 Por isso, algumas plataformas e formatos de pacote ainda aparecem como **pendentes de validação**, em vez de serem apresentados como suporte já garantido.
+## Licença
+
+O PapinhoSecureTransport é licenciado sob a [Mozilla Public License 2.0](../../LICENSE). Dependências redistribuídas preservam seus próprios termos; consulte os [avisos de terceiros](../../THIRD_PARTY_NOTICES.md).

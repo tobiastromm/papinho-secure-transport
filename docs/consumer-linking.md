@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Consumer linking and runtime manifest
 
 Consumers include only `papinho_secure_transport.h` and, for Win32 transport/bootstrap, `papinho_secure_transport_win32.h`. They never include the provider SPI or private source headers.

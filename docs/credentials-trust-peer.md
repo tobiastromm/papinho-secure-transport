@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Credentials, trust, and peer identity
 
 Phase 4 materializes the backend-neutral identity objects without starting the public TLS runtime from Phase 5.

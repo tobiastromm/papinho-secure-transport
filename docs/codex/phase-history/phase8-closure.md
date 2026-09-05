@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Phase 8 closure audit
 
 Status: **Phase 8 - Multiple Backends / Provider Evolution: complete**. Phase 9 has not started.

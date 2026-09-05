@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Modern MSVC x64 build
 
 The canonical modern Windows target uses the newest complete Visual Studio C++ Build Tools installation discovered by `vswhere.exe`. It is independent from the VC6/RetroZilla NSS target.

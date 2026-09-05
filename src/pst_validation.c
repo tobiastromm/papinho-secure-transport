@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #include "pst_internal.h"
 typedef struct pst_public_struct_header {
     pst_u32 struct_size;

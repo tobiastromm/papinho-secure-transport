@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #include "papinho_secure_transport_win32.h"
 #include "pst_backend.h"
 #if defined(PST_BUILTIN_RETROZILLA_NSS)

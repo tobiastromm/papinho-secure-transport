@@ -1,3 +1,4 @@
+@rem SPDX-License-Identifier: MPL-2.0
 @echo off
 if not "%PST_MODERN_VCVARS64%"=="" goto validate_path
 set PST_VSWHERE=C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe

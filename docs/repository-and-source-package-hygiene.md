@@ -1,6 +1,8 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Repository and source-package hygiene
 
-Status: Phase 9.E-H complete. This is the normative separation between repository history, the source package, and target binary SDKs. It does not apply MPL-2.0, promote version 0.4.0, or start Phase 9.F.
+Status: Phase 9.E-H complete. This is the normative separation between repository history, the source package, and target binary SDKs. Phase 9.E-L2 has now applied MPL-2.0 and promoted Library/Package 0.4.0; Phase 9.F remains unstarted.
 
 ## Principles
 
@@ -80,7 +82,7 @@ The global `*.zip` ignore rule incorrectly hid the exact RetroZilla correspondin
 
 `tools/stage-release-source.ps1` implements an allowlist. It stages the root README, notices and four Makefiles, then the explicit trees `include/`, `src/`, `tests/`, `examples/`, `tools/`, `packaging/`, and `third_party/`. It selects all current `docs/` files except `docs/codex/`.
 
-The dry-run always excludes `.git/`, `build/`, nested `dist/staging/`, IDE metadata, logs, and temporary outputs. It verifies required public headers, PST source, build scripts, notices, OpenSSL source/provenance, and the exact RetroZilla snapshot, patch, and provenance. The absent root `LICENSE` is recorded as the expected pre-application gate; the script will include it automatically after the approved licensing step.
+The dry-run always excludes `.git/`, `build/`, nested `dist/staging/`, IDE metadata, logs, and temporary outputs. It verifies required public headers, PST source, build scripts, notices, OpenSSL source/provenance, and the exact RetroZilla snapshot, patch, and provenance. The root LICENSE is mandatory and is included in the staged source package and every binary SDK.
 
 The source package deliberately includes canonical third-party binaries alongside source, manifests, patches and provenance because they are inputs to the supported/reproducible builds. This is distinct from blindly copying build outputs.
 
@@ -107,6 +109,6 @@ The Combined SDK includes the single validated combined PST static library, Open
 
 ## Generated files and checks
 
-Staging creates `VERSION`, `manifest.ini`, `consumer-link.ini`, `SHA256SUMS.txt`, and the source-package status record. These generated files belong only to `dist/staging/` and are not versioned. Final ZIP creation, signing, MPL application, and version 0.4.0 promotion remain Phase 9.E closure work.
+Staging creates `VERSION`, `manifest.ini`, `consumer-link.ini`, `SHA256SUMS.txt`, and the source-package status record. These generated files belong only to `dist/staging/` and are not versioned. Local candidate ZIP creation is part of Phase 9.E closure. Signing and publication remain future release work.
 
 Markdown links must resolve relative to the moved document's new directory. Historical path text may remain only when explicitly discussing the old context. Absolute paths are permitted in build/provenance instructions where they identify deliberate local tool overrides; they are forbidden as hidden runtime/package dependencies. Obvious-secret scanning must distinguish deliberate negative-test fixtures from actual credentials.

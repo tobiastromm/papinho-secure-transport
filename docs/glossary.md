@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Glossary
 
 - **Secure transport:** authenticated and encrypted byte transport below an application protocol.

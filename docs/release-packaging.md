@@ -1,6 +1,8 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Release packaging decision
 
-Status: Phase 9.E technical staging is defined. Standard MPL-2.0 without Exhibit B is approved for later application, but public redistribution remains blocked until that application and the remaining 9.E gates are complete.
+Status: Phase 9.E complete. Standard MPL-2.0 without Exhibit B is applied; the 0.4.0 source package and four static binary SDK candidates are staged locally. Publication and clean-machine validation remain later gates.
 
 ## Distribution model
 
@@ -19,7 +21,7 @@ Combined is now an official optional binary SDK candidate. It is neither the def
 
 ## SDK tree
 
-`tools/stage-release-sdk.ps1` recreates the four technical binary candidates under `dist/staging/0.3.0/<target-id>`:
+`tools/stage-release-sdk.ps1` recreates the four technical binary candidates under `dist/staging/0.4.0/<target-id>`:
 
 ```text
 README.md
@@ -36,7 +38,7 @@ docs/
 examples/
 ```
 
-Staging is not a public release. It deliberately omits PST `LICENSE` while recording `license_status=REVIEW_REQUIRED`. It contains no objects, private headers, test fixtures, keys, caches, dumps, or provider source. Target IDs avoid time-relative words.
+Staging is not a public release. It includes PST LICENSE and records license_id=MPL-2.0 plus the exact 0.4.0 source-package reference. It contains no objects, private headers, test fixtures, keys, caches, dumps, or provider source. Target IDs avoid time-relative words.
 
 `tools/stage-release-source.ps1` separately creates an allowlisted source-package dry-run, excluding `docs/codex/`, build/staging outputs and repository metadata while preserving tests, tooling and corresponding third-party source. See `repository-and-source-package-hygiene.md`.
 
@@ -44,7 +46,7 @@ The eventual archive name should be `papinho-secure-transport-<package-version>-
 
 ## Version decision
 
-Technical staging keeps Package/Library `0.3.0`, API `1.3.0`, and SPI `2.4`. The accumulated provider and packaging evolution justifies `0.4.0` for the eventual Phase-9 release, but promotion must occur only after the approved PST license is applied and update normative sources/tests/docs together. No version is changed in 9.E.
+Package and Library are 0.4.0. API remains 1.3.0 and SPI remains 2.4. The compatible library promotion records the accumulated provider, bootstrap, documentation, packaging, provenance and licensing work without changing API/SPI.
 
 ## Consumer placement
 

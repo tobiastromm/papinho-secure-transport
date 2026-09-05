@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MPL-2.0
 param(
     [ValidateSet("12","13")][string]$TlsVersion="12",
     [int]$Port=8472,

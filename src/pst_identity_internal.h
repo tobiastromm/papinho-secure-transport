@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #ifndef PST_IDENTITY_INTERNAL_H
 #define PST_IDENTITY_INTERNAL_H
 #include "papinho_secure_transport.h"

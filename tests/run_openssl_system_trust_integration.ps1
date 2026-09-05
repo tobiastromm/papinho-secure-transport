@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MPL-2.0
 param([string[]]$Endpoints=@("www.cloudflare.com","www.google.com"))
 $ErrorActionPreference="Stop"
 if($Endpoints.Count -lt 2){throw "At least two configurable endpoints are required"}

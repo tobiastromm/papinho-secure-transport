@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Public API examples
 
 These sources include only public PST headers. They are intentionally small building blocks; replace fixture paths, addresses and certificates with deployment-controlled values.

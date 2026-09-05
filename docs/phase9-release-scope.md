@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Phase 9 release scope, version policy, and canonical inventory
 
 Status: **Phase 9.A complete**. Phase 9 is in progress; Phase 9.B through 9.H have not started. This document defines release inputs and decisions, but does not freeze ABI/SPI, change versions, or create packages.
@@ -78,13 +80,13 @@ This is an inventory, not legal advice. Before release, 9.E must select the PST 
 
 ## Versions and proposed policy
 
-After the public-bootstrap addendum, current values are API **1.3.0**, library **0.3.0**, and SPI **2.4**. They evolve independently:
+After the public-bootstrap addendum, release values are API **1.3.0**, library **0.4.0**, and SPI **2.4**. They evolve independently:
 
 - The API version identifies the public consumer contract and accepted structure/version families. Patch means compatible clarification/fix with no ABI layout or behavior break; minor means compatible additions using guarded tails/new symbols; major means an intentionally incompatible public contract. 9.B must validate these proposed rules before calling the ABI frozen.
 - The library version identifies the shipped implementation/release. Patch means compatible defect/documentation/build correction; minor means meaningful compatible implementation/provider capability growth; major means a maturity/compatibility commitment justified by the full release, not merely a phase number.
 - The SPI version identifies the internal provider contract. Patch/minor terminology is project-defined: a compatible guarded extension may increment the SPI minor, while a required prefix/layout/semantic incompatibility requires a new SPI major. 9.C owns the precise freeze and compatibility rules.
 
-Recommendation: **RECOMMEND_0_4_0_FOR_PHASE9**, but do not apply it before the Phase 9 release decision. Since 0.3.0, the implementation gained deterministic multi-provider selection, Schannel, OpenSSL 3.5.8, TLS1.3, Windows OpenSSL SYSTEM_TRUST, cross-provider validation, and substantial lifecycle/readiness/security hardening. This is meaningful compatible feature growth appropriate for a 0.4.0 candidate.
+Decision: **0.4.0 applied for Phase 9 packaging closure**. Since 0.3.0, the implementation gained deterministic multi-provider selection, Schannel, OpenSSL 3.5.8, TLS1.3, Windows OpenSSL SYSTEM_TRUST, cross-provider validation, and substantial lifecycle/readiness/security hardening. This is meaningful compatible feature growth appropriate for a 0.4.0 candidate.
 
 Do not choose 1.0.0 yet. Public ABI and SPI have not completed 9.B/9.C freeze audits; packaging, examples, bilingual documentation, release-validation kits, and clean-machine RC proof remain incomplete; platform certification is intentionally narrow. A 1.0 maturity promise would be premature.
 

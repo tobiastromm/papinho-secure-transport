@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # TLS Policy Negative Matrix
 
 ## Status and scope

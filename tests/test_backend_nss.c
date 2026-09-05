@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #include "backends/nss/pst_backend_nss.h"
 #include "papinho_secure_transport_win32.h"
 #include "prerr.h"

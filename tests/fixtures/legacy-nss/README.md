@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Legacy NSS test evidence
 
 No executable or credential fixture is stored here.

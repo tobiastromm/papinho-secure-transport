@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # OpenSSL failure, close, diagnostics and lifecycle hardening
 
 Status: OSSL-E complete. Phase 9 and OSSL-F have not started.

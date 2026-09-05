@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #include "papinho_secure_transport_win32.h"
 
 typedef char pst_win32_header_result_is_4[(sizeof(PST_RESULT) == 4) ? 1 : -1];

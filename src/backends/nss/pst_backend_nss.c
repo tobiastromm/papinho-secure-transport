@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #include "pst_backend_nss.h"
 #if defined(_MSC_VER) && _MSC_VER == 1200
 # pragma warning(push)

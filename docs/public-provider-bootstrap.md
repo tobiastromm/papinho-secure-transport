@@ -1,6 +1,8 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Public built-in provider bootstrap architecture
 
-Status: Phase 9.D0-A architecture, 9.D0-B implementation/validation, and the limited 9.B public-bootstrap addendum are complete. API 1.3.0 is frozen; SPI 2.4 and library 0.3.0 are unchanged. Phase 9.D is ready to resume only when explicitly requested.
+Status: Phase 9.D0-A architecture, 9.D0-B implementation/validation, and the limited 9.B public-bootstrap addendum are complete. API 1.3.0 is frozen; SPI 2.4 is unchanged; library 0.4.0 is the compatible Phase 9 release promotion. Phase 9.D is ready to resume only when explicitly requested.
 
 ## Problem and boundary
 

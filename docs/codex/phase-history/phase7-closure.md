@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Phase 7 overall closure
 
 Status: Phase 7 - Interoperability / Hardening is complete. Phase 8 - Multiple Backends / Provider Evolution is next but has not started.

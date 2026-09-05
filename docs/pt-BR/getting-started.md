@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Começando com o PapinhoSecureTransport
 
 > **Este é o guia prático do PapinhoSecureTransport.**

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #include "pst_diagnostic.h"
 #include <stddef.h>
 #include <stdio.h>
@@ -198,7 +199,7 @@ int main(void)
 {
     int result; volatile pst_u32 constant;
     constant=PST_API_VERSION;CHECK(constant==0x00010300UL,50);
-    constant=PST_LIBRARY_VERSION;CHECK(constant==0x00000300UL,51);
+    constant=PST_LIBRARY_VERSION;CHECK(constant==0x00000400UL,51);
     constant=PST_DIAGNOSTIC_BACKEND_ID_CAPACITY;CHECK(constant==32UL,52);
     constant=PST_DIAGNOSTIC_INFO_MIN_SIZE;CHECK(constant==56UL,55);
     constant=PST_DIAGNOSTIC_OPERATION_NONE;CHECK(constant==0UL,53);

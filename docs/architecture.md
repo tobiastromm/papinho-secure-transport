@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Scope and architectural boundaries
 
 Phase 4 materializes immutable credentials/trust, frozen identity configuration, and an owned peer snapshot without changing this boundary. No NSS, NSPR, WinSock, certificate-parser, or crypto type enters the public API.
@@ -67,7 +69,7 @@ No concrete platform handle may leak through the future public interface, includ
 
 The portable PST core delegates cryptographic and secure-protocol mechanism to backend implementations. The proven legacy NSS/NSPR implementation is the first backend candidate. Modern Windows, Linux/POSIX, embedded, or other backends remain possible, but Phase 0.B neither creates them nor chooses their libraries.
 
-Backend state and platform resources remain private behind a backend-neutral boundary. Phase 2 materializes the internal contract described in [backend-spi.md](codex/design-history/backend-spi.md), and Phase 3 implements the first opt-in provider, `retrozilla-nss`, as documented in [backend-nss.md](backend-nss.md). Runtime selection policy remains deferred; neither the SPI nor backend/platform types are exposed publicly.
+Backend state and platform resources remain private behind a backend-neutral boundary. Phase 2 materializes the internal contract described in the historical Phase 2 SPI design record, and Phase 3 implements the first opt-in provider, `retrozilla-nss`, as documented in [backend-nss.md](backend-nss.md). Runtime selection policy remains deferred; neither the SPI nor backend/platform types are exposed publicly.
 
 ## Readiness invariant
 
@@ -122,4 +124,4 @@ Phase 0.B records portability as a constraint. It does not implement a PAL, sock
 
 No item in this document should be read as pre-approving a concrete API design.
 
-Phase 0.C resolves these design questions provisionally in [runtime-api-design.md](codex/design-history/runtime-api-design.md). That specification remains documentation, not a released public header or implementation.
+Phase 0.C resolves these design questions provisionally in the historical Phase 0.C runtime/API design record. That specification remains documentation, not a released public header or implementation.

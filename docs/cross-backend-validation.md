@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Cross-backend validation
 
 Status: Phase 8.G complete, with the post-Phase-8 OpenSSL SYSTEM_TRUST follow-up incorporated. This matrix compares public PST semantics, not provider implementation details.

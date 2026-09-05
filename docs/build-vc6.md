@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Visual C++ 6 build
 
 This is the single source of truth for the Win32 x86 VC6 developer build. Future automation should use the bootstrap below instead of rediscovering compiler or linker paths.

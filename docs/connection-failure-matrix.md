@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Phase 7.B connection failure matrix
 
 Status: **complete**. The closure audit does not start Phase 7.C.

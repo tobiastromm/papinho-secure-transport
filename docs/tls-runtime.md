@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Public TLS runtime
 
 Phase 5 joins provider selection, frozen policy, transport attachment, incremental TLS operations and peer identity behind the public PST API. Consumers do not include the SPI or any NSS/NSPR header.

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MPL-2.0
 CC=cl
 LIBTOOL=lib
 BUILD=build\win64-modern-msvc-openssl

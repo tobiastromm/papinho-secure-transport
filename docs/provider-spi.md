@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Provider SPI 2.4 contract
 
 This document freezes the in-process contract between the PapinhoSecureTransport core and independently implemented TLS providers. It is normative for SPI 2.4. It is not a public application API, a DLL plugin ABI, or a claim that the same SPI can support DTLS, QUIC, Noise, or other future transports unchanged.

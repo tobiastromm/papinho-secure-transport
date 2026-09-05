@@ -1,14 +1,16 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # MPL 2.0 license compatibility audit
 
 Audit date: 2026-09-04
 
-Decision under review: license the PapinhoSecureTransport project-authored files under Mozilla Public License 2.0 (`MPL-2.0`). This is a technical compatibility audit, not legal advice and not an application of that license.
+Decision applied after owner approval: PapinhoSecureTransport project-authored files are licensed under Mozilla Public License 2.0 (`MPL-2.0`). This is a technical compatibility audit, not legal advice and not an application of that license.
 
 ## Conclusion
 
 **CONFIRMED WITH CONDITIONS.** MPL-2.0 is technically compatible with the project's static-only four-SDK release model. Static linking does not, by itself, require unrelated application files to be licensed under MPL-2.0. The MPL obligations remain file-scoped: recipients of executable form must be told how to obtain the corresponding Source Code Form of MPL-covered files, and modified covered files remain under MPL-2.0.
 
-This conclusion does not authorize adding a root `LICENSE`, changing source headers, publishing a release, or claiming that every contribution is owned by the project. Phase 9.E remains blocked until the owner explicitly approves the license and the conditions below are implemented.
+Phase 9.E-L2 subsequently satisfied the recorded conditions: the authority audit found no external contributor identity, the root license and project-owned SPDX notices were applied, source/notices were staged, and third-party terms remained separate.
 
 ## Recommended MPL variant
 

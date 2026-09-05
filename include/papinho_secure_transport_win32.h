@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #ifndef PAPINHO_SECURE_TRANSPORT_WIN32_H
 #define PAPINHO_SECURE_TRANSPORT_WIN32_H
 #include "papinho_secure_transport.h"

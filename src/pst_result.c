@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #include "papinho_secure_transport.h"
 const char *PST_CALL pst_result_string(PST_RESULT r)
 {

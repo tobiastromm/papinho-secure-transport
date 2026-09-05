@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # OpenSSL extension three-provider closure audit
 
 Status: OSSL-F and the post-Phase-8 OpenSSL provider extension are complete. Phase 9 has not started.

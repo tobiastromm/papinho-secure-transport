@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Internal backend SPI
 
 SPI 2.1 appends `connection_configure_identity`. The hook is necessary for generic frozen credentials, trust, hostname, and authentication requirements to cross the provider boundary before native attachment; an NSS-only helper would create a parallel contract. The major stays 2 because the field is append-only. Providers advertising client authentication, custom trust, or hostname verification must implement it. A non-NSS backend can map the same opaque objects to its own certificate store and TLS configuration APIs.

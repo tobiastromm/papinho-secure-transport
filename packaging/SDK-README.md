@@ -1,8 +1,10 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # PapinhoSecureTransport technical SDK staging
 
 This target-separated SDK contains the public PST headers, one static provider build, its declared link/runtime dependencies, public examples, and release documentation.
 
-This is **not a public release**. Standard MPL-2.0 without Exhibit B is approved for later application but has not yet been applied, so redistribution remains blocked. See [the licensing audit](docs/release-licensing.md).
+This is a local 0.4.0 release candidate SDK, not a published release. PapinhoSecureTransport is licensed under MPL-2.0; see LICENSE and THIRD_PARTY_NOTICES.md. The exact corresponding source is papinho-secure-transport-0.4.0-src.zip. The legacy NSS source package also contains the exact modified runtime snapshot and fail-closed patch.
 
 ## Use
 

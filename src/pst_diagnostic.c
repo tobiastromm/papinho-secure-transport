@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #include "pst_diagnostic.h"
 #include <string.h>
 void pst_diagnostic_initialize(pst_internal_diagnostic *d){if(d)memset(d,0,sizeof(*d));}

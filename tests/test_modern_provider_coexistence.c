@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #include "papinho_secure_transport.h"
 #include "backends/schannel/pst_backend_schannel.h"
 #include "backends/openssl/pst_backend_openssl.h"

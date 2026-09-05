@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #include "pst_internal.h"
 pst_u32 PST_CALL pst_api_version(void) { return (pst_u32)PST_API_VERSION; }
 pst_u32 PST_CALL pst_library_version(void) { return (pst_u32)PST_LIBRARY_VERSION; }

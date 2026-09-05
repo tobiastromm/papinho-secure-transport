@@ -1,3 +1,4 @@
+@rem SPDX-License-Identifier: MPL-2.0
 @echo off
 if not "%PST_VC6_ROOT%"=="" goto vc6_root_set
 if exist C:\MSVC600-master\VC98\Bin\cl.exe set PST_VC6_ROOT=C:\MSVC600-master

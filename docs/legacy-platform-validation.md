@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Legacy platform validation
 
 Status: Phase 6 complete. Every mandatory gate passed on real Windows NT 4.0 SP6, including the final repeated full TLS lifecycle, bounded graceful shutdown, and peer-snapshot lifetime gate.

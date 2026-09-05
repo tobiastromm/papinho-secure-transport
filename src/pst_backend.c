@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #include "pst_backend.h"
 #include <string.h>
 #define PST_BACKEND_REGISTRY_CAPACITY 8

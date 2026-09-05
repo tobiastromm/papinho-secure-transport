@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Trust, security, readiness, and limitations
 
 PST requires TLS 1.2 or newer and fails closed. It does not silently downgrade, bypass hostname validation, union CUSTOM_TRUST with SYSTEM_TRUST, or fall back to plaintext. mTLS client identity is explicit certificate DER plus unencrypted PKCS#8 DER; server authentication and client authentication are distinct. Required ALPN mismatch fails.

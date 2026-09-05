@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Consumer-controlled logging and event sink design
 
 Status: Phase 7.A complete. PST exposes a closure-audited limited structured, consumer-controlled callback ABI without a worker, queue, file, console output, PAL dependency, or wire-visible behavior.

@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Provisional runtime and API design
 
 Phase 5 materializes runtime selection and connection orchestration as documented in [tls-runtime.md](../../tls-runtime.md). Later hardening and additional providers remain deferred.

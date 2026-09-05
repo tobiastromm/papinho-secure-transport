@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MPL-2.0
 param(
     [ValidateSet("all", "windows-nt4-x86-vc6-retrozilla-nss", "windows-x64-msvc-schannel", "windows-x64-msvc-openssl-3.5.8", "windows-x64-msvc-schannel-openssl-3.5.8")]
     [string]$Target = "all",
@@ -6,10 +7,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
-$version = "0.3.0"
+$version = "0.4.0"
 $root = Join-Path $repo "dist\staging\$version"
 $targets = @("windows-nt4-x86-vc6-retrozilla-nss", "windows-x64-msvc-schannel", "windows-x64-msvc-openssl-3.5.8", "windows-x64-msvc-schannel-openssl-3.5.8")
-if ($Clean -and (Test-Path -LiteralPath $root)) { Remove-Item -LiteralPath $root -Recurse -Force }
 if ($Target -ne "all") { $targets = @($Target) }
 
 function Copy-Required($Source, $Destination) {
@@ -30,6 +30,7 @@ foreach ($id in $targets) {
     New-Item -ItemType Directory -Path $stage -Force | Out-Null
     Copy-Required (Join-Path $repo "packaging\SDK-README.md") (Join-Path $stage "README.md")
     Copy-Required (Join-Path $repo "THIRD_PARTY_NOTICES.md") (Join-Path $stage "THIRD_PARTY_NOTICES.md")
+    Copy-Required (Join-Path $repo "LICENSE") (Join-Path $stage "LICENSE")
     foreach ($file in @("papinho_secure_transport.h", "papinho_secure_transport_win32.h")) { Copy-Required (Join-Path $repo "include\$file") (Join-Path $stage "include\$file") }
     foreach ($file in @("release-packaging.md", "release-licensing.md", "consumer-linking.md", "security-and-limitations.md")) { Copy-Required (Join-Path $repo "docs\$file") (Join-Path $stage "docs\$file") }
     Get-ChildItem (Join-Path $repo "examples") -File | ForEach-Object { Copy-Required $_.FullName (Join-Path $stage "examples\$($_.Name)") }
@@ -67,9 +68,9 @@ foreach ($id in $targets) {
         $runtimeFiles = "libssl-3-x64.dll,libcrypto-3-x64.dll"; $thirdParty = "OpenSSL 3.5.8 LTS"
     }
     Copy-Required (Join-Path $build "papinho_secure_transport.lib") (Join-Path $stage "lib\$id\papinho_secure_transport.lib")
-    Write-Utf8NoBom (Join-Path $stage "VERSION") "package_version=0.3.0`nlibrary_version=0.3.0`napi_version=1.3.0`nspi_version=2.4`n"
+    Write-Utf8NoBom (Join-Path $stage "VERSION") "package_version=0.4.0`nlibrary_version=0.4.0`napi_version=1.3.0`nspi_version=2.4`n"
     Write-Utf8NoBom (Join-Path $stage "consumer-link.ini") "target_id=$id`nlink_libraries=$linkLibraries`nruntime_files=$runtimeFiles`n"
-    Write-Utf8NoBom (Join-Path $stage "manifest.ini") "format_version=1`npackage_name=PapinhoSecureTransport`npackage_version=0.3.0`nlibrary_version=0.3.0`napi_version=1.3.0`nspi_version=2.4`ntarget_id=$id`narchitecture=$architecture`ntoolchain=$toolchain`ncrt=$crt`nlinkage=static`nprovider_ids=$providers`ncapabilities=$capabilities`nruntime_files=$runtimeFiles`nthird_party_components=$thirdParty`nlicense_status=REVIEW_REQUIRED`nprovenance_reference=docs/release-packaging.md`nthird_party_notice=THIRD_PARTY_NOTICES.md`n"
+    Write-Utf8NoBom (Join-Path $stage "manifest.ini") "format_version=1`npackage_name=PapinhoSecureTransport`npackage_version=0.4.0`nlibrary_version=0.4.0`napi_version=1.3.0`nspi_version=2.4`ntarget_id=$id`narchitecture=$architecture`ntoolchain=$toolchain`ncrt=$crt`nlinkage=static`nprovider_ids=$providers`ncapabilities=$capabilities`nruntime_files=$runtimeFiles`nthird_party_components=$thirdParty`nlicense_id=MPL-2.0`nsource_package=papinho-secure-transport-0.4.0-src.zip`nlicense_file=LICENSE`nprovenance_reference=docs/release-packaging.md`nthird_party_notice=THIRD_PARTY_NOTICES.md`n"
     $hashLines = Get-ChildItem $stage -File -Recurse | Where-Object { $_.Name -ne "SHA256SUMS.txt" } | Sort-Object FullName | ForEach-Object { $relative = $_.FullName.Substring($stage.Length + 1).Replace("\", "/"); "{0}  {1}" -f (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant(), $relative }
     Write-Utf8NoBom (Join-Path $stage "SHA256SUMS.txt") (($hashLines -join "`n") + "`n")
     Write-Host "STAGED $id"

@@ -1,6 +1,8 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Provider evolution
 
-Status: Phase 8 complete. RetroZilla NSS and Schannel are first-class target-specific providers; see `docs/codex/phase-history/phase8-closure.md`. Phase 9 has not started.
+Status: Phase 8 complete. RetroZilla NSS and Schannel are first-class target-specific providers; see `archived Phase 8 closure record`. Phase 9 has not started.
 
 ## SPI 2.4 audit
 

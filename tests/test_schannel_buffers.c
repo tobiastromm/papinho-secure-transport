@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #define PST_SCHANNEL_TESTING
 #include "../src/backends/schannel/pst_backend_schannel.c"
 #include <stdio.h>

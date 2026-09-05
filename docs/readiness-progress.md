@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Readiness and progress audit
 
 Phase 7.C is complete. This document records the audit baseline and closure evidence; no

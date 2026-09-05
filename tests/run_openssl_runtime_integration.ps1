@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MPL-2.0
 param(
     [ValidateSet("12","13")][string]$MinimumTls="12",
     [ValidateSet("12","13")][string]$MaximumTls="13",

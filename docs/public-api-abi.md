@@ -1,6 +1,8 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Public API and ABI baseline
 
-Status: **Phase 9.B and the public-bootstrap addendum complete**. This document freezes the additive public API/ABI baseline at API 1.3.0 and library 0.3.0. SPI 2.4 remains internal and frozen by Phase 9.C.
+Status: **Phase 9.B and the public-bootstrap addendum complete**. This document freezes the additive public API/ABI baseline at API 1.3.0 and library 0.4.0. SPI 2.4 remains internal and frozen by Phase 9.C.
 
 ## Public-header boundary
 
@@ -157,7 +159,7 @@ The test deliberately excludes compiler-specific debug records, object timestamp
 
 PST makes no general thread-safety guarantee in API 1.3.0. Registry setup is caller-serialized; a connection and its configuration/lifecycle must not be concurrently mutated; callbacks are synchronous. Independent provider/runtime behavior is only guaranteed where explicitly tested and documented. This avoids inventing locking or reentrancy promises during an ABI freeze.
 
-Phase 9.B found one release-blocking deterministic-output defect and fixed it at the portable core boundary. The public-bootstrap addendum freezes API 1.3.0 as a strictly additive evolution of API 1.2.0: all prior layouts, values, signatures and semantics remain unchanged, while one explicit Win32 target-manifest bootstrap is added. Library remains 0.3.0 and SPI remains 2.4.
+Phase 9.B found one release-blocking deterministic-output defect and fixed it at the portable core boundary. The public-bootstrap addendum freezes API 1.3.0 as a strictly additive evolution of API 1.2.0: all prior layouts, values, signatures and semantics remain unchanged, while one explicit Win32 target-manifest bootstrap is added. Library is promoted compatibly to 0.4.0 for release packaging; SPI remains 2.4.
 
 The public source/ABI baseline is frozen for the two canonical target/toolchain pairs above. Phase 9.C, the internal SPI/provider contract freeze, is next but remains not started until explicitly requested.
 

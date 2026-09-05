@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # RetroZilla NSS/NSPR backend
 
 Phase 4 adds backend-neutral custom trust, memory DER/PKCS#8 local credentials, client authentication, and independent peer snapshots. Phase 3 environment overrides remain test-only compatibility mechanisms, not the Phase 4 contract. See [credentials-trust-peer.md](credentials-trust-peer.md).
@@ -95,6 +97,6 @@ The most recent native code remains private and can be read by backend-specific 
 
 `test_backend_nss_integration` is a separately built opt-in loopback client. It accepts host, port, and certificate hostname, imports the connected socket through the PST SPI, and drives handshake through incremental step plus backend `PR_Poll`. For successful certificate authentication it requires an external test NSS DB selected with `PST_NSS_DB_DIR` and a separately managed local TLS server.
 
-The integration executable was executed with an ephemeral private CA/server fixture on loopback. The PST backend completed an authenticated TLS 1.2 handshake after two would-block/poll cycles, echoed 27 secure bytes, and completed its shutdown step. Every NSS/NSPR module path was recorded under the versioned repository runtime. See [phase3-functional-proof.md](codex/phase-history/phase3-functional-proof.md). No fixture or public credential/trust API was retained.
+The integration executable was executed with an ephemeral private CA/server fixture on loopback. The PST backend completed an authenticated TLS 1.2 handshake after two would-block/poll cycles, echoed 27 secure bytes, and completed its shutdown step. Every NSS/NSPR module path was recorded under the versioned repository runtime. See the archived Phase 3 functional proof. No fixture or public credential/trust API was retained.
 
 ALPN, client credentials/mTLS, public trust loading, peer snapshots, public runtime selection, and consumer-facing transport setup remain deferred to Phases 4 and 5. No application protocol identifier is compiled into this backend.

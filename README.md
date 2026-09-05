@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # PapinhoSecureTransport
 
 **PapinhoSecureTransport (PST)** gives applications a common interface for secure communication while keeping provider-specific security code out of the application's main logic.
@@ -40,3 +42,7 @@ Contributions are welcome in documentation, real-hardware testing, legacy Window
 A particularly valuable area of research is maintaining or developing reproducible NSS/NSPR-based paths capable of bringing modern TLS to older operating systems.
 
 See the documentation above for the project's motivation, architecture, provider model, trust concepts, retrocomputing perspective, practical integration, and community goals.
+
+## License
+
+PapinhoSecureTransport is licensed under the [Mozilla Public License 2.0](LICENSE). Redistributed dependencies retain their own terms; see [Third-party notices](THIRD_PARTY_NOTICES.md).

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MPL-2.0
 param([string]$OutputDirectory = "build\fixtures\interoperability-pki")
 
 $ErrorActionPreference = "Stop"

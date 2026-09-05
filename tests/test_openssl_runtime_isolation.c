@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include "papinho_secure_transport.h"
 #include "papinho_secure_transport_win32.h"

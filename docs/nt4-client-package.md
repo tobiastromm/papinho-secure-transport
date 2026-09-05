@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # NT4 client package
 
 Phase 6.A prepares `build/nt4-validation/client` for manual copying to Windows NT 4.0 SP6. This does not complete or substitute the NT4 validation gate.

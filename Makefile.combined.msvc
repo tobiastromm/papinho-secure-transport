@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MPL-2.0
 CC=cl
 LIBTOOL=lib
 BUILD=build\win64-modern-msvc-combined
@@ -62,7 +63,7 @@ $(BUILD)\test_openssl_runtime_integration.exe: $(BUILD)\test_openssl_runtime_int
 
 $(BUILD)\test_openssl_runtime_isolation.obj: tests\test_openssl_runtime_isolation.c
 	$(CC) $(OSSL_CFLAGS) /Fo$@ /c $**
-$(BUILD)\test_openssl_runtime_isolation.exe: $(BUILD)\test_openssl_runtime_isolation.obj $(BUILD)\pst_backend_schannel.obj $(BUILD)\pst_backend_schannel.obj $(BUILD)\pst_backend_openssl.obj $(OSSL_SYSTEM_TRUST) $(PSTLIB)
+$(BUILD)\test_openssl_runtime_isolation.exe: $(BUILD)\test_openssl_runtime_isolation.obj $(BUILD)\pst_backend_schannel.obj $(BUILD)\pst_backend_openssl.obj $(OSSL_SYSTEM_TRUST) $(PSTLIB)
 	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib secur32.lib crypt32.lib ncrypt.lib
 
 $(BUILD)\test_openssl_identity_integration.obj: tests\test_openssl_identity_integration.c
@@ -76,7 +77,7 @@ $(BUILD)\pst_backend_schannel.obj: src\backends\schannel\pst_backend_schannel.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_modern_provider_coexistence.obj: tests\test_modern_provider_coexistence.c
 	$(CC) $(OSSL_CFLAGS) /Fo$@ /c $**
-$(BUILD)\test_modern_provider_coexistence.exe: $(BUILD)\test_modern_provider_coexistence.obj $(BUILD)\pst_backend_schannel.obj $(BUILD)\pst_backend_schannel.obj $(BUILD)\pst_backend_openssl.obj $(OSSL_SYSTEM_TRUST) $(PSTLIB)
+$(BUILD)\test_modern_provider_coexistence.exe: $(BUILD)\test_modern_provider_coexistence.obj $(BUILD)\pst_backend_schannel.obj $(BUILD)\pst_backend_openssl.obj $(OSSL_SYSTEM_TRUST) $(PSTLIB)
 	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib secur32.lib crypt32.lib ncrypt.lib
 
 $(BUILD)\test_openssl_system_trust_win32.obj: tests\test_openssl_system_trust_win32.c
@@ -96,7 +97,7 @@ system-trust-integration: dirs $(PSTLIB) $(BUILD)\test_openssl_system_trust_inte
 	@echo Running environment-dependent public OpenSSL SYSTEM_TRUST integration
 	powershell -NoProfile -ExecutionPolicy Bypass -File tests\run_openssl_system_trust_integration.ps1
 
-test: all
+test: all $(BUILD)\test_public_header.exe $(BUILD)\test_backend_openssl.exe $(BUILD)\test_modern_provider_coexistence.exe $(BUILD)\test_openssl_system_trust_win32.exe
 	$(BUILD)\test_public_header.exe
 	$(BUILD)\test_backend_openssl.exe
 	$(BUILD)\test_modern_provider_coexistence.exe

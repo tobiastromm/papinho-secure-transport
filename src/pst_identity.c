@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #include "pst_identity_internal.h"
 #include <stdlib.h>
 #include <string.h>

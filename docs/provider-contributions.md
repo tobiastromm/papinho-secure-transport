@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Provider contribution checklist
 
 Dynamic plugins are not supported; providers are deliberately compiled into target manifests. A proposal must state:

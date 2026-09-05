@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Phase 3 NSS functional proof
 
 Date: 2026-08-31. System: Windows 10 Pro 10.0.19045 x64. Client executable: Win32 x86 built with Visual C++ 6.0 `/W4`.

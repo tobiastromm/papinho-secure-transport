@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Controlled diagnostic exposure design
 
 Status: Phase 7.A complete. The public diagnostic ABI foundation, abuse-resistance rules, and optional consumer-controlled logging integration passed closure audit; SPI, TLS, readiness, diagnostic ABI, and wire behavior are unchanged.

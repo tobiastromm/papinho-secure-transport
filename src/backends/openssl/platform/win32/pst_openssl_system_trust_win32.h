@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #ifndef PST_OPENSSL_SYSTEM_TRUST_WIN32_H
 #define PST_OPENSSL_SYSTEM_TRUST_WIN32_H
 #include "papinho_secure_transport.h"

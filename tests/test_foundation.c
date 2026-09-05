@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #include "papinho_secure_transport.h"
 #include <stdio.h>
 #include <string.h>
@@ -12,7 +13,7 @@ int main(void)
     memset(&i,0,sizeof(i)); if (pst_version_info_init(&i)!=PST_RESULT_OK) return 4;
     if (pst_get_version(&i)!=PST_RESULT_OK) return 5;
     if (i.api_major!=1UL || i.api_minor!=3UL || i.api_patch!=0UL ||
-        i.library_major!=0UL || i.library_minor!=3UL || i.library_patch!=0UL)
+        i.library_major!=0UL || i.library_minor!=4UL || i.library_patch!=0UL)
         return 12;
     if (pst_api_version()!=PST_API_VERSION || pst_library_version()!=PST_LIBRARY_VERSION) return 6;
     i.struct_size=PST_VERSION_INFO_MIN_SIZE-1UL;

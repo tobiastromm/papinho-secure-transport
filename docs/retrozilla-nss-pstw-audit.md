@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # C:\PSTW disposability audit
 
 Audit scope: the historical RetroZilla workspace only. No file was deleted.

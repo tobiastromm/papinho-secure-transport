@@ -1,10 +1,11 @@
+# SPDX-License-Identifier: MPL-2.0
 param(
     [switch]$Clean
 )
 
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
-$version = "0.3.0"
+$version = "0.4.0"
 $stage = Join-Path $repo "dist\staging\$version\source"
 
 function Copy-RequiredFile($RelativePath) {
@@ -29,7 +30,7 @@ if ($Clean -and (Test-Path -LiteralPath $stage)) { Remove-Item -LiteralPath $sta
 if (Test-Path -LiteralPath $stage) { Remove-Item -LiteralPath $stage -Recurse -Force }
 New-Item -ItemType Directory -Path $stage -Force | Out-Null
 
-foreach ($file in @("README.md", "THIRD_PARTY_NOTICES.md", "Makefile.vc6", "Makefile.msvc", "Makefile.openssl.msvc", "Makefile.combined.msvc")) {
+foreach ($file in @("README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "Makefile.vc6", "Makefile.msvc", "Makefile.openssl.msvc", "Makefile.combined.msvc")) {
     Copy-RequiredFile $file
 }
 foreach ($tree in @("include", "src", "tests", "examples", "tools", "packaging", "third_party")) {
@@ -61,8 +62,8 @@ foreach ($excluded in @(".git", "build", "dist\staging", ".vs", ".vscode")) {
     if (Test-Path -LiteralPath (Join-Path $stage $excluded)) { throw "Excluded path leaked into source package: $excluded" }
 }
 
-$licenseStatus = if (Test-Path -LiteralPath (Join-Path $repo "LICENSE") -PathType Leaf) { Copy-RequiredFile "LICENSE"; "present" } else { "expected-gate-not-yet-applied" }
-[IO.File]::WriteAllText((Join-Path $stage "SOURCE-PACKAGE-STATUS.txt"), "package_version=0.3.0`nlicense=$licenseStatus`npolicy=allowlist`ninternal_docs=excluded`n", (New-Object Text.UTF8Encoding($false)))
+$licenseStatus = "present"
+[IO.File]::WriteAllText((Join-Path $stage "SOURCE-PACKAGE-STATUS.txt"), "package_version=0.4.0`nlicense=$licenseStatus`npolicy=allowlist`ninternal_docs=excluded`n", (New-Object Text.UTF8Encoding($false)))
 $hashLines = Get-ChildItem $stage -File -Recurse | Where-Object { $_.Name -ne "SHA256SUMS.txt" } | Sort-Object FullName | ForEach-Object {
     $relative = $_.FullName.Substring($stage.Length + 1).Replace("\", "/")
     "{0}  {1}" -f (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant(), $relative

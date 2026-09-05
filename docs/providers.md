@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Providers and selection
 
 A provider is the engine adapter that implements PST's common secure-transport contract.

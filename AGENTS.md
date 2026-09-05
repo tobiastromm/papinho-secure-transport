@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Repository instructions
 
 ## VC6 BUILD — READ THIS BEFORE BUILDING

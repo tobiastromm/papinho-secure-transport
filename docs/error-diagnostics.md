@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Error and diagnostic model hardening
 
 Status: Phase 7.A complete. The public diagnostic value and consumer-controlled event sink are hardened, structurally redacted, and regression-tested. TLS behavior and remote-visible behavior are unchanged, and the internal SPI remains 2.3.

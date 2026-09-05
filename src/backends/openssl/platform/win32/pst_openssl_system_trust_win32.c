@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: MPL-2.0 */
 #include "backends/openssl/platform/win32/pst_openssl_system_trust_win32.h"
 #include <windows.h>
 #include <wincrypt.h>

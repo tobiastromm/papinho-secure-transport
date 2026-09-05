@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # OpenSSL on Windows system-trust architecture
 
 Status: OSSL-ST-A through OSSL-ST-D complete. The OpenSSL provider advertises `SYSTEM_TRUST` with capability mask `0x00000e7f`. Phase 9 has not started.

@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # OpenSSL provider build
 
 The OpenSSL provider is a separate modern-MSVC x64 target. It never participates in the VC6/RetroZilla NSS or Schannel-only builds.

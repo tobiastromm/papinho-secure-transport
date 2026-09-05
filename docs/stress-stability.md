@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 # Stress and long-run stability
 
 Status: Phase 7.H stress and long-run stability complete. All frozen mandatory gates passed; the overall Phase 7 closure audit is complete. Phase 8 is next but has not started.
