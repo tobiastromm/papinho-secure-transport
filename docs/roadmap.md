@@ -132,7 +132,7 @@
     - 9.D0-A public built-in provider bootstrap architecture: complete
     - 9.D0-B public built-in provider bootstrap implementation / validation: complete
     - limited 9.B additive API addendum / API 1.3.0 freeze: complete
-  - 9.E Packaging / dependencies / licenses / provenance: next; not started
+  - 9.E Packaging / dependencies / licenses / provenance: blocked on PST license decision; technical staging complete
   - 9.F Release validation kit: not started
   - 9.G Release candidate / clean-machine validation: not started
   - 9.H Final closure / release baseline: not started
