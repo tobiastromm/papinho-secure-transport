@@ -40,7 +40,7 @@ The consumer includes only papinho_secure_transport.h and papinho_secure_transpo
 | Schannel package functional TLS 1.2 | PENDING |
 | OpenSSL package functional TLS 1.2/1.3 | PENDING |
 | Combined package AUTOMATIC/EXACT/ORDERED functional matrix | PENDING |
-| real NT4 TLS 1.2 and TLS 1.3 from release ZIP | PENDING - REQUIRED |
+| real NT4 TLS 1.2 and TLS 1.3 from release ZIP | PASS - Windows NT 4.0 SP6 x86 |
 
 ## Prepare the NT4 transfer directory
 
@@ -54,10 +54,10 @@ The output is dist/validation/0.4.0/nt4-transfer. Add only freshly generated can
 
 Transfer the unmodified NSS ZIP and its externally recorded SHA-256 to Windows NT 4.0 SP6 x86. Extract it into a new directory using an NT4-compatible extractor. Do not copy files from the checkout or staging tree into that directory. Deploy the contents of runtime/windows-nt4-x86-vc6-retrozilla-nss beside the validation executable.
 
-The final run must prove built-in bootstrap, runtime creation, TLS 1.2 and TLS 1.3 with custom trust and hostname verification, WRITE=25 READ=25 CONTENT_MATCH=1, bounded readiness, and orderly shutdown. Preserve client output, server output, package hash and loaded-module paths. Failure/closure fixtures must retain CLOSED/CLEAN for clean close and FAILED/TRUNCATED for abrupt EOF/reset when exercised.
+The real package-derived run was performed on Windows NT 4.0 SP6 x86. The modern fixture was 172.16.0.1 and the NT4 client was 172.16.0.11. TLS 1.2 negotiated 0x0303 and TLS 1.3 negotiated 0x0304. Both runs reported WRITE=25, READ=25, CONTENT_MATCH=1, ALPN=9, AUTH=2, and the release-specific PASS marker. Both servers reported AUTH=True, ALPN=fixture/1, RECV=25, SEND=25, and CONTENT_MATCH=True. The supplied captures also showed incremental readiness and provider shutdown. NSS/NSPR DLLs remained beside the executable; none was installed in SYSTEM32. Evidence files produced on NT4 were tls12-client.log, tls13-client.log, tls12-modules.log, and tls13-modules.log.
 
 The host-side isolated run is not a clean-machine result and is not a substitute for this NT4 gate. Phase 9.G has not started.
 
 ## Current closure decision
 
-The package hashes, extraction, internal hashes, licensing/source boundaries, four minimal public consumers, and NSS host TLS 1.2/TLS 1.3 are PASS. Phase 9.F remains BLOCKED on the mandatory real NT4 run and the remaining provider-functional package matrix. No package or production source was modified, and Phase 9.G remains NOT STARTED.
+The package hashes, extraction, internal hashes, licensing/source boundaries, four minimal public consumers, NSS host TLS 1.2/TLS 1.3, and real NT4 package TLS 1.2/TLS 1.3 are PASS. Phase 9.F remains BLOCKED only on the remaining x64 provider-functional package matrix. No package or production source was modified, and Phase 9.G remains NOT STARTED.
