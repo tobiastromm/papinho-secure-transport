@@ -45,7 +45,7 @@ Capability bits are TLS1.2 `0x001`, TLS1.3 `0x002`, CLIENT_AUTH `0x004`, ALPN `0
 
 The verified three-provider intersection is `0x00000e5d`: TLS1.2, CLIENT_AUTH, ALPN, CUSTOM_TRUST, HOSTNAME_VERIFY, PEER_INFO, NONBLOCKING, and BACKEND_WAIT. SYSTEM_TRUST is common to Schannel and OpenSSL but absent from NSS. TLS1.3 is present in NSS and OpenSSL but absent from the tested Schannel capability set.
 
-For a tested combined modern registry ordered `[schannel, openssl]`, automatic selection chooses Schannel for TLS1.2+SYSTEM and common TLS1.2 policies, and OpenSSL for TLS1.3+SYSTEM or TLS1.3+CUSTOM. Exact selection never substitutes; ordered selection follows consumer order. The combined arrangement is currently a **test/model target**, not an initial binary-package promise. 9.E may propose a combined package only after defining manifests, dependency layout, and consumer value; separate Schannel and OpenSSL packages are the safer initial baseline.
+For a tested combined modern registry ordered `[schannel, openssl]`, automatic selection chooses Schannel for TLS1.2+SYSTEM and common TLS1.2 policies, and OpenSSL for TLS1.3+SYSTEM or TLS1.3+CUSTOM. Exact selection never substitutes; ordered selection follows consumer order. The combined arrangement is an official optional binary SDK candidate after the Phase 9.E decision. It is not the default or generally recommended package; separate Schannel and OpenSSL SDKs remain available. Its manifest must declare provider order and OpenSSL runtime obligations.
 
 ## Build-target matrix
 
@@ -169,6 +169,6 @@ Deferred inventory: Windows 2000/XP validation is OPTIONAL VALIDATION; Windows 9
 
 ## Decision and next steps
 
-Phase 9.A answers the release question: PST is preparing separate legacy NSS, modern Schannel, and modern OpenSSL target baselines plus source/SDK/documentation/validation inputs, all derived from the current three-provider code and evidence. A combined modern provider package remains optional and uncommitted. No package has been created.
+Phase 9.A answers the release question: PST is preparing separate legacy NSS, modern Schannel, and modern OpenSSL target baselines plus source/SDK/documentation/validation inputs, all derived from the current three-provider code and evidence. A combined modern provider package is an official optional candidate, not a default or recommendation. No final package has been created.
 
 Phase 9.A is complete with no API, ABI, SPI, provider, build, or version change. The next step, only when explicitly requested, is **9.B - Public API / ABI Freeze Audit**.

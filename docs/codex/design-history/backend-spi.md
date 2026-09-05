@@ -77,7 +77,7 @@ Phase 2 defines and tests this transition contract but does not define a public 
 
 ## First implementation
 
-Phase 3 implements `retrozilla-nss` behind this SPI. The NSS descriptor is compiled only by explicit backend targets and remains absent from the portable public header. Native import required SPI 2.0 to add `ownership_accepted` to `attach_transport`, because ownership can cross irreversibly at a successful intermediate import even when later secure-layer construction fails. See [backend-nss.md](backend-nss.md).
+Phase 3 implements `retrozilla-nss` behind this SPI. The NSS descriptor is compiled only by explicit backend targets and remains absent from the portable public header. Native import required SPI 2.0 to add `ownership_accepted` to `attach_transport`, because ownership can cross irreversibly at a successful intermediate import even when later secure-layer construction fails. See [backend-nss.md](../../backend-nss.md).
 ## Deferred work
 
 Phase 3 may implement the first real backend behind this contract. Later phases still own public runtime/configuration/transport APIs, credential and trust material, peer identity records, selection policy, concurrency, diagnostics, and actual secure operations. Phase 2 does not begin any of that work.

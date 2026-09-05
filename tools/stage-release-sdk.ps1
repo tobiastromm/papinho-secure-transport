@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("all", "windows-nt4-x86-vc6-retrozilla-nss", "windows-x64-msvc-schannel", "windows-x64-msvc-openssl-3.5.8")]
+    [ValidateSet("all", "windows-nt4-x86-vc6-retrozilla-nss", "windows-x64-msvc-schannel", "windows-x64-msvc-openssl-3.5.8", "windows-x64-msvc-schannel-openssl-3.5.8")]
     [string]$Target = "all",
     [switch]$Clean
 )
@@ -8,7 +8,7 @@ $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 $version = "0.3.0"
 $root = Join-Path $repo "dist\staging\$version"
-$targets = @("windows-nt4-x86-vc6-retrozilla-nss", "windows-x64-msvc-schannel", "windows-x64-msvc-openssl-3.5.8")
+$targets = @("windows-nt4-x86-vc6-retrozilla-nss", "windows-x64-msvc-schannel", "windows-x64-msvc-openssl-3.5.8", "windows-x64-msvc-schannel-openssl-3.5.8")
 if ($Clean -and (Test-Path -LiteralPath $root)) { Remove-Item -LiteralPath $root -Recurse -Force }
 if ($Target -ne "all") { $targets = @($Target) }
 
@@ -49,7 +49,7 @@ foreach ($id in $targets) {
         $build = Join-Path $repo "build\win64-modern-msvc"; $architecture = "x64"; $toolchain = "documented MSVC x64"; $crt = "dynamic-/MD"; $providers = "schannel"
         $capabilities = "TLS1.2,CUSTOM_TRUST,SYSTEM_TRUST,HOSTNAME_VERIFY,ALPN,CLIENT_AUTH,PEER_INFO,NONBLOCKING,BACKEND_WAIT"
         $linkLibraries = "papinho_secure_transport.lib,ws2_32.lib,secur32.lib,crypt32.lib,ncrypt.lib"
-    } else {
+    } elseif ($id -eq "windows-x64-msvc-openssl-3.5.8") {
         $build = Join-Path $repo "build\win64-modern-msvc-openssl"; $architecture = "x64"; $toolchain = "documented MSVC x64"; $crt = "dynamic-/MD"; $providers = "openssl"
         $capabilities = "TLS1.2,TLS1.3,CUSTOM_TRUST,SYSTEM_TRUST,HOSTNAME_VERIFY,ALPN,CLIENT_AUTH,PEER_INFO,NONBLOCKING,BACKEND_WAIT"
         $linkLibraries = "papinho_secure_transport.lib,libssl.lib,libcrypto.lib,ws2_32.lib,crypt32.lib"
@@ -57,8 +57,15 @@ foreach ($id in $targets) {
         foreach ($file in @("libssl-3-x64.dll","libcrypto-3-x64.dll")) { Copy-Required (Join-Path $repo "third_party\openssl\prebuilt\win64-msvc-3.5.8\runtime\$file") (Join-Path $stage "runtime\$id\$file") }
         Copy-Required (Join-Path $repo "third_party\openssl\LICENSE.txt") (Join-Path $stage "licenses\openssl\LICENSE-APACHE-2.0.txt")
         $runtimeFiles = "libssl-3-x64.dll,libcrypto-3-x64.dll"; $thirdParty = "OpenSSL 3.5.8 LTS"
+    } else {
+        $build = Join-Path $repo "build\win64-modern-msvc-combined"; $architecture = "x64"; $toolchain = "documented MSVC x64"; $crt = "dynamic-/MD"; $providers = "schannel,openssl"
+        $capabilities = "TLS1.2,TLS1.3,CUSTOM_TRUST,SYSTEM_TRUST,HOSTNAME_VERIFY,ALPN,CLIENT_AUTH,PEER_INFO,NONBLOCKING,BACKEND_WAIT"
+        $linkLibraries = "papinho_secure_transport.lib,libssl.lib,libcrypto.lib,ws2_32.lib,secur32.lib,crypt32.lib,ncrypt.lib"
+        foreach ($file in @("libssl.lib","libcrypto.lib")) { Copy-Required (Join-Path $repo "third_party\openssl\prebuilt\win64-msvc-3.5.8\lib\$file") (Join-Path $stage "lib\$id\$file") }
+        foreach ($file in @("libssl-3-x64.dll","libcrypto-3-x64.dll")) { Copy-Required (Join-Path $repo "third_party\openssl\prebuilt\win64-msvc-3.5.8\runtime\$file") (Join-Path $stage "runtime\$id\$file") }
+        Copy-Required (Join-Path $repo "third_party\openssl\LICENSE.txt") (Join-Path $stage "licenses\openssl\LICENSE-APACHE-2.0.txt")
+        $runtimeFiles = "libssl-3-x64.dll,libcrypto-3-x64.dll"; $thirdParty = "OpenSSL 3.5.8 LTS"
     }
-
     Copy-Required (Join-Path $build "papinho_secure_transport.lib") (Join-Path $stage "lib\$id\papinho_secure_transport.lib")
     Write-Utf8NoBom (Join-Path $stage "VERSION") "package_version=0.3.0`nlibrary_version=0.3.0`napi_version=1.3.0`nspi_version=2.4`n"
     Write-Utf8NoBom (Join-Path $stage "consumer-link.ini") "target_id=$id`nlink_libraries=$linkLibraries`nruntime_files=$runtimeFiles`n"

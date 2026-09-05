@@ -6,7 +6,7 @@ Decision under review: license the PapinhoSecureTransport project-authored files
 
 ## Conclusion
 
-**CONFIRMED WITH CONDITIONS.** MPL-2.0 is technically compatible with the project's static-only three-SDK release model. Static linking does not, by itself, require unrelated application files to be licensed under MPL-2.0. The MPL obligations remain file-scoped: recipients of executable form must be told how to obtain the corresponding Source Code Form of MPL-covered files, and modified covered files remain under MPL-2.0.
+**CONFIRMED WITH CONDITIONS.** MPL-2.0 is technically compatible with the project's static-only four-SDK release model. Static linking does not, by itself, require unrelated application files to be licensed under MPL-2.0. The MPL obligations remain file-scoped: recipients of executable form must be told how to obtain the corresponding Source Code Form of MPL-covered files, and modified covered files remain under MPL-2.0.
 
 This conclusion does not authorize adding a root `LICENSE`, changing source headers, publishing a release, or claiming that every contribution is owned by the project. Phase 9.E remains blocked until the owner explicitly approves the license and the conditions below are implemented.
 
@@ -38,13 +38,14 @@ A repository scan found no conflicting third-party license markers in the intend
 
 Mozilla's MPL FAQ expressly permits an MPL library to be statically linked into a larger proprietary work. The consumer's separate new files do not become MPL-covered merely because they link the PST static library. The consumer must still comply with MPL-2.0 for PST covered files: preserve notices, disclose modifications to those files, and make their corresponding source available when distributing executable form.
 
-The three candidate SDKs therefore remain viable:
+The four candidate SDKs therefore remain viable:
 
 | Candidate SDK | PST form | Principal external boundary | Compatibility result |
 |---|---|---|---|
 | Windows NT 4.0 x86 / VC6 / RetroZilla NSS | static PST library plus runtime DLLs | NSS/NSPR notices and corresponding source | compatible with conditions |
 | Windows x64 / modern MSVC / Schannel | static PST library | Windows system facilities are not redistributed | compatible with conditions |
 | Windows x64 / modern MSVC / OpenSSL 3.5.8 | static PST library plus OpenSSL runtime DLLs/import libraries | Apache-2.0 license and notices remain separate | compatible with conditions |
+| Windows x64 / modern MSVC / Schannel + OpenSSL 3.5.8 | combined static PST library plus OpenSSL runtime DLLs/import libraries | Windows remains OS-supplied; OpenSSL remains Apache-2.0 | compatible with conditions; optional, not default |
 
 A binary SDK must contain a conspicuous source-availability notice. The corresponding source must be available at the same time and by a reasonable means, at no more than the cost of distribution. The release source package must correspond exactly to the shipped PST binaries and include the scripts needed to modify and rebuild covered code.
 
@@ -137,7 +138,7 @@ After the owner states `Aprovado, aplique MPL-2.0`, perform a dedicated, reviewa
 2. add the selected short notice/SPDX form only to project-owned files;
 3. update README files, package metadata, SDK README, notices, and manifests;
 4. stage exact corresponding-source archives and verify their hashes against binaries;
-5. inspect all three SDK candidates for license/source completeness;
+5. inspect all four SDK candidates for license/source completeness;
 6. run the normal VC6 and modern MSVC regressions plus clean staging validation;
 7. record `git diff --check`, package manifests, hashes, and the release-license gate result.
 

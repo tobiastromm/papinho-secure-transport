@@ -1,6 +1,6 @@
 # Provider evolution
 
-Status: Phase 8 complete. RetroZilla NSS and Schannel are first-class target-specific providers; see `docs/phase8-closure.md`. Phase 9 has not started.
+Status: Phase 8 complete. RetroZilla NSS and Schannel are first-class target-specific providers; see `docs/codex/phase-history/phase8-closure.md`. Phase 9 has not started.
 
 ## SPI 2.4 audit
 

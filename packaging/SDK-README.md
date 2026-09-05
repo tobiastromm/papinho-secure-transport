@@ -2,7 +2,7 @@
 
 This target-separated SDK contains the public PST headers, one static provider build, its declared link/runtime dependencies, public examples, and release documentation.
 
-This is **not a public release**. PST's project license has not been selected, so redistribution remains blocked. See [the licensing audit](docs/release-licensing.md).
+This is **not a public release**. Standard MPL-2.0 without Exhibit B is approved for later application but has not yet been applied, so redistribution remains blocked. See [the licensing audit](docs/release-licensing.md).
 
 ## Use
 

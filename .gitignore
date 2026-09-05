@@ -1,4 +1,5 @@
 *.zip
+!third_party/*/source/*.zip
 _work/
 PSTW/
 build/
