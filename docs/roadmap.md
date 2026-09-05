@@ -137,7 +137,7 @@
   - 9.E Packaging / dependencies / licenses / provenance: complete; standard MPL-2.0 without Exhibit B applied; Library/Package 0.4.0 and five local package candidates validated
     - 9.E-H repository/source-package hygiene: complete
     - Combined Schannel/OpenSSL: official optional binary SDK candidate; not default or recommended
-  - 9.F Release validation kit: in progress; offline/extracted-package and real NT4 TLS 1.2/TLS 1.3 gates pass, final x64 package matrix pending
+  - 9.F Release validation kit: complete; extracted-package, real NT4, x64 provider, online system-trust, Combined selection and provenance gates pass; clean-machine execution deferred to 9.G
   - 9.G Release candidate / clean-machine validation: not started
   - 9.H Final closure / release baseline: not started
   - documentation handoff: concise root README linking complete English and pt-BR paths, written for non-experts

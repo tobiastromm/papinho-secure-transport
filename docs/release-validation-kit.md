@@ -2,7 +2,7 @@
 
 # Release validation kit
 
-Status: Phase 9.F is in progress. Offline package validation and isolated host consumers are reproducible; final execution of the extracted NSS SDK on a real Windows NT 4.0 SP6 x86 system remains mandatory before closure.
+Status: Phase 9.F complete. Offline package validation, isolated host consumers, real provider TLS, public selection, online system trust, and final NT4 package validation passed.
 
 ## Source of truth
 
@@ -37,9 +37,10 @@ The consumer includes only papinho_secure_transport.h and papinho_secure_transpo
 | isolated package runtime | PASS |
 | NSS package host TLS 1.2 | PASS - TLS=0x0303, WRITE=25, READ=25, CONTENT_MATCH=1 |
 | NSS package host TLS 1.3 | PASS - TLS=0x0304, WRITE=25, READ=25, CONTENT_MATCH=1 |
-| Schannel package functional TLS 1.2 | PENDING |
-| OpenSSL package functional TLS 1.2/1.3 | PENDING |
-| Combined package AUTOMATIC/EXACT/ORDERED functional matrix | PENDING |
+| Schannel package functional TLS 1.2 | PASS |
+| OpenSSL package functional TLS 1.2/1.3 | PASS |
+| OpenSSL TLS 1.3 SYSTEM_TRUST online | PASS - www.cloudflare.com |
+| Combined package AUTOMATIC/EXACT/ORDERED functional matrix | PASS |
 | real NT4 TLS 1.2 and TLS 1.3 from release ZIP | PASS - Windows NT 4.0 SP6 x86 |
 
 ## Prepare the NT4 transfer directory
@@ -60,4 +61,17 @@ The host-side isolated run is not a clean-machine result and is not a substitute
 
 ## Current closure decision
 
-The package hashes, extraction, internal hashes, licensing/source boundaries, four minimal public consumers, NSS host TLS 1.2/TLS 1.3, and real NT4 package TLS 1.2/TLS 1.3 are PASS. Phase 9.F remains BLOCKED only on the remaining x64 provider-functional package matrix. No package or production source was modified, and Phase 9.G remains NOT STARTED.
+The package hashes, extraction, internal hashes, licensing/source boundaries, four minimal public consumers, NSS host and real NT4 TLS 1.2/TLS 1.3, Schannel TLS 1.2, OpenSSL TLS 1.2/TLS 1.3, online OpenSSL TLS 1.3 SYSTEM_TRUST, Combined public selection, and DLL provenance are PASS. Clean-machine x64 execution was not performed and is explicitly deferred to Phase 9.G; isolated-package validation is not described as clean-machine validation. No package or production source was modified, and Phase 9.G remains NOT STARTED.
+## X64 package execution evidence
+
+All functional consumers were compiled with /MD /W4 from test sources in the extracted source ZIP, using public headers and static libraries only from the applicable extracted SDK. The initial commands produced C4996 warnings for legacy CRT calls; recompilation used the build policy _CRT_SECURE_NO_WARNINGS and completed with zero warnings. No build output or dist/staging path was an input.
+
+Schannel TLS 1.2 passed with backend schannel, TLS 0x0303, custom trust, hostname and peer authentication, ALPN fixture/1, WRITE=25, READ=25, CONTENT_MATCH=1, and clean shutdown.
+
+OpenSSL TLS 1.2 and TLS 1.3 passed with backend openssl, TLS 0x0303 and 0x0304 respectively, custom trust, hostname and peer authentication, ALPN fixture/1, WRITE=25, READ=25, CONTENT_MATCH=1, and clean shutdown.
+
+OpenSSL TLS 1.3 SYSTEM_TRUST passed online against www.cloudflare.com at 104.16.124.96. The result reported TLS 0x0304, CHAIN=1, HOSTNAME=1, AUTH=1, and no application bytes. The bounded shutdown ended with the already-modeled remote shutdown result after the authenticated handshake; the identity/system-trust gate passed.
+
+The Combined public matrix passed: TLS 1.2 SYSTEM_TRUST AUTOMATIC selected schannel; TLS 1.3 SYSTEM_TRUST AUTOMATIC selected openssl; EXACT openssl TLS 1.3 passed; EXACT schannel TLS 1.3 returned UNSUPPORTED; ORDERED openssl then schannel for TLS 1.2 selected openssl.
+
+With PATH restricted to the executable directory and Windows system directories, the loaded paths were dist/validation/0.4.0/x64-openssl/libssl-3-x64.dll and libcrypto-3-x64.dll. Their SHA-256 values matched the extracted SDK files: libssl 3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed and libcrypto 09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044. Dumpbin showed no OpenSSL dependency for Schannel and the expected OpenSSL dependencies for OpenSSL and Combined.

@@ -61,12 +61,15 @@ if($CompileConsumers){
   if($LASTEXITCODE -ne 0){Report "COMPILE" "FAIL";throw ("consumer compile/link failed: "+$package.Id)}
   Report "PACKAGE" $package.Id;Report "COMPILE" "PASS";Report "LINK" "PASS"
   $runtime=Join-Path $sdk ("runtime\"+$package.Id);if(Test-Path -LiteralPath $runtime){Get-ChildItem -LiteralPath $runtime -File|Copy-Item -Destination $work -Force}
-  & $exe;if($LASTEXITCODE -ne 0){Report "RUNTIME" "FAIL";throw ("consumer runtime failed: "+$package.Id)}
+  $consumerOut=Join-Path $work "consumer.out";$consumerErr=Join-Path $work "consumer.err"
+  $consumerProcess=Start-Process -FilePath $exe -WorkingDirectory $work -Wait -PassThru -RedirectStandardOutput $consumerOut -RedirectStandardError $consumerErr
+  Get-Content $consumerOut;if((Get-Item $consumerErr).Length){Get-Content $consumerErr}
+  if($consumerProcess.ExitCode -ne 0){Report "RUNTIME" "FAIL";throw ("consumer runtime failed: "+$package.Id)}
   Report "RUNTIME" "PASS";Report "RESULT" "PASS";$consumerCount++
  }
  if($consumerCount -ne 4){throw ("consumer count mismatch: "+$consumerCount)}
  Report "CONSUMER_COUNT" $consumerCount
 }
 Report "CLEAN_MACHINE_RUNTIME" "NOT_PERFORMED"
-Report "NT4_FINAL_RUNTIME_VALIDATION" "PENDING_REAL_NT4"
-Report "RESULT" "PASS_WITH_REQUIRED_EXTERNAL_NT4_GATE_PENDING"
+Report "NT4_FINAL_RUNTIME_VALIDATION" "PASS_RECORDED_EXTERNAL_EVIDENCE"
+Report "RESULT" "PASS"
