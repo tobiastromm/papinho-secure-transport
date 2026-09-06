@@ -1,0 +1,74 @@
+--- a/security/nss/lib/freebl/win_rand.c
++++ b/security/nss/lib/freebl/win_rand.c
+@@ -439,42 +439,47 @@
+     size_t bytes = 0;
+ 
+     usedWindowsPRNG = PR_FALSE;
++
+     hModule = LoadLibrary("advapi32.dll");
+     if (hModule == NULL) {
+-	return rng_systemFromNoise(dest,maxLen);
++        return 0;
+     }
++
+     pRtlGenRandom = (RtlGenRandomFn)
+-	GetProcAddress(hModule, "SystemFunction036");
++        GetProcAddress(hModule, "SystemFunction036");
++
+     if (pRtlGenRandom) {
+-	if (pRtlGenRandom(dest, maxLen)) {
+-	    bytes = maxLen;
+-	    usedWindowsPRNG = PR_TRUE;
+-	} else {
+-	    bytes = rng_systemFromNoise(dest,maxLen);
+-	}
+-	goto done;
++        if (pRtlGenRandom(dest, maxLen)) {
++            bytes = maxLen;
++            usedWindowsPRNG = PR_TRUE;
++        }
++        goto done;
+     }
++
+     pCryptAcquireContextA = (CryptAcquireContextAFn)
+-	GetProcAddress(hModule, "CryptAcquireContextA");
++        GetProcAddress(hModule, "CryptAcquireContextA");
+     pCryptReleaseContext = (CryptReleaseContextFn)
+-	GetProcAddress(hModule, "CryptReleaseContext");
++        GetProcAddress(hModule, "CryptReleaseContext");
+     pCryptGenRandom = (CryptGenRandomFn)
+-	GetProcAddress(hModule, "CryptGenRandom");
+-    if (!pCryptAcquireContextA || !pCryptReleaseContext || !pCryptGenRandom) {
+-	bytes = rng_systemFromNoise(dest,maxLen);
+-	goto done;
++        GetProcAddress(hModule, "CryptGenRandom");
++
++    if (!pCryptAcquireContextA ||
++        !pCryptReleaseContext ||
++        !pCryptGenRandom) {
++        goto done;
+     }
++
+     if (pCryptAcquireContextA(&hCryptProv, NULL, NULL,
+-	PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
+-	if (pCryptGenRandom(hCryptProv, maxLen, dest)) {
+-	    bytes = maxLen;
+-	    usedWindowsPRNG = PR_TRUE;
+-	}
+-	pCryptReleaseContext(hCryptProv, 0);
+-    }
+-    if (bytes == 0) {
+-	bytes = rng_systemFromNoise(dest,maxLen);
++        PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
++
++        if (pCryptGenRandom(hCryptProv, maxLen, dest)) {
++            bytes = maxLen;
++            usedWindowsPRNG = PR_TRUE;
++        }
++
++        pCryptReleaseContext(hCryptProv, 0);
+     }
++
+ done:
+     FreeLibrary(hModule);
+     return bytes;

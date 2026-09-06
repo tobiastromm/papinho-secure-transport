@@ -1,0 +1,4 @@
+windows-nt4-x86-vc6-retrozilla-nss -> win32-x86-vc6-retrozilla-nss
+windows-x64-msvc-schannel -> win32-x64-msvc-19.51-schannel
+windows-x64-msvc-openssl-3.5.8 -> win32-x64-msvc-19.51-openssl3
+windows-x64-msvc-schannel-openssl-3.5.8 -> win32-x64-msvc-19.51-schannel-openssl3

@@ -1,0 +1,126 @@
+{
+  "name": "openssl-local-tls13",
+  "time": "2026-09-05T19:23:52.151544",
+  "sdk": "openssl",
+  "command": [
+    "C:\\pse-clean-code\\clean-validation\\consumers\\openssl\\consumer.exe",
+    "openssl",
+    "13",
+    "C:\\pse-clean-code\\clean-validation\\fixtures\\interoperability-pki\\root.der",
+    "127.0.0.1",
+    "18474",
+    "localhost",
+    "openssl",
+    "local",
+    "fixture/1"
+  ],
+  "cwd": "C:\\pse-clean-code\\clean-validation\\consumers\\openssl",
+  "PATH": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8;C:\\Windows\\System32;C:\\Windows",
+  "executable_sha256": "92c04fb77e33957f7159de9efb4e7f3d66770b70376b3f3de2e6a319f0443f58",
+  "consumer_source_sha256": "10110d161ea3a2daf72267bd2fe4109ce9db0709d971127fb3d39afe70d4f5a4",
+  "fixture_server_command": [
+    "C:\\Users\\R\u00e1dio Papinho\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+    "C:\\pse-clean-code\\clean-validation\\source\\tests\\schannel_backend_tls_server.py",
+    "18474",
+    "C:\\pse-clean-code\\clean-validation\\fixtures\\interoperability-pki\\server-chain.pem",
+    "C:\\pse-clean-code\\clean-validation\\fixtures\\interoperability-pki\\server.key",
+    "13",
+    "1",
+    "client",
+    "fixture/1",
+    "-",
+    "-"
+  ],
+  "exit_code": 0,
+  "result": "PASS",
+  "server_exit_code": 0,
+  "modules": [
+    {
+      "path": "C:\\pse-clean-code\\clean-validation\\consumers\\openssl\\consumer.exe"
+    },
+    {
+      "path": "C:\\WINDOWS\\SYSTEM32\\ntdll.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\KERNEL32.DLL"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\KERNELBASE.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\WS2_32.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\RPCRT4.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\CRYPT32.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\ucrtbase.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\SYSTEM32\\VCRUNTIME140.dll"
+    },
+    {
+      "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+      "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+      "sdk_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+      "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+      "result": "PASS"
+    },
+    {
+      "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+      "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+      "sdk_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+      "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+      "result": "PASS"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\ADVAPI32.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\msvcrt.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\sechost.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\bcrypt.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\USER32.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\win32u.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\GDI32.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\gdi32full.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\msvcp_win.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\IMM32.DLL"
+    },
+    {
+      "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTSP.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\system32\\rsaenh.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTBASE.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\bcryptPrimitives.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\system32\\mswsock.dll"
+    }
+  ],
+  "module_provenance": "PASS"
+}

@@ -1,0 +1,9 @@
+﻿
+
+ProductName    : Windows 10 Pro
+DisplayVersion : 22H2
+CurrentBuild   : 19045
+UBR            : 6332
+
+
+

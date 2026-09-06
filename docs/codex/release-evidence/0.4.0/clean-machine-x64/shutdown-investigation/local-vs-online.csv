@@ -1,0 +1,9 @@
+scenario,peer_close_notify,client_close_notify,TCP_EOF,PST_shutdown,operation_error,classification
+local-tls13,1,1,1,PASS,OK,reciprocal close_notify
+google-h11-close,0,1,1,FAIL,TRUNCATED (13),EXPECTED_PEER_BEHAVIOR
+google-h11-keep,0,1,1,FAIL,TRUNCATED (13),EXPECTED_PEER_BEHAVIOR
+cloudflare-h11-close,1,1,1,PASS,OK,reciprocal close_notify
+cloudflare-h11-keep,0,1,1,FAIL,TRUNCATED (13),EXPECTED_PEER_BEHAVIOR
+google-h11-keep-graceful0,0,1,1,FAIL,TRUNCATED (13),EXPECTED_PEER_BEHAVIOR
+cloudflare-h11-keep-graceful0,0,1,1,FAIL,TRUNCATED (13),EXPECTED_PEER_BEHAVIOR
+google-tls12-keep,0,1,1,FAIL,TRUNCATED (13),EXPECTED_PEER_BEHAVIOR

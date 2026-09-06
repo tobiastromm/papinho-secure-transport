@@ -1,0 +1,39 @@
+﻿
+
+File             : papinho-secure-transport-0.4.0-src.zip
+SHA256           : 8d20b8975c06029fc828a42cdb6c75dc96c74ee1e0dedab867077fbf21cc223d
+ManifestSHA256   : 8d20b8975c06029fc828a42cdb6c75dc96c74ee1e0dedab867077fbf21cc223d
+ManifestResult   : PASS
+HistoricalSHA256 : 8d20b8975c06029fc828a42cdb6c75dc96c74ee1e0dedab867077fbf21cc223d
+HistoricalResult : PASS
+
+File             : papinho-secure-transport-0.4.0-windows-nt4-x86-vc6-retrozilla-nss.zip
+SHA256           : 55e38a19d743849317cab919dc7ba682ee823137666ee60004cf562e1788bed4
+ManifestSHA256   : 55e38a19d743849317cab919dc7ba682ee823137666ee60004cf562e1788bed4
+ManifestResult   : PASS
+HistoricalSHA256 : 
+HistoricalResult : NOT_PERFORMED
+
+File             : papinho-secure-transport-0.4.0-windows-x64-msvc-openssl-3.5.8.zip
+SHA256           : a59847425895dad2b3b8bb96ae40b70e2698f3a02d1812c0f8de40404953741f
+ManifestSHA256   : a59847425895dad2b3b8bb96ae40b70e2698f3a02d1812c0f8de40404953741f
+ManifestResult   : PASS
+HistoricalSHA256 : a59847425895dad2b3b8bb96ae40b70e2698f3a02d1812c0f8de40404953741f
+HistoricalResult : PASS
+
+File             : papinho-secure-transport-0.4.0-windows-x64-msvc-schannel-openssl-3.5.8.zip
+SHA256           : 8e78dd36f6f9486c7eea50df093a74c3cd2838b0a1823b8f9c406f3d496a0010
+ManifestSHA256   : 8e78dd36f6f9486c7eea50df093a74c3cd2838b0a1823b8f9c406f3d496a0010
+ManifestResult   : PASS
+HistoricalSHA256 : 8e78dd36f6f9486c7eea50df093a74c3cd2838b0a1823b8f9c406f3d496a0010
+HistoricalResult : PASS
+
+File             : papinho-secure-transport-0.4.0-windows-x64-msvc-schannel.zip
+SHA256           : 044f22dc2eac6ef82a53a096f0a27d1ce6719bb7d7798d71b6ebaa648f53eda8
+ManifestSHA256   : 044f22dc2eac6ef82a53a096f0a27d1ce6719bb7d7798d71b6ebaa648f53eda8
+ManifestResult   : PASS
+HistoricalSHA256 : 044f22dc2eac6ef82a53a096f0a27d1ce6719bb7d7798d71b6ebaa648f53eda8
+HistoricalResult : PASS
+
+
+

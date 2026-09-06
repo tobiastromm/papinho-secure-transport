@@ -1,0 +1,104 @@
+[
+  {
+    "gate": "PACKAGE_HASHES",
+    "result": "PASS",
+    "evidence": "package-hashes-post-test.json",
+    "basis": "resultado anterior preservado"
+  },
+  {
+    "gate": "COMPILE_LINK_SCHANNEL",
+    "result": "PASS",
+    "evidence": "compile-schannel.cmd; compile-schannel.log",
+    "basis": "resultado anterior preservado"
+  },
+  {
+    "gate": "COMPILE_LINK_OPENSSL",
+    "result": "PASS",
+    "evidence": "compile-openssl.cmd; compile-openssl.log",
+    "basis": "resultado anterior preservado"
+  },
+  {
+    "gate": "COMPILE_LINK_COMBINED",
+    "result": "PASS",
+    "evidence": "compile-combined.cmd; compile-combined.log",
+    "basis": "resultado anterior preservado"
+  },
+  {
+    "gate": "COMPILE_INPUT_PROVENANCE",
+    "result": "PASS",
+    "evidence": "compile-and-dependency-audit.json",
+    "basis": "resultado anterior preservado"
+  },
+  {
+    "gate": "SCHANNEL_TLS12",
+    "result": "PASS",
+    "evidence": "schannel-local-tls12-result.json",
+    "basis": "resultado anterior preservado"
+  },
+  {
+    "gate": "OPENSSL_TLS12",
+    "result": "PASS",
+    "evidence": "openssl-local-tls12-result.json",
+    "basis": "resultado anterior preservado"
+  },
+  {
+    "gate": "OPENSSL_TLS13",
+    "result": "PASS",
+    "evidence": "openssl-local-tls13-result.json",
+    "basis": "resultado anterior preservado"
+  },
+  {
+    "gate": "OPENSSL_TLS13_SYSTEM_TRUST",
+    "result": "PASS",
+    "evidence": "final-reexecution/result.json",
+    "basis": "reexecutado nesta etapa"
+  },
+  {
+    "gate": "OPENSSL_GRACEFUL_SHUTDOWN",
+    "result": "PASS",
+    "evidence": "final-reexecution/stdout.log; final-reexecution/gate-proof.txt",
+    "basis": "reexecutado nesta etapa; alertas recíprocos obrigatórios"
+  },
+  {
+    "gate": "COMBINED_AUTOMATIC",
+    "result": "PASS",
+    "evidence": "combined-automatic-system-tls12-result.json; combined-automatic-system-tls13-result.json",
+    "basis": "seleção/TLS/autenticação já aprovados; antigos shutdowns online não são reclassificados"
+  },
+  {
+    "gate": "COMBINED_EXACT",
+    "result": "PASS",
+    "evidence": "combined-exact-local-tls13-result.json; combined-exact-schannel-tls13-result.json",
+    "basis": "resultado anterior preservado, incluindo expectativa UNSUPPORTED"
+  },
+  {
+    "gate": "COMBINED_ORDERED",
+    "result": "PASS",
+    "evidence": "combined-ordered-system-tls12-result.json",
+    "basis": "seleção/TLS/autenticação já aprovados; antigo shutdown online não é reclassificado"
+  },
+  {
+    "gate": "OPENSSL_DLL_PROVENANCE",
+    "result": "PASS",
+    "evidence": "dll-loaded-hashes.json; final-reexecution/result.json",
+    "basis": "paths e hashes confirmados também na reexecução"
+  },
+  {
+    "gate": "NO_CHECKOUT_DEPENDENCY",
+    "result": "PASS",
+    "evidence": "compile-and-dependency-audit.json; loaded-module-paths.txt",
+    "basis": "resultado anterior preservado"
+  },
+  {
+    "gate": "NO_EXTERNAL_STAGING_BUILD_DEPENDENCY",
+    "result": "PASS",
+    "evidence": "compile-and-dependency-audit.json; runtime-paths-and-commands.txt",
+    "basis": "resultado anterior preservado"
+  },
+  {
+    "gate": "RUNTIME_ISOLATION",
+    "result": "PASS",
+    "evidence": "final-reexecution/result.json; loaded-module-paths.txt",
+    "basis": "módulos somente executable local, Windows e SDK correspondente"
+  }
+]

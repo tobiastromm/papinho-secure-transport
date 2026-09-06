@@ -1,0 +1,4 @@
+e6047dadbf2b9c85b3bd52598fd6dbac78f9789de9b1c0a837712584ac883509  lib\libcrypto.lib
+e6d86b6fb9ad205f3b80ba80564b4ab8764c7bf45a793bc209385ad3c601a755  lib\libssl.lib
+09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044  runtime\libcrypto-3-x64.dll
+3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed  runtime\libssl-3-x64.dll

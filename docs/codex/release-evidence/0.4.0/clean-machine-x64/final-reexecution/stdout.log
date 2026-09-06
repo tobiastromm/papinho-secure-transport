@@ -1,0 +1,147 @@
+SEQ=000001 MS=0 CASE MODE=openssl TLS=13 TRUST=SYSTEM ADDRESS=www.cloudflare.com PORT=443 HOSTNAME=www.cloudflare.com EXPECTED=openssl TYPE=online
+
+SEQ=000002 MS=0 PATH=C:\pse-clean-code\clean-validation\openssl\runtime\windows-x64-msvc-openssl-3.5.8;C:\Windows\System32;C:\Windows
+
+SEQ=000003 MS=0 RUNTIME_RESULT=success CODE=0
+
+SEQ=000004 MS=0 BACKEND=openssl CAPABILITIES=0x00000e7f
+
+SEQ=000005 MS=16 POLICY require_graceful_shutdown=1
+SEQ=000006 MS=16 NATIVE_SSL_NEW observer_installed=1
+SEQ=000007 MS=63 SOCKET phase=TCP_CONNECTED peek_return=-1 wsa_error=10035 tcp_eof=0 encrypted_available=0 ssl_pending=0 sent_notify=0 received_notify=0
+SEQ=000008 MS=63 TCP_CONNECT_COMPLETE
+SEQ=000009 MS=63 PST_CALL function=pst_connection_handshake step=0
+SEQ=000010 MS=78 NATIVE function=SSL_do_handshake return=-1 bytes=0 errno=0 wsa_error=10035 sent_notify=0 received_notify=0 queue_first=0x00000000 queue_last=0x00000000
+SEQ=000011 MS=78 NATIVE_SSL_GET_ERROR input_return=-1 error=2 zero_return=0 want_read=1 want_write=0
+SEQ=000012 MS=78 PST_RETURN function=pst_connection_handshake result=0 operation=1 operation_error=0
+SEQ=000013 MS=78 PST_DIAGNOSTIC phase=HANDSHAKE copy_result=0 valid=0 generation=0 normalized=0 operation=0 backend=
+SEQ=000014 MS=78 PST_WAIT_BEGIN
+SEQ=000015 MS=94 PST_WAIT_READY
+SEQ=000016 MS=94 PST_CALL function=pst_connection_handshake step=1
+SEQ=000017 MS=125 NATIVE function=SSL_do_handshake return=1 bytes=0 errno=0 wsa_error=0 sent_notify=0 received_notify=0 queue_first=0x00000000 queue_last=0x00000000
+SEQ=000018 MS=125 PST_RETURN function=pst_connection_handshake result=0 operation=0 operation_error=0
+SEQ=000019 MS=125 PST_DIAGNOSTIC phase=HANDSHAKE copy_result=0 valid=0 generation=0 normalized=0 operation=0 backend=
+SEQ=000020 MS=125 HANDSHAKE=PASS
+
+SEQ=000021 MS=125 SOCKET phase=HANDSHAKE_COMPLETE peek_return=-1 wsa_error=10035 tcp_eof=0 encrypted_available=0 ssl_pending=0 sent_notify=0 received_notify=0
+SEQ=000022 MS=125 TRUST=SYSTEM TLS=0x0304 PST_TLS_VERSION=13 CERT=1 CHAIN=1 HOSTNAME=1 AUTH=1
+
+SEQ=000023 MS=125 HTTP_REQUEST_BEGIN bytes=104
+HEAD / HTTP/1.1
+Host: www.cloudflare.com
+Connection: close
+User-Agent: PST-clean-validation/0.4.0
+
+HTTP_REQUEST_END
+SEQ=000024 MS=125 NATIVE function=SSL_write_ex return=1 bytes=104 errno=0 wsa_error=0 sent_notify=0 received_notify=0 queue_first=0x00000000 queue_last=0x00000000
+SEQ=000025 MS=141 WRITE=104
+
+SEQ=000026 MS=141 NATIVE function=SSL_read_ex return=0 bytes=0 errno=0 wsa_error=10035 sent_notify=0 received_notify=0 queue_first=0x00000000 queue_last=0x00000000
+SEQ=000027 MS=141 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0
+SEQ=000028 MS=391 NATIVE function=SSL_read_ex return=0 bytes=0 errno=0 wsa_error=0 sent_notify=0 received_notify=0 queue_first=0x00000000 queue_last=0x00000000
+SEQ=000029 MS=391 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0
+SEQ=000030 MS=391 NATIVE function=SSL_read_ex return=0 bytes=0 errno=0 wsa_error=0 sent_notify=0 received_notify=0 queue_first=0x00000000 queue_last=0x00000000
+SEQ=000031 MS=391 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0
+SEQ=000032 MS=391 NATIVE function=SSL_read_ex return=1 bytes=1369 errno=0 wsa_error=0 sent_notify=0 received_notify=0 queue_first=0x00000000 queue_last=0x00000000
+SEQ=000033 MS=391 READ=1369 HTTP_PREFIX=HTTP/1.1 200
+
+SEQ=000034 MS=391 NATIVE function=SSL_read_ex return=1 bytes=1369 errno=0 wsa_error=0 sent_notify=0 received_notify=0 queue_first=0x00000000 queue_last=0x00000000
+SEQ=000035 MS=391 NATIVE function=SSL_read_ex return=1 bytes=1369 errno=0 wsa_error=0 sent_notify=0 received_notify=0 queue_first=0x00000000 queue_last=0x00000000
+SEQ=000036 MS=391 NATIVE function=SSL_read_ex return=1 bytes=814 errno=0 wsa_error=0 sent_notify=0 received_notify=0 queue_first=0x00000000 queue_last=0x00000000
+SEQ=000037 MS=391 HTTP_HEAD_COMPLETE=4921
+
+SEQ=000038 MS=391 HTTP_RESPONSE_HEADER HTTP/1.1 200 OK
+SEQ=000039 MS=391 HTTP_RESPONSE_HEADER Connection: close
+SEQ=000040 MS=391 HTTP_RESPONSE_HEADER Server: cloudflare
+SEQ=000041 MS=391 HTTP_MESSAGE_COMPLETE method=HEAD header_bytes=4921 total_read=4921 extra_bytes=0 expected_body_bytes=0
+SEQ=000042 MS=406 SOCKET phase=APPLICATION_RESPONSE_COMPLETE peek_return=1 wsa_error=0 tcp_eof=0 encrypted_available=24 ssl_pending=0 sent_notify=0 received_notify=0
+SEQ=000043 MS=406 PST_DIAGNOSTIC phase=BEFORE_SHUTDOWN copy_result=0 valid=0 generation=0 normalized=0 operation=0 backend=
+SEQ=000044 MS=406 PST_CALL function=pst_connection_shutdown step=0
+SEQ=000045 MS=406 SOCKET phase=BEFORE_SSL_SHUTDOWN peek_return=1 wsa_error=0 tcp_eof=0 encrypted_available=24 ssl_pending=0 sent_notify=0 received_notify=0
+SEQ=000046 MS=406 NATIVE_ALERT direction=WRITE level=1 description=0 close_notify=1
+SEQ=000047 MS=406 NATIVE function=SSL_shutdown return=0 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=0 queue_first=0x00000000 queue_last=0x00000000
+SEQ=000048 MS=406 SOCKET phase=AFTER_SSL_SHUTDOWN peek_return=1 wsa_error=0 tcp_eof=0 encrypted_available=24 ssl_pending=0 sent_notify=1 received_notify=0
+SEQ=000049 MS=406 PST_RETURN function=pst_connection_shutdown result=0 operation=1 operation_error=0
+SEQ=000050 MS=406 PST_DIAGNOSTIC phase=SHUTDOWN copy_result=0 valid=0 generation=0 normalized=0 operation=0 backend=
+SEQ=000051 MS=406 PST_WAIT_BEGIN
+SEQ=000052 MS=406 PST_WAIT_READY
+SEQ=000053 MS=406 PST_CALL function=pst_connection_shutdown step=1
+SEQ=000054 MS=406 SOCKET phase=BEFORE_SSL_SHUTDOWN peek_return=1 wsa_error=0 tcp_eof=0 encrypted_available=24 ssl_pending=0 sent_notify=1 received_notify=0
+SEQ=000055 MS=406 NATIVE_ALERT direction=READ level=1 description=0 close_notify=1
+SEQ=000056 MS=406 NATIVE function=SSL_shutdown return=1 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=1 queue_first=0x00000000 queue_last=0x00000000
+SEQ=000057 MS=406 SOCKET phase=AFTER_SSL_SHUTDOWN peek_return=0 wsa_error=0 tcp_eof=1 encrypted_available=0 ssl_pending=0 sent_notify=1 received_notify=1
+SEQ=000058 MS=406 PST_RETURN function=pst_connection_shutdown result=0 operation=0 operation_error=0
+SEQ=000059 MS=406 PST_DIAGNOSTIC phase=SHUTDOWN copy_result=0 valid=0 generation=0 normalized=0 operation=0 backend=
+SEQ=000060 MS=406 SHUTDOWN=PASS
+
+SEQ=000061 MS=406 PST_DIAGNOSTIC phase=FINAL copy_result=0 valid=0 generation=0 normalized=0 operation=0 backend=
+SEQ=000062 MS=406 SOCKET phase=FINAL_BEFORE_RELEASE peek_return=0 wsa_error=0 tcp_eof=1 encrypted_available=0 ssl_pending=0 sent_notify=1 received_notify=1
+SEQ=000063 MS=422 NATIVE_SUMMARY client_close_notify=1 peer_close_notify=1 SSL_ERROR_ZERO_RETURN_count=0 tcp_eof_observations=2
+SEQ=000064 MS=422 MODULE=C:\pse-clean-code\clean-validation\evidence\shutdown-investigation\shutdown-trace.exe
+
+SEQ=000065 MS=422 MODULE=C:\WINDOWS\SYSTEM32\ntdll.dll
+
+SEQ=000066 MS=422 MODULE=C:\WINDOWS\System32\KERNEL32.DLL
+
+SEQ=000067 MS=422 MODULE=C:\WINDOWS\System32\KERNELBASE.dll
+
+SEQ=000068 MS=422 MODULE=C:\WINDOWS\System32\WS2_32.dll
+
+SEQ=000069 MS=422 MODULE=C:\WINDOWS\System32\RPCRT4.dll
+
+SEQ=000070 MS=422 MODULE=C:\WINDOWS\System32\CRYPT32.dll
+
+SEQ=000071 MS=422 MODULE=C:\WINDOWS\System32\ucrtbase.dll
+
+SEQ=000072 MS=422 MODULE=C:\pse-clean-code\clean-validation\openssl\runtime\windows-x64-msvc-openssl-3.5.8\libssl-3-x64.dll
+
+SEQ=000073 MS=422 MODULE=C:\WINDOWS\SYSTEM32\VCRUNTIME140.dll
+
+SEQ=000074 MS=422 MODULE=C:\pse-clean-code\clean-validation\openssl\runtime\windows-x64-msvc-openssl-3.5.8\libcrypto-3-x64.dll
+
+SEQ=000075 MS=422 MODULE=C:\WINDOWS\System32\ADVAPI32.dll
+
+SEQ=000076 MS=422 MODULE=C:\WINDOWS\System32\msvcrt.dll
+
+SEQ=000077 MS=422 MODULE=C:\WINDOWS\System32\sechost.dll
+
+SEQ=000078 MS=422 MODULE=C:\WINDOWS\System32\bcrypt.dll
+
+SEQ=000079 MS=422 MODULE=C:\WINDOWS\System32\USER32.dll
+
+SEQ=000080 MS=422 MODULE=C:\WINDOWS\System32\win32u.dll
+
+SEQ=000081 MS=422 MODULE=C:\WINDOWS\System32\GDI32.dll
+
+SEQ=000082 MS=422 MODULE=C:\WINDOWS\System32\gdi32full.dll
+
+SEQ=000083 MS=422 MODULE=C:\WINDOWS\System32\msvcp_win.dll
+
+SEQ=000084 MS=422 MODULE=C:\WINDOWS\System32\IMM32.DLL
+
+SEQ=000085 MS=422 MODULE=C:\WINDOWS\SYSTEM32\CRYPTSP.dll
+
+SEQ=000086 MS=422 MODULE=C:\WINDOWS\system32\rsaenh.dll
+
+SEQ=000087 MS=422 MODULE=C:\WINDOWS\SYSTEM32\CRYPTBASE.dll
+
+SEQ=000088 MS=422 MODULE=C:\WINDOWS\System32\bcryptPrimitives.dll
+
+SEQ=000089 MS=438 MODULE=C:\WINDOWS\system32\mswsock.dll
+
+SEQ=000090 MS=438 MODULE=C:\WINDOWS\SYSTEM32\DNSAPI.dll
+
+SEQ=000091 MS=438 MODULE=C:\WINDOWS\SYSTEM32\IPHLPAPI.DLL
+
+SEQ=000092 MS=438 MODULE=C:\WINDOWS\System32\NSI.dll
+
+SEQ=000093 MS=438 MODULE=C:\Windows\System32\rasadhlp.dll
+
+SEQ=000094 MS=438 MODULE=C:\WINDOWS\System32\fwpuclnt.dll
+
+SEQ=000095 MS=438 MODULE=C:\WINDOWS\SYSTEM32\MSASN1.dll
+
+SEQ=000096 MS=438 MODULE=C:\WINDOWS\SYSTEM32\gpapi.dll
+
+SEQ=000097 MS=438 CONSUMER_RESULT=PASS
+

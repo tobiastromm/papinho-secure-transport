@@ -1,0 +1,233 @@
+**********************************************************************
+** Visual Studio 2022 Developer Command Prompt v17.14.39
+** Copyright (c) 2025 Microsoft Corporation
+**********************************************************************
+[vcvarsall.bat] Environment initialized for: 'x64'
+PATH=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\HostX64\x64;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\VC\VCPackages;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\TestWindow;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\bin\Roslyn;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Team Tools\DiagnosticsHub\Collector;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\Extensions\Microsoft\CodeCoverage.Console;C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\\x64;C:\Program Files (x86)\Windows Kits\10\bin\\x64;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\\MSBuild\Current\Bin\amd64;C:\Windows\Microsoft.NET\Framework64\v4.0.30319;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\;<REDACTED_USER_PROFILE>\.codex\tmp\arg0\codex-arg0qEtZ1o;C:\Program Files (x86)\Common Files\Oracle\Java\java8path;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\ffmpeg\bin;<REDACTED_USER_PROFILE>\AppData\Local\Microsoft\WindowsApps;;<REDACTED_USER_PROFILE>\AppData\Local\Programs\Microsoft VS Code\bin;<REDACTED_USER_PROFILE>\.vscode\extensions\openai.chatgpt-26.901.22334-win32-x64\bin\windows-x86_64;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\IDE\VC\Linux\bin\ConnectionManagerExe;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\vcpkg
+PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.CPL
+INCLUDE=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\VS\include;C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um;C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared;C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\winrt;C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\cppwinrt
+LIB=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64;C:\Program Files (x86)\Windows Kits\10\lib\10.0.19041.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64
+LIBPATH=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64;C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x86\store\references;C:\Program Files (x86)\Windows Kits\10\UnionMetadata\10.0.19041.0;C:\Program Files (x86)\Windows Kits\10\References\10.0.19041.0;C:\Windows\Microsoft.NET\Framework64\v4.0.30319
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe
+consumer.c
+Observação: incluindo arquivo: C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\winsock2.h
+Observação: incluindo arquivo:  C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\winapifamily.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\winpackagefamily.h
+Observação: incluindo arquivo:  C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\windows.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\sdkddkver.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\excpt.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vcruntime.h
+Observação: incluindo arquivo:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\sal.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\concurrencysal.h
+Observação: incluindo arquivo:     C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vadefs.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\stdarg.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\windef.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\minwindef.h
+Observação: incluindo arquivo:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\specstrings.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\specstrings_strict.h
+Observação: incluindo arquivo:       C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\specstrings_undef.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\driverspecs.h
+Observação: incluindo arquivo:       C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\shared\sdv_driverspecs.h
+Observação: incluindo arquivo:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\winnt.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt\ctype.h
+Observação: incluindo arquivo:       C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt\corecrt.h
+Observação: incluindo arquivo:       C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt\corecrt_wctype.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\kernelspecs.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\basetsd.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\guiddef.h
+Observação: incluindo arquivo:       C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt\string.h
+Observação: incluindo arquivo:        C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt\corecrt_memory.h
+Observação: incluindo arquivo:         C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt\corecrt_memcpy_s.h
+Observação: incluindo arquivo:          C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt\errno.h
+Observação: incluindo arquivo:          C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vcruntime_string.h
+Observação: incluindo arquivo:        C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt\corecrt_wstring.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\shared\pshpack4.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\shared\poppack.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\pshpack4.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\poppack.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\shared\pshpack4.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\shared\pshpack2.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\shared\poppack.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\shared\pshpack2.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\pshpack2.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\poppack.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\shared\poppack.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\shared\pshpack8.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\shared\poppack.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\shared\pshpack1.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\shared\poppack.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\shared\pshpack1.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\shared\poppack.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\shared\poppack.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\apiset.h
+Observação: incluindo arquivo:      C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\ktmtypes.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\winbase.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\apisetcconv.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\minwinbase.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\apiquery2.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\processenv.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\fileapifromapp.h
+Observação: incluindo arquivo:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\fileapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\debugapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\utilapiset.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\handleapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\errhandlingapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\fibersapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\namedpipeapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\profileapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\heapapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\ioapiset.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\synchapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\interlockedapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\processthreadsapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\sysinfoapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\memoryapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\enclaveapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\threadpoollegacyapiset.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\threadpoolapiset.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\jobapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\jobapi2.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\wow64apiset.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\libloaderapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\securitybaseapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\namespaceapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\systemtopologyapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\processtopologyapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\securityappcontainer.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\realtimeapiset.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\winerror.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\timezoneapi.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\wingdi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\pshpack1.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\poppack.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\pshpack2.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\poppack.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\pshpack2.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\poppack.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\pshpack4.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\poppack.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\pshpack4.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\poppack.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\winuser.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\pshpack2.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\poppack.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\tvout.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\winnls.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\datetimeapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\stringapiset.h
+Observação: incluindo arquivo:     C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\winnls.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\wincon.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\wincontypes.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\consoleapi.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\consoleapi2.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\consoleapi3.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\winver.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\verrsrc.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\winreg.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\reason.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\winnetwk.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\wnnc.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\stralign.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\winsvc.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\mcx.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\imm.h
+Observação: incluindo arquivo:    C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\ime_cmodes.h
+Observação: incluindo arquivo:  C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\ws2def.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\inaddr.h
+Observação: incluindo arquivo:  C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\qos.h
+Observação: incluindo arquivo: C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\ws2tcpip.h
+Observação: incluindo arquivo:  C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\ws2ipdef.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\shared\in6addr.h
+Observação: incluindo arquivo:  C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\limits.h
+Observação: incluindo arquivo: C:\Program Files (x86)\Windows Kits\10\\include\10.0.19041.0\\um\tlhelp32.h
+Observação: incluindo arquivo: C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt\stdio.h
+Observação: incluindo arquivo:  C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt\corecrt_wstdio.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt\corecrt_stdio_config.h
+Observação: incluindo arquivo: C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt\stdlib.h
+Observação: incluindo arquivo:  C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt\corecrt_malloc.h
+Observação: incluindo arquivo:  C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt\corecrt_search.h
+Observação: incluindo arquivo:   C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt\stddef.h
+Observação: incluindo arquivo:  C:\Program Files (x86)\Windows Kits\10\include\10.0.19041.0\ucrt\corecrt_wstdlib.h
+Observação: incluindo arquivo: C:\pse-clean-code\clean-validation\schannel\include\papinho_secure_transport.h
+Observação: incluindo arquivo: C:\pse-clean-code\clean-validation\schannel\include\papinho_secure_transport_win32.h
+C:\pse-clean-code\clean-validation\consumers\consumer.c(90): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\pse-clean-code\clean-validation\consumers\consumer.c(103): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+
+Buscando bibliotecas
+    Pesquisando C:\pse-clean-code\clean-validation\schannel\lib\windows-x64-msvc-schannel\papinho_secure_transport.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\ws2_32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\secur32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\crypt32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\ncrypt.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\MSVCRT.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\OLDNAMES.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\kernel32.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\vcruntime.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\lib\10.0.19041.0\ucrt\x64\ucrt.lib:
+    Pesquisando C:\pse-clean-code\clean-validation\schannel\lib\windows-x64-msvc-schannel\papinho_secure_transport.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\ws2_32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\secur32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\crypt32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\ncrypt.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\MSVCRT.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\OLDNAMES.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\kernel32.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\vcruntime.lib:
+
+Buscando bibliotecas finalizadas
+
+Buscando bibliotecas
+    Pesquisando C:\pse-clean-code\clean-validation\schannel\lib\windows-x64-msvc-schannel\papinho_secure_transport.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\ws2_32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\secur32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\crypt32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\ncrypt.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\MSVCRT.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\OLDNAMES.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\kernel32.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\vcruntime.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\lib\10.0.19041.0\ucrt\x64\ucrt.lib:
+
+Buscando bibliotecas finalizadas
+
+Buscando bibliotecas
+    Pesquisando C:\pse-clean-code\clean-validation\schannel\lib\windows-x64-msvc-schannel\papinho_secure_transport.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\ws2_32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\secur32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\crypt32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\ncrypt.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\MSVCRT.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\OLDNAMES.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\kernel32.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\vcruntime.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\lib\10.0.19041.0\ucrt\x64\ucrt.lib:
+
+Buscando bibliotecas finalizadas
+
+Buscando bibliotecas
+    Pesquisando C:\pse-clean-code\clean-validation\schannel\lib\windows-x64-msvc-schannel\papinho_secure_transport.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\ws2_32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\secur32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\crypt32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\ncrypt.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\MSVCRT.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\OLDNAMES.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\kernel32.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\vcruntime.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\lib\10.0.19041.0\ucrt\x64\ucrt.lib:
+
+Buscando bibliotecas finalizadas
+
+Buscando bibliotecas
+    Pesquisando C:\pse-clean-code\clean-validation\schannel\lib\windows-x64-msvc-schannel\papinho_secure_transport.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\ws2_32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\secur32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\crypt32.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\ncrypt.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\MSVCRT.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\OLDNAMES.lib:
+    Pesquisando C:\Program Files (x86)\Windows Kits\10\\lib\10.0.19041.0\\um\x64\kernel32.lib:
+    Pesquisando C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\lib\x64\vcruntime.lib:
+
+Buscando bibliotecas finalizadas

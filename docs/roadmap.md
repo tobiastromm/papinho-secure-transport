@@ -1,0 +1,150 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
+# Roadmap
+
+- Phase 0 - Scope, Provenance & Architecture: complete
+  - 0.A Legacy NSS Asset Ingestion & Provenance: complete
+  - 0.A-R1 RNG fail-closed A/B revalidation addendum: complete
+  - 0.B Scope & Architectural Boundaries: complete
+  - 0.C Runtime/API Design: complete
+- Phase 1 - Portable Foundation: complete
+  - C89/Visual C++ 6 portable integer and size types: complete
+  - Stable result model and result strings: complete
+  - API/library version query and size/version validation: complete
+  - Opaque public handle declarations: complete
+  - VC6 static-library build and foundation test: complete
+- Phase 2 - Backend Interface / SPI: complete
+  - Internal versioned descriptor and C89 function table: complete
+  - Capability model and consistency validation: complete
+  - In-process registry, exact lookup, and duplicate rejection: complete
+  - Incremental readiness, handshake, I/O, and ownership contracts: complete
+  - Deterministic mock dispatch tests with VC6 `/W4`: complete
+- Phase 3 - NSS Backend: complete
+  - Opt-in `retrozilla-nss` descriptor and private NSS/NSPR state: complete
+  - Normal-runtime lifecycle and fail-closed initialization propagation: complete
+  - Transactional native import and single-owner cleanup: complete
+  - Incremental handshake, `PR_Poll`, secure I/O, shutdown, and error mapping: complete
+  - VC6 unit/lifecycle tests and compiled opt-in integration harness: complete
+  - Authenticated loopback TLS 1.2, backend polling, secure echo, and shutdown proof: complete
+- Phase 4 - Credentials & Peer Identity: complete
+  - Immutable memory DER/PKCS#8 credentials and custom/system trust representation: complete
+  - Frozen backend-neutral hostname and authentication configuration: complete
+  - NSS custom trust, client authentication, SHA-256, and owned leaf snapshot: complete
+  - Loopback mTLS, wrong-hostname, and untrusted-CA functional gates: complete
+- Phase 5 - TLS Runtime: complete
+  - Public runtime selection and capability gating: complete
+  - Frozen TLS version, ALPN, resumption and 0-RTT policy: complete
+  - Public Win32 adapter and ownership transition: complete
+  - Incremental connection lifecycle, readiness, secure I/O and shutdown: complete
+  - Public-only TLS 1.2/TLS 1.3 server-auth, mTLS and negative gates: complete
+- Phase 6 - Legacy Platform Validation: complete
+  - Static VC6/PE/import compatibility audit: complete
+  - Windows NT 4.0 SP6 real execution: complete
+  - Repeated full TLS lifecycle, bounded shutdown and peer snapshot lifetime: complete
+- Phase 7 - Interoperability / Hardening: complete
+  - 7.A Error & Diagnostic Model Hardening: complete
+    - 7.A1 internal diagnostic snapshot: complete
+    - 7.A2 internal diagnostic transport, copy and redaction: complete
+    - 7.A3 pre-runtime diagnostic retention and internal operation context: complete
+    - 7.A4 controlled diagnostic exposure design: complete
+    - 7.A5 public diagnostic ABI foundation: complete
+    - 7.A6 public diagnostic API hardening and abuse resistance: complete
+    - 7.A7 consumer-controlled logging/event sink design: complete
+    - 7.A8 logging event ABI review and minimal public sink: complete
+    - 7.A closure audit: complete
+  - 7.B Connection Failure Matrix: complete
+    - audit and readiness/wait defect correction: host complete
+    - deterministic functional fixtures: host complete
+    - real NT4 clean_close and data_then_close: complete
+    - real NT4 abrupt_close provider blocker reproduction: complete
+    - RetroZilla NSS close_notify observability audit: complete
+    - provider-local close_notify implementation and host validation: complete
+    - targeted NT4 clean/data/abrupt revalidation: complete
+    - shutdown-abort contract proof: complete; pending-during-step is not observable with this provider
+    - 7.B closure audit: complete
+  - 7.C Readiness / Progress Hardening: complete
+    - audit and operation/interest matrix: complete
+    - deterministic READ/WRITE, timeout, partial-I/O and interest-change coverage: complete
+    - isolation, operation-transition, handshake and generic-shutdown coverage: complete
+    - host TLS 1.2/TLS 1.3 and failure-fixture revalidation: complete
+    - 7.C closure audit: complete
+  - 7.D TLS Policy Negative Matrix: complete
+    - existing policy surface and Phase 4/5/6/7 evidence audit: complete
+    - canonical negative matrix and real-gap inventory: complete
+    - focused deterministic policy coverage: complete
+    - real NSS functional policy matrix: complete
+    - 7.D closure audit: complete
+  - 7.E Lifecycle / Ownership Hardening: complete
+    - existing lifecycle and ownership evidence audit: complete
+    - canonical object graph and cleanup rules: complete
+    - focused deterministic lifecycle/counter matrix: complete
+    - real NSS lifecycle revalidation: complete
+    - 7.E closure audit: complete
+  - 7.F Interoperability Matrix: complete
+    - bounded scope and existing-evidence audit: complete
+    - canonical interoperability matrix: complete
+    - independent non-OpenSSL server proof: complete
+    - intermediate certificate-chain proof: complete
+    - negotiated-cipher functional assertion: complete
+    - bounded functional gap closure: complete
+    - 7.F closure audit: complete
+  - 7.G Diagnostics / Security Disclosure: complete
+    - existing surface and disclosure-boundary audit: complete
+    - canonical cross-surface disclosure matrix: complete
+    - focused malicious-memory and fixed-buffer regressions: complete
+    - functional logging/wire-equivalence revalidation: complete
+    - 7.G closure audit: complete
+  - 7.H Stress / Long-run Stability: complete
+    - existing repetition/resource evidence audit: complete
+    - bounded soak plan and closure matrix: complete
+    - bounded soak implementation and execution: complete
+    - 7.H closure audit: complete
+  - Phase 7 overall closure audit: complete
+- Phase 8 - Multiple Backends / Provider Evolution: complete
+  - 8.A SPI and provider-neutral architecture audit: complete
+  - 8.B deterministic multi-backend core and selection matrix: complete
+  - 8.C backend metadata / production priority / transport genericization: complete
+  - 8.D Schannel backend skeleton / modern Windows build: complete
+  - 8.E Schannel TLS, readiness, shutdown and close semantics: complete
+  - 8.F Schannel trust, identity, ALPN, mTLS and peer info: complete
+  - 8.G cross-backend interoperability and legacy regression: complete
+  - RetroZilla NSS provenance/reproducibility housekeeping: complete
+  - 8.H Phase 8 closure audit: complete
+- Post-Phase-8 OpenSSL provider extension: in progress
+  - OSSL-A architecture / version / build / provenance: complete
+  - OSSL-B backend skeleton / registration / modern build integration: complete
+  - OSSL-C TLS 1.2 / TLS 1.3 / readiness / secure I/O: complete
+  - OSSL-D trust / hostname / ALPN / mTLS / peer info: complete
+  - OSSL-E failure / close / diagnostics / logging / lifecycle hardening: complete
+  - OSSL-F three-provider validation and extension closure: complete
+  - OSSL-ST Windows SYSTEM_TRUST follow-up: complete
+    - OSSL-ST-A architecture / policy audit: complete
+    - OSSL-ST-B provider-local Win32 implementation: complete
+    - OSSL-ST-C functional and isolation matrix: complete
+    - OSSL-ST-D hardening / closure audit: complete
+- Phase 9 - Release / ABI Stabilization: complete; ready for owner release approval, not published
+  - 9.A Release scope / version policy / canonical inventory: complete
+  - 9.B Public API / ABI freeze audit: complete
+  - 9.C SPI / provider contract freeze: complete
+    - descriptor/vtable prefix and x86/x64 ABI baseline: complete
+    - provider ID, capability, registration, selection and lifecycle contract: complete
+    - provider-neutral transport/readiness/I/O/diagnostic/metadata freeze: complete
+    - append-only optional-hook gate and bounded-ID defects fixed: complete
+  - 9.D Documentation / community / examples: complete
+    - 9.D0-A public built-in provider bootstrap architecture: complete
+    - 9.D0-B public built-in provider bootstrap implementation / validation: complete
+    - limited 9.B additive API addendum / API 1.3.0 freeze: complete
+  - 9.E Packaging / dependencies / licenses / provenance: complete; standard MPL-2.0 without Exhibit B applied; Library/Package 0.4.0 and five local package candidates validated
+    - 9.E-H repository/source-package hygiene: complete
+    - Combined Schannel/OpenSSL: official optional binary SDK candidate; not default or recommended
+  - 9.F Release validation kit: complete; extracted-package, real NT4, x64 provider, online system-trust, Combined selection and provenance gates pass; clean-machine execution deferred to 9.G
+  - 9.G Release candidate / clean-machine validation and final Phase 9 closure: complete; separate physical Windows 10 build 19045.6332 x64 package-only execution passed
+    - 9.G-R1 canonical package builder / package reproduction: complete; deterministic content and byte-identical RUN1/RUN2 archives, historical 0.4.0 candidates preserved
+    - OpenSSL shutdown investigation: expected peer behavior preserved; EOF without reciprocal close_notify remains TRUNCATED, final Cloudflare graceful gate passed
+    - ADR-0002 durable target naming review: future controlled migration; frozen 0.4.0 names unchanged
+  - documentation handoff: concise root README linking complete English and pt-BR paths, written for non-experts
+  - scope wording: PST is generic secure transport for Internet, LAN, and private/corporate networks; PapinhoBrowser/PapinhoAccelerator are examples only
+  - future-transport note: TLS is the current implementation; DTLS, QUIC, Noise, or other transports require future study and are not claims of SPI 2.4
+  - community/contribution handoff: contribution guide, retrocomputing relevance, and invitation for old-Windows TLS 1.3/NSS/NSPR contributors
+  - dependency handoff: provider/library contributions require license and provenance review; document vendored and external dependency models
+  - release handoff: integration examples, release-validation BATs, NT4/NSS to OpenSSL TLS 1.3, and NT4/NSS to Schannel TLS 1.2 validation

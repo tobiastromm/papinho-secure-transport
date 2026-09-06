@@ -1,0 +1,513 @@
+[
+  {
+    "sdk": "schannel",
+    "file": "LICENSE",
+    "sha256": "cde215e5b42363eb28ca2462c4558ff4807b38f383c537624c31e44657ac58f4",
+    "zip_sha256": "cde215e5b42363eb28ca2462c4558ff4807b38f383c537624c31e44657ac58f4",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "README.md",
+    "sha256": "5ca0a5cf0c10a0e6662eb9dab8e29b3ddae42e0e596db340d05cf5a938aaf55d",
+    "zip_sha256": "5ca0a5cf0c10a0e6662eb9dab8e29b3ddae42e0e596db340d05cf5a938aaf55d",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "SHA256SUMS.txt",
+    "sha256": "ed46eef300e99b20422017f41937f4b3a5e227a7512ac2605b96383403aa4c0e",
+    "zip_sha256": "ed46eef300e99b20422017f41937f4b3a5e227a7512ac2605b96383403aa4c0e",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "THIRD_PARTY_NOTICES.md",
+    "sha256": "7da88c78d4f6b66ed41ec2b532177eb95319b31ffc6d7d7f55815ad794fbe659",
+    "zip_sha256": "7da88c78d4f6b66ed41ec2b532177eb95319b31ffc6d7d7f55815ad794fbe659",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "VERSION",
+    "sha256": "5487d8b38e1cbdbd6ab9c745408dac2e168f67e1ee92b882bd1f00e4ed7e852a",
+    "zip_sha256": "5487d8b38e1cbdbd6ab9c745408dac2e168f67e1ee92b882bd1f00e4ed7e852a",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "consumer-link.ini",
+    "sha256": "b0a4a94d22ea8488d3ac928ae2a7db5c3cce948e414f4917afcac50ea2a680d7",
+    "zip_sha256": "b0a4a94d22ea8488d3ac928ae2a7db5c3cce948e414f4917afcac50ea2a680d7",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "docs/consumer-linking.md",
+    "sha256": "73eda8f09b8761e4ddbf85b8978541bbd002603a505e30d52d69df0019beb894",
+    "zip_sha256": "73eda8f09b8761e4ddbf85b8978541bbd002603a505e30d52d69df0019beb894",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "docs/release-licensing.md",
+    "sha256": "6fb7f9256a05a3063ca4cdf10369e36ba1470da14789879cc74b9ae9cfe7da7a",
+    "zip_sha256": "6fb7f9256a05a3063ca4cdf10369e36ba1470da14789879cc74b9ae9cfe7da7a",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "docs/release-packaging.md",
+    "sha256": "40329bcb3325398b45214a286f2701db0d6c8d246a81d60914ddad8e57ea589f",
+    "zip_sha256": "40329bcb3325398b45214a286f2701db0d6c8d246a81d60914ddad8e57ea589f",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "docs/security-and-limitations.md",
+    "sha256": "9167ba5e554136fb923316cbd36b132f631e3964e5394d8a7e80536f7b7d376b",
+    "zip_sha256": "9167ba5e554136fb923316cbd36b132f631e3964e5394d8a7e80536f7b7d376b",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "examples/README.md",
+    "sha256": "40593b70331e637f50265553729bccb87091d28200b133017f65838604aeacc6",
+    "zip_sha256": "40593b70331e637f50265553729bccb87091d28200b133017f65838604aeacc6",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "examples/basic_client.c",
+    "sha256": "42ddd15153a85af58eeab9aeb3c527284622938b4a4a02b81f963bfc525af059",
+    "zip_sha256": "42ddd15153a85af58eeab9aeb3c527284622938b4a4a02b81f963bfc525af059",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "examples/custom_trust.c",
+    "sha256": "8b58e5d3ff64b69086c048176449387a666200cfbea4e665c6cebb596c7237d2",
+    "zip_sha256": "8b58e5d3ff64b69086c048176449387a666200cfbea4e665c6cebb596c7237d2",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "examples/diagnostics_logging.c",
+    "sha256": "ab8943e8b5239bf0cd27010f7b840a7750b57862506f56367b3385e2ee49e17e",
+    "zip_sha256": "ab8943e8b5239bf0cd27010f7b840a7750b57862506f56367b3385e2ee49e17e",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "examples/mtls.c",
+    "sha256": "9e294f7e212b7d98de3d2687356db26a8f80845c606f51929908598a2cf0378b",
+    "zip_sha256": "9e294f7e212b7d98de3d2687356db26a8f80845c606f51929908598a2cf0378b",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "examples/provider_selection.c",
+    "sha256": "a6f3ef71c3f5c41996f54ec468b80146f3891524c555939953562d1a264ed0af",
+    "zip_sha256": "a6f3ef71c3f5c41996f54ec468b80146f3891524c555939953562d1a264ed0af",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "examples/system_trust.c",
+    "sha256": "cd3353e6bc41069fd7c94f0beb35e05496f477796d547a030b3b09a7dc9dd43c",
+    "zip_sha256": "cd3353e6bc41069fd7c94f0beb35e05496f477796d547a030b3b09a7dc9dd43c",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "include/papinho_secure_transport.h",
+    "sha256": "af2efb333031ccc6f5a541a91799c93a2a1d3a64d1061eb3fe5c01a04f76cfc3",
+    "zip_sha256": "af2efb333031ccc6f5a541a91799c93a2a1d3a64d1061eb3fe5c01a04f76cfc3",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "include/papinho_secure_transport_win32.h",
+    "sha256": "99e2ce13c3ceb043645cccf6ba73ae4c34cddb7b06e6d88b71716518144575dc",
+    "zip_sha256": "99e2ce13c3ceb043645cccf6ba73ae4c34cddb7b06e6d88b71716518144575dc",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "lib/windows-x64-msvc-schannel/papinho_secure_transport.lib",
+    "sha256": "474c925e2576e694574e5e6fe6692b88756a94486d1abacb5ca6280178cea6f5",
+    "zip_sha256": "474c925e2576e694574e5e6fe6692b88756a94486d1abacb5ca6280178cea6f5",
+    "result": "PASS"
+  },
+  {
+    "sdk": "schannel",
+    "file": "manifest.ini",
+    "sha256": "040513be036c0f31247d5448a79bd69b620e839c929ab16efde8340302b28f49",
+    "zip_sha256": "040513be036c0f31247d5448a79bd69b620e839c929ab16efde8340302b28f49",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "LICENSE",
+    "sha256": "cde215e5b42363eb28ca2462c4558ff4807b38f383c537624c31e44657ac58f4",
+    "zip_sha256": "cde215e5b42363eb28ca2462c4558ff4807b38f383c537624c31e44657ac58f4",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "README.md",
+    "sha256": "5ca0a5cf0c10a0e6662eb9dab8e29b3ddae42e0e596db340d05cf5a938aaf55d",
+    "zip_sha256": "5ca0a5cf0c10a0e6662eb9dab8e29b3ddae42e0e596db340d05cf5a938aaf55d",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "SHA256SUMS.txt",
+    "sha256": "04e9d72007cc5ff11c5bef34bda0ce1bf6ff0d14d84719106b8ece35fe6d9228",
+    "zip_sha256": "04e9d72007cc5ff11c5bef34bda0ce1bf6ff0d14d84719106b8ece35fe6d9228",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "THIRD_PARTY_NOTICES.md",
+    "sha256": "7da88c78d4f6b66ed41ec2b532177eb95319b31ffc6d7d7f55815ad794fbe659",
+    "zip_sha256": "7da88c78d4f6b66ed41ec2b532177eb95319b31ffc6d7d7f55815ad794fbe659",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "VERSION",
+    "sha256": "5487d8b38e1cbdbd6ab9c745408dac2e168f67e1ee92b882bd1f00e4ed7e852a",
+    "zip_sha256": "5487d8b38e1cbdbd6ab9c745408dac2e168f67e1ee92b882bd1f00e4ed7e852a",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "consumer-link.ini",
+    "sha256": "b067a4599e19f21a069bc9a4f8f8f3bc77c2a6198ae9325c080d52a201e58dfe",
+    "zip_sha256": "b067a4599e19f21a069bc9a4f8f8f3bc77c2a6198ae9325c080d52a201e58dfe",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "docs/consumer-linking.md",
+    "sha256": "73eda8f09b8761e4ddbf85b8978541bbd002603a505e30d52d69df0019beb894",
+    "zip_sha256": "73eda8f09b8761e4ddbf85b8978541bbd002603a505e30d52d69df0019beb894",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "docs/release-licensing.md",
+    "sha256": "6fb7f9256a05a3063ca4cdf10369e36ba1470da14789879cc74b9ae9cfe7da7a",
+    "zip_sha256": "6fb7f9256a05a3063ca4cdf10369e36ba1470da14789879cc74b9ae9cfe7da7a",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "docs/release-packaging.md",
+    "sha256": "40329bcb3325398b45214a286f2701db0d6c8d246a81d60914ddad8e57ea589f",
+    "zip_sha256": "40329bcb3325398b45214a286f2701db0d6c8d246a81d60914ddad8e57ea589f",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "docs/security-and-limitations.md",
+    "sha256": "9167ba5e554136fb923316cbd36b132f631e3964e5394d8a7e80536f7b7d376b",
+    "zip_sha256": "9167ba5e554136fb923316cbd36b132f631e3964e5394d8a7e80536f7b7d376b",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "examples/README.md",
+    "sha256": "40593b70331e637f50265553729bccb87091d28200b133017f65838604aeacc6",
+    "zip_sha256": "40593b70331e637f50265553729bccb87091d28200b133017f65838604aeacc6",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "examples/basic_client.c",
+    "sha256": "42ddd15153a85af58eeab9aeb3c527284622938b4a4a02b81f963bfc525af059",
+    "zip_sha256": "42ddd15153a85af58eeab9aeb3c527284622938b4a4a02b81f963bfc525af059",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "examples/custom_trust.c",
+    "sha256": "8b58e5d3ff64b69086c048176449387a666200cfbea4e665c6cebb596c7237d2",
+    "zip_sha256": "8b58e5d3ff64b69086c048176449387a666200cfbea4e665c6cebb596c7237d2",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "examples/diagnostics_logging.c",
+    "sha256": "ab8943e8b5239bf0cd27010f7b840a7750b57862506f56367b3385e2ee49e17e",
+    "zip_sha256": "ab8943e8b5239bf0cd27010f7b840a7750b57862506f56367b3385e2ee49e17e",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "examples/mtls.c",
+    "sha256": "9e294f7e212b7d98de3d2687356db26a8f80845c606f51929908598a2cf0378b",
+    "zip_sha256": "9e294f7e212b7d98de3d2687356db26a8f80845c606f51929908598a2cf0378b",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "examples/provider_selection.c",
+    "sha256": "a6f3ef71c3f5c41996f54ec468b80146f3891524c555939953562d1a264ed0af",
+    "zip_sha256": "a6f3ef71c3f5c41996f54ec468b80146f3891524c555939953562d1a264ed0af",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "examples/system_trust.c",
+    "sha256": "cd3353e6bc41069fd7c94f0beb35e05496f477796d547a030b3b09a7dc9dd43c",
+    "zip_sha256": "cd3353e6bc41069fd7c94f0beb35e05496f477796d547a030b3b09a7dc9dd43c",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "include/papinho_secure_transport.h",
+    "sha256": "af2efb333031ccc6f5a541a91799c93a2a1d3a64d1061eb3fe5c01a04f76cfc3",
+    "zip_sha256": "af2efb333031ccc6f5a541a91799c93a2a1d3a64d1061eb3fe5c01a04f76cfc3",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "include/papinho_secure_transport_win32.h",
+    "sha256": "99e2ce13c3ceb043645cccf6ba73ae4c34cddb7b06e6d88b71716518144575dc",
+    "zip_sha256": "99e2ce13c3ceb043645cccf6ba73ae4c34cddb7b06e6d88b71716518144575dc",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "lib/windows-x64-msvc-openssl-3.5.8/libcrypto.lib",
+    "sha256": "e6047dadbf2b9c85b3bd52598fd6dbac78f9789de9b1c0a837712584ac883509",
+    "zip_sha256": "e6047dadbf2b9c85b3bd52598fd6dbac78f9789de9b1c0a837712584ac883509",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "lib/windows-x64-msvc-openssl-3.5.8/libssl.lib",
+    "sha256": "e6d86b6fb9ad205f3b80ba80564b4ab8764c7bf45a793bc209385ad3c601a755",
+    "zip_sha256": "e6d86b6fb9ad205f3b80ba80564b4ab8764c7bf45a793bc209385ad3c601a755",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "lib/windows-x64-msvc-openssl-3.5.8/papinho_secure_transport.lib",
+    "sha256": "007d0e3210fecce10e56c78d603d57220754757d0288d0fb428c10f5ecebfd5c",
+    "zip_sha256": "007d0e3210fecce10e56c78d603d57220754757d0288d0fb428c10f5ecebfd5c",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "licenses/openssl/LICENSE-APACHE-2.0.txt",
+    "sha256": "7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a",
+    "zip_sha256": "7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "manifest.ini",
+    "sha256": "e9bd6a76e47ff5d8397e057aeb1e150762ff1faba6e66c7c42ae95d525bb1418",
+    "zip_sha256": "e9bd6a76e47ff5d8397e057aeb1e150762ff1faba6e66c7c42ae95d525bb1418",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "runtime/windows-x64-msvc-openssl-3.5.8/libcrypto-3-x64.dll",
+    "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "zip_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "result": "PASS"
+  },
+  {
+    "sdk": "openssl",
+    "file": "runtime/windows-x64-msvc-openssl-3.5.8/libssl-3-x64.dll",
+    "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "zip_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "LICENSE",
+    "sha256": "cde215e5b42363eb28ca2462c4558ff4807b38f383c537624c31e44657ac58f4",
+    "zip_sha256": "cde215e5b42363eb28ca2462c4558ff4807b38f383c537624c31e44657ac58f4",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "README.md",
+    "sha256": "5ca0a5cf0c10a0e6662eb9dab8e29b3ddae42e0e596db340d05cf5a938aaf55d",
+    "zip_sha256": "5ca0a5cf0c10a0e6662eb9dab8e29b3ddae42e0e596db340d05cf5a938aaf55d",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "SHA256SUMS.txt",
+    "sha256": "a9b40c9ee109e5f2602f054b8cd4731af79fd15c9d5c0dda4972dce413b81f85",
+    "zip_sha256": "a9b40c9ee109e5f2602f054b8cd4731af79fd15c9d5c0dda4972dce413b81f85",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "THIRD_PARTY_NOTICES.md",
+    "sha256": "7da88c78d4f6b66ed41ec2b532177eb95319b31ffc6d7d7f55815ad794fbe659",
+    "zip_sha256": "7da88c78d4f6b66ed41ec2b532177eb95319b31ffc6d7d7f55815ad794fbe659",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "VERSION",
+    "sha256": "5487d8b38e1cbdbd6ab9c745408dac2e168f67e1ee92b882bd1f00e4ed7e852a",
+    "zip_sha256": "5487d8b38e1cbdbd6ab9c745408dac2e168f67e1ee92b882bd1f00e4ed7e852a",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "consumer-link.ini",
+    "sha256": "8b3dcbeaedaf11da30611b882145e9c4be225fdef153e099a94691eadcc9b77b",
+    "zip_sha256": "8b3dcbeaedaf11da30611b882145e9c4be225fdef153e099a94691eadcc9b77b",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "docs/consumer-linking.md",
+    "sha256": "73eda8f09b8761e4ddbf85b8978541bbd002603a505e30d52d69df0019beb894",
+    "zip_sha256": "73eda8f09b8761e4ddbf85b8978541bbd002603a505e30d52d69df0019beb894",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "docs/release-licensing.md",
+    "sha256": "6fb7f9256a05a3063ca4cdf10369e36ba1470da14789879cc74b9ae9cfe7da7a",
+    "zip_sha256": "6fb7f9256a05a3063ca4cdf10369e36ba1470da14789879cc74b9ae9cfe7da7a",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "docs/release-packaging.md",
+    "sha256": "40329bcb3325398b45214a286f2701db0d6c8d246a81d60914ddad8e57ea589f",
+    "zip_sha256": "40329bcb3325398b45214a286f2701db0d6c8d246a81d60914ddad8e57ea589f",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "docs/security-and-limitations.md",
+    "sha256": "9167ba5e554136fb923316cbd36b132f631e3964e5394d8a7e80536f7b7d376b",
+    "zip_sha256": "9167ba5e554136fb923316cbd36b132f631e3964e5394d8a7e80536f7b7d376b",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "examples/README.md",
+    "sha256": "40593b70331e637f50265553729bccb87091d28200b133017f65838604aeacc6",
+    "zip_sha256": "40593b70331e637f50265553729bccb87091d28200b133017f65838604aeacc6",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "examples/basic_client.c",
+    "sha256": "42ddd15153a85af58eeab9aeb3c527284622938b4a4a02b81f963bfc525af059",
+    "zip_sha256": "42ddd15153a85af58eeab9aeb3c527284622938b4a4a02b81f963bfc525af059",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "examples/custom_trust.c",
+    "sha256": "8b58e5d3ff64b69086c048176449387a666200cfbea4e665c6cebb596c7237d2",
+    "zip_sha256": "8b58e5d3ff64b69086c048176449387a666200cfbea4e665c6cebb596c7237d2",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "examples/diagnostics_logging.c",
+    "sha256": "ab8943e8b5239bf0cd27010f7b840a7750b57862506f56367b3385e2ee49e17e",
+    "zip_sha256": "ab8943e8b5239bf0cd27010f7b840a7750b57862506f56367b3385e2ee49e17e",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "examples/mtls.c",
+    "sha256": "9e294f7e212b7d98de3d2687356db26a8f80845c606f51929908598a2cf0378b",
+    "zip_sha256": "9e294f7e212b7d98de3d2687356db26a8f80845c606f51929908598a2cf0378b",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "examples/provider_selection.c",
+    "sha256": "a6f3ef71c3f5c41996f54ec468b80146f3891524c555939953562d1a264ed0af",
+    "zip_sha256": "a6f3ef71c3f5c41996f54ec468b80146f3891524c555939953562d1a264ed0af",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "examples/system_trust.c",
+    "sha256": "cd3353e6bc41069fd7c94f0beb35e05496f477796d547a030b3b09a7dc9dd43c",
+    "zip_sha256": "cd3353e6bc41069fd7c94f0beb35e05496f477796d547a030b3b09a7dc9dd43c",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "include/papinho_secure_transport.h",
+    "sha256": "af2efb333031ccc6f5a541a91799c93a2a1d3a64d1061eb3fe5c01a04f76cfc3",
+    "zip_sha256": "af2efb333031ccc6f5a541a91799c93a2a1d3a64d1061eb3fe5c01a04f76cfc3",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "include/papinho_secure_transport_win32.h",
+    "sha256": "99e2ce13c3ceb043645cccf6ba73ae4c34cddb7b06e6d88b71716518144575dc",
+    "zip_sha256": "99e2ce13c3ceb043645cccf6ba73ae4c34cddb7b06e6d88b71716518144575dc",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "lib/windows-x64-msvc-schannel-openssl-3.5.8/libcrypto.lib",
+    "sha256": "e6047dadbf2b9c85b3bd52598fd6dbac78f9789de9b1c0a837712584ac883509",
+    "zip_sha256": "e6047dadbf2b9c85b3bd52598fd6dbac78f9789de9b1c0a837712584ac883509",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "lib/windows-x64-msvc-schannel-openssl-3.5.8/libssl.lib",
+    "sha256": "e6d86b6fb9ad205f3b80ba80564b4ab8764c7bf45a793bc209385ad3c601a755",
+    "zip_sha256": "e6d86b6fb9ad205f3b80ba80564b4ab8764c7bf45a793bc209385ad3c601a755",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "lib/windows-x64-msvc-schannel-openssl-3.5.8/papinho_secure_transport.lib",
+    "sha256": "90db5628c7aed6b55636f421d73e074d47251f0b1d823ef9a0e2da11da0d12c7",
+    "zip_sha256": "90db5628c7aed6b55636f421d73e074d47251f0b1d823ef9a0e2da11da0d12c7",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "licenses/openssl/LICENSE-APACHE-2.0.txt",
+    "sha256": "7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a",
+    "zip_sha256": "7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "manifest.ini",
+    "sha256": "199830753d2c6806c9c3af90e6c4ad2ca496e82ac1431c260e1fa15a2a2e42e7",
+    "zip_sha256": "199830753d2c6806c9c3af90e6c4ad2ca496e82ac1431c260e1fa15a2a2e42e7",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "runtime/windows-x64-msvc-schannel-openssl-3.5.8/libcrypto-3-x64.dll",
+    "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "zip_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "result": "PASS"
+  },
+  {
+    "sdk": "combined",
+    "file": "runtime/windows-x64-msvc-schannel-openssl-3.5.8/libssl-3-x64.dll",
+    "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "zip_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "result": "PASS"
+  }
+]

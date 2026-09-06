@@ -1,0 +1,44 @@
+[
+  {
+    "path": "C:\\pse-clean-code\\clean-validation\\consumers\\consumer.c",
+    "expected": "10110d161ea3a2daf72267bd2fe4109ce9db0709d971127fb3d39afe70d4f5a4",
+    "actual": "10110d161ea3a2daf72267bd2fe4109ce9db0709d971127fb3d39afe70d4f5a4",
+    "result": "PASS"
+  },
+  {
+    "path": "C:\\pse-clean-code\\clean-validation\\openssl\\lib\\windows-x64-msvc-openssl-3.5.8\\papinho_secure_transport.lib",
+    "expected": "007d0e3210fecce10e56c78d603d57220754757d0288d0fb428c10f5ecebfd5c",
+    "actual": "007d0e3210fecce10e56c78d603d57220754757d0288d0fb428c10f5ecebfd5c",
+    "result": "PASS"
+  },
+  {
+    "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "expected": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "actual": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "result": "PASS"
+  },
+  {
+    "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+    "expected": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "actual": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "result": "PASS"
+  },
+  {
+    "path": "C:\\pse-clean-code\\clean-validation\\source\\src\\backends\\openssl\\pst_backend_openssl.c",
+    "expected": "ce4e11070b1ca4ae4b17278ad1a678c0f56d319efda312b49825cef3df6d2297",
+    "actual": "ce4e11070b1ca4ae4b17278ad1a678c0f56d319efda312b49825cef3df6d2297",
+    "result": "PASS"
+  },
+  {
+    "path": "C:\\pse-clean-code\\clean-validation\\source\\src\\pst_runtime.c",
+    "expected": "919154448f882bb798348fcc656e533ffa4a8de5bb81303f3ea15d8d6207c995",
+    "actual": "919154448f882bb798348fcc656e533ffa4a8de5bb81303f3ea15d8d6207c995",
+    "result": "PASS"
+  },
+  {
+    "path": "C:\\pse-clean-code\\clean-validation\\source\\src\\pst_identity.c",
+    "expected": "886f94a0e7ecd58e2a23f91c86666cdfaf190332059335b31a5879357dbfa10e",
+    "actual": "886f94a0e7ecd58e2a23f91c86666cdfaf190332059335b31a5879357dbfa10e",
+    "result": "PASS"
+  }
+]

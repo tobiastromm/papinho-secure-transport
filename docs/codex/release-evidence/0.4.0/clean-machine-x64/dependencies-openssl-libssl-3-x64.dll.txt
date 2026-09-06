@@ -1,0 +1,34 @@
+"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\dumpbin.exe" /DEPENDENTS C:\pse-clean-code\clean-validation\openssl\runtime\windows-x64-msvc-openssl-3.5.8\libssl-3-x64.dll
+Microsoft (R) COFF/PE Dumper Version 14.44.35228.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file C:\pse-clean-code\clean-validation\openssl\runtime\windows-x64-msvc-openssl-3.5.8\libssl-3-x64.dll
+
+File Type: DLL
+
+  Image has the following dependencies:
+
+    libcrypto-3-x64.dll
+    WS2_32.dll
+    KERNEL32.dll
+    VCRUNTIME140.dll
+    api-ms-win-crt-heap-l1-1-0.dll
+    api-ms-win-crt-environment-l1-1-0.dll
+    api-ms-win-crt-runtime-l1-1-0.dll
+    api-ms-win-crt-time-l1-1-0.dll
+    api-ms-win-crt-string-l1-1-0.dll
+    api-ms-win-crt-utility-l1-1-0.dll
+    api-ms-win-crt-filesystem-l1-1-0.dll
+    api-ms-win-crt-convert-l1-1-0.dll
+
+  Summary
+
+        1000 .00cfg
+        5000 .data
+        8000 .idata
+        D000 .pdata
+       37000 .rdata
+        3000 .reloc
+        1000 .rsrc
+       F1000 .text

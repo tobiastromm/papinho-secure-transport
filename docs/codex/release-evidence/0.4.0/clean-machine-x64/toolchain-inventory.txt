@@ -1,0 +1,21 @@
+﻿TIME=2026-09-05T18:52:15.2146720-03:00
+MSVC_INSTALLED:
+
+FullName                                                                                                         
+--------                                                                                                         
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207                         
+COMPILER_LINKER_INSPECTION:
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\cl.exe  
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\dumpb...
+SDK_HEADERS_AND_LIBRARIES:
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\Windows.h EXISTS=True
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\stdio.h EXISTS=True
+C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x64\ws2_32.lib EXISTS=True
+C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\ucrt\x64\ucrt.lib EXISTS=True
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um\Windows.h EXISTS=True
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\stdio.h EXISTS=True
+C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\um\x64\ws2_32.lib EXISTS=True
+C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\ucrt\x64\ucrt.lib EXISTS=True
+
+

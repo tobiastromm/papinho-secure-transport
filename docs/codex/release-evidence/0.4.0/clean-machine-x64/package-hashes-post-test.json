@@ -1,0 +1,34 @@
+[
+  {
+    "file": "papinho-secure-transport-0.4.0-src.zip",
+    "actual": "8d20b8975c06029fc828a42cdb6c75dc96c74ee1e0dedab867077fbf21cc223d",
+    "historical": "8d20b8975c06029fc828a42cdb6c75dc96c74ee1e0dedab867077fbf21cc223d",
+    "manifest": "8d20b8975c06029fc828a42cdb6c75dc96c74ee1e0dedab867077fbf21cc223d",
+    "result": "PASS",
+    "post_test_sha256": "8d20b8975c06029fc828a42cdb6c75dc96c74ee1e0dedab867077fbf21cc223d"
+  },
+  {
+    "file": "papinho-secure-transport-0.4.0-windows-x64-msvc-schannel.zip",
+    "actual": "044f22dc2eac6ef82a53a096f0a27d1ce6719bb7d7798d71b6ebaa648f53eda8",
+    "historical": "044f22dc2eac6ef82a53a096f0a27d1ce6719bb7d7798d71b6ebaa648f53eda8",
+    "manifest": "044f22dc2eac6ef82a53a096f0a27d1ce6719bb7d7798d71b6ebaa648f53eda8",
+    "result": "PASS",
+    "post_test_sha256": "044f22dc2eac6ef82a53a096f0a27d1ce6719bb7d7798d71b6ebaa648f53eda8"
+  },
+  {
+    "file": "papinho-secure-transport-0.4.0-windows-x64-msvc-openssl-3.5.8.zip",
+    "actual": "a59847425895dad2b3b8bb96ae40b70e2698f3a02d1812c0f8de40404953741f",
+    "historical": "a59847425895dad2b3b8bb96ae40b70e2698f3a02d1812c0f8de40404953741f",
+    "manifest": "a59847425895dad2b3b8bb96ae40b70e2698f3a02d1812c0f8de40404953741f",
+    "result": "PASS",
+    "post_test_sha256": "a59847425895dad2b3b8bb96ae40b70e2698f3a02d1812c0f8de40404953741f"
+  },
+  {
+    "file": "papinho-secure-transport-0.4.0-windows-x64-msvc-schannel-openssl-3.5.8.zip",
+    "actual": "8e78dd36f6f9486c7eea50df093a74c3cd2838b0a1823b8f9c406f3d496a0010",
+    "historical": "8e78dd36f6f9486c7eea50df093a74c3cd2838b0a1823b8f9c406f3d496a0010",
+    "manifest": "8e78dd36f6f9486c7eea50df093a74c3cd2838b0a1823b8f9c406f3d496a0010",
+    "result": "PASS",
+    "post_test_sha256": "8e78dd36f6f9486c7eea50df093a74c3cd2838b0a1823b8f9c406f3d496a0010"
+  }
+]

@@ -1,0 +1,5 @@
+HEAD / HTTP/1.1
+Host: www.cloudflare.com
+Connection: close
+User-Agent: PST-clean-validation/0.4.0
+

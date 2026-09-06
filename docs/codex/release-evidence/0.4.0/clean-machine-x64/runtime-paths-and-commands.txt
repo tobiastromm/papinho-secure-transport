@@ -1,0 +1,49 @@
+schannel-local-tls12
+CWD=C:\pse-clean-code\clean-validation\consumers\schannel
+PATH=C:\Windows\System32;C:\Windows
+C:\pse-clean-code\clean-validation\consumers\schannel\consumer.exe schannel 12 C:\pse-clean-code\clean-validation\fixtures\interoperability-pki\root.der 127.0.0.1 18472 localhost schannel local fixture/1
+
+openssl-local-tls12
+CWD=C:\pse-clean-code\clean-validation\consumers\openssl
+PATH=C:\pse-clean-code\clean-validation\openssl\runtime\windows-x64-msvc-openssl-3.5.8;C:\Windows\System32;C:\Windows
+C:\pse-clean-code\clean-validation\consumers\openssl\consumer.exe openssl 12 C:\pse-clean-code\clean-validation\fixtures\interoperability-pki\root.der 127.0.0.1 18473 localhost openssl local fixture/1
+
+openssl-local-tls13
+CWD=C:\pse-clean-code\clean-validation\consumers\openssl
+PATH=C:\pse-clean-code\clean-validation\openssl\runtime\windows-x64-msvc-openssl-3.5.8;C:\Windows\System32;C:\Windows
+C:\pse-clean-code\clean-validation\consumers\openssl\consumer.exe openssl 13 C:\pse-clean-code\clean-validation\fixtures\interoperability-pki\root.der 127.0.0.1 18474 localhost openssl local fixture/1
+
+combined-exact-local-tls13
+CWD=C:\pse-clean-code\clean-validation\consumers\combined
+PATH=C:\pse-clean-code\clean-validation\combined\runtime\windows-x64-msvc-schannel-openssl-3.5.8;C:\Windows\System32;C:\Windows
+C:\pse-clean-code\clean-validation\consumers\combined\consumer.exe openssl 13 C:\pse-clean-code\clean-validation\fixtures\interoperability-pki\root.der 127.0.0.1 18475 localhost openssl local fixture/1
+
+combined-exact-schannel-tls13
+CWD=C:\pse-clean-code\clean-validation\consumers\combined
+PATH=C:\pse-clean-code\clean-validation\combined\runtime\windows-x64-msvc-schannel-openssl-3.5.8;C:\Windows\System32;C:\Windows
+C:\pse-clean-code\clean-validation\consumers\combined\consumer.exe schannel 13 system www.cloudflare.com 443 www.cloudflare.com unsupported selection -
+
+openssl-system-tls13
+CWD=C:\pse-clean-code\clean-validation\consumers\openssl
+PATH=C:\pse-clean-code\clean-validation\openssl\runtime\windows-x64-msvc-openssl-3.5.8;C:\Windows\System32;C:\Windows
+C:\pse-clean-code\clean-validation\consumers\openssl\consumer.exe openssl 13 system www.google.com 443 www.google.com openssl online -
+
+combined-automatic-system-tls12
+CWD=C:\pse-clean-code\clean-validation\consumers\combined
+PATH=C:\pse-clean-code\clean-validation\combined\runtime\windows-x64-msvc-schannel-openssl-3.5.8;C:\Windows\System32;C:\Windows
+C:\pse-clean-code\clean-validation\consumers\combined\consumer.exe automatic 12 system www.google.com 443 www.google.com schannel online -
+
+combined-automatic-system-tls13
+CWD=C:\pse-clean-code\clean-validation\consumers\combined
+PATH=C:\pse-clean-code\clean-validation\combined\runtime\windows-x64-msvc-schannel-openssl-3.5.8;C:\Windows\System32;C:\Windows
+C:\pse-clean-code\clean-validation\consumers\combined\consumer.exe automatic 13 system www.google.com 443 www.google.com openssl online -
+
+combined-ordered-system-tls12
+CWD=C:\pse-clean-code\clean-validation\consumers\combined
+PATH=C:\pse-clean-code\clean-validation\combined\runtime\windows-x64-msvc-schannel-openssl-3.5.8;C:\Windows\System32;C:\Windows
+C:\pse-clean-code\clean-validation\consumers\combined\consumer.exe ordered 12 system www.google.com 443 www.google.com openssl online -
+
+combined-exact-system-tls13
+CWD=C:\pse-clean-code\clean-validation\consumers\combined
+PATH=C:\pse-clean-code\clean-validation\combined\runtime\windows-x64-msvc-schannel-openssl-3.5.8;C:\Windows\System32;C:\Windows
+C:\pse-clean-code\clean-validation\consumers\combined\consumer.exe openssl 13 system www.google.com 443 www.google.com openssl online -

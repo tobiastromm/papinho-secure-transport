@@ -1,0 +1,13 @@
+{
+  "classification": "EXPECTED_PEER_BEHAVIOR",
+  "category": "C",
+  "production_change_required": false,
+  "packages_modified": false,
+  "gate_status": "FAIL/BLOCKED retained pending affected online reexecution; no criterion changed",
+  "observed_native_error": "SSL_shutdown -1; SSL_get_error 1 (SSL_ERROR_SSL); ERR 0A000126 unexpected eof while reading",
+  "observed_public_return": "pst_connection_shutdown returns PST_RESULT_OK; operation=FAILED; operation_error=TRUNCATED (13)",
+  "policy_zero_changes_result": false,
+  "harness_premature_shutdown_in_current_HEAD_cases": false,
+  "local_control": "PASS, both close_notify alerts, SSL_shutdown 0 then 1",
+  "next_step": "Reexecute affected online cases only with explicit HEAD HTTP/1.1, www.cloudflare.com, Connection: close and require_graceful_shutdown=1. Require reciprocal close_notify for PASS; retain TRUNCATED as failure if absent."
+}

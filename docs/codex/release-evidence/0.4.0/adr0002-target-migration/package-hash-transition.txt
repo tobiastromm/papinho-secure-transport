@@ -1,0 +1,15 @@
+OLD_PACKAGES
+8d20b8975c06029fc828a42cdb6c75dc96c74ee1e0dedab867077fbf21cc223d  papinho-secure-transport-0.4.0-src.zip
+55e38a19d743849317cab919dc7ba682ee823137666ee60004cf562e1788bed4  papinho-secure-transport-0.4.0-windows-nt4-x86-vc6-retrozilla-nss.zip
+a59847425895dad2b3b8bb96ae40b70e2698f3a02d1812c0f8de40404953741f  papinho-secure-transport-0.4.0-windows-x64-msvc-openssl-3.5.8.zip
+044f22dc2eac6ef82a53a096f0a27d1ce6719bb7d7798d71b6ebaa648f53eda8  papinho-secure-transport-0.4.0-windows-x64-msvc-schannel.zip
+8e78dd36f6f9486c7eea50df093a74c3cd2838b0a1823b8f9c406f3d496a0010  papinho-secure-transport-0.4.0-windows-x64-msvc-schannel-openssl-3.5.8.zip
+6d20fbac33f92f16a712f9e1ef7ec3a52b577bdfd8b929dcd4558a7940cd163e  SHA256SUMS-packages.txt
+
+NEW_PACKAGES
+d301ac5a31192f45f368849cfcc03dfedf1cbe0690c0d8e240d4c69e50328498  papinho-secure-transport-0.4.0-src.zip
+0a451a26d6c4e3e114dcd6d8a6054c9e6bac34a68616a5bc8bcd806518eb0319  papinho-secure-transport-0.4.0-win32-x64-msvc-19.51-openssl3.zip
+0d868e172408ddb1aa3c28555ba982e4dc592dabb174dffb41b8514684f779cf  papinho-secure-transport-0.4.0-win32-x64-msvc-19.51-schannel.zip
+67d393892490bec27ad9f2dac9501a369e23f37285361e03f20baba5237d60fd  papinho-secure-transport-0.4.0-win32-x64-msvc-19.51-schannel-openssl3.zip
+3c7e0e4d881f9900b31ed7ba859ee464d9b8b79744fdb9aa4b1b29d0664a2993  papinho-secure-transport-0.4.0-win32-x86-vc6-retrozilla-nss.zip
+30def7a80e4aa027dfc5f07131d755492d151483e16f6f18fd889085c8d65825  SHA256SUMS-packages.txt

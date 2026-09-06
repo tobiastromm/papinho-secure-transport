@@ -1,0 +1,1260 @@
+[
+  {
+    "case": "local-tls13",
+    "time": "2026-09-05T19:39:51.137037-03:00",
+    "command": [
+      "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation\\shutdown-trace.exe",
+      "openssl",
+      "13",
+      "C:\\pse-clean-code\\clean-validation\\fixtures\\interoperability-pki\\root.der",
+      "127.0.0.1",
+      "18486",
+      "localhost",
+      "openssl",
+      "local",
+      "fixture/1"
+    ],
+    "environment": {
+      "PATH": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8;C:\\Windows\\System32;C:\\Windows",
+      "PST_TEST_CONNECTION": "keep-alive",
+      "PST_TEST_HTTP_VERSION": "1.1",
+      "PST_TEST_GRACEFUL": "1"
+    },
+    "cwd": "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation",
+    "exe_sha256": "53c10c1eb34dadf25331d94ee58f2e5fff1c3854baeb3bb14e8b3febf7fdbe88",
+    "harness_sha256": "5fffb34b4720a897addaaa220b4b477457e26a97da9dd044b80175ae9e353c54",
+    "trace_sha256": "449cc621b23d0c3716b8e9001ff165270c664d83ec36c2a6e5265acdf5bcf4a0",
+    "server_command": [
+      "C:\\Users\\R\u00e1dio Papinho\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+      "C:\\pse-clean-code\\clean-validation\\source\\tests\\schannel_backend_tls_server.py",
+      "18486",
+      "C:\\pse-clean-code\\clean-validation\\fixtures\\interoperability-pki\\server-chain.pem",
+      "C:\\pse-clean-code\\clean-validation\\fixtures\\interoperability-pki\\server.key",
+      "13",
+      "1",
+      "client",
+      "fixture/1",
+      "-",
+      "-"
+    ],
+    "exit_code": 0,
+    "server_exit_code": 0,
+    "native_shutdown": [
+      "SEQ=000037 MS=63 NATIVE function=SSL_shutdown return=0 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=0 queue_first=0x00000000 queue_last=0x00000000",
+      "SEQ=000046 MS=79 NATIVE function=SSL_shutdown return=1 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=1 queue_first=0x00000000 queue_last=0x00000000"
+    ],
+    "native_errors": [
+      "SEQ=000011 MS=32 NATIVE_SSL_GET_ERROR input_return=-1 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000027 MS=63 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000029 MS=63 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0"
+    ],
+    "alerts": [
+      "SEQ=000036 MS=63 NATIVE_ALERT direction=WRITE level=1 description=0 close_notify=1",
+      "SEQ=000045 MS=79 NATIVE_ALERT direction=READ level=1 description=0 close_notify=1"
+    ],
+    "native_summary": "SEQ=000053 MS=79 NATIVE_SUMMARY client_close_notify=1 peer_close_notify=1 SSL_ERROR_ZERO_RETURN_count=0 tcp_eof_observations=2",
+    "public_shutdown": [
+      "SEQ=000039 MS=63 PST_RETURN function=pst_connection_shutdown result=0 operation=1 operation_error=0",
+      "SEQ=000048 MS=79 PST_RETURN function=pst_connection_shutdown result=0 operation=0 operation_error=0"
+    ],
+    "response_summary": [],
+    "modules": [
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation\\shutdown-trace.exe"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\ntdll.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\KERNEL32.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\KERNELBASE.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\apphelp.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\WS2_32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\RPCRT4.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\CRYPT32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\ucrtbase.dll"
+      },
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+        "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+        "expected_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\VCRUNTIME140.dll"
+      },
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+        "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+        "expected_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\ADVAPI32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\msvcrt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\sechost.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\bcrypt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\USER32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\win32u.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\GDI32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\gdi32full.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\msvcp_win.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\IMM32.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTSP.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\system32\\rsaenh.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTBASE.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\bcryptPrimitives.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\system32\\mswsock.dll"
+      }
+    ]
+  },
+  {
+    "case": "google-h11-close",
+    "time": "2026-09-05T19:39:51.686146-03:00",
+    "command": [
+      "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation\\shutdown-trace.exe",
+      "openssl",
+      "13",
+      "system",
+      "www.google.com",
+      "443",
+      "www.google.com",
+      "openssl",
+      "online",
+      "-"
+    ],
+    "environment": {
+      "PATH": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8;C:\\Windows\\System32;C:\\Windows",
+      "PST_TEST_CONNECTION": "close",
+      "PST_TEST_HTTP_VERSION": "1.1",
+      "PST_TEST_GRACEFUL": "1"
+    },
+    "cwd": "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation",
+    "exe_sha256": "53c10c1eb34dadf25331d94ee58f2e5fff1c3854baeb3bb14e8b3febf7fdbe88",
+    "harness_sha256": "5fffb34b4720a897addaaa220b4b477457e26a97da9dd044b80175ae9e353c54",
+    "trace_sha256": "449cc621b23d0c3716b8e9001ff165270c664d83ec36c2a6e5265acdf5bcf4a0",
+    "exit_code": 1,
+    "native_shutdown": [
+      "SEQ=000045 MS=266 NATIVE function=SSL_shutdown return=0 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=0 queue_first=0x00000000 queue_last=0x00000000",
+      "SEQ=000053 MS=266 NATIVE function=SSL_shutdown return=-1 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=0 queue_first=0x0a000126 queue_last=0x0a000126"
+    ],
+    "native_errors": [
+      "SEQ=000011 MS=63 NATIVE_SSL_GET_ERROR input_return=-1 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000027 MS=172 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000029 MS=250 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000031 MS=266 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000054 MS=266 NATIVE_QUEUE_PEEK first=error:0A000126:SSL routines::unexpected eof while reading last=error:0A000126:SSL routines::unexpected eof while reading",
+      "SEQ=000056 MS=266 NATIVE_SSL_GET_ERROR input_return=-1 error=1 zero_return=0 want_read=0 want_write=0",
+      "SEQ=000057 MS=266 NATIVE_QUEUE_POP code=0x0a000126 reason=error:0A000126:SSL routines::unexpected eof while reading"
+    ],
+    "alerts": [
+      "SEQ=000044 MS=266 NATIVE_ALERT direction=WRITE level=1 description=0 close_notify=1"
+    ],
+    "native_summary": "SEQ=000063 MS=282 NATIVE_SUMMARY client_close_notify=1 peer_close_notify=0 SSL_ERROR_ZERO_RETURN_count=0 tcp_eof_observations=6",
+    "public_shutdown": [
+      "SEQ=000047 MS=266 PST_RETURN function=pst_connection_shutdown result=0 operation=1 operation_error=0",
+      "SEQ=000058 MS=266 PST_RETURN function=pst_connection_shutdown result=0 operation=5 operation_error=13"
+    ],
+    "response_summary": [
+      "SEQ=000035 MS=266 HTTP_RESPONSE_HEADER HTTP/1.1 200 OK",
+      "SEQ=000036 MS=266 HTTP_RESPONSE_HEADER Server: gws",
+      "SEQ=000037 MS=266 HTTP_RESPONSE_HEADER Transfer-Encoding: chunked",
+      "SEQ=000038 MS=266 HTTP_RESPONSE_HEADER Connection: close",
+      "SEQ=000039 MS=266 HTTP_MESSAGE_COMPLETE method=HEAD header_bytes=1392 total_read=1392 extra_bytes=0 expected_body_bytes=0"
+    ],
+    "modules": [
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation\\shutdown-trace.exe"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\ntdll.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\KERNEL32.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\KERNELBASE.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\WS2_32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\RPCRT4.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\CRYPT32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\ucrtbase.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\VCRUNTIME140.dll"
+      },
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+        "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+        "expected_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044"
+      },
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+        "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+        "expected_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\ADVAPI32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\msvcrt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\sechost.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\bcrypt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\USER32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\win32u.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\GDI32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\gdi32full.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\msvcp_win.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\IMM32.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTSP.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\system32\\rsaenh.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTBASE.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\bcryptPrimitives.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\system32\\mswsock.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\DNSAPI.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\IPHLPAPI.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\NSI.dll"
+      },
+      {
+        "path": "C:\\Windows\\System32\\rasadhlp.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\fwpuclnt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\MSASN1.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\gpapi.dll"
+      }
+    ]
+  },
+  {
+    "case": "google-h11-keep",
+    "time": "2026-09-05T19:39:52.195132-03:00",
+    "command": [
+      "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation\\shutdown-trace.exe",
+      "openssl",
+      "13",
+      "system",
+      "www.google.com",
+      "443",
+      "www.google.com",
+      "openssl",
+      "online",
+      "-"
+    ],
+    "environment": {
+      "PATH": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8;C:\\Windows\\System32;C:\\Windows",
+      "PST_TEST_CONNECTION": "keep-alive",
+      "PST_TEST_HTTP_VERSION": "1.1",
+      "PST_TEST_GRACEFUL": "1"
+    },
+    "cwd": "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation",
+    "exe_sha256": "53c10c1eb34dadf25331d94ee58f2e5fff1c3854baeb3bb14e8b3febf7fdbe88",
+    "harness_sha256": "5fffb34b4720a897addaaa220b4b477457e26a97da9dd044b80175ae9e353c54",
+    "trace_sha256": "449cc621b23d0c3716b8e9001ff165270c664d83ec36c2a6e5265acdf5bcf4a0",
+    "exit_code": 1,
+    "native_shutdown": [
+      "SEQ=000044 MS=563 NATIVE function=SSL_shutdown return=0 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=0 queue_first=0x00000000 queue_last=0x00000000",
+      "SEQ=000052 MS=579 NATIVE function=SSL_shutdown return=-1 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=0 queue_first=0x0a000126 queue_last=0x0a000126"
+    ],
+    "native_errors": [
+      "SEQ=000011 MS=63 NATIVE_SSL_GET_ERROR input_return=-1 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000027 MS=188 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000029 MS=547 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000031 MS=547 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000053 MS=579 NATIVE_QUEUE_PEEK first=error:0A000126:SSL routines::unexpected eof while reading last=error:0A000126:SSL routines::unexpected eof while reading",
+      "SEQ=000055 MS=579 NATIVE_SSL_GET_ERROR input_return=-1 error=1 zero_return=0 want_read=0 want_write=0",
+      "SEQ=000056 MS=579 NATIVE_QUEUE_POP code=0x0a000126 reason=error:0A000126:SSL routines::unexpected eof while reading"
+    ],
+    "alerts": [
+      "SEQ=000043 MS=563 NATIVE_ALERT direction=WRITE level=1 description=0 close_notify=1"
+    ],
+    "native_summary": "SEQ=000062 MS=579 NATIVE_SUMMARY client_close_notify=1 peer_close_notify=0 SSL_ERROR_ZERO_RETURN_count=0 tcp_eof_observations=3",
+    "public_shutdown": [
+      "SEQ=000046 MS=563 PST_RETURN function=pst_connection_shutdown result=0 operation=1 operation_error=0",
+      "SEQ=000057 MS=579 PST_RETURN function=pst_connection_shutdown result=0 operation=5 operation_error=13"
+    ],
+    "response_summary": [
+      "SEQ=000035 MS=547 HTTP_RESPONSE_HEADER HTTP/1.1 200 OK",
+      "SEQ=000036 MS=547 HTTP_RESPONSE_HEADER Server: gws",
+      "SEQ=000037 MS=547 HTTP_RESPONSE_HEADER Transfer-Encoding: chunked",
+      "SEQ=000038 MS=547 HTTP_MESSAGE_COMPLETE method=HEAD header_bytes=1372 total_read=1372 extra_bytes=0 expected_body_bytes=0"
+    ],
+    "modules": [
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation\\shutdown-trace.exe"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\ntdll.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\KERNEL32.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\KERNELBASE.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\WS2_32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\RPCRT4.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\CRYPT32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\ucrtbase.dll"
+      },
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+        "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+        "expected_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed"
+      },
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+        "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+        "expected_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\ADVAPI32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\msvcrt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\sechost.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\bcrypt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\VCRUNTIME140.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\USER32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\win32u.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\GDI32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\gdi32full.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\msvcp_win.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\IMM32.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTSP.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\system32\\rsaenh.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTBASE.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\bcryptPrimitives.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\system32\\mswsock.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\DNSAPI.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\IPHLPAPI.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\NSI.dll"
+      },
+      {
+        "path": "C:\\Windows\\System32\\rasadhlp.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\fwpuclnt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\MSASN1.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\gpapi.dll"
+      }
+    ]
+  },
+  {
+    "case": "cloudflare-h11-close",
+    "time": "2026-09-05T19:39:53.040994-03:00",
+    "command": [
+      "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation\\shutdown-trace.exe",
+      "openssl",
+      "13",
+      "system",
+      "www.cloudflare.com",
+      "443",
+      "www.cloudflare.com",
+      "openssl",
+      "online",
+      "-"
+    ],
+    "environment": {
+      "PATH": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8;C:\\Windows\\System32;C:\\Windows",
+      "PST_TEST_CONNECTION": "close",
+      "PST_TEST_HTTP_VERSION": "1.1",
+      "PST_TEST_GRACEFUL": "1"
+    },
+    "cwd": "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation",
+    "exe_sha256": "53c10c1eb34dadf25331d94ee58f2e5fff1c3854baeb3bb14e8b3febf7fdbe88",
+    "harness_sha256": "5fffb34b4720a897addaaa220b4b477457e26a97da9dd044b80175ae9e353c54",
+    "trace_sha256": "449cc621b23d0c3716b8e9001ff165270c664d83ec36c2a6e5265acdf5bcf4a0",
+    "exit_code": 0,
+    "native_shutdown": [
+      "SEQ=000047 MS=390 NATIVE function=SSL_shutdown return=0 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=0 queue_first=0x00000000 queue_last=0x00000000",
+      "SEQ=000056 MS=390 NATIVE function=SSL_shutdown return=1 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=1 queue_first=0x00000000 queue_last=0x00000000"
+    ],
+    "native_errors": [
+      "SEQ=000011 MS=78 NATIVE_SSL_GET_ERROR input_return=-1 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000027 MS=156 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000029 MS=375 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000031 MS=375 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0"
+    ],
+    "alerts": [
+      "SEQ=000046 MS=390 NATIVE_ALERT direction=WRITE level=1 description=0 close_notify=1",
+      "SEQ=000055 MS=390 NATIVE_ALERT direction=READ level=1 description=0 close_notify=1"
+    ],
+    "native_summary": "SEQ=000063 MS=390 NATIVE_SUMMARY client_close_notify=1 peer_close_notify=1 SSL_ERROR_ZERO_RETURN_count=0 tcp_eof_observations=2",
+    "public_shutdown": [
+      "SEQ=000049 MS=390 PST_RETURN function=pst_connection_shutdown result=0 operation=1 operation_error=0",
+      "SEQ=000058 MS=390 PST_RETURN function=pst_connection_shutdown result=0 operation=0 operation_error=0"
+    ],
+    "response_summary": [
+      "SEQ=000038 MS=375 HTTP_RESPONSE_HEADER HTTP/1.1 200 OK",
+      "SEQ=000039 MS=375 HTTP_RESPONSE_HEADER Connection: close",
+      "SEQ=000040 MS=375 HTTP_RESPONSE_HEADER Server: cloudflare",
+      "SEQ=000041 MS=375 HTTP_MESSAGE_COMPLETE method=HEAD header_bytes=4925 total_read=4925 extra_bytes=0 expected_body_bytes=0"
+    ],
+    "modules": [
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation\\shutdown-trace.exe"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\ntdll.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\KERNEL32.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\KERNELBASE.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\WS2_32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\RPCRT4.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\CRYPT32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\ucrtbase.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\VCRUNTIME140.dll"
+      },
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+        "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+        "expected_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed"
+      },
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+        "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+        "expected_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\ADVAPI32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\msvcrt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\sechost.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\bcrypt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\USER32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\win32u.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\GDI32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\gdi32full.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\msvcp_win.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\IMM32.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTSP.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\system32\\rsaenh.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTBASE.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\bcryptPrimitives.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\system32\\mswsock.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\DNSAPI.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\IPHLPAPI.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\NSI.dll"
+      },
+      {
+        "path": "C:\\Windows\\System32\\rasadhlp.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\fwpuclnt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\MSASN1.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\gpapi.dll"
+      }
+    ]
+  },
+  {
+    "case": "cloudflare-h11-keep",
+    "time": "2026-09-05T19:39:53.648937-03:00",
+    "command": [
+      "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation\\shutdown-trace.exe",
+      "openssl",
+      "13",
+      "system",
+      "www.cloudflare.com",
+      "443",
+      "www.cloudflare.com",
+      "openssl",
+      "online",
+      "-"
+    ],
+    "environment": {
+      "PATH": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8;C:\\Windows\\System32;C:\\Windows",
+      "PST_TEST_CONNECTION": "keep-alive",
+      "PST_TEST_HTTP_VERSION": "1.1",
+      "PST_TEST_GRACEFUL": "1"
+    },
+    "cwd": "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation",
+    "exe_sha256": "53c10c1eb34dadf25331d94ee58f2e5fff1c3854baeb3bb14e8b3febf7fdbe88",
+    "harness_sha256": "5fffb34b4720a897addaaa220b4b477457e26a97da9dd044b80175ae9e353c54",
+    "trace_sha256": "449cc621b23d0c3716b8e9001ff165270c664d83ec36c2a6e5265acdf5bcf4a0",
+    "exit_code": 1,
+    "native_shutdown": [
+      "SEQ=000047 MS=359 NATIVE function=SSL_shutdown return=0 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=0 queue_first=0x00000000 queue_last=0x00000000",
+      "SEQ=000055 MS=375 NATIVE function=SSL_shutdown return=-1 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=0 queue_first=0x0a000126 queue_last=0x0a000126"
+    ],
+    "native_errors": [
+      "SEQ=000011 MS=63 NATIVE_SSL_GET_ERROR input_return=-1 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000027 MS=125 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000029 MS=359 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000031 MS=359 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000056 MS=375 NATIVE_QUEUE_PEEK first=error:0A000126:SSL routines::unexpected eof while reading last=error:0A000126:SSL routines::unexpected eof while reading",
+      "SEQ=000058 MS=391 NATIVE_SSL_GET_ERROR input_return=-1 error=1 zero_return=0 want_read=0 want_write=0",
+      "SEQ=000059 MS=391 NATIVE_QUEUE_POP code=0x0a000126 reason=error:0A000126:SSL routines::unexpected eof while reading"
+    ],
+    "alerts": [
+      "SEQ=000046 MS=359 NATIVE_ALERT direction=WRITE level=1 description=0 close_notify=1"
+    ],
+    "native_summary": "SEQ=000065 MS=391 NATIVE_SUMMARY client_close_notify=1 peer_close_notify=0 SSL_ERROR_ZERO_RETURN_count=0 tcp_eof_observations=3",
+    "public_shutdown": [
+      "SEQ=000049 MS=375 PST_RETURN function=pst_connection_shutdown result=0 operation=1 operation_error=0",
+      "SEQ=000060 MS=391 PST_RETURN function=pst_connection_shutdown result=0 operation=5 operation_error=13"
+    ],
+    "response_summary": [
+      "SEQ=000038 MS=359 HTTP_RESPONSE_HEADER HTTP/1.1 200 OK",
+      "SEQ=000039 MS=359 HTTP_RESPONSE_HEADER Connection: keep-alive",
+      "SEQ=000040 MS=359 HTTP_RESPONSE_HEADER Server: cloudflare",
+      "SEQ=000041 MS=359 HTTP_MESSAGE_COMPLETE method=HEAD header_bytes=4930 total_read=4930 extra_bytes=0 expected_body_bytes=0"
+    ],
+    "modules": [
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation\\shutdown-trace.exe"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\ntdll.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\KERNEL32.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\KERNELBASE.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\WS2_32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\RPCRT4.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\CRYPT32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\ucrtbase.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\VCRUNTIME140.dll"
+      },
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+        "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+        "expected_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed"
+      },
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+        "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+        "expected_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\ADVAPI32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\msvcrt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\sechost.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\bcrypt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\USER32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\win32u.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\GDI32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\gdi32full.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\msvcp_win.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\IMM32.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTSP.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\system32\\rsaenh.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTBASE.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\bcryptPrimitives.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\system32\\mswsock.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\DNSAPI.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\IPHLPAPI.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\NSI.dll"
+      },
+      {
+        "path": "C:\\Windows\\System32\\rasadhlp.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\fwpuclnt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\MSASN1.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\gpapi.dll"
+      }
+    ]
+  },
+  {
+    "case": "google-h11-keep-graceful0",
+    "time": "2026-09-05T19:39:54.252584-03:00",
+    "command": [
+      "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation\\shutdown-trace.exe",
+      "openssl",
+      "13",
+      "system",
+      "www.google.com",
+      "443",
+      "www.google.com",
+      "openssl",
+      "online",
+      "-"
+    ],
+    "environment": {
+      "PATH": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8;C:\\Windows\\System32;C:\\Windows",
+      "PST_TEST_CONNECTION": "keep-alive",
+      "PST_TEST_HTTP_VERSION": "1.1",
+      "PST_TEST_GRACEFUL": "0"
+    },
+    "cwd": "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation",
+    "exe_sha256": "53c10c1eb34dadf25331d94ee58f2e5fff1c3854baeb3bb14e8b3febf7fdbe88",
+    "harness_sha256": "5fffb34b4720a897addaaa220b4b477457e26a97da9dd044b80175ae9e353c54",
+    "trace_sha256": "449cc621b23d0c3716b8e9001ff165270c664d83ec36c2a6e5265acdf5bcf4a0",
+    "exit_code": 1,
+    "native_shutdown": [
+      "SEQ=000044 MS=266 NATIVE function=SSL_shutdown return=0 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=0 queue_first=0x00000000 queue_last=0x00000000",
+      "SEQ=000052 MS=282 NATIVE function=SSL_shutdown return=-1 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=0 queue_first=0x0a000126 queue_last=0x0a000126"
+    ],
+    "native_errors": [
+      "SEQ=000011 MS=47 NATIVE_SSL_GET_ERROR input_return=-1 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000027 MS=172 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000029 MS=250 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000031 MS=250 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000053 MS=282 NATIVE_QUEUE_PEEK first=error:0A000126:SSL routines::unexpected eof while reading last=error:0A000126:SSL routines::unexpected eof while reading",
+      "SEQ=000055 MS=282 NATIVE_SSL_GET_ERROR input_return=-1 error=1 zero_return=0 want_read=0 want_write=0",
+      "SEQ=000056 MS=282 NATIVE_QUEUE_POP code=0x0a000126 reason=error:0A000126:SSL routines::unexpected eof while reading"
+    ],
+    "alerts": [
+      "SEQ=000043 MS=266 NATIVE_ALERT direction=WRITE level=1 description=0 close_notify=1"
+    ],
+    "native_summary": "SEQ=000062 MS=282 NATIVE_SUMMARY client_close_notify=1 peer_close_notify=0 SSL_ERROR_ZERO_RETURN_count=0 tcp_eof_observations=3",
+    "public_shutdown": [
+      "SEQ=000046 MS=266 PST_RETURN function=pst_connection_shutdown result=0 operation=1 operation_error=0",
+      "SEQ=000057 MS=282 PST_RETURN function=pst_connection_shutdown result=0 operation=5 operation_error=13"
+    ],
+    "response_summary": [
+      "SEQ=000035 MS=250 HTTP_RESPONSE_HEADER HTTP/1.1 200 OK",
+      "SEQ=000036 MS=250 HTTP_RESPONSE_HEADER Server: gws",
+      "SEQ=000037 MS=250 HTTP_RESPONSE_HEADER Transfer-Encoding: chunked",
+      "SEQ=000038 MS=250 HTTP_MESSAGE_COMPLETE method=HEAD header_bytes=1490 total_read=1490 extra_bytes=0 expected_body_bytes=0"
+    ],
+    "modules": [
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation\\shutdown-trace.exe"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\ntdll.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\KERNEL32.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\KERNELBASE.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\WS2_32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\RPCRT4.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\CRYPT32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\ucrtbase.dll"
+      },
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+        "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+        "expected_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\VCRUNTIME140.dll"
+      },
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+        "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+        "expected_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\ADVAPI32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\msvcrt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\sechost.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\bcrypt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\USER32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\win32u.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\GDI32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\gdi32full.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\msvcp_win.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\IMM32.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTSP.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\system32\\rsaenh.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTBASE.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\bcryptPrimitives.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\system32\\mswsock.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\DNSAPI.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\IPHLPAPI.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\NSI.dll"
+      },
+      {
+        "path": "C:\\Windows\\System32\\rasadhlp.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\fwpuclnt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\MSASN1.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\gpapi.dll"
+      }
+    ]
+  },
+  {
+    "case": "cloudflare-h11-keep-graceful0",
+    "time": "2026-09-05T19:39:54.741700-03:00",
+    "command": [
+      "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation\\shutdown-trace.exe",
+      "openssl",
+      "13",
+      "system",
+      "www.cloudflare.com",
+      "443",
+      "www.cloudflare.com",
+      "openssl",
+      "online",
+      "-"
+    ],
+    "environment": {
+      "PATH": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8;C:\\Windows\\System32;C:\\Windows",
+      "PST_TEST_CONNECTION": "keep-alive",
+      "PST_TEST_HTTP_VERSION": "1.1",
+      "PST_TEST_GRACEFUL": "0"
+    },
+    "cwd": "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation",
+    "exe_sha256": "53c10c1eb34dadf25331d94ee58f2e5fff1c3854baeb3bb14e8b3febf7fdbe88",
+    "harness_sha256": "5fffb34b4720a897addaaa220b4b477457e26a97da9dd044b80175ae9e353c54",
+    "trace_sha256": "449cc621b23d0c3716b8e9001ff165270c664d83ec36c2a6e5265acdf5bcf4a0",
+    "exit_code": 1,
+    "native_shutdown": [
+      "SEQ=000047 MS=359 NATIVE function=SSL_shutdown return=0 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=0 queue_first=0x00000000 queue_last=0x00000000",
+      "SEQ=000055 MS=375 NATIVE function=SSL_shutdown return=-1 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=0 queue_first=0x0a000126 queue_last=0x0a000126"
+    ],
+    "native_errors": [
+      "SEQ=000011 MS=62 NATIVE_SSL_GET_ERROR input_return=-1 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000027 MS=125 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000029 MS=344 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000031 MS=344 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000056 MS=375 NATIVE_QUEUE_PEEK first=error:0A000126:SSL routines::unexpected eof while reading last=error:0A000126:SSL routines::unexpected eof while reading",
+      "SEQ=000058 MS=375 NATIVE_SSL_GET_ERROR input_return=-1 error=1 zero_return=0 want_read=0 want_write=0",
+      "SEQ=000059 MS=375 NATIVE_QUEUE_POP code=0x0a000126 reason=error:0A000126:SSL routines::unexpected eof while reading"
+    ],
+    "alerts": [
+      "SEQ=000046 MS=359 NATIVE_ALERT direction=WRITE level=1 description=0 close_notify=1"
+    ],
+    "native_summary": "SEQ=000065 MS=390 NATIVE_SUMMARY client_close_notify=1 peer_close_notify=0 SSL_ERROR_ZERO_RETURN_count=0 tcp_eof_observations=3",
+    "public_shutdown": [
+      "SEQ=000049 MS=359 PST_RETURN function=pst_connection_shutdown result=0 operation=1 operation_error=0",
+      "SEQ=000060 MS=390 PST_RETURN function=pst_connection_shutdown result=0 operation=5 operation_error=13"
+    ],
+    "response_summary": [
+      "SEQ=000038 MS=359 HTTP_RESPONSE_HEADER HTTP/1.1 200 OK",
+      "SEQ=000039 MS=359 HTTP_RESPONSE_HEADER Connection: keep-alive",
+      "SEQ=000040 MS=359 HTTP_RESPONSE_HEADER Server: cloudflare",
+      "SEQ=000041 MS=359 HTTP_MESSAGE_COMPLETE method=HEAD header_bytes=4924 total_read=4924 extra_bytes=0 expected_body_bytes=0"
+    ],
+    "modules": [
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation\\shutdown-trace.exe"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\ntdll.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\KERNEL32.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\KERNELBASE.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\WS2_32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\RPCRT4.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\CRYPT32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\ucrtbase.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\VCRUNTIME140.dll"
+      },
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+        "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+        "expected_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed"
+      },
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+        "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+        "expected_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\ADVAPI32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\msvcrt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\sechost.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\bcrypt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\USER32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\win32u.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\GDI32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\gdi32full.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\msvcp_win.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\IMM32.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTSP.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\system32\\rsaenh.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTBASE.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\bcryptPrimitives.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\system32\\mswsock.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\DNSAPI.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\IPHLPAPI.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\NSI.dll"
+      },
+      {
+        "path": "C:\\Windows\\System32\\rasadhlp.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\fwpuclnt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\MSASN1.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\gpapi.dll"
+      }
+    ]
+  },
+  {
+    "case": "google-tls12-keep",
+    "time": "2026-09-05T19:39:55.318917-03:00",
+    "command": [
+      "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation\\shutdown-trace.exe",
+      "openssl",
+      "12",
+      "system",
+      "www.google.com",
+      "443",
+      "www.google.com",
+      "openssl",
+      "online",
+      "-"
+    ],
+    "environment": {
+      "PATH": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8;C:\\Windows\\System32;C:\\Windows",
+      "PST_TEST_CONNECTION": "keep-alive",
+      "PST_TEST_HTTP_VERSION": "1.1",
+      "PST_TEST_GRACEFUL": "1"
+    },
+    "cwd": "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation",
+    "exe_sha256": "53c10c1eb34dadf25331d94ee58f2e5fff1c3854baeb3bb14e8b3febf7fdbe88",
+    "harness_sha256": "5fffb34b4720a897addaaa220b4b477457e26a97da9dd044b80175ae9e353c54",
+    "trace_sha256": "449cc621b23d0c3716b8e9001ff165270c664d83ec36c2a6e5265acdf5bcf4a0",
+    "exit_code": 1,
+    "native_shutdown": [
+      "SEQ=000047 MS=281 NATIVE function=SSL_shutdown return=0 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=0 queue_first=0x00000000 queue_last=0x00000000",
+      "SEQ=000055 MS=297 NATIVE function=SSL_shutdown return=-1 bytes=0 errno=0 wsa_error=0 sent_notify=1 received_notify=0 queue_first=0x0a000126 queue_last=0x0a000126"
+    ],
+    "native_errors": [
+      "SEQ=000011 MS=47 NATIVE_SSL_GET_ERROR input_return=-1 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000018 MS=156 NATIVE_SSL_GET_ERROR input_return=-1 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000034 MS=187 NATIVE_SSL_GET_ERROR input_return=0 error=2 zero_return=0 want_read=1 want_write=0",
+      "SEQ=000056 MS=297 NATIVE_QUEUE_PEEK first=error:0A000126:SSL routines::unexpected eof while reading last=error:0A000126:SSL routines::unexpected eof while reading",
+      "SEQ=000058 MS=297 NATIVE_SSL_GET_ERROR input_return=-1 error=1 zero_return=0 want_read=0 want_write=0",
+      "SEQ=000059 MS=297 NATIVE_QUEUE_POP code=0x0a000126 reason=error:0A000126:SSL routines::unexpected eof while reading"
+    ],
+    "alerts": [
+      "SEQ=000046 MS=281 NATIVE_ALERT direction=WRITE level=1 description=0 close_notify=1"
+    ],
+    "native_summary": "SEQ=000065 MS=297 NATIVE_SUMMARY client_close_notify=1 peer_close_notify=0 SSL_ERROR_ZERO_RETURN_count=0 tcp_eof_observations=3",
+    "public_shutdown": [
+      "SEQ=000049 MS=281 PST_RETURN function=pst_connection_shutdown result=0 operation=1 operation_error=0",
+      "SEQ=000060 MS=297 PST_RETURN function=pst_connection_shutdown result=0 operation=5 operation_error=13"
+    ],
+    "response_summary": [
+      "SEQ=000038 MS=266 HTTP_RESPONSE_HEADER HTTP/1.1 200 OK",
+      "SEQ=000039 MS=266 HTTP_RESPONSE_HEADER Server: gws",
+      "SEQ=000040 MS=266 HTTP_RESPONSE_HEADER Transfer-Encoding: chunked",
+      "SEQ=000041 MS=266 HTTP_MESSAGE_COMPLETE method=HEAD header_bytes=1372 total_read=1372 extra_bytes=0 expected_body_bytes=0"
+    ],
+    "modules": [
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\evidence\\shutdown-investigation\\shutdown-trace.exe"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\ntdll.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\KERNEL32.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\KERNELBASE.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\WS2_32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\RPCRT4.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\CRYPT32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\ucrtbase.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\VCRUNTIME140.dll"
+      },
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+        "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+        "expected_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\ADVAPI32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\msvcrt.dll"
+      },
+      {
+        "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+        "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+        "expected_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\sechost.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\bcrypt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\USER32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\win32u.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\GDI32.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\gdi32full.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\msvcp_win.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\IMM32.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTSP.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\system32\\rsaenh.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\CRYPTBASE.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\bcryptPrimitives.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\system32\\mswsock.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\DNSAPI.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\IPHLPAPI.DLL"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\NSI.dll"
+      },
+      {
+        "path": "C:\\Windows\\System32\\rasadhlp.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\fwpuclnt.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\MSASN1.dll"
+      },
+      {
+        "path": "C:\\WINDOWS\\SYSTEM32\\gpapi.dll"
+      }
+    ]
+  }
+]

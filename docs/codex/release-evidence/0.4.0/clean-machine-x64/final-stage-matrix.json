@@ -1,0 +1,122 @@
+[
+  {
+    "case": "schannel-local-tls12",
+    "sdk": "schannel",
+    "backend": "schannel",
+    "selection": "PASS",
+    "handshake": "PASS",
+    "trust_hostname_auth": "PASS",
+    "read_write": "PASS",
+    "shutdown": "PASS",
+    "module_provenance": "PASS",
+    "whole_consumer": "PASS"
+  },
+  {
+    "case": "openssl-local-tls12",
+    "sdk": "openssl",
+    "backend": "openssl",
+    "selection": "PASS",
+    "handshake": "PASS",
+    "trust_hostname_auth": "PASS",
+    "read_write": "PASS",
+    "shutdown": "PASS",
+    "module_provenance": "PASS",
+    "whole_consumer": "PASS"
+  },
+  {
+    "case": "openssl-local-tls13",
+    "sdk": "openssl",
+    "backend": "openssl",
+    "selection": "PASS",
+    "handshake": "PASS",
+    "trust_hostname_auth": "PASS",
+    "read_write": "PASS",
+    "shutdown": "PASS",
+    "module_provenance": "PASS",
+    "whole_consumer": "PASS"
+  },
+  {
+    "case": "combined-exact-local-tls13",
+    "sdk": "combined",
+    "backend": "openssl",
+    "selection": "PASS",
+    "handshake": "PASS",
+    "trust_hostname_auth": "PASS",
+    "read_write": "PASS",
+    "shutdown": "PASS",
+    "module_provenance": "PASS",
+    "whole_consumer": "PASS"
+  },
+  {
+    "case": "combined-exact-schannel-tls13",
+    "sdk": "combined",
+    "backend": "UNSUPPORTED",
+    "selection": "PASS",
+    "handshake": "NOT_PERFORMED",
+    "trust_hostname_auth": "NOT_PERFORMED",
+    "read_write": "NOT_PERFORMED",
+    "shutdown": "NOT_PERFORMED",
+    "module_provenance": "PASS",
+    "whole_consumer": "PASS"
+  },
+  {
+    "case": "openssl-system-tls13",
+    "sdk": "openssl",
+    "backend": "openssl",
+    "selection": "PASS",
+    "handshake": "PASS",
+    "trust_hostname_auth": "PASS",
+    "read_write": "PASS",
+    "shutdown": "FAIL",
+    "module_provenance": "PASS",
+    "whole_consumer": "FAIL"
+  },
+  {
+    "case": "combined-automatic-system-tls12",
+    "sdk": "combined",
+    "backend": "schannel",
+    "selection": "PASS",
+    "handshake": "PASS",
+    "trust_hostname_auth": "PASS",
+    "read_write": "PASS",
+    "shutdown": "PASS",
+    "module_provenance": "PASS",
+    "whole_consumer": "PASS"
+  },
+  {
+    "case": "combined-automatic-system-tls13",
+    "sdk": "combined",
+    "backend": "openssl",
+    "selection": "PASS",
+    "handshake": "PASS",
+    "trust_hostname_auth": "PASS",
+    "read_write": "PASS",
+    "shutdown": "FAIL",
+    "module_provenance": "PASS",
+    "whole_consumer": "FAIL"
+  },
+  {
+    "case": "combined-ordered-system-tls12",
+    "sdk": "combined",
+    "backend": "openssl",
+    "selection": "PASS",
+    "handshake": "PASS",
+    "trust_hostname_auth": "PASS",
+    "read_write": "PASS",
+    "shutdown": "FAIL",
+    "module_provenance": "PASS",
+    "whole_consumer": "FAIL"
+  },
+  {
+    "case": "combined-exact-system-tls13",
+    "sdk": "combined",
+    "backend": "openssl",
+    "selection": "PASS",
+    "handshake": "PASS",
+    "trust_hostname_auth": "PASS",
+    "read_write": "PASS",
+    "shutdown": "FAIL",
+    "module_provenance": "PASS",
+    "whole_consumer": "FAIL"
+  }
+]

@@ -1,0 +1,6 @@
+CWD=C:\pse-clean-code\clean-validation\evidence\shutdown-investigation
+PATH=C:\pse-clean-code\clean-validation\openssl\runtime\windows-x64-msvc-openssl-3.5.8;C:\Windows\System32;C:\Windows
+PST_TEST_CONNECTION=close
+PST_TEST_HTTP_VERSION=1.1
+PST_TEST_GRACEFUL=1
+C:\pse-clean-code\clean-validation\evidence\shutdown-investigation\shutdown-trace.exe openssl 13 system www.cloudflare.com 443 www.cloudflare.com openssl online -

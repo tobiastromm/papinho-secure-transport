@@ -1,0 +1,112 @@
+{
+  "name": "combined-exact-schannel-tls13",
+  "time": "2026-09-05T19:23:53.244201",
+  "sdk": "combined",
+  "command": [
+    "C:\\pse-clean-code\\clean-validation\\consumers\\combined\\consumer.exe",
+    "schannel",
+    "13",
+    "system",
+    "www.cloudflare.com",
+    "443",
+    "www.cloudflare.com",
+    "unsupported",
+    "selection",
+    "-"
+  ],
+  "cwd": "C:\\pse-clean-code\\clean-validation\\consumers\\combined",
+  "PATH": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8;C:\\Windows\\System32;C:\\Windows",
+  "executable_sha256": "fe69e4d4298866207d3d9ad553efdeb672de57a7202e1108f35d63e54c6a909c",
+  "consumer_source_sha256": "10110d161ea3a2daf72267bd2fe4109ce9db0709d971127fb3d39afe70d4f5a4",
+  "exit_code": 0,
+  "result": "PASS",
+  "modules": [
+    {
+      "path": "C:\\pse-clean-code\\clean-validation\\consumers\\combined\\consumer.exe"
+    },
+    {
+      "path": "C:\\WINDOWS\\SYSTEM32\\ntdll.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\KERNEL32.DLL"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\KERNELBASE.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\WS2_32.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\RPCRT4.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\CRYPT32.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\ucrtbase.dll"
+    },
+    {
+      "path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libcrypto-3-x64.dll",
+      "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+      "sdk_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+      "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libcrypto-3-x64.dll",
+      "result": "PASS"
+    },
+    {
+      "path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libssl-3-x64.dll",
+      "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+      "sdk_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+      "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libssl-3-x64.dll",
+      "result": "PASS"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\ADVAPI32.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\SYSTEM32\\Secur32.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\msvcrt.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\sechost.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\bcrypt.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\SYSTEM32\\ncrypt.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\USER32.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\SYSTEM32\\VCRUNTIME140.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\win32u.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\GDI32.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\gdi32full.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\msvcp_win.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\SYSTEM32\\SSPICLI.DLL"
+    },
+    {
+      "path": "C:\\WINDOWS\\System32\\IMM32.DLL"
+    },
+    {
+      "path": "C:\\WINDOWS\\SYSTEM32\\NTASN1.dll"
+    },
+    {
+      "path": "C:\\WINDOWS\\system32\\schannel.DLL"
+    }
+  ],
+  "module_provenance": "PASS"
+}

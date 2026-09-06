@@ -1,0 +1,146 @@
+[
+  {
+    "case": "openssl-local-tls12",
+    "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "sdk_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "openssl-local-tls12",
+    "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+    "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "sdk_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "openssl-local-tls13",
+    "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+    "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "sdk_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "openssl-local-tls13",
+    "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "sdk_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "combined-exact-local-tls13",
+    "path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "sdk_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "combined-exact-local-tls13",
+    "path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libssl-3-x64.dll",
+    "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "sdk_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libssl-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "combined-exact-schannel-tls13",
+    "path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "sdk_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "combined-exact-schannel-tls13",
+    "path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libssl-3-x64.dll",
+    "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "sdk_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libssl-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "openssl-system-tls13",
+    "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "sdk_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "openssl-system-tls13",
+    "path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+    "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "sdk_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\openssl\\runtime\\windows-x64-msvc-openssl-3.5.8\\libssl-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "combined-automatic-system-tls12",
+    "path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libssl-3-x64.dll",
+    "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "sdk_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libssl-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "combined-automatic-system-tls12",
+    "path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "sdk_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "combined-automatic-system-tls13",
+    "path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "sdk_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "combined-automatic-system-tls13",
+    "path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libssl-3-x64.dll",
+    "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "sdk_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libssl-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "combined-ordered-system-tls12",
+    "path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libssl-3-x64.dll",
+    "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "sdk_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libssl-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "combined-ordered-system-tls12",
+    "path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "sdk_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "combined-exact-system-tls13",
+    "path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "sdk_sha256": "09eec573c9adea156ba2073f8cd61720d0aabeb7562d8498b4ecd21b710a3044",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libcrypto-3-x64.dll",
+    "result": "PASS"
+  },
+  {
+    "case": "combined-exact-system-tls13",
+    "path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libssl-3-x64.dll",
+    "sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "sdk_sha256": "3fb3cd7804dbe3216c801b470e14461d80214ece99c637ae42ea3d8caf75d7ed",
+    "expected_sdk_path": "C:\\pse-clean-code\\clean-validation\\combined\\runtime\\windows-x64-msvc-schannel-openssl-3.5.8\\libssl-3-x64.dll",
+    "result": "PASS"
+  }
+]
