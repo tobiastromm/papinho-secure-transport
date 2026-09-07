@@ -37,14 +37,16 @@ static int check_layout(void)
 {
     volatile pst_size size;
     volatile pst_size offset;
-    size=sizeof(PST_DIAGNOSTIC_INFO);CHECK(size==56UL,1);
+    size=sizeof(PST_DIAGNOSTIC_INFO);CHECK(size==64UL,1);
     offset=offsetof(PST_DIAGNOSTIC_INFO,struct_size);CHECK(offset==0UL,2);
     offset=offsetof(PST_DIAGNOSTIC_INFO,api_version);CHECK(offset==4UL,3);
     offset=offsetof(PST_DIAGNOSTIC_INFO,valid);CHECK(offset==8UL,4);
     offset=offsetof(PST_DIAGNOSTIC_INFO,generation);CHECK(offset==12UL,5);
     offset=offsetof(PST_DIAGNOSTIC_INFO,normalized_result);CHECK(offset==16UL,6);
     offset=offsetof(PST_DIAGNOSTIC_INFO,operation);CHECK(offset==20UL,7);
-    offset=offsetof(PST_DIAGNOSTIC_INFO,backend_id);CHECK(offset==24UL,8);
+    offset=offsetof(PST_DIAGNOSTIC_INFO,role);CHECK(offset==24UL,8);
+    offset=offsetof(PST_DIAGNOSTIC_INFO,reason);CHECK(offset==28UL,9);
+    offset=offsetof(PST_DIAGNOSTIC_INFO,backend_id);CHECK(offset==32UL,10);
     return 0;
 }
 
@@ -60,9 +62,9 @@ static int check_init(void)
     pst_diagnostic_initialize(&source);
     value.struct_size=PST_DIAGNOSTIC_INFO_MIN_SIZE-1UL;value.api_version=PST_API_VERSION;
     CHECK(pst_diagnostic_export_public(&source,&value)==PST_RESULT_INVALID_ARGUMENT,23);
-    value.struct_size=sizeof(value);value.api_version=0x00020000UL;
+    value.struct_size=sizeof(value);value.api_version=0x00030000UL;
     CHECK(pst_diagnostic_export_public(&source,&value)==PST_RESULT_INCOMPATIBLE_API,24);
-    value.struct_size=sizeof(value);value.api_version=0x00010000UL;
+    value.struct_size=sizeof(value);value.api_version=0x00020001UL;
     CHECK(pst_diagnostic_export_public(&source,&value)==PST_RESULT_OK,25);
     memset(&larger,0xa5,sizeof(larger));larger.base.struct_size=sizeof(larger);larger.base.api_version=PST_API_VERSION;
     CHECK(pst_diagnostic_export_public(&source,&larger.base)==PST_RESULT_OK,26);
@@ -150,7 +152,7 @@ static int check_boundaries(void)
 
 static int check_result_consistency(void)
 {
-    static const PST_RESULT results[]={PST_RESULT_TRANSPORT_FAILURE,PST_RESULT_PROTOCOL_FAILURE,PST_RESULT_AUTH_FAILURE,PST_RESULT_HOSTNAME_MISMATCH,PST_RESULT_CLOSED,PST_RESULT_TRUNCATED};
+    static const PST_RESULT results[]={PST_RESULT_TRANSPORT_FAILURE,PST_RESULT_PROTOCOL_FAILURE,PST_RESULT_AUTH_FAILURE,PST_RESULT_PEER_NAME_MISMATCH,PST_RESULT_CLOSED,PST_RESULT_TRUNCATED};
     static const pst_u32 phases[]={PST_DIAGNOSTIC_PHASE_TRANSPORT_ATTACH,PST_DIAGNOSTIC_PHASE_HANDSHAKE,PST_DIAGNOSTIC_PHASE_PEER_AUTHENTICATE,PST_DIAGNOSTIC_PHASE_HOSTNAME_VERIFY,PST_DIAGNOSTIC_PHASE_READ,PST_DIAGNOSTIC_PHASE_READ};
     pst_internal_diagnostic source; PST_DIAGNOSTIC_INFO out; pst_size i;
     for(i=0;i<sizeof(results)/sizeof(results[0]);++i){
@@ -198,10 +200,10 @@ static int check_redaction_abuse(void)
 int main(void)
 {
     int result; volatile pst_u32 constant;
-    constant=PST_API_VERSION;CHECK(constant==0x00010300UL,50);
-    constant=PST_LIBRARY_VERSION;CHECK(constant==0x00000400UL,51);
+    constant=PST_API_VERSION;CHECK(constant==0x00020000UL,50);
+    constant=PST_LIBRARY_VERSION;CHECK(constant==0x00000500UL,51);
     constant=PST_DIAGNOSTIC_BACKEND_ID_CAPACITY;CHECK(constant==32UL,52);
-    constant=PST_DIAGNOSTIC_INFO_MIN_SIZE;CHECK(constant==56UL,55);
+    constant=PST_DIAGNOSTIC_INFO_MIN_SIZE;CHECK(constant==64UL,55);
     constant=PST_DIAGNOSTIC_OPERATION_NONE;CHECK(constant==0UL,53);
     constant=PST_DIAGNOSTIC_OPERATION_PEER_INFO;CHECK(constant==11UL,54);
     result=check_layout();if(result)return result;

@@ -10,4 +10,5 @@ typedef struct pst_log_state {
 PST_RESULT pst_log_state_initialize(pst_log_state *state,const PST_LOG_CONFIG *config);
 int pst_log_should_emit(PST_LOG_LEVEL configured,PST_LOG_LEVEL event_level);
 void pst_log_emit(const pst_log_state *state,PST_LOG_LEVEL level,pst_u32 event_id,pst_u32 category,PST_RESULT normalized_result,pst_u32 operation,const char *backend_id);
+void pst_log_emit_facts(const pst_log_state *,PST_LOG_LEVEL,pst_u32,pst_u32,PST_RESULT,pst_u32,const char *,pst_u32,pst_u32,pst_u32);
 #endif

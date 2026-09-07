@@ -60,13 +60,8 @@ PST_RESULT pst_backend_validate(const PST_BACKEND_DESCRIPTOR *d)
     if ((d->capabilities & PST_BACKEND_CAP_PEER_INFO) != 0UL &&
         (v->peer_info_create == NULL || v->peer_info_destroy == NULL))
         return PST_RESULT_INVALID_ARGUMENT;
-    if ((d->capabilities & (PST_BACKEND_CAP_CLIENT_AUTH |
-                            PST_BACKEND_CAP_CUSTOM_TRUST |
-                            PST_BACKEND_CAP_HOSTNAME_VERIFY)) != 0UL &&
-        (v->struct_size < PST_BACKEND_VTABLE_FIELD_SIZE(connection_configure_identity) ||
-         v->connection_configure_identity == NULL))
-        return PST_RESULT_INVALID_ARGUMENT;
-    if ((d->capabilities & PST_BACKEND_CAP_ALPN) != 0UL &&
+    if ((d->capabilities & (PST_BACKEND_CAP_ALPN_CLIENT |
+                            PST_BACKEND_CAP_ALPN_SERVER)) != 0UL &&
         (v->struct_size < PST_BACKEND_VTABLE_FIELD_SIZE(connection_get_alpn) ||
          v->connection_get_alpn == NULL)) return PST_RESULT_INVALID_ARGUMENT;
     return PST_RESULT_OK;

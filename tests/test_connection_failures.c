@@ -208,8 +208,9 @@ int main(int argc, char **argv)
     pst_size key_size;
     PST_TRUST_SOURCE trust_source;
     PST_CREDENTIAL_SOURCE credential_source;
-    PST_IDENTITY_CONFIG identity;
-    PST_TLS_POLICY policy;
+    PST_DER_ITEM trust_item;
+    PST_DER_ITEM certificate_item;
+    PST_CONNECTION_CONFIG config;
     PST_ALPN_PROTOCOL protocol;
     PST_RUNTIME_OPTIONS runtime_options;
     PST_LOG_CONFIG log_config;
@@ -218,7 +219,6 @@ int main(int argc, char **argv)
     failure_log log;
     pst_trust *trust;
     pst_credentials *credentials;
-    pst_config *config;
     pst_runtime *runtime;
     pst_transport *transport;
     pst_connection *connection;
@@ -292,7 +292,6 @@ int main(int argc, char **argv)
     ca_size = cert_size = key_size = 0;
     trust = NULL;
     credentials = NULL;
-    config = NULL;
     runtime = NULL;
     transport = NULL;
     connection = NULL;
@@ -335,8 +334,10 @@ int main(int argc, char **argv)
     trust_source.struct_size = sizeof(trust_source);
     trust_source.api_version = PST_API_VERSION;
     trust_source.kind = PST_TRUST_SOURCE_CUSTOM_CA_DER;
-    trust_source.data = ca_data;
-    trust_source.data_size = ca_size;
+    trust_item.data = ca_data;
+    trust_item.size = ca_size;
+    trust_source.anchors = &trust_item;
+    trust_source.anchor_count = 1;
     timeline("TRUST_CREATE_BEGIN");
     result = pst_trust_create(&trust_source, &trust);
     timeline("TRUST_CREATE_END result=%ld", (long)result);
@@ -349,9 +350,11 @@ int main(int argc, char **argv)
     memset(&credential_source, 0, sizeof(credential_source));
     credential_source.struct_size = sizeof(credential_source);
     credential_source.api_version = PST_API_VERSION;
-    credential_source.kind = PST_CREDENTIAL_SOURCE_CERT_DER_PKCS8_DER;
-    credential_source.certificate_der = cert_data;
-    credential_source.certificate_der_size = cert_size;
+    credential_source.kind = PST_CREDENTIAL_SOURCE_CERT_CHAIN_DER_PKCS8_DER;
+    certificate_item.data = cert_data;
+    certificate_item.size = cert_size;
+    credential_source.certificate_chain = &certificate_item;
+    credential_source.certificate_count = 1;
     credential_source.private_key_der = key_data;
     credential_source.private_key_der_size = key_size;
     timeline("CREDENTIAL_CREATE_BEGIN");
@@ -366,26 +369,25 @@ int main(int argc, char **argv)
     free(key_data);
     key_data = NULL;
 
-    timeline("CONFIG_CREATE_BEGIN");
-    result = pst_config_create(&config);
-    timeline("CONFIG_CREATE_END result=%ld", (long)result);
-    if (result != PST_RESULT_OK) {
-        timeline("SETUP_FAIL stage=CONFIG_CREATE result=%ld", (long)result);
-        console_marker("SETUP_FAIL stage=CONFIG_CREATE result=%ld", (long)result);
-        exit_code = 6; setup_failed = 1; goto cleanup;
-    }
-
-    memset(&identity, 0, sizeof(identity));
-    identity.struct_size = sizeof(identity);
-    identity.api_version = PST_API_VERSION;
-    identity.credentials = credentials;
-    identity.trust = trust;
-    identity.expected_hostname = argv[3];
-    identity.expected_hostname_size = strlen(argv[3]);
-    identity.require_peer_authentication = 1;
-    identity.require_client_authentication = 1;
+    memset(&config, 0, sizeof(config));
+    config.struct_size = sizeof(config);
+    config.api_version = PST_API_VERSION;
+    config.role = PST_CONNECTION_ROLE_CLIENT;
+    config.provider_selection.struct_size = sizeof(config.provider_selection);
+    config.provider_selection.api_version = PST_API_VERSION;
+    config.provider_selection.mode = PST_BACKEND_SELECTION_EXACT;
+    config.provider_selection.exact_provider_id = "retrozilla-nss";
+    config.local_identity.struct_size = sizeof(config.local_identity);
+    config.local_identity.api_version = PST_API_VERSION;
+    config.local_identity.credentials = credentials;
+    config.peer_authentication.struct_size = sizeof(config.peer_authentication);
+    config.peer_authentication.api_version = PST_API_VERSION;
+    config.peer_authentication.certificate_mode = PST_PEER_CERTIFICATE_REQUIRED;
+    config.peer_authentication.trust = trust;
+    config.peer_authentication.expected_peer_name = argv[3];
+    config.peer_authentication.expected_peer_name_size = strlen(argv[3]);
     timeline("IDENTITY_CONFIG_BEGIN");
-    result = pst_config_set_identity(config, &identity);
+    result = PST_RESULT_OK;
     timeline("IDENTITY_CONFIG_END result=%ld", (long)result);
     if (result != PST_RESULT_OK) {
         timeline("SETUP_FAIL stage=IDENTITY_CONFIG result=%ld", (long)result);
@@ -393,22 +395,22 @@ int main(int argc, char **argv)
         exit_code = 7; setup_failed = 1; goto cleanup;
     }
 
-    memset(&policy, 0, sizeof(policy));
-    policy.struct_size = sizeof(policy);
-    policy.api_version = PST_API_VERSION;
-    policy.minimum_version = (pst_u32)atoi(argv[7]);
-    policy.maximum_version = policy.minimum_version;
+    config.tls.struct_size = sizeof(config.tls);
+    config.tls.api_version = PST_API_VERSION;
+    config.tls.minimum_version = (pst_u32)atoi(argv[7]);
+    config.tls.maximum_version = config.tls.minimum_version;
     timeline("ALPN_CONFIG_BEGIN");
     protocol.data = (const pst_u8 *)argv[8];
     protocol.size = strlen(argv[8]);
-    policy.alpn_protocols = &protocol;
-    policy.alpn_protocol_count = 1;
-    policy.alpn_requirement = PST_FEATURE_REQUIRED;
-    policy.early_data = PST_FEATURE_DISABLED;
+    config.alpn.struct_size = sizeof(config.alpn);
+    config.alpn.api_version = PST_API_VERSION;
+    config.alpn.protocols = &protocol;
+    config.alpn.protocol_count = 1;
+    config.alpn.mode = PST_FEATURE_REQUIRED;
+    config.tls.early_data = PST_FEATURE_DISABLED;
     timeline("ALPN_CONFIG_END result=%ld", (long)PST_RESULT_OK);
     timeline("TLS_POLICY_BEGIN");
-    result = pst_config_set_tls_policy(config, &policy);
-    if (result == PST_RESULT_OK) result = pst_config_freeze(config);
+    result = PST_RESULT_OK;
     timeline("TLS_POLICY_END result=%ld", (long)result);
     if (result != PST_RESULT_OK) {
         timeline("SETUP_FAIL stage=TLS_POLICY result=%ld", (long)result);
@@ -428,8 +430,6 @@ int main(int argc, char **argv)
     memset(&runtime_options, 0, sizeof(runtime_options));
     runtime_options.struct_size = sizeof(runtime_options);
     runtime_options.api_version = PST_API_VERSION;
-    runtime_options.selection = PST_BACKEND_SELECTION_EXACT;
-    runtime_options.exact_backend_id = "retrozilla-nss";
     result = pst_log_config_init(&log_config);
     if (result != PST_RESULT_OK) {
         timeline("SETUP_FAIL stage=LOG_CONFIG result=%ld", (long)result);
@@ -503,7 +503,7 @@ int main(int argc, char **argv)
 
     timeline("CONNECTION_CREATE_BEGIN");
     console_marker("CONNECTION_CREATE_BEGIN");
-    result = pst_connection_create(runtime, config, &connection);
+    result = pst_connection_create(runtime, &config, &connection);
     timeline("CONNECTION_CREATE_END result=%ld", (long)result);
     console_marker("CONNECTION_CREATE_END result=%ld", (long)result);
     if (result != PST_RESULT_OK) {
@@ -819,11 +819,6 @@ cleanup:
         closesocket(control_socket);
         control_socket = INVALID_SOCKET;
         timeline("CLEANUP AFTER_CONTROL_SOCKET_CLOSE");
-    }
-    if (config != NULL) {
-        timeline("CLEANUP BEFORE_CONFIG_RELEASE");
-        pst_config_release(config);
-        timeline("CLEANUP AFTER_CONFIG_RELEASE");
     }
     if (credentials != NULL) {
         timeline("CLEANUP BEFORE_CREDENTIALS_RELEASE");

@@ -28,7 +28,7 @@
 #define PST_DIAGNOSTIC_PHASE_CONNECTION_CREATE 17UL
 #define PST_DIAGNOSTIC_FLAG_NATIVE 0x00000001UL
 #define PST_DIAGNOSTIC_FLAG_SECONDARY 0x00000002UL
-typedef struct pst_internal_diagnostic { PST_RESULT result; pst_u32 phase; pst_u32 native_domain; pst_i32 native_code; pst_i32 secondary_native_code; pst_u32 flags; pst_u32 generation; pst_u32 valid; char backend_id[PST_DIAGNOSTIC_BACKEND_ID_CAPACITY]; } pst_internal_diagnostic;
+typedef struct pst_internal_diagnostic { PST_RESULT result; pst_u32 phase,role,reason; pst_u32 native_domain; pst_i32 native_code; pst_i32 secondary_native_code; pst_u32 flags; pst_u32 generation; pst_u32 valid; char backend_id[PST_DIAGNOSTIC_BACKEND_ID_CAPACITY]; } pst_internal_diagnostic;
 void pst_diagnostic_initialize(pst_internal_diagnostic *diagnostic);
 void pst_diagnostic_clear(pst_internal_diagnostic *diagnostic);
 void pst_diagnostic_copy(pst_internal_diagnostic *destination,const pst_internal_diagnostic *source);

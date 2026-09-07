@@ -314,7 +314,7 @@ PST_RESULT pst_backend_nss_normalize_error(pst_i32 error)
         error == (pst_i32)PR_HOST_UNREACHABLE_ERROR)
         return PST_RESULT_TRANSPORT_FAILURE;
     if (error == (pst_i32)SSL_ERROR_BAD_CERT_DOMAIN)
-        return PST_RESULT_HOSTNAME_MISMATCH;
+        return PST_RESULT_PEER_NAME_MISMATCH;
     if (error == (pst_i32)SSL_ERROR_BAD_CERTIFICATE ||
         error == (pst_i32)SSL_ERROR_BAD_CERT_ALERT ||
         error == (pst_i32)SSL_ERROR_REVOKED_CERT_ALERT ||
@@ -373,7 +373,7 @@ static pst_u32 pst_nss_error_domain(pst_i32 error)
 static void pst_nss_record(pst_nss_connection_state *c, pst_u32 phase)
 {
     PST_RESULT result = pst_backend_nss_normalize_error(c->last_error);
-    if (result == PST_RESULT_HOSTNAME_MISMATCH)
+    if (result == PST_RESULT_PEER_NAME_MISMATCH)
         phase = PST_DIAGNOSTIC_PHASE_HOSTNAME_VERIFY;
     else if (result == PST_RESULT_AUTH_FAILURE)
         phase = PST_DIAGNOSTIC_PHASE_PEER_AUTHENTICATE;
@@ -520,9 +520,10 @@ static PST_RESULT pst_nss_query(void *state, pst_u32 *capabilities)
         return PST_RESULT_INVALID_ARGUMENT;
     *capabilities = PST_BACKEND_CAP_TLS_1_2 | PST_BACKEND_CAP_TLS_1_3 |
         PST_BACKEND_CAP_NONBLOCKING | PST_BACKEND_CAP_BACKEND_WAIT |
-        PST_BACKEND_CAP_HOSTNAME_VERIFY | PST_BACKEND_CAP_CLIENT_AUTH |
+        PST_BACKEND_CAP_ROLE_CLIENT | PST_BACKEND_CAP_PEER_CERT_AUTH |
+        PST_BACKEND_CAP_PEER_NAME_VERIFY | PST_BACKEND_CAP_LOCAL_IDENTITY |
         PST_BACKEND_CAP_CUSTOM_TRUST | PST_BACKEND_CAP_PEER_INFO |
-        PST_BACKEND_CAP_ALPN;
+        PST_BACKEND_CAP_ALPN_CLIENT;
     return PST_RESULT_OK;
 }
 static PST_RESULT pst_nss_validate_requirements(void *state, pst_u32 required)
@@ -533,14 +534,20 @@ static PST_RESULT pst_nss_validate_requirements(void *state, pst_u32 required)
     pst_nss_query(runtime->backend, &available);
     return (required & ~available) == 0UL ? PST_RESULT_OK : PST_RESULT_UNSUPPORTED;
 }
-static PST_RESULT pst_nss_connection_create(void *state, void **out_connection)
+static PST_RESULT pst_nss_configure_connection(void *,const PST_CONNECTION_CONFIG *);
+static void pst_nss_connection_destroy(void *);
+static PST_RESULT pst_nss_connection_create(void *state,const PST_BACKEND_CONNECTION_OPTIONS *options,void **out_connection)
 {
     pst_nss_runtime_state *runtime = (pst_nss_runtime_state *)state;
-    pst_nss_connection_state *connection;
-    if (runtime == NULL || out_connection == NULL) return PST_RESULT_INVALID_ARGUMENT;
+    pst_nss_connection_state *connection;PST_RESULT result;
+    if (runtime == NULL || options == NULL || out_connection == NULL || options->struct_size<PST_BACKEND_CONNECTION_OPTIONS_MIN_SIZE || options->spi_version!=PST_BACKEND_SPI_VERSION) return PST_RESULT_INVALID_ARGUMENT;
+    if(options->role!=PST_CONNECTION_ROLE_CLIENT)return PST_RESULT_UNSUPPORTED;
+    *out_connection=NULL;
     connection = (pst_nss_connection_state *)calloc(1, sizeof(*connection));
     if (connection == NULL) return PST_RESULT_OUT_OF_MEMORY;
-    connection->runtime = runtime; *out_connection = connection;
+    connection->runtime = runtime;result=pst_nss_configure_connection(connection,options->configuration);
+    if(result!=PST_RESULT_OK){pst_nss_connection_destroy(connection);return result;}
+    *out_connection = connection;
     return PST_RESULT_OK;
 }
 static void pst_nss_connection_destroy(void *state)
@@ -577,12 +584,12 @@ static void PR_CALLBACK pst_nss_alert_received(const PRFileDesc *fd, void *arg,
         pst_nss_trace("TLS_alert", "close_notify_received=1");
     }
 }
-static PST_RESULT pst_nss_configure_identity(void *state,const pst_config *config)
+static PST_RESULT pst_nss_configure_connection(void *state,const PST_CONNECTION_CONFIG *config)
 {
  pst_nss_connection_state *c=(pst_nss_connection_state*)state;pst_nss_backend_state *s;
  const pst_trust *trust;const pst_credentials *credentials;const pst_u8 *data;SECItem item;CERTCertTrust flags;PK11SlotInfo *slot;const char *host;pst_size n;
- if(!c||!config||!pst_config_is_frozen(config)||c->ssl_fd||c->expected_hostname)return PST_RESULT_INVALID_ARGUMENT;
- s=c->runtime->backend;trust=pst_config_trust(config);credentials=pst_config_credentials(config);
+ if(!c||!config||config->role!=PST_CONNECTION_ROLE_CLIENT||c->ssl_fd||c->expected_hostname)return PST_RESULT_INVALID_ARGUMENT;
+ s=c->runtime->backend;trust=pst_connection_config_peer_trust(config);credentials=pst_connection_config_local_credentials(config);
  if(trust){if(pst_trust_kind(trust)==PST_TRUST_SOURCE_SYSTEM)return PST_RESULT_UNSUPPORTED;if(pst_trust_kind(trust)!=PST_TRUST_SOURCE_CUSTOM_CA_DER)return PST_RESULT_UNSUPPORTED;
   data=pst_trust_data(trust,&n);if(n>(pst_size)UINT_MAX)return PST_RESULT_INVALID_ARGUMENT;item.type=siDERCertBuffer;item.data=(unsigned char*)data;item.len=(unsigned int)n;
   c->trust_anchor=s->cert_new_temp(s->cert_default_db(),&item,"pst-custom-trust",PR_FALSE,PR_TRUE);if(!c->trust_anchor)return PST_RESULT_AUTH_FAILURE;
@@ -592,9 +599,9 @@ static PST_RESULT pst_nss_configure_identity(void *state,const pst_config *confi
   c->local_certificate=s->cert_new_temp(s->cert_default_db(),&item,"pst-local-credential",PR_FALSE,PR_TRUE);if(!c->local_certificate)return PST_RESULT_AUTH_FAILURE;
   data=pst_credentials_private_key_der(credentials,&n);if(n>(pst_size)UINT_MAX)return PST_RESULT_INVALID_ARGUMENT;item.type=siBuffer;item.data=(unsigned char*)data;item.len=(unsigned int)n;slot=s->pk11_get_slot();if(!slot)return PST_RESULT_BACKEND_FAILURE;
   if(s->pk11_import_key(slot,&item,NULL,NULL,PR_FALSE,PR_TRUE,KU_ALL,&c->local_key,NULL)!=SECSuccess){s->pk11_free_slot(slot);return PST_RESULT_AUTH_FAILURE;}s->pk11_free_slot(slot);}
- host=pst_config_expected_hostname(config);if(host){n=strlen(host);c->expected_hostname=(char*)malloc(n+1);if(!c->expected_hostname)return PST_RESULT_OUT_OF_MEMORY;memcpy(c->expected_hostname,host,n+1);}
- data=pst_config_alpn_wire(config,&n);if(n){c->alpn=(pst_u8*)malloc(n);if(!c->alpn)return PST_RESULT_OUT_OF_MEMORY;memcpy(c->alpn,data,n);c->alpn_size=n;}c->minimum_version=pst_config_minimum_version(config);c->maximum_version=pst_config_maximum_version(config);c->alpn_requirement=pst_config_alpn_requirement(config);
- c->require_peer=pst_config_require_peer_authentication(config);pst_nss_trace("PST_identity_config","ok");return PST_RESULT_OK;
+ host=pst_connection_config_expected_peer_name(config);if(host){n=strlen(host);c->expected_hostname=(char*)malloc(n+1);if(!c->expected_hostname)return PST_RESULT_OUT_OF_MEMORY;memcpy(c->expected_hostname,host,n+1);}
+ data=pst_connection_config_alpn_wire(config,&n);if(n){c->alpn=(pst_u8*)malloc(n);if(!c->alpn)return PST_RESULT_OUT_OF_MEMORY;memcpy(c->alpn,data,n);c->alpn_size=n;}c->minimum_version=pst_connection_config_minimum_version(config);c->maximum_version=pst_connection_config_maximum_version(config);c->alpn_requirement=pst_connection_config_alpn_mode(config);
+ c->require_peer=pst_connection_config_peer_certificate_mode(config)!=PST_PEER_CERTIFICATE_DISABLED;pst_nss_trace("PST_identity_config","ok");return PST_RESULT_OK;
 }
 static PST_RESULT pst_nss_attach(void *state, void *transport, pst_u32 ownership,
                                  pst_u32 *ownership_accepted)
@@ -942,9 +949,11 @@ static PST_RESULT pst_nss_peer_info_create(void *state, void **out)
     if (cert == NULL) return PST_RESULT_UNAVAILABLE;
     memset(&summary, 0, sizeof(summary)); summary.struct_size = sizeof(summary);
     summary.api_version = PST_API_VERSION;
+    summary.local_role = PST_CONNECTION_ROLE_CLIENT;
+    strncpy(summary.provider_id,"retrozilla-nss",sizeof(summary.provider_id)-1);
     summary.certificate_present = PST_KNOWN_TRUE;
     summary.chain_validated = c->require_peer ? PST_KNOWN_TRUE : PST_KNOWN_UNKNOWN;
-    summary.hostname_validated = c->require_peer ? PST_KNOWN_TRUE : PST_KNOWN_UNKNOWN;
+    summary.peer_name_validated = c->require_peer ? PST_KNOWN_TRUE : PST_KNOWN_NOT_APPLICABLE;
     summary.peer_authenticated = c->require_peer ? PST_KNOWN_TRUE : PST_KNOWN_UNKNOWN;
     summary.tls_version = (pst_u32)info.protocolVersion;
     summary.cipher_suite = (pst_u32)info.cipherSuite;
@@ -1009,7 +1018,7 @@ static const PST_BACKEND_VTABLE pst_nss_vtable = {
     pst_nss_connection_create, pst_nss_connection_destroy, pst_nss_attach,
     pst_nss_handshake, pst_nss_interest, pst_nss_wait, pst_nss_read,
     pst_nss_write, pst_nss_shutdown_step, pst_nss_peer_info_create,
-    pst_nss_peer_info_destroy, pst_nss_configure_identity, pst_nss_get_alpn,
+    pst_nss_peer_info_destroy, pst_nss_get_alpn,
     pst_nss_diagnostic_copy
 };
 static const PST_BACKEND_METADATA pst_nss_metadata = {
@@ -1023,10 +1032,11 @@ static const PST_BACKEND_DESCRIPTOR pst_nss_descriptor = {
     sizeof(PST_BACKEND_DESCRIPTOR), PST_BACKEND_SPI_VERSION,
     "retrozilla-nss", "RetroZilla NSS/NSPR",
     PST_BACKEND_CAP_TLS_1_2 | PST_BACKEND_CAP_TLS_1_3 |
-    PST_BACKEND_CAP_HOSTNAME_VERIFY | PST_BACKEND_CAP_NONBLOCKING |
-    PST_BACKEND_CAP_BACKEND_WAIT | PST_BACKEND_CAP_CLIENT_AUTH |
+    PST_BACKEND_CAP_ROLE_CLIENT | PST_BACKEND_CAP_PEER_CERT_AUTH |
+    PST_BACKEND_CAP_PEER_NAME_VERIFY | PST_BACKEND_CAP_NONBLOCKING |
+    PST_BACKEND_CAP_BACKEND_WAIT | PST_BACKEND_CAP_LOCAL_IDENTITY |
     PST_BACKEND_CAP_CUSTOM_TRUST | PST_BACKEND_CAP_PEER_INFO |
-    PST_BACKEND_CAP_ALPN, &pst_nss_vtable, &pst_nss_metadata
+    PST_BACKEND_CAP_ALPN_CLIENT, &pst_nss_vtable, &pst_nss_metadata
 };
 const PST_BACKEND_DESCRIPTOR *pst_backend_nss_descriptor(void)
 {

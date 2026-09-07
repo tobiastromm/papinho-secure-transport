@@ -25,10 +25,12 @@ int pst_log_should_emit(PST_LOG_LEVEL configured,PST_LOG_LEVEL event_level)
     return event_level<=configured;
 }
 void pst_log_emit(const pst_log_state *state,PST_LOG_LEVEL level,pst_u32 event_id,pst_u32 category,PST_RESULT normalized_result,pst_u32 operation,const char *backend_id)
+{pst_log_emit_facts(state,level,event_id,category,normalized_result,operation,backend_id,PST_CONNECTION_ROLE_INVALID,PST_KNOWN_UNKNOWN,PST_KNOWN_UNKNOWN);}
+void pst_log_emit_facts(const pst_log_state *state,PST_LOG_LEVEL level,pst_u32 event_id,pst_u32 category,PST_RESULT normalized_result,pst_u32 operation,const char *backend_id,pst_u32 role,pst_u32 auth_fact,pst_u32 policy_fact)
 {
     PST_LOG_EVENT event;pst_size i;if(!state||!state->callback||!pst_log_should_emit(state->level,level))return;
     memset(&event,0,sizeof(event));event.struct_size=(pst_u32)sizeof(event);event.api_version=PST_API_VERSION;
-    event.level=level;event.event_id=event_id;event.category=category;event.normalized_result=normalized_result;event.operation=operation;
+    event.level=level;event.event_id=event_id;event.category=category;event.normalized_result=normalized_result;event.operation=operation;event.role=role;event.peer_auth_fact=auth_fact;event.policy_fact=policy_fact;
     if(backend_id){for(i=0;i+1UL<PST_DIAGNOSTIC_BACKEND_ID_CAPACITY&&backend_id[i]!='\0';++i)event.backend_id[i]=backend_id[i];event.backend_id[i]='\0';}
     state->callback(state->user_context,&event);
 }

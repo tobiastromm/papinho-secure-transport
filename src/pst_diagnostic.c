@@ -21,6 +21,15 @@ static pst_u32 pst_diagnostic_public_operation(pst_u32 phase)
     if(phase==PST_DIAGNOSTIC_PHASE_PEER_INFO)return PST_DIAGNOSTIC_OPERATION_PEER_INFO;
     return PST_DIAGNOSTIC_OPERATION_NONE;
 }
+static pst_u32 pst_diagnostic_public_reason(const pst_internal_diagnostic *source)
+{
+    if(source->reason)return source->reason;
+    if(source->result==PST_RESULT_PEER_NAME_MISMATCH)return PST_DIAGNOSTIC_REASON_PEER_NAME_MISMATCH;
+    if(source->phase==PST_DIAGNOSTIC_PHASE_ALPN)return PST_DIAGNOSTIC_REASON_ALPN_MISMATCH;
+    if(source->phase==PST_DIAGNOSTIC_PHASE_CAPABILITY_VALIDATE||source->phase==PST_DIAGNOSTIC_PHASE_TLS_CONFIGURE)return PST_DIAGNOSTIC_REASON_TLS_POLICY_MISMATCH;
+    if(source->result==PST_RESULT_AUTH_FAILURE)return PST_DIAGNOSTIC_REASON_PEER_CERT_INVALID;
+    return PST_DIAGNOSTIC_REASON_NONE;
+}
 PST_RESULT PST_CALL pst_diagnostic_info_init(PST_DIAGNOSTIC_INFO *out)
 {
     if(!out)return PST_RESULT_INVALID_ARGUMENT;
@@ -40,6 +49,6 @@ PST_RESULT pst_diagnostic_export_public(const pst_internal_diagnostic *source,PS
     result=pst_diagnostic_validate_public(out);if(result!=PST_RESULT_OK)return result;
     size=out->struct_size;memset(out,0,sizeof(*out));out->struct_size=size;out->api_version=PST_API_VERSION;
     out->valid=source->valid;out->generation=source->generation;
-    if(source->valid){out->normalized_result=source->result;out->operation=pst_diagnostic_public_operation(source->phase);memcpy(out->backend_id,source->backend_id,sizeof(out->backend_id));out->backend_id[sizeof(out->backend_id)-1]='\0';}
+    if(source->valid){out->normalized_result=source->result;out->operation=pst_diagnostic_public_operation(source->phase);out->role=source->role;out->reason=pst_diagnostic_public_reason(source);memcpy(out->backend_id,source->backend_id,sizeof(out->backend_id));out->backend_id[sizeof(out->backend_id)-1]='\0';}
     return PST_RESULT_OK;
 }

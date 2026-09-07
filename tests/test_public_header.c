@@ -19,7 +19,7 @@ int main(void)
     if (pst_log_config_init(&logging) != PST_RESULT_OK) return 5;
     if (logging.level != PST_LOG_LEVEL_OFF || logging.callback != NULL) return 6;
     log_constant = PST_LOG_LEVEL_TRACE; if (log_constant != 5UL) return 7;
-    log_constant = PST_LOG_EVENT_MIN_SIZE; if (log_constant != 60UL) return 8;
+    log_constant = PST_LOG_EVENT_MIN_SIZE; if (log_constant != 72UL) return 8;
     event.level = PST_LOG_LEVEL_INFO; event.event_id = PST_LOG_EVENT_RUNTIME_READY;
     if (event.level != 3UL || event.event_id != 1UL) return 9;
     printf("test_public_header: PASS\n");
