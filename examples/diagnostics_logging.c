@@ -37,9 +37,6 @@ int main(void)
     memset(&options, 0, sizeof(options));
     options.struct_size = sizeof(options);
     options.api_version = PST_API_VERSION;
-    options.selection = PST_BACKEND_SELECTION_AUTOMATIC;
-    options.required_capabilities = PST_CAP_TLS_1_2;
-
     if (pst_win32_register_builtin_providers() != PST_RESULT_OK) return 1;
     if (pst_diagnostic_info_init(&diagnostic) != PST_RESULT_OK) return 2;
     result = pst_runtime_create_with_logging(&options, &logging, &runtime,

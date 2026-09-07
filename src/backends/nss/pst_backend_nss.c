@@ -137,9 +137,12 @@ typedef struct pst_nss_connection_state {
     pst_u32 interest;
     pst_u32 ownership;
     CERTCertificate *local_certificate;
+    CERTCertificate **local_chain;
+    pst_size local_chain_count;
     SECKEYPrivateKey *local_key;
-    CERTCertificate *trust_anchor;
-    char *expected_hostname;
+    CERTCertificate **trust_anchors;
+    pst_size trust_anchor_count;
+    char *expected_peer_name;
     pst_u32 require_peer;
     int handshake_complete;
     pst_u32 received_close_notify;
@@ -553,13 +556,16 @@ static PST_RESULT pst_nss_connection_create(void *state,const PST_BACKEND_CONNEC
 static void pst_nss_connection_destroy(void *state)
 {
     pst_nss_connection_state *c = (pst_nss_connection_state *)state;
+    pst_size i;
     if (c == NULL) return;
     if (c->ssl_fd != NULL) c->runtime->backend->pr_close(c->ssl_fd);
     c->ssl_fd = NULL;
-    if (c->local_certificate != NULL) c->runtime->backend->cert_destroy(c->local_certificate);
+    for(i=0;i<c->local_chain_count;i++)if(c->local_chain[i]!=NULL)c->runtime->backend->cert_destroy(c->local_chain[i]);
+    free(c->local_chain);
     if (c->local_key != NULL) c->runtime->backend->key_destroy(c->local_key);
-    if (c->trust_anchor != NULL) c->runtime->backend->cert_destroy(c->trust_anchor);
-    free(c->expected_hostname); free(c->alpn); free(c);
+    for(i=0;i<c->trust_anchor_count;i++)if(c->trust_anchors[i]!=NULL)c->runtime->backend->cert_destroy(c->trust_anchors[i]);
+    free(c->trust_anchors);
+    free(c->expected_peer_name); free(c->alpn); free(c);
 }
 static SECStatus PR_CALLBACK pst_nss_client_auth(void *arg, PRFileDesc *fd,
  CERTDistNames *names, CERTCertificate **cert, SECKEYPrivateKey **key)
@@ -587,19 +593,17 @@ static void PR_CALLBACK pst_nss_alert_received(const PRFileDesc *fd, void *arg,
 static PST_RESULT pst_nss_configure_connection(void *state,const PST_CONNECTION_CONFIG *config)
 {
  pst_nss_connection_state *c=(pst_nss_connection_state*)state;pst_nss_backend_state *s;
- const pst_trust *trust;const pst_credentials *credentials;const pst_u8 *data;SECItem item;CERTCertTrust flags;PK11SlotInfo *slot;const char *host;pst_size n;
- if(!c||!config||config->role!=PST_CONNECTION_ROLE_CLIENT||c->ssl_fd||c->expected_hostname)return PST_RESULT_INVALID_ARGUMENT;
+ const pst_trust *trust;const pst_credentials *credentials;const pst_u8 *data;SECItem item;CERTCertTrust flags;PK11SlotInfo *slot;const char *host;pst_size n,i,count;
+ if(!c||!config||config->role!=PST_CONNECTION_ROLE_CLIENT||c->ssl_fd||c->expected_peer_name)return PST_RESULT_INVALID_ARGUMENT;
  s=c->runtime->backend;trust=pst_connection_config_peer_trust(config);credentials=pst_connection_config_local_credentials(config);
  if(trust){if(pst_trust_kind(trust)==PST_TRUST_SOURCE_SYSTEM)return PST_RESULT_UNSUPPORTED;if(pst_trust_kind(trust)!=PST_TRUST_SOURCE_CUSTOM_CA_DER)return PST_RESULT_UNSUPPORTED;
-  data=pst_trust_data(trust,&n);if(n>(pst_size)UINT_MAX)return PST_RESULT_INVALID_ARGUMENT;item.type=siDERCertBuffer;item.data=(unsigned char*)data;item.len=(unsigned int)n;
-  c->trust_anchor=s->cert_new_temp(s->cert_default_db(),&item,"pst-custom-trust",PR_FALSE,PR_TRUE);if(!c->trust_anchor)return PST_RESULT_AUTH_FAILURE;
+  count=pst_trust_anchor_count(trust);c->trust_anchors=(CERTCertificate**)calloc(count,sizeof(*c->trust_anchors));if(!c->trust_anchors)return PST_RESULT_OUT_OF_MEMORY;c->trust_anchor_count=count;
   memset(&flags,0,sizeof(flags));flags.sslFlags=CERTDB_VALID_CA|CERTDB_TRUSTED_CA|CERTDB_TRUSTED_CLIENT_CA;
-  if(s->cert_change_trust(s->cert_default_db(),c->trust_anchor,&flags)!=SECSuccess)return PST_RESULT_AUTH_FAILURE;s->has_database=1;}
- if(credentials){data=pst_credentials_certificate_der(credentials,&n);if(n>(pst_size)UINT_MAX)return PST_RESULT_INVALID_ARGUMENT;item.type=siDERCertBuffer;item.data=(unsigned char*)data;item.len=(unsigned int)n;
-  c->local_certificate=s->cert_new_temp(s->cert_default_db(),&item,"pst-local-credential",PR_FALSE,PR_TRUE);if(!c->local_certificate)return PST_RESULT_AUTH_FAILURE;
+  for(i=0;i<count;i++){data=pst_trust_anchor_at(trust,i,&n);if(!data||n>(pst_size)UINT_MAX)return PST_RESULT_INVALID_ARGUMENT;item.type=siDERCertBuffer;item.data=(unsigned char*)data;item.len=(unsigned int)n;c->trust_anchors[i]=s->cert_new_temp(s->cert_default_db(),&item,"pst-custom-trust",PR_FALSE,PR_TRUE);if(!c->trust_anchors[i]||s->cert_change_trust(s->cert_default_db(),c->trust_anchors[i],&flags)!=SECSuccess)return PST_RESULT_AUTH_FAILURE;}s->has_database=1;}
+ if(credentials){count=pst_credentials_certificate_count(credentials);c->local_chain=(CERTCertificate**)calloc(count,sizeof(*c->local_chain));if(!c->local_chain)return PST_RESULT_OUT_OF_MEMORY;c->local_chain_count=count;for(i=0;i<count;i++){data=pst_credentials_certificate_at(credentials,i,&n);if(!data||n>(pst_size)UINT_MAX)return PST_RESULT_INVALID_ARGUMENT;item.type=siDERCertBuffer;item.data=(unsigned char*)data;item.len=(unsigned int)n;c->local_chain[i]=s->cert_new_temp(s->cert_default_db(),&item,"pst-local-credential",PR_FALSE,PR_TRUE);if(!c->local_chain[i])return PST_RESULT_AUTH_FAILURE;}c->local_certificate=c->local_chain[0];
   data=pst_credentials_private_key_der(credentials,&n);if(n>(pst_size)UINT_MAX)return PST_RESULT_INVALID_ARGUMENT;item.type=siBuffer;item.data=(unsigned char*)data;item.len=(unsigned int)n;slot=s->pk11_get_slot();if(!slot)return PST_RESULT_BACKEND_FAILURE;
   if(s->pk11_import_key(slot,&item,NULL,NULL,PR_FALSE,PR_TRUE,KU_ALL,&c->local_key,NULL)!=SECSuccess){s->pk11_free_slot(slot);return PST_RESULT_AUTH_FAILURE;}s->pk11_free_slot(slot);}
- host=pst_connection_config_expected_peer_name(config);if(host){n=strlen(host);c->expected_hostname=(char*)malloc(n+1);if(!c->expected_hostname)return PST_RESULT_OUT_OF_MEMORY;memcpy(c->expected_hostname,host,n+1);}
+ host=pst_connection_config_expected_peer_name(config);if(host){n=strlen(host);c->expected_peer_name=(char*)malloc(n+1);if(!c->expected_peer_name)return PST_RESULT_OUT_OF_MEMORY;memcpy(c->expected_peer_name,host,n+1);}
  data=pst_connection_config_alpn_wire(config,&n);if(n){c->alpn=(pst_u8*)malloc(n);if(!c->alpn)return PST_RESULT_OUT_OF_MEMORY;memcpy(c->alpn,data,n);c->alpn_size=n;}c->minimum_version=pst_connection_config_minimum_version(config);c->maximum_version=pst_connection_config_maximum_version(config);c->alpn_requirement=pst_connection_config_alpn_mode(config);
  c->require_peer=pst_connection_config_peer_certificate_mode(config)!=PST_PEER_CERTIFICATE_DISABLED;pst_nss_trace("PST_identity_config","ok");return PST_RESULT_OK;
 }
@@ -623,7 +627,7 @@ static PST_RESULT pst_nss_attach(void *state, void *transport, pst_u32 ownership
     if (t->struct_size < PST_NSS_NATIVE_TRANSPORT_MIN_SIZE ||
         t->version != PST_NSS_NATIVE_TRANSPORT_VERSION ||
         t->kind != PST_NSS_NATIVE_TRANSPORT_KIND_WIN32_SOCKET ||
-        (c->expected_hostname == NULL && (t->hostname == NULL || t->hostname[0] == '\0')))
+        (c->expected_peer_name == NULL && (t->hostname == NULL || t->hostname[0] == '\0')))
         return PST_RESULT_INVALID_ARGUMENT;
     s = c->runtime->backend; socket_value = (SOCKET)t->native_socket;
     nonblocking = 1UL;
@@ -672,7 +676,7 @@ static PST_RESULT pst_nss_attach(void *state, void *transport, pst_u32 ownership
         s->ssl_option_set(ssl_fd, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE) != SECSuccess ||
         s->ssl_option_set(ssl_fd, SSL_ENABLE_SSL3, PR_FALSE) != SECSuccess ||
         (c->alpn_size != 0 && s->ssl_option_set(ssl_fd, SSL_ENABLE_ALPN, PR_TRUE) != SECSuccess) ||
-        s->ssl_set_url(ssl_fd, c->expected_hostname != NULL ? c->expected_hostname : t->hostname) != SECSuccess ||
+        s->ssl_set_url(ssl_fd, c->expected_peer_name != NULL ? c->expected_peer_name : t->hostname) != SECSuccess ||
         s->ssl_reset_handshake(ssl_fd, PR_FALSE) != SECSuccess) {
         pst_nss_capture_error(s, &c->last_error); s->pr_close(ssl_fd);
         return pst_backend_nss_normalize_error(c->last_error);

@@ -2,7 +2,7 @@
 
 # Public API 2.0 CLIENT/SERVER contract
 
-Status: frozen design contract for library 0.5.0 development. Real SERVER provider implementations are not part of SS-1.
+Status: frozen contract implemented by the library 0.5.0 development core. SS-2 migrated existing CLIENT behavior for RetroZilla NSS, Schannel and OpenSSL; real SERVER provider implementations remain outside this phase.
 
 ## Roles and object model
 

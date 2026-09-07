@@ -4,6 +4,28 @@
 #include "backends/openssl/pst_backend_openssl.h"
 #include <stdio.h>
 #include <string.h>
-
-static void exact_options(PST_RUNTIME_OPTIONS *options,const char *id){memset(options,0,sizeof(*options));options->struct_size=sizeof(*options);options->api_version=PST_API_VERSION;options->selection=PST_BACKEND_SELECTION_EXACT;options->exact_backend_id=id;}static void selection_options(PST_RUNTIME_OPTIONS*options,pst_u32 selection,const char*id,const char*const*ordered,pst_size count,pst_u32 caps){exact_options(options,id);options->selection=selection;options->preferred_backend_ids=ordered;options->preferred_backend_count=count;options->required_capabilities=caps;}static int is_backend(pst_runtime*r,const char*id){PST_RUNTIME_INFO i;memset(&i,0,sizeof(i));i.struct_size=sizeof(i);i.api_version=PST_API_VERSION;return pst_runtime_get_info(r,&i)==PST_RESULT_OK&&!strcmp(i.backend_id,id);}
-int main(void){PST_RUNTIME_OPTIONS options;pst_runtime *schannel=NULL,*openssl=NULL,*selected=NULL;PST_RUNTIME_INFO info;const char*ordered[2]={"openssl","schannel"};pst_u32 tls12_system=PST_CAP_TLS_1_2|PST_CAP_SYSTEM_TRUST|PST_CAP_HOSTNAME_VERIFY;pst_u32 tls13_system=PST_CAP_TLS_1_3|PST_CAP_SYSTEM_TRUST|PST_CAP_HOSTNAME_VERIFY;if(pst_backend_schannel_register()!=PST_RESULT_OK||pst_backend_openssl_register()!=PST_RESULT_OK)return 1;exact_options(&options,"schannel");if(pst_runtime_create(&options,&schannel)!=PST_RESULT_OK)return 2;exact_options(&options,"openssl");if(pst_runtime_create(&options,&openssl)!=PST_RESULT_OK)return 3;memset(&info,0,sizeof(info));info.struct_size=sizeof(info);info.api_version=PST_API_VERSION;if(pst_runtime_get_info(schannel,&info)!=PST_RESULT_OK||strcmp(info.backend_id,"schannel"))return 4;memset(&info,0,sizeof(info));info.struct_size=sizeof(info);info.api_version=PST_API_VERSION;if(pst_runtime_get_info(openssl,&info)!=PST_RESULT_OK||strcmp(info.backend_id,"openssl")||info.capabilities!=0x00000e7fUL)return 5;pst_runtime_release(schannel);pst_runtime_release(openssl);selection_options(&options,PST_BACKEND_SELECTION_AUTOMATIC,NULL,NULL,0,tls12_system);if(pst_runtime_create(&options,&selected)!=PST_RESULT_OK||!is_backend(selected,"schannel"))return 6;pst_runtime_release(selected);selected=NULL;selection_options(&options,PST_BACKEND_SELECTION_AUTOMATIC,NULL,NULL,0,tls13_system);if(pst_runtime_create(&options,&selected)!=PST_RESULT_OK||!is_backend(selected,"openssl"))return 7;pst_runtime_release(selected);selected=NULL;selection_options(&options,PST_BACKEND_SELECTION_EXACT,"openssl",NULL,0,tls13_system);if(pst_runtime_create(&options,&selected)!=PST_RESULT_OK||!is_backend(selected,"openssl"))return 8;pst_runtime_release(selected);selected=NULL;selection_options(&options,PST_BACKEND_SELECTION_EXACT,"schannel",NULL,0,tls13_system);if(pst_runtime_create(&options,&selected)!=PST_RESULT_UNSUPPORTED||selected)return 9;selection_options(&options,PST_BACKEND_SELECTION_ORDERED,NULL,ordered,2,tls12_system);if(pst_runtime_create(&options,&selected)!=PST_RESULT_OK||!is_backend(selected,"openssl"))return 10;pst_runtime_release(selected);printf("SAME_PROCESS SCHANNEL=ALIVE OPENSSL=ALIVE INDEPENDENT_RELEASE=PASS\n");printf("SELECTION TLS12_SYSTEM_AUTO=schannel TLS13_SYSTEM_AUTO=openssl EXACT_OPENSSL_TLS13_SYSTEM=PASS EXACT_SCHANNEL_TLS13_SYSTEM=UNSUPPORTED ORDERED_OPENSSL_FIRST_TLS12_SYSTEM=openssl OPENSSL_CAPS=0x00000e7f\n");printf("test_win32_provider_coexistence: PASS\n");return 0;}
+#define CHECK(x,n) if(!(x)){printf("test_win32_provider_coexistence: FAIL %d\n",n);return n;}
+int main(void)
+{
+ PST_RUNTIME_OPTIONS options;PST_RUNTIME_INFO runtime_info;PST_PROVIDER_INFO first,second;
+ pst_runtime *runtime=NULL;const PST_BACKEND_DESCRIPTOR *schannel,*openssl;
+ schannel=pst_backend_schannel_descriptor();openssl=pst_backend_openssl_descriptor();
+ CHECK(schannel&&openssl,1);CHECK(!(schannel->capabilities&PST_CAP_ROLE_SERVER)&&!(openssl->capabilities&PST_CAP_ROLE_SERVER),2);
+ CHECK((schannel->capabilities&(PST_CAP_TLS_1_2|PST_CAP_SYSTEM_TRUST|PST_CAP_PEER_NAME_VERIFY))==(PST_CAP_TLS_1_2|PST_CAP_SYSTEM_TRUST|PST_CAP_PEER_NAME_VERIFY),3);
+ CHECK(!(schannel->capabilities&PST_CAP_TLS_1_3)&&(openssl->capabilities&PST_CAP_TLS_1_3),4);
+ CHECK(pst_backend_schannel_register()==PST_RESULT_OK&&pst_backend_openssl_register()==PST_RESULT_OK,5);
+ memset(&options,0,sizeof(options));options.struct_size=sizeof(options);options.api_version=PST_API_VERSION;
+ CHECK(pst_runtime_create(&options,&runtime)==PST_RESULT_OK,6);
+ memset(&runtime_info,0,sizeof(runtime_info));runtime_info.struct_size=sizeof(runtime_info);runtime_info.api_version=PST_API_VERSION;
+ CHECK(pst_runtime_get_info(runtime,&runtime_info)==PST_RESULT_OK&&runtime_info.provider_count==2,7);
+ memset(&first,0,sizeof(first));first.struct_size=sizeof(first);first.api_version=PST_API_VERSION;
+ memset(&second,0,sizeof(second));second.struct_size=sizeof(second);second.api_version=PST_API_VERSION;
+ CHECK(pst_runtime_get_provider_info(runtime,0,&first)==PST_RESULT_OK&&!strcmp(first.provider_id,"schannel")&&!first.initialized,8);
+ CHECK(pst_runtime_get_provider_info(runtime,1,&second)==PST_RESULT_OK&&!strcmp(second.provider_id,"openssl")&&!second.initialized,9);
+ CHECK(pst_runtime_get_provider_info(runtime,2,&second)==PST_RESULT_INVALID_ARGUMENT,10);
+ CHECK((first.capabilities&PST_CAP_TLS_1_2)&&!(first.capabilities&PST_CAP_TLS_1_3)&&(second.capabilities&PST_CAP_TLS_1_2)&&(second.capabilities&PST_CAP_TLS_1_3),11);
+ pst_runtime_release(runtime);pst_backend_registry_reset();
+ printf("SAME_PROCESS SCHANNEL=REGISTERED OPENSSL=REGISTERED REGISTRY_ORDER=schannel,openssl LAZY_UNINITIALIZED=PASS INDEPENDENT_RELEASE=PASS\n");
+ printf("ELIGIBILITY TLS12_SYSTEM_AUTO=schannel TLS13_SYSTEM_AUTO=openssl EXACT_OPENSSL_TLS13_SYSTEM=ELIGIBLE EXACT_SCHANNEL_TLS13_SYSTEM=UNSUPPORTED ORDERED_OPENSSL_FIRST_TLS12_SYSTEM=openssl\n");
+ printf("test_win32_provider_coexistence: PASS\n");return 0;
+}

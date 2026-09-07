@@ -114,13 +114,9 @@ int main(int argc, char **argv)
     memset(&options, 0, sizeof(options));
     options.struct_size = sizeof(options);
     options.api_version = PST_API_VERSION;
-    options.selection = PST_BACKEND_SELECTION_AUTOMATIC;
-    options.required_capabilities = PST_CAP_TLS_1_2 |
-                                    PST_CAP_HOSTNAME_VERIFY |
-                                    PST_CAP_NONBLOCKING;
     if (pst_runtime_create(&options, &runtime) != PST_RESULT_OK) return 2;
 
-    printf("Built-in provider selected. Create authenticated trust/config and a TCP socket before using the bounded helpers.\n");
+    printf("Provider registry created. Selection occurs transactionally when a connection configuration is created.\n");
     if (argc == 999) {
         (void)attach_socket(NULL, 0);
         (void)drive_handshake(NULL);

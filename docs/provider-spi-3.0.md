@@ -4,6 +4,8 @@
 
 SPI version is `0x00030000`. This is an in-process provider contract, not a public application ABI or dynamic plugin ABI.
 
+SS-2 implementation status: the core registry and all three existing providers use SPI 3.0 for CLIENT behavior. Real providers advertise `ROLE_CLIENT` only; SERVER remains limited to core/mock contract validation until a later provider phase.
+
 ## Descriptor and capabilities
 
 Descriptors retain stable ID, informational name, metadata, static capabilities and vtable. Capabilities use the API 2.0 role-aware numeric values. Runtime-effective query may remove static claims but never invent unsupported behavior. Registration order is the deterministic AUTOMATIC order.
