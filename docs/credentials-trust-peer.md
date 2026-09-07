@@ -2,6 +2,8 @@
 
 # Credentials, trust, and peer identity
 
+> The API 2.0 development contract supersedes the client-centric configuration shape, not this published evidence. It follows PapinhoEngineering/ADR-0009 by separating Local Identity, Peer Authentication, Peer Trust and Expected Peer Name; see [api-2.0.md](api-2.0.md).
+
 Phase 4 materializes the backend-neutral identity objects without starting the public TLS runtime from Phase 5.
 
 `pst_credentials` answers "who am I?". Its implemented source is one X.509 leaf certificate DER plus its unencrypted PKCS#8 DER private key, supplied from memory with explicit sizes. PST copies both inputs, never logs them, and overwrites the key copy before release. Password formats, file sources, hardware and backend-native references are deferred. No test private key is stored in Git.

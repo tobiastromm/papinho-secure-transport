@@ -2,6 +2,8 @@
 
 # Provider SPI 2.4 contract
 
+> Historical baseline: this document describes the published v0.4.0 SPI 2.4 contract. The breaking role-aware development contract is frozen in [provider-spi-3.0.md](provider-spi-3.0.md).
+
 This document freezes the in-process contract between the PapinhoSecureTransport core and independently implemented TLS providers. It is normative for SPI 2.4. It is not a public application API, a DLL plugin ABI, or a claim that the same SPI can support DTLS, QUIC, Noise, or other future transports unchanged.
 
 ## Boundaries and compatibility

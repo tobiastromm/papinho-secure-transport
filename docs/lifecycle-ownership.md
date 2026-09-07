@@ -2,6 +2,8 @@
 
 # Lifecycle and Ownership
 
+> The published 0.4.0 evidence below remains historical. The API 2.0 CLIENT/SERVER development lifecycle is frozen in [client-server-lifecycle.md](client-server-lifecycle.md): selection is per connection, listeners remain consumer-owned, and exactly-one-close after transport acceptance is unchanged.
+
 ## Status
 
 Phase 7.E Lifecycle / Ownership Hardening is complete. The focused deterministic matrix, real NSS lifecycle revalidation, and formal closure audit satisfy every mandatory 7.E contract. No public API, ABI, SPI, or production behavior changed.

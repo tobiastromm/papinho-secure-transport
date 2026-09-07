@@ -2,6 +2,12 @@
 
 # Roadmap
 
+- Server-side evolution on `feature/server-side`:
+  - SS-0 CLIENT/SERVER architecture audit: complete.
+  - SS-0A PST-local ADR baseline: complete.
+  - SS-1 API 2.0 / SPI 3.0 contract freeze: complete; x86/x64 mock selection and ABI contract pass; existing CLIENT implementation awaits the SS-2 core/SPI migration; provider SERVER implementations not started.
+  - SS-2 core implementation and CLIENT provider SPI migration: next.
+
 - Phase 0 - Scope, Provenance & Architecture: complete
   - 0.A Legacy NSS Asset Ingestion & Provenance: complete
   - 0.A-R1 RNG fail-closed A/B revalidation addendum: complete

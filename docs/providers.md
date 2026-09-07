@@ -2,6 +2,8 @@
 
 # Providers and selection
 
+> SPI 3.0 development makes CLIENT and SERVER independent factual capabilities and selects an eligible provider per connection. Existing providers remain CLIENT-only until their dedicated SERVER implementation and validation phases.
+
 A provider is the engine adapter that implements PST's common secure-transport contract.
 
 | Capability | RetroZilla NSS | Schannel | OpenSSL 3.5.8 |

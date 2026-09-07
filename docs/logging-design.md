@@ -2,6 +2,8 @@
 
 # Consumer-controlled logging and event sink design
 
+> API 2.0 extends structured events with connection role and normalized peer-auth/policy facts. Delivery remains synchronous and consumer-controlled; secrets, payload, native handles and arbitrary provider text remain excluded. See [api-2.0.md](api-2.0.md).
+
 Status: Phase 7.A complete. PST exposes a closure-audited limited structured, consumer-controlled callback ABI without a worker, queue, file, console output, PAL dependency, or wire-visible behavior.
 
 ## Decision

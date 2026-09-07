@@ -2,6 +2,8 @@
 
 # Scope and architectural boundaries
 
+The CLIENT/SERVER development line is governed by the accepted PST-local ADRs in `docs/adr/` and the frozen contracts in `api-2.0.md`, `provider-spi-3.0.md`, and `client-server-lifecycle.md`. Provider SERVER implementations are not yet present.
+
 Phase 4 materializes immutable credentials/trust, frozen identity configuration, and an owned peer snapshot without changing this boundary. No NSS, NSPR, WinSock, certificate-parser, or crypto type enters the public API.
 
 Phase 5 adds the public runtime and lifecycle core. The generic transport remains opaque; the Win32 adapter is a separate header and implementation. Backend selection is finalized before connection state exists, so no authentication failure can trigger provider fallback.

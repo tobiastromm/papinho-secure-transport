@@ -2,6 +2,8 @@
 
 # Readiness and progress audit
 
+> API 2.0/SPI 3.0 preserve this role-neutral contract for both CLIENT and SERVER. No readiness sequence implies connection role, and provider selection is fixed before handshake progress begins.
+
 Phase 7.C is complete. This document records its historical audit baseline and closure
 evidence; no readiness or progress behavior was changed there. The frozen release
 baseline is public API 1.3.0, library 0.4.0 and SPI 2.4.

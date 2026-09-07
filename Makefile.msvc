@@ -72,6 +72,10 @@ test: all
 	$(BUILD)\test_schannel_buffers.exe
 clean:
 	@if exist $(BUILD) rmdir /s /q $(BUILD)
+$(BUILD)\test_api2_spi3_contract.exe: dirs tests\test_api2_spi3_contract.c
+	$(CC) $(CFLAGS) /Fe$@ tests\test_api2_spi3_contract.c $(LDFLAGS)
+ss1-contract: $(BUILD)\test_api2_spi3_contract.exe
+	$(BUILD)\test_api2_spi3_contract.exe
 $(BUILD)\test_public_builtin_bootstrap.obj: tests\test_public_builtin_bootstrap.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_public_builtin_bootstrap.exe: $(BUILD)\test_public_builtin_bootstrap.obj $(PSTLIB)

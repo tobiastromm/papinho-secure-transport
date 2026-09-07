@@ -2,6 +2,8 @@
 
 # Error and diagnostic model hardening
 
+> API 2.0 adds structured role and normalized reasons for peer-certificate absence/invalidity/untrusted status, peer-name mismatch, ALPN mismatch and TLS-policy mismatch. Text parsing and native error domains do not become the primary contract.
+
 Status: Phase 7.A complete. The public diagnostic value and consumer-controlled event sink are hardened, structurally redacted, and regression-tested. TLS behavior and remote-visible behavior are unchanged, and the internal SPI remains 2.3.
 
 ## Policy

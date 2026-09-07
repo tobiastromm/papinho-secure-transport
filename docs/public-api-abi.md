@@ -2,6 +2,8 @@
 
 # Public API and ABI baseline
 
+> Historical baseline: this document describes the published v0.4.0 API 1.3 ABI. The breaking CLIENT/SERVER development contract is frozen in [api-2.0.md](api-2.0.md); migration is documented in [api-1.3-to-2.0-migration.md](api-1.3-to-2.0-migration.md).
+
 Status: **Phase 9.B and the public-bootstrap addendum complete**. This document freezes the additive public API/ABI baseline at API 1.3.0 and library 0.4.0. SPI 2.4 remains internal and frozen by Phase 9.C.
 
 ## Public-header boundary
