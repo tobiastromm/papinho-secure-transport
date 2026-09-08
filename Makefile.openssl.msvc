@@ -87,7 +87,7 @@ $(BUILD)\pst_backend_schannel.obj: src\backends\schannel\pst_backend_schannel.c
 $(BUILD)\test_win32_provider_coexistence.obj: tests\test_win32_provider_coexistence.c
 	$(CC) $(OSSL_CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_win32_provider_coexistence.exe: $(BUILD)\test_win32_provider_coexistence.obj $(BUILD)\pst_backend_schannel.obj $(BUILD)\pst_backend_openssl.obj $(OSSL_SYSTEM_TRUST) $(PSTLIB)
-	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib secur32.lib crypt32.lib ncrypt.lib
+	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib secur32.lib crypt32.lib ncrypt.lib bcrypt.lib
 
 $(BUILD)\test_openssl_system_trust_win32.obj: tests\test_openssl_system_trust_win32.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**

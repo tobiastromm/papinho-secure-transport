@@ -10,7 +10,7 @@
   - SS-3 OpenSSL SERVER implementation and closure validation: complete; TLS 1.2/1.3, local identity, peer-certificate modes, server-preference ALPN, readiness, I/O, strict truncation, diagnostics/logging, ownership, repetition, NSS/Schannel clients and Combined selection pass. Schannel and NSS SERVER remain unstarted.
   - SS-3A role-scoped capability eligibility: complete; aggregate discovery plus explicit CLIENT/SERVER masks prevent unsupported role/capability cross-products before binding.
   - SS-3B OpenSSL SERVER Windows SYSTEM_TRUST: complete; role-aware Windows chain evaluation uses client-auth EKU for SERVER, preserves CLIENT hostname semantics, and passes TLS 1.2/1.3 plus negative authentication gates. OpenSSL SERVER peer-name verification remains unsupported; Schannel and NSS SERVER remain unstarted.
-  - SS-4 Schannel SERVER implementation: next; not started.
+  - SS-4 Schannel SERVER implementation: complete; real TLS 1.2, CUSTOM/SYSTEM trust with clientAuth, optional/required/disabled peer certificates, identity-chain delivery, peer info, nonblocking I/O, reciprocal shutdown, strict truncation, diagnostics/logging, cross-provider clients, Combined selection and bounded repetition pass. TLS 1.3 SERVER was not supported by the validated Windows environment. Complete PST SERVER ALPN semantics are not advertised by Schannel; ALPN-requiring selection skips it before binding. RetroZilla NSS SERVER remains unimplemented.
 
 - Phase 0 - Scope, Provenance & Architecture: complete
   - 0.A Legacy NSS Asset Ingestion & Provenance: complete

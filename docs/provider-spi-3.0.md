@@ -4,7 +4,7 @@
 
 SPI version is `0x00030000`. This is an in-process provider contract, not a public application ABI or dynamic plugin ABI.
 
-SS-2 implementation baseline: the core registry and all three existing providers use SPI 3.0 for CLIENT behavior. SS-3 subsequently implemented and validated `ROLE_SERVER` only in OpenSSL. Schannel and RetroZilla NSS remain CLIENT-only and do not advertise `ROLE_SERVER`.
+SS-2 implementation baseline: the core registry and all three existing providers use SPI 3.0 for CLIENT behavior. SS-3 implemented and validated `ROLE_SERVER` in OpenSSL. SS-4 implemented a capability-limited Schannel TLS 1.2 SERVER; its role mask deliberately excludes TLS 1.3 on the validated environment, `ALPN_SERVER`, and SERVER peer-name verification. RetroZilla NSS remains CLIENT-only and does not advertise `ROLE_SERVER`.
 
 ## Descriptor and capabilities
 

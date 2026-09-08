@@ -114,10 +114,10 @@ $(BUILD)\test_public_builtin_bootstrap.exe: $(BUILD)\test_public_builtin_bootstr
 $(BUILD)\test_public_combined_selection.obj: tests\test_public_combined_selection.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_public_combined_selection.exe: $(BUILD)\test_public_combined_selection.obj $(PSTLIB)
-	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib secur32.lib crypt32.lib ncrypt.lib
+	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib secur32.lib crypt32.lib ncrypt.lib bcrypt.lib
 $(BUILD)\test_openssl_server_integration.obj: tests\test_openssl_server_integration.c
 	$(CC) $(OSSL_CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_openssl_server_integration.exe: $(BUILD)\test_openssl_server_integration.obj $(PSTLIB)
-	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib secur32.lib crypt32.lib ncrypt.lib
+	$(CC) /nologo /Fe$@ $** $(LDFLAGS) /LIBPATH:$(OPENSSL_LIB) libssl.lib libcrypto.lib ws2_32.lib secur32.lib crypt32.lib ncrypt.lib bcrypt.lib
 combined-test: all
 	$(BUILD)\test_public_combined_selection.exe

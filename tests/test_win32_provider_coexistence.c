@@ -10,10 +10,10 @@ int main(void)
  PST_RUNTIME_OPTIONS options;PST_RUNTIME_INFO runtime_info;PST_PROVIDER_INFO first,second;
  pst_runtime *runtime=NULL;const PST_BACKEND_DESCRIPTOR *schannel,*openssl;
  schannel=pst_backend_schannel_descriptor();openssl=pst_backend_openssl_descriptor();
- CHECK(schannel&&openssl,1);CHECK(!(schannel->capabilities&PST_CAP_ROLE_SERVER)&&(openssl->capabilities&PST_CAP_ROLE_SERVER),2);
+ CHECK(schannel&&openssl,1);CHECK((schannel->capabilities&PST_CAP_ROLE_SERVER)&&(openssl->capabilities&PST_CAP_ROLE_SERVER),2);
  CHECK((schannel->capabilities&(PST_CAP_TLS_1_2|PST_CAP_SYSTEM_TRUST|PST_CAP_PEER_NAME_VERIFY))==(PST_CAP_TLS_1_2|PST_CAP_SYSTEM_TRUST|PST_CAP_PEER_NAME_VERIFY),3);
  CHECK(!(schannel->capabilities&PST_CAP_TLS_1_3)&&(openssl->capabilities&PST_CAP_TLS_1_3),4);
- CHECK(schannel->client_capabilities==schannel->capabilities&&schannel->server_capabilities==0UL,12);
+ CHECK((schannel->client_capabilities&PST_CAP_ROLE_CLIENT)&&(schannel->server_capabilities&PST_CAP_ROLE_SERVER)&&!(schannel->server_capabilities&(PST_CAP_TLS_1_3|PST_CAP_ALPN_SERVER|PST_CAP_PEER_NAME_VERIFY)),12);
  CHECK((openssl->client_capabilities&PST_CAP_SYSTEM_TRUST)&&(openssl->server_capabilities&PST_CAP_SYSTEM_TRUST)&&(openssl->server_capabilities&PST_CAP_CUSTOM_TRUST)&&!(openssl->server_capabilities&PST_CAP_PEER_NAME_VERIFY),13);
  CHECK(pst_backend_schannel_register()==PST_RESULT_OK&&pst_backend_openssl_register()==PST_RESULT_OK,5);
  memset(&options,0,sizeof(options));options.struct_size=sizeof(options);options.api_version=PST_API_VERSION;
@@ -26,7 +26,7 @@ int main(void)
  CHECK(pst_runtime_get_provider_info(runtime,1,&second)==PST_RESULT_OK&&!strcmp(second.provider_id,"openssl")&&!second.initialized,9);
  CHECK(pst_runtime_get_provider_info(runtime,2,&second)==PST_RESULT_INVALID_ARGUMENT,10);
  CHECK((first.capabilities&PST_CAP_TLS_1_2)&&!(first.capabilities&PST_CAP_TLS_1_3)&&(second.capabilities&PST_CAP_TLS_1_2)&&(second.capabilities&PST_CAP_TLS_1_3),11);
- CHECK(first.client_capabilities==first.capabilities&&first.server_capabilities==0UL&&(second.client_capabilities&PST_CAP_SYSTEM_TRUST)&&(second.server_capabilities&PST_CAP_SYSTEM_TRUST)&&!(second.server_capabilities&PST_CAP_PEER_NAME_VERIFY),14);
+ CHECK((first.client_capabilities&PST_CAP_ROLE_CLIENT)&&(first.server_capabilities&PST_CAP_ROLE_SERVER)&&!(first.server_capabilities&(PST_CAP_TLS_1_3|PST_CAP_ALPN_SERVER|PST_CAP_PEER_NAME_VERIFY))&&(second.client_capabilities&PST_CAP_SYSTEM_TRUST)&&(second.server_capabilities&PST_CAP_SYSTEM_TRUST)&&!(second.server_capabilities&PST_CAP_PEER_NAME_VERIFY),14);
  pst_runtime_release(runtime);pst_backend_registry_reset();
  printf("SAME_PROCESS SCHANNEL=REGISTERED OPENSSL=REGISTERED REGISTRY_ORDER=schannel,openssl LAZY_UNINITIALIZED=PASS INDEPENDENT_RELEASE=PASS\n");
  printf("ELIGIBILITY TLS12_SYSTEM_AUTO=schannel TLS13_SYSTEM_AUTO=openssl EXACT_OPENSSL_TLS13_SYSTEM=ELIGIBLE EXACT_SCHANNEL_TLS13_SYSTEM=UNSUPPORTED ORDERED_OPENSSL_FIRST_TLS12_SYSTEM=openssl\n");

@@ -130,4 +130,4 @@ Historical OSSL-B checkpoint: Phase 8 was complete. OSSL-A froze OpenSSL 3.5.8 L
 
 ## Server-side evolution
 
-SS-3 completes the first real SERVER implementation in OpenSSL under API 2.0/SPI 3.0. Combined selection proves OpenSSL as the sole SERVER-eligible built-in: EXACT OpenSSL, ORDERED `[schannel,openssl]`, and AUTOMATIC succeed; EXACT Schannel is unsupported; post-binding OpenSSL failure is terminal. Schannel SERVER is SS-4 work and RetroZilla NSS SERVER remains unimplemented.
+SS-3 completed the first real SERVER implementation in OpenSSL under API 2.0/SPI 3.0. SS-4 adds a factual Schannel TLS 1.2 SERVER. Its SERVER mask includes role, TLS 1.2, local identity, peer-certificate required/optional authentication, custom/system trust, peer info, nonblocking transport and backend wait. It excludes TLS 1.3 on the validated environment, complete `ALPN_SERVER`, and SERVER peer-name verification. Combined EXACT, ORDERED and AUTOMATIC selection was exercised with both real SERVER providers; ALPN requirements filter Schannel before binding, and a terminal failure after Schannel binding does not fall back. RetroZilla NSS SERVER remains unimplemented.

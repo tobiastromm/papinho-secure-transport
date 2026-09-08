@@ -44,4 +44,4 @@ windows-x64-msvc-schannel-openssl-3.5.8
 
 ## 0.5.0 development SERVER status
 
-OpenSSL SERVER is implemented and validated on the existing modern x64 target with TLS 1.2/1.3. Schannel SERVER and RetroZilla NSS SERVER are not implemented and their providers do not advertise `ROLE_SERVER`. This development status does not alter the frozen 0.4.0 release target claims above.
+OpenSSL SERVER is implemented and validated on the existing modern x64 target with TLS 1.2/1.3. Schannel SERVER is implemented and validated there for TLS 1.2; TLS 1.3 SERVER and complete PST SERVER ALPN remain unadvertised factual limitations of the validated environment/provider behavior. RetroZilla NSS SERVER is not implemented and does not advertise `ROLE_SERVER`. This development status does not alter the frozen 0.4.0 release target claims above.
