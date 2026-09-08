@@ -12,7 +12,7 @@ OSSL_CFLAGS=$(CFLAGS) /I$(OPENSSL_INCLUDE)
 CORE=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_diagnostic.obj $(BUILD)\pst_log.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj $(BUILD)\pst_transport_win32.obj $(BUILD)\pst_builtin_manifest.obj $(BUILD)\pst_backend_openssl.obj $(OSSL_SYSTEM_TRUST)
 OSSL_SYSTEM_TRUST=$(BUILD)\pst_openssl_system_trust_win32.obj
 PSTLIB=$(BUILD)\papinho_secure_transport.lib
-all: dirs $(PSTLIB) $(BUILD)\test_public_header.exe $(BUILD)\test_public_builtin_bootstrap.exe $(BUILD)\test_backend_openssl.exe $(BUILD)\test_openssl_runtime_integration.exe $(BUILD)\test_openssl_server_integration.exe $(BUILD)\test_openssl_server_validation.exe $(BUILD)\test_openssl_identity_integration.exe $(BUILD)\test_openssl_runtime_isolation.exe $(BUILD)\test_win32_provider_coexistence.exe $(BUILD)\test_openssl_system_trust_win32.exe $(BUILD)\libcrypto-3-x64.dll $(BUILD)\libssl-3-x64.dll
+all: dirs $(PSTLIB) $(BUILD)\test_public_header.exe $(BUILD)\test_public_builtin_bootstrap.exe $(BUILD)\test_backend_openssl.exe $(BUILD)\test_openssl_runtime_integration.exe $(BUILD)\test_openssl_server_integration.exe $(BUILD)\test_openssl_server_validation.exe $(BUILD)\test_openssl_identity_integration.exe $(BUILD)\test_openssl_runtime_isolation.exe $(BUILD)\test_win32_provider_coexistence.exe $(BUILD)\test_openssl_system_trust_win32.exe $(BUILD)\test_security_lifecycle_negative.exe $(BUILD)\libcrypto-3-x64.dll $(BUILD)\libssl-3-x64.dll
 
 dirs:
 	@if not exist build mkdir build
@@ -93,6 +93,10 @@ $(BUILD)\test_openssl_system_trust_win32.obj: tests\test_openssl_system_trust_wi
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_openssl_system_trust_win32.exe: $(BUILD)\test_openssl_system_trust_win32.obj $(OSSL_SYSTEM_TRUST)
 	$(CC) /nologo /Fe$@ $** $(LDFLAGS) crypt32.lib
+$(BUILD)\test_security_lifecycle_negative.obj: tests\test_security_lifecycle_negative.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_security_lifecycle_negative.exe: $(BUILD)\test_security_lifecycle_negative.obj $(PSTLIB)
+	$(CC) /nologo /Fe$@ $** $(LDFLAGS)
 
 $(BUILD)\libcrypto-3-x64.dll: $(OPENSSL_RUNTIME)\libcrypto-3-x64.dll
 	copy /y $** $@ >nul
@@ -112,6 +116,7 @@ test: all
 	$(BUILD)\test_openssl_server_validation.exe build\fixtures\interoperability-pki\server.der build\fixtures\interoperability-pki\intermediate.der build\fixtures\interoperability-pki\server.pk8 build\fixtures\interoperability-pki\wrong-client.pk8
 	$(BUILD)\test_win32_provider_coexistence.exe
 	$(BUILD)\test_openssl_system_trust_win32.exe build\fixtures\interoperability-pki\client.der build\fixtures\interoperability-pki\intermediate.der
+	$(BUILD)\test_security_lifecycle_negative.exe
 
 clean:
 	@if exist $(BUILD) rmdir /s /q $(BUILD)
