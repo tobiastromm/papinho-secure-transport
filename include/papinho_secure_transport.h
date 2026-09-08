@@ -178,7 +178,7 @@ typedef struct PST_TLS_POLICY { pst_u32 struct_size,api_version,minimum_version,
 typedef struct PST_CONNECTION_CONFIG { pst_u32 struct_size,api_version,role; PST_PROVIDER_SELECTION provider_selection; PST_LOCAL_IDENTITY local_identity; PST_PEER_AUTH_CONFIG peer_authentication; PST_TLS_POLICY tls; PST_ALPN_CONFIG alpn; } PST_CONNECTION_CONFIG;
 typedef struct PST_RUNTIME_OPTIONS { pst_u32 struct_size,api_version; } PST_RUNTIME_OPTIONS;
 typedef struct PST_RUNTIME_INFO { pst_u32 struct_size,api_version; pst_size provider_count; } PST_RUNTIME_INFO;
-typedef struct PST_PROVIDER_INFO { pst_u32 struct_size,api_version,available,initialized,capabilities; char provider_id[PST_DIAGNOSTIC_BACKEND_ID_CAPACITY]; } PST_PROVIDER_INFO;
+typedef struct PST_PROVIDER_INFO { pst_u32 struct_size,api_version,available,initialized,capabilities; char provider_id[PST_DIAGNOSTIC_BACKEND_ID_CAPACITY]; pst_u32 client_capabilities,server_capabilities; } PST_PROVIDER_INFO;
 typedef struct PST_PEER_INFO_SUMMARY { pst_u32 struct_size,api_version,local_role,certificate_present,chain_validated,peer_name_validated,peer_authenticated,tls_version,cipher_suite,alpn_available,session_resumed,early_data_accepted; char provider_id[PST_DIAGNOSTIC_BACKEND_ID_CAPACITY]; pst_u8 certificate_sha256[32]; pst_size certificate_sha256_size,leaf_der_size; } PST_PEER_INFO_SUMMARY;
 typedef struct PST_IO_RESULT { pst_size bytes_transferred; pst_u32 operation,close_kind; PST_RESULT error; } PST_IO_RESULT;
 typedef struct PST_WAIT_RESULT { pst_u32 ready_interest,timed_out; } PST_WAIT_RESULT;

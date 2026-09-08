@@ -4,7 +4,7 @@ title: Taxonomia de capabilities de provider consciente de role
 status: accepted
 decision-date: 2026-09-07
 last-revised: 2026-09-07
-revision: 1
+revision: 2
 scope: project
 decision-makers:
   - Tobias Tromm
@@ -77,6 +77,8 @@ Os nomes públicos exatos serão refinados na API 2.0/SPI 3.0. `CLIENT_AUTH` nã
 
 Uma bitmask compacta é aceitável enquanto suficiente, mas 32 bits são armazenamento, não arquitetura semântica. Não existem implicações entre capabilities salvo definição explícita.
 
+Cada descriptor expõe uma máscara agregada de descoberta e máscaras separadas para CLIENT e SERVER. A agregada deve ser exatamente a união das máscaras por role e não representa o produto cartesiano entre roles e mecanismos. A seleção compara todos os requisitos da configuração congelada somente com a máscara do role solicitado, antes do binding. A mesma regra vale para EXACT, ORDERED e AUTOMATIC.
+
 ## Justificativa
 
 Capabilities são claims de comportamento PST comprovado, não inventário de símbolos do backend. Separar role e mecanismos permite seleção fail-closed e preserva diferenças reais entre OpenSSL, Schannel e RetroZilla NSS.
@@ -108,6 +110,8 @@ Capabilities são claims de comportamento PST comprovado, não inventário de s�
 6. Provider selection usa capabilities factuais e requisitos da conexão.
 7. Nenhuma implication é presumida sem contrato explícito.
 8. Terminologia deve seguir PapinhoEngineering/ADR-0009.
+9. A presença de duas capabilities na máscara agregada não prova que sua combinação seja suportada no mesmo role.
+10. A elegibilidade usa a máscara específica do role antes do binding e nunca depende de checks por nome de provider no core.
 
 ## Impacto
 
@@ -159,3 +163,4 @@ Não se aplica atualmente.
 | Revisão | Data | Descrição |
 |---:|---|---|
 | 1 | 2026-09-07 | Registro inicial da taxonomia de capabilities consciente de role. |
+| 2 | 2026-09-07 | Substitui a interpretação plana por máscaras CLIENT/SERVER explícitas; a máscara agregada passa a ser somente a união para descoberta. |

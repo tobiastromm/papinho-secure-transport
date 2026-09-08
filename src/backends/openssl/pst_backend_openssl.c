@@ -16,7 +16,9 @@
 #include "pst_identity_internal.h"
 #include "pst_transport_internal.h"
 #include <limits.h>
-#define OSSL_CAPABILITIES (PST_BACKEND_CAP_TLS_1_2|PST_BACKEND_CAP_TLS_1_3|PST_BACKEND_CAP_ROLE_CLIENT|PST_BACKEND_CAP_ROLE_SERVER|PST_BACKEND_CAP_LOCAL_IDENTITY|PST_BACKEND_CAP_PEER_CERT_AUTH|PST_BACKEND_CAP_PEER_CERT_OPTIONAL|PST_BACKEND_CAP_CUSTOM_TRUST|PST_BACKEND_CAP_SYSTEM_TRUST|PST_BACKEND_CAP_PEER_NAME_VERIFY|PST_BACKEND_CAP_ALPN_CLIENT|PST_BACKEND_CAP_ALPN_SERVER|PST_BACKEND_CAP_PEER_INFO|PST_BACKEND_CAP_NONBLOCKING|PST_BACKEND_CAP_BACKEND_WAIT)
+#define OSSL_CLIENT_CAPABILITIES (PST_BACKEND_CAP_TLS_1_2|PST_BACKEND_CAP_TLS_1_3|PST_BACKEND_CAP_ROLE_CLIENT|PST_BACKEND_CAP_LOCAL_IDENTITY|PST_BACKEND_CAP_PEER_CERT_AUTH|PST_BACKEND_CAP_CUSTOM_TRUST|PST_BACKEND_CAP_SYSTEM_TRUST|PST_BACKEND_CAP_PEER_NAME_VERIFY|PST_BACKEND_CAP_ALPN_CLIENT|PST_BACKEND_CAP_PEER_INFO|PST_BACKEND_CAP_NONBLOCKING|PST_BACKEND_CAP_BACKEND_WAIT)
+#define OSSL_SERVER_CAPABILITIES (PST_BACKEND_CAP_TLS_1_2|PST_BACKEND_CAP_TLS_1_3|PST_BACKEND_CAP_ROLE_SERVER|PST_BACKEND_CAP_LOCAL_IDENTITY|PST_BACKEND_CAP_PEER_CERT_AUTH|PST_BACKEND_CAP_PEER_CERT_OPTIONAL|PST_BACKEND_CAP_CUSTOM_TRUST|PST_BACKEND_CAP_ALPN_SERVER|PST_BACKEND_CAP_PEER_INFO|PST_BACKEND_CAP_NONBLOCKING|PST_BACKEND_CAP_BACKEND_WAIT)
+#define OSSL_CAPABILITIES (OSSL_CLIENT_CAPABILITIES|OSSL_SERVER_CAPABILITIES)
 #include <stdlib.h>
 #include <string.h>
 
@@ -348,7 +350,7 @@ static PST_RESULT ossl_peer_role(void *state,void **out)
 
 static const PST_BACKEND_VTABLE ossl_vtable={sizeof(PST_BACKEND_VTABLE),PST_BACKEND_SPI_VERSION,ossl_initialize,ossl_shutdown,ossl_runtime_create,ossl_runtime_destroy,ossl_query,ossl_validate,ossl_connection_create_role,ossl_connection_destroy,ossl_attach,ossl_handshake,ossl_interest,ossl_wait,ossl_read,ossl_write,ossl_close,ossl_peer_role,ossl_peer_destroy,ossl_alpn,ossl_diagnostic};
 static const PST_BACKEND_METADATA ossl_metadata={sizeof(PST_BACKEND_METADATA),PST_BACKEND_METADATA_VERSION,{PST_BACKEND_VERSION_AVAILABLE,0UL,3UL,0UL,"pst-openssl","identity"},1UL,{{PST_BACKEND_VERSION_AVAILABLE,3UL,5UL,8UL,"OpenSSL","LTS"},{0}}};
-static const PST_BACKEND_DESCRIPTOR ossl_descriptor={sizeof(PST_BACKEND_DESCRIPTOR),PST_BACKEND_SPI_VERSION,"openssl","OpenSSL 3.5.8",OSSL_CAPABILITIES,&ossl_vtable,&ossl_metadata};
+static const PST_BACKEND_DESCRIPTOR ossl_descriptor={sizeof(PST_BACKEND_DESCRIPTOR),PST_BACKEND_SPI_VERSION,"openssl","OpenSSL 3.5.8",OSSL_CAPABILITIES,&ossl_vtable,&ossl_metadata,OSSL_CLIENT_CAPABILITIES,OSSL_SERVER_CAPABILITIES};
 PST_RESULT pst_backend_openssl_connection_info(void *v,pst_u32 *tls_version,pst_u32 *cipher_suite){ossl_connection *c=(ossl_connection*)v;if(!c||!tls_version||!cipher_suite)return PST_RESULT_INVALID_ARGUMENT;if(!c->established)return PST_RESULT_INVALID_STATE;*tls_version=c->negotiated_version;*cipher_suite=c->cipher_suite;return PST_RESULT_OK;}
 const PST_BACKEND_DESCRIPTOR *pst_backend_openssl_descriptor(void){return &ossl_descriptor;}
 PST_RESULT pst_backend_openssl_register(void){return pst_backend_register(&ossl_descriptor);}

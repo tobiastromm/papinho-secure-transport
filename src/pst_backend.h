@@ -51,11 +51,11 @@ typedef struct PST_BACKEND_VTABLE {
 #define PST_BACKEND_VERSION_AVAILABLE 1UL
 typedef struct PST_BACKEND_COMPONENT_VERSION { pst_u32 flags,major,minor,patch; char name[PST_BACKEND_METADATA_NAME_CAPACITY]; char qualifier[PST_BACKEND_METADATA_QUALIFIER_CAPACITY]; } PST_BACKEND_COMPONENT_VERSION;
 typedef struct PST_BACKEND_METADATA { pst_u32 struct_size,version; PST_BACKEND_COMPONENT_VERSION implementation; pst_u32 component_count; PST_BACKEND_COMPONENT_VERSION components[PST_BACKEND_METADATA_COMPONENT_CAPACITY]; } PST_BACKEND_METADATA;
-typedef struct PST_BACKEND_DESCRIPTOR { pst_u32 struct_size,spi_version; const char *id,*name; pst_u32 capabilities; const PST_BACKEND_VTABLE *vtable; const PST_BACKEND_METADATA *metadata; } PST_BACKEND_DESCRIPTOR;
+typedef struct PST_BACKEND_DESCRIPTOR { pst_u32 struct_size,spi_version; const char *id,*name; pst_u32 capabilities; const PST_BACKEND_VTABLE *vtable; const PST_BACKEND_METADATA *metadata; pst_u32 client_capabilities,server_capabilities; } PST_BACKEND_DESCRIPTOR;
 #define PST_BACKEND_CONNECTION_OPTIONS_MIN_SIZE ((pst_u32)sizeof(PST_BACKEND_CONNECTION_OPTIONS))
 #define PST_BACKEND_METADATA_MIN_SIZE ((pst_u32)(offsetof(PST_BACKEND_METADATA,components)+sizeof(((PST_BACKEND_METADATA*)0)->components)))
 #define PST_BACKEND_VTABLE_MIN_SIZE ((pst_u32)(offsetof(PST_BACKEND_VTABLE,shutdown_step)+sizeof(((PST_BACKEND_VTABLE*)0)->shutdown_step)))
 #define PST_BACKEND_VTABLE_FIELD_SIZE(f) ((pst_u32)(offsetof(PST_BACKEND_VTABLE,f)+sizeof(((PST_BACKEND_VTABLE*)0)->f)))
-#define PST_BACKEND_DESCRIPTOR_MIN_SIZE ((pst_u32)(offsetof(PST_BACKEND_DESCRIPTOR,vtable)+sizeof(((PST_BACKEND_DESCRIPTOR*)0)->vtable)))
+#define PST_BACKEND_DESCRIPTOR_MIN_SIZE ((pst_u32)sizeof(PST_BACKEND_DESCRIPTOR))
 PST_RESULT pst_backend_validate(const PST_BACKEND_DESCRIPTOR *); PST_RESULT pst_backend_register(const PST_BACKEND_DESCRIPTOR *); PST_RESULT pst_backend_register_manifest(const PST_BACKEND_DESCRIPTOR *const *,pst_size); void pst_backend_registry_seal(void); int pst_backend_registry_is_sealed(void); void pst_backend_test_manifest_fail_after(pst_size); PST_RESULT pst_backend_unregister(const char *); const PST_BACKEND_DESCRIPTOR *pst_backend_find(const char *); const PST_BACKEND_DESCRIPTOR *pst_backend_find_by_index(pst_size); pst_size pst_backend_count(void); void pst_backend_registry_reset(void);
 #endif

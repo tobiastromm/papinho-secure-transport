@@ -7,7 +7,7 @@
 #include <string.h>
 typedef struct pst_runtime_provider {
  const PST_BACKEND_DESCRIPTOR *descriptor;void *backend_state,*runtime_state;
- pst_u32 capabilities,initialized,failed,initialization_order;
+ pst_u32 capabilities,client_capabilities,server_capabilities,initialized,failed,initialization_order;
 } pst_runtime_provider;
 struct pst_runtime { pst_runtime_provider providers[8];pst_size provider_count;pst_u32 initialized_count,connections,release_requested; pst_internal_diagnostic diagnostic; pst_log_state log; };
 struct pst_connection { pst_runtime *runtime;pst_runtime_provider *provider;pst_connection_config_snapshot *config;void *backend_state;pst_transport *transport;pst_u32 state,role,pending_io,pending_interest,last_wait_ready,suppressed_interest;int wait_observed; pst_internal_diagnostic diagnostic; };
@@ -39,6 +39,7 @@ static PST_RESULT runtime_provider_initialize(pst_runtime *r,pst_runtime_provide
  PST_RESULT x;if(p->initialized)return PST_RESULT_OK;if(p->failed)return PST_RESULT_UNAVAILABLE;
  x=p->descriptor->vtable->initialize(&p->backend_state);if(x!=PST_RESULT_OK)goto fail;
  x=p->descriptor->vtable->query_capabilities(p->backend_state,&p->capabilities);if(x!=PST_RESULT_OK)goto fail;
+ p->client_capabilities&=p->capabilities;p->server_capabilities&=p->capabilities;
  x=p->descriptor->vtable->runtime_create(p->backend_state,&p->runtime_state);if(x!=PST_RESULT_OK)goto fail;
  p->initialized=1;p->initialization_order=++r->initialized_count;return PST_RESULT_OK;
 fail:operation_backend(context,p->descriptor,p->backend_state,x,PST_DIAGNOSTIC_PHASE_BACKEND_INITIALIZE);if(p->runtime_state)p->descriptor->vtable->runtime_destroy(p->runtime_state);if(p->backend_state)p->descriptor->vtable->shutdown(p->backend_state);p->runtime_state=NULL;p->backend_state=NULL;p->failed=1;return x;
@@ -54,7 +55,7 @@ PST_RESULT pst_runtime_create_internal(const PST_RUNTIME_OPTIONS *o,pst_runtime 
     if(!version_ok(o->api_version)){operation_capture(context,PST_RESULT_INCOMPATIBLE_API,PST_DIAGNOSTIC_PHASE_RUNTIME_CREATE,NULL);return PST_RESULT_INCOMPATIBLE_API;}
     count=pst_backend_count();if(count>8)count=8;
     r=(pst_runtime*)calloc(1,sizeof(*r));if(!r){operation_capture(context,PST_RESULT_OUT_OF_MEMORY,PST_DIAGNOSTIC_PHASE_RUNTIME_CREATE,NULL);return PST_RESULT_OUT_OF_MEMORY;}
-    r->provider_count=count;for(i=0;i<count;i++){r->providers[i].descriptor=pst_backend_find_by_index(i);r->providers[i].capabilities=r->providers[i].descriptor->capabilities;}
+    r->provider_count=count;for(i=0;i<count;i++){r->providers[i].descriptor=pst_backend_find_by_index(i);r->providers[i].capabilities=r->providers[i].descriptor->capabilities;r->providers[i].client_capabilities=r->providers[i].descriptor->client_capabilities;r->providers[i].server_capabilities=r->providers[i].descriptor->server_capabilities;}
     pst_diagnostic_initialize(&r->diagnostic);if(context)pst_diagnostic_clear(&context->diagnostic);*out=r;return PST_RESULT_OK;
 }
 PST_RESULT PST_CALL pst_runtime_create_ex(const PST_RUNTIME_OPTIONS *o,pst_runtime **out,PST_DIAGNOSTIC_INFO *diagnostic)
@@ -87,13 +88,13 @@ PST_RESULT PST_CALL pst_runtime_copy_diagnostic(const pst_runtime *runtime,PST_D
 static void runtime_destroy(pst_runtime *r){pst_u32 order;for(order=r->initialized_count;order;order--){pst_size i;for(i=0;i<r->provider_count;i++)if(r->providers[i].initialized&&r->providers[i].initialization_order==order){r->providers[i].descriptor->vtable->runtime_destroy(r->providers[i].runtime_state);r->providers[i].descriptor->vtable->shutdown(r->providers[i].backend_state);}}free(r);}
 void PST_CALL pst_runtime_release(pst_runtime *r){if(!r)return;if(r->connections){r->release_requested=1;return;}runtime_destroy(r);}
 PST_RESULT PST_CALL pst_runtime_get_info(const pst_runtime *r,PST_RUNTIME_INFO *i){if(!i||i->struct_size<PST_RUNTIME_INFO_MIN_SIZE)return PST_RESULT_INVALID_ARGUMENT;if(!version_ok(i->api_version))return PST_RESULT_INCOMPATIBLE_API;i->provider_count=0;if(!r)return PST_RESULT_INVALID_ARGUMENT;i->provider_count=r->provider_count;return PST_RESULT_OK;}
-static PST_RESULT provider_info_fill(const pst_runtime_provider *p,PST_PROVIDER_INFO *i){pst_u32 size;if(!i||i->struct_size<PST_PROVIDER_INFO_MIN_SIZE)return PST_RESULT_INVALID_ARGUMENT;if(!version_ok(i->api_version))return PST_RESULT_INCOMPATIBLE_API;size=i->struct_size;memset(i,0,sizeof(*i));i->struct_size=size;i->api_version=PST_API_VERSION;if(!p)return PST_RESULT_INVALID_ARGUMENT;i->available=p->failed?0UL:1UL;i->initialized=p->initialized;i->capabilities=p->initialized?p->capabilities:p->descriptor->capabilities;strncpy(i->provider_id,p->descriptor->id,sizeof(i->provider_id)-1);return PST_RESULT_OK;}
+static PST_RESULT provider_info_fill(const pst_runtime_provider *p,PST_PROVIDER_INFO *i){pst_u32 size;if(!i||i->struct_size<PST_PROVIDER_INFO_MIN_SIZE)return PST_RESULT_INVALID_ARGUMENT;if(!version_ok(i->api_version))return PST_RESULT_INCOMPATIBLE_API;size=i->struct_size;memset(i,0,sizeof(*i));i->struct_size=size;i->api_version=PST_API_VERSION;if(!p)return PST_RESULT_INVALID_ARGUMENT;i->available=p->failed?0UL:1UL;i->initialized=p->initialized;i->capabilities=p->initialized?p->capabilities:p->descriptor->capabilities;i->client_capabilities=p->initialized?p->client_capabilities:p->descriptor->client_capabilities;i->server_capabilities=p->initialized?p->server_capabilities:p->descriptor->server_capabilities;strncpy(i->provider_id,p->descriptor->id,sizeof(i->provider_id)-1);return PST_RESULT_OK;}
 PST_RESULT PST_CALL pst_runtime_get_provider_info(const pst_runtime *r,pst_size index,PST_PROVIDER_INFO *i){if(!r)return PST_RESULT_INVALID_ARGUMENT;if(index>=r->provider_count)return PST_RESULT_INVALID_ARGUMENT;return provider_info_fill(&r->providers[index],i);}
 static pst_runtime_provider *selection_candidate(pst_runtime *r,const PST_PROVIDER_SELECTION *s,pst_size index)
 {if(s->mode==PST_BACKEND_SELECTION_EXACT)return index?NULL:runtime_provider_by_id(r,s->exact_provider_id);if(s->mode==PST_BACKEND_SELECTION_ORDERED)return index<s->ordered_provider_count?runtime_provider_by_id(r,s->ordered_provider_ids[index]):NULL;return index<r->provider_count?&r->providers[index]:NULL;}
 PST_RESULT pst_connection_create_internal(pst_runtime *r,const PST_CONNECTION_CONFIG *cfg,pst_connection **out,pst_internal_operation_context *context)
 {
-    pst_connection *c;pst_connection_config_snapshot *snapshot;const PST_CONNECTION_CONFIG *frozen;PST_BACKEND_CONNECTION_OPTIONS options;pst_runtime_provider *p=NULL;PST_RESULT x,last=PST_RESULT_UNSUPPORTED;pst_u32 req,tls;pst_size i,limit;
+    pst_connection *c;pst_connection_config_snapshot *snapshot;const PST_CONNECTION_CONFIG *frozen;PST_BACKEND_CONNECTION_OPTIONS options;pst_runtime_provider *p=NULL;PST_RESULT x,last=PST_RESULT_UNSUPPORTED;pst_u32 req,tls,role_caps;pst_size i,limit;
     pst_internal_operation_context_initialize(context);
     if(!out){operation_capture(context,PST_RESULT_INVALID_ARGUMENT,PST_DIAGNOSTIC_PHASE_CONNECTION_CREATE,NULL);return PST_RESULT_INVALID_ARGUMENT;}
     *out=NULL;
@@ -103,9 +104,11 @@ PST_RESULT pst_connection_create_internal(pst_runtime *r,const PST_CONNECTION_CO
     limit=frozen->provider_selection.mode==PST_BACKEND_SELECTION_EXACT?1:(frozen->provider_selection.mode==PST_BACKEND_SELECTION_ORDERED?frozen->provider_selection.ordered_provider_count:r->provider_count);
     for(i=0;i<limit;i++){
         p=selection_candidate(r,&frozen->provider_selection,i);if(!p){last=PST_RESULT_UNSUPPORTED;continue;}
-        if((req&~p->descriptor->capabilities)||(p->descriptor->capabilities&tls)==0UL){last=PST_RESULT_UNSUPPORTED;continue;}
+        role_caps=frozen->role==PST_CONNECTION_ROLE_CLIENT?p->descriptor->client_capabilities:p->descriptor->server_capabilities;
+        if((req&~role_caps)||(role_caps&tls)==0UL){last=PST_RESULT_UNSUPPORTED;continue;}
         x=runtime_provider_initialize(r,p,context);if(x!=PST_RESULT_OK){last=x;continue;}
-        if((req&~p->capabilities)||(p->capabilities&tls)==0UL){last=PST_RESULT_UNSUPPORTED;continue;}
+        role_caps=frozen->role==PST_CONNECTION_ROLE_CLIENT?p->client_capabilities:p->server_capabilities;
+        if((req&~role_caps)||(role_caps&tls)==0UL){last=PST_RESULT_UNSUPPORTED;continue;}
         x=p->descriptor->vtable->validate_requirements(p->runtime_state,req);if(x!=PST_RESULT_OK){operation_backend(context,p->descriptor,p->runtime_state,x,PST_DIAGNOSTIC_PHASE_CAPABILITY_VALIDATE);last=x;continue;}
         break;
     }

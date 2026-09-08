@@ -8,7 +8,7 @@ SS-2 implementation baseline: the core registry and all three existing providers
 
 ## Descriptor and capabilities
 
-Descriptors retain stable ID, informational name, metadata, static capabilities and vtable. Capabilities use the API 2.0 role-aware numeric values. Runtime-effective query may remove static claims but never invent unsupported behavior. Registration order is the deterministic AUTOMATIC order.
+Descriptors retain stable ID, informational name, metadata, an aggregate static capability mask, CLIENT and SERVER capability masks, and the vtable. The aggregate mask is exactly the union of the two role masks and exists for discovery; it does not assert every role/capability cross-product. Selection uses only the mask for the frozen connection role. Capabilities use the API 2.0 numeric values. Runtime-effective query may remove static claims but never invent unsupported behavior, and the effective result is intersected with both role masks. Registration order is the deterministic AUTOMATIC order.
 
 ## Runtime and connection
 
@@ -21,7 +21,7 @@ PST_RESULT (*connection_create)(
     void **out_connection_state);
 ```
 
-The provider must reject unsupported role/policy before publishing state. It may convert copied PST credentials/trust into native objects but retains no caller buffer and frees every native allocation in its own module. No provider-native type crosses the SPI.
+The core rejects requirements absent from the candidate's role-specific mask before binding. The provider must still reject unsupported role/policy before publishing state. It may convert copied PST credentials/trust into native objects but retains no caller buffer and frees every native allocation in its own module. No provider-native type crosses the SPI.
 
 ## Remaining operations
 

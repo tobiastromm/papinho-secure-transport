@@ -55,6 +55,24 @@ PST_RESULT pst_backend_validate(const PST_BACKEND_DESCRIPTOR *d)
     if ((d->capabilities & PST_BACKEND_CAP_EARLY_DATA) != 0UL &&
         (d->capabilities & PST_BACKEND_CAP_RESUMPTION) == 0UL)
         return PST_RESULT_INVALID_ARGUMENT;
+    if ((d->capabilities & ~PST_CAP_KNOWN_MASK) != 0UL ||
+        (d->client_capabilities | d->server_capabilities) != d->capabilities ||
+        (d->client_capabilities & PST_BACKEND_CAP_ROLE_SERVER) != 0UL ||
+        (d->server_capabilities & PST_BACKEND_CAP_ROLE_CLIENT) != 0UL ||
+        (d->client_capabilities != 0UL &&
+         (d->client_capabilities & PST_BACKEND_CAP_ROLE_CLIENT) == 0UL) ||
+        (d->server_capabilities != 0UL &&
+         (d->server_capabilities & PST_BACKEND_CAP_ROLE_SERVER) == 0UL) ||
+        (((d->capabilities & PST_BACKEND_CAP_ROLE_CLIENT) != 0UL) !=
+         ((d->client_capabilities & PST_BACKEND_CAP_ROLE_CLIENT) != 0UL)) ||
+        (((d->capabilities & PST_BACKEND_CAP_ROLE_SERVER) != 0UL) !=
+         ((d->server_capabilities & PST_BACKEND_CAP_ROLE_SERVER) != 0UL)))
+        return PST_RESULT_INVALID_ARGUMENT;
+    if (((d->client_capabilities & PST_BACKEND_CAP_EARLY_DATA) != 0UL &&
+         (d->client_capabilities & PST_BACKEND_CAP_RESUMPTION) == 0UL) ||
+        ((d->server_capabilities & PST_BACKEND_CAP_EARLY_DATA) != 0UL &&
+         (d->server_capabilities & PST_BACKEND_CAP_RESUMPTION) == 0UL))
+        return PST_RESULT_INVALID_ARGUMENT;
     if ((d->capabilities & PST_BACKEND_CAP_BACKEND_WAIT) != 0UL &&
         v->wait == NULL) return PST_RESULT_INVALID_ARGUMENT;
     if ((d->capabilities & PST_BACKEND_CAP_PEER_INFO) != 0UL &&

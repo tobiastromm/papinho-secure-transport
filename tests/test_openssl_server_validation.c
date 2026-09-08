@@ -113,14 +113,94 @@ static int expect_failure(pst_runtime *runtime, pst_credentials *credentials,
          strcmp(diagnostic.backend_id, "openssl") == 0);
 }
 
+static pst_trust *make_trust(pst_u32 kind, const unsigned char *anchor,
+                             pst_size anchor_size)
+{
+    PST_TRUST_SOURCE source;
+    PST_DER_ITEM item;
+    pst_trust *trust = NULL;
+    memset(&source, 0, sizeof(source));
+    source.struct_size = sizeof(source);
+    source.api_version = PST_API_VERSION;
+    source.kind = kind;
+    if (kind == PST_TRUST_SOURCE_CUSTOM_CA_DER) {
+        item.data = anchor;
+        item.size = anchor_size;
+        source.anchors = &item;
+        source.anchor_count = 1;
+    }
+    if (pst_trust_create(&source, &trust) != PST_RESULT_OK) return NULL;
+    return trust;
+}
+
+static int expect_role_result(pst_runtime *runtime,
+    pst_credentials *credentials, pst_trust *trust, pst_u32 mode,
+    const char *const *ordered, pst_size ordered_count, PST_RESULT expected,
+    int expect_backend)
+{
+    PST_CONNECTION_CONFIG config;
+    PST_DIAGNOSTIC_INFO diagnostic;
+    pst_connection *connection = NULL;
+    PST_RESULT result;
+    config_init(&config, credentials);
+    config.provider_selection.mode = mode;
+    config.provider_selection.exact_provider_id =
+        mode == PST_BACKEND_SELECTION_EXACT ? "openssl" : NULL;
+    config.provider_selection.ordered_provider_ids = ordered;
+    config.provider_selection.ordered_provider_count = ordered_count;
+    config.peer_authentication.certificate_mode =
+        PST_PEER_CERTIFICATE_REQUIRED;
+    config.peer_authentication.trust = trust;
+    memset(&diagnostic, 0, sizeof(diagnostic));
+    diagnostic.struct_size = sizeof(diagnostic);
+    diagnostic.api_version = PST_API_VERSION;
+    result = pst_connection_create_ex(runtime, &config, &connection,
+                                      &diagnostic);
+    printf("ROLE_SCOPE MODE=%lu RESULT=%ld CONNECTION=%d BACKEND=%s\n",
+           (unsigned long)mode, (long)result, connection != NULL,
+           diagnostic.backend_id);
+    if (connection != NULL) pst_connection_release(connection);
+    return result == expected && ((connection != NULL) == expect_backend) &&
+        (expect_backend || (diagnostic.valid &&
+         diagnostic.normalized_result == expected &&
+         diagnostic.backend_id[0] == '\0'));
+}
+
+static int expect_server_peer_name_rejected(pst_runtime *runtime,
+                                             pst_credentials *credentials,
+                                             pst_trust *trust)
+{
+    PST_CONNECTION_CONFIG config;
+    PST_DIAGNOSTIC_INFO diagnostic;
+    pst_connection *connection = NULL;
+    PST_RESULT result;
+    config_init(&config, credentials);
+    config.peer_authentication.certificate_mode =
+        PST_PEER_CERTIFICATE_REQUIRED;
+    config.peer_authentication.trust = trust;
+    config.peer_authentication.expected_peer_name = "client.example";
+    config.peer_authentication.expected_peer_name_size = 14;
+    memset(&diagnostic, 0, sizeof(diagnostic));
+    diagnostic.struct_size = sizeof(diagnostic);
+    diagnostic.api_version = PST_API_VERSION;
+    result = pst_connection_create_ex(runtime, &config, &connection,
+                                      &diagnostic);
+    return result == PST_RESULT_POLICY_VIOLATION && connection == NULL &&
+        diagnostic.valid && diagnostic.backend_id[0] == '\0';
+}
+
 int main(int argc, char **argv)
 {
     unsigned char malformed[4] = { 0x30, 0x02, 0x01, 0x00 };
     unsigned char *leaf, *intermediate, *key, *wrong_key;
     pst_size leaf_size, intermediate_size, key_size, wrong_key_size;
     pst_credentials *credentials;
+    pst_credentials *valid_credentials;
+    pst_trust *system_trust, *custom_trust;
     pst_runtime *runtime = NULL;
     PST_RUNTIME_OPTIONS options;
+    PST_PROVIDER_INFO provider_info;
+    const char *ordered[1] = { "openssl" };
     if (argc != 5) {
         fprintf(stderr, "usage: server.der intermediate.der server.pk8 wrong.pk8\n");
         return 2;
@@ -136,6 +216,34 @@ int main(int argc, char **argv)
     options.struct_size = sizeof(options);
     options.api_version = PST_API_VERSION;
     CHECK(pst_runtime_create(&options, &runtime) == PST_RESULT_OK);
+
+    valid_credentials = make_credentials(leaf, leaf_size, intermediate,
+                                         intermediate_size, key, key_size);
+    system_trust = make_trust(PST_TRUST_SOURCE_SYSTEM, NULL, 0);
+    custom_trust = make_trust(PST_TRUST_SOURCE_CUSTOM_CA_DER, intermediate,
+                              intermediate_size);
+    CHECK(valid_credentials != NULL && system_trust != NULL &&
+          custom_trust != NULL);
+    CHECK(expect_role_result(runtime, valid_credentials, system_trust,
+          PST_BACKEND_SELECTION_EXACT, NULL, 0, PST_RESULT_UNSUPPORTED, 0));
+    CHECK(expect_role_result(runtime, valid_credentials, system_trust,
+          PST_BACKEND_SELECTION_ORDERED, ordered, 1,
+          PST_RESULT_UNSUPPORTED, 0));
+    CHECK(expect_role_result(runtime, valid_credentials, system_trust,
+          PST_BACKEND_SELECTION_AUTOMATIC, NULL, 0,
+          PST_RESULT_UNSUPPORTED, 0));
+    CHECK(expect_server_peer_name_rejected(runtime, valid_credentials,
+                                           custom_trust));
+    memset(&provider_info, 0, sizeof(provider_info));
+    provider_info.struct_size = sizeof(provider_info);
+    provider_info.api_version = PST_API_VERSION;
+    CHECK(pst_runtime_get_provider_info(runtime, 0, &provider_info) ==
+          PST_RESULT_OK && !provider_info.initialized);
+    CHECK(expect_role_result(runtime, valid_credentials, custom_trust,
+          PST_BACKEND_SELECTION_EXACT, NULL, 0, PST_RESULT_OK, 1));
+    pst_trust_release(system_trust);
+    pst_trust_release(custom_trust);
+    pst_credentials_release(valid_credentials);
 
     CHECK(expect_failure(runtime, NULL, PST_RESULT_POLICY_VIOLATION));
     credentials = make_credentials(malformed, sizeof(malformed), NULL, 0,
@@ -166,6 +274,9 @@ int main(int argc, char **argv)
     free(key);
     free(wrong_key);
     printf("OPENSSL_SERVER_KEY_MATCH_VALIDATION=PASS\n");
+    printf("OPENSSL_ROLE_SCOPED_ELIGIBILITY=PASS EXACT=PASS ORDERED=PASS "
+           "AUTOMATIC=PASS PRE_BINDING=PASS SERVER_SYSTEM_TRUST=UNSUPPORTED "
+           "SERVER_CUSTOM_TRUST=ELIGIBLE SERVER_PEER_NAME=POLICY_REJECTED\n");
     printf("OPENSSL_SERVER_IDENTITY_NEGATIVE_MATRIX=PASS "
            "MISSING=PASS MALFORMED_CERT=PASS MALFORMED_KEY=PASS "
            "KEY_MISMATCH=PASS MALFORMED_CHAIN=PASS\n");
