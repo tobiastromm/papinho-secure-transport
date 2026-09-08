@@ -6,7 +6,13 @@
 
 Phase 7.F Interoperability Matrix is complete. The formal closure audit found all 16 bounded mandatory gates satisfied. This document is the canonical interoperability matrix for the current release. `TESTED` means an execution is recorded, `SUPPORTED` is an explicit implemented contract, `EXPECTED` is architectural expectation without execution, `NOT TESTED` has no evidence, and `UNSUPPORTED` is explicitly unavailable.
 
-The current tested target is Win32 x86 with a VC6/C89 consumer, the RetroZilla NSS 3.42 Beta and NSPR 4.7.7 provider, the private Win32 socket adapter, and the versioned VC6 runtime. Tests cover a modern Windows development host and real Windows NT 4.0 SP6. Windows 2000, XP, 95/98, and Win32s are not inferred from NT4 evidence.
+The tested targets now include Win32 x86 with a VC6/C89 consumer and RetroZilla
+NSS 3.42 Beta/NSPR 4.7.7, plus modern Windows x64/MSVC targets with OpenSSL
+3.5.8 and Schannel. Network interoperability is tested across the x86/x64
+process boundary. Same-process composition remains limited to providers built
+for the same target architecture. Tests cover a modern Windows development
+host and real Windows NT 4.0 SP6. Windows 2000, XP, 95/98, and Win32s are not
+inferred from NT4 evidence.
 
 ## Dimension classification
 
@@ -62,7 +68,11 @@ The current tested target is Win32 x86 with a VC6/C89 consumer, the RetroZilla N
 
 `papinho_secure_transport.h` uses explicit PST integer types, `pst_size`, opaque handles, `PST_CALL` and `PST_API`. It contains no `SOCKET`, `HANDLE`, NSS/NSPR type, provider-native structure or native descriptor. The separate Win32 convenience header accepts a socket value as `pst_size` without exporting the Winsock type. This is an interoperability boundary audit, not an ABI freeze.
 
-The only implemented PST backend is `retrozilla-nss`. The tested lineage is RetroZilla NSS 3.42 Beta, NSPR 4.7.7, VC6 Win32 x86 with the repository's versioned runtime. Compatibility with arbitrary NSS versions is not claimed. Additional PST backends belong to Phase 8; no second transport adapter is created in 7.F.
+The implemented providers are `retrozilla-nss`, `openssl`, and `schannel`.
+RetroZilla NSS retains the exact 3.42 Beta/NSPR 4.7.7 VC6 Win32 x86 lineage
+and repository runtime; compatibility with arbitrary NSS versions is not
+claimed. OpenSSL and Schannel are built for the modern x64 target. No additional
+transport adapter is inferred from this provider matrix.
 
 The current server fixture is a SHA-256-with-RSA certificate with a 2048-bit RSA public key, DNS SAN `localhost`, issued directly by the test root. It proves only this certificate/key profile and a root-to-leaf chain. ECDSA and an algorithm matrix are not mandatory for the current release. One deterministic intermediate-chain case is mandatory because chain validation is part of the current authentication contract and direct issuance does not exercise chain building.
 
@@ -134,4 +144,66 @@ The later RetroZilla NSS provenance housekeeping preserved the exact source line
 
 OpenSSL SERVER passed real TLS 1.2 and TLS 1.3 with encrypted 25-byte bidirectional content, required/optional/disabled client certificates, CUSTOM trust, peer information, and reciprocal close-notify. Conflicting ALPN lists proved server preference: client `[h2,http/1.1]`, server `[http/1.1,h2]`, selected `http/1.1`.
 
-Schannel SERVER passed real TLS 1.2 with Schannel, OpenSSL and RetroZilla NSS clients, 25-byte bidirectional I/O, CUSTOM and SYSTEM clientAuth trust, reciprocal close-notify and strict truncation. The NSS-client proof used the repository-versioned x86 NSS/NSPR runtime and ended with `WRITE=25 READ=25 CONTENT_MATCH=1`. Combined real selection passed EXACT for each provider, ORDERED in both directions and AUTOMATIC. With SERVER ALPN required, `[schannel,openssl]` skipped Schannel before binding and selected OpenSSL; a post-binding Schannel authentication failure remained terminal with `BACKEND=schannel`. Schannel SERVER TLS 1.3 and complete PST SERVER ALPN are not advertised on the validated environment. RetroZilla NSS SERVER remains unimplemented.
+Schannel SERVER passed real TLS 1.2 with Schannel, OpenSSL and RetroZilla NSS clients, 25-byte bidirectional I/O, CUSTOM and SYSTEM clientAuth trust, reciprocal close-notify and strict truncation. The NSS-client proof used the repository-versioned x86 NSS/NSPR runtime and ended with `WRITE=25 READ=25 CONTENT_MATCH=1`. Combined real selection passed EXACT for each provider, ORDERED in both directions and AUTOMATIC. With SERVER ALPN required, `[schannel,openssl]` skipped Schannel before binding and selected OpenSSL; a post-binding Schannel authentication failure remained terminal with `BACKEND=schannel`. Schannel SERVER TLS 1.3 and complete PST SERVER ALPN are not advertised on the validated environment.
+
+RetroZilla NSS SERVER is implemented and validated for TLS 1.2/TLS 1.3,
+CUSTOM_TRUST client authentication, bidirectional I/O, Peer Info, reciprocal
+shutdown and strict truncation on the modern host and real NT4 SP6 x86.
+SYSTEM_TRUST and complete PST SERVER ALPN semantics remain absent from its
+role-scoped mask.
+
+## SS-6 CLIENT/SERVER cross-provider closure
+
+The following table records executions from the 0.5.0 development tree. Every
+positive row used API 2.0/SPI 3.0, CUSTOM_TRUST mutual authentication, a
+root/intermediate/leaf chain, exact 25-byte encrypted echo, nonblocking
+handshake/read/write progress, authenticated Peer Info and reciprocal TLS
+shutdown.
+
+| CLIENT | SERVER | Target/process relationship | TLS 1.2 | TLS 1.3 |
+|---|---|---|---|---|
+| OpenSSL | OpenSSL | x64, separate processes | PASS | PASS |
+| OpenSSL | Schannel | x64, separate processes | PASS | NOT ELIGIBLE: Schannel SERVER mask |
+| Schannel | OpenSSL | x64, separate processes | PASS | NOT ELIGIBLE: Schannel CLIENT mask |
+| Schannel | Schannel | x64, separate processes | PASS | NOT ELIGIBLE: role masks |
+| NSS | NSS | x86, separate processes | PASS | PASS |
+| OpenSSL | NSS | x64 CLIENT to x86 SERVER over loopback | PASS | PASS |
+| Schannel | NSS | x64 CLIENT to x86 SERVER over loopback | PASS | NOT ELIGIBLE: Schannel CLIENT mask |
+| NSS | OpenSSL | x86 CLIENT to x64 SERVER over loopback | PASS | PASS |
+| NSS | Schannel | x86 CLIENT to x64 SERVER over loopback | PASS | NOT ELIGIBLE: Schannel SERVER mask |
+
+Representative output across the matrix included `WRITE=25 READ=25
+CONTENT_MATCH=1`, nonzero negotiated cipher identifiers, CLIENT and SERVER
+authenticated peer summaries, and completion only after reciprocal
+`close_notify`. NSS executions showed incremental `PR_Poll` readiness. OpenSSL
+TLS 1.3 with conflicting lists selected `http/1.1` from SERVER order.
+
+The existing provider negative matrices remain the semantic controls for
+absent/invalid/untrusted certificates, disjoint TLS policy, ALPN mismatch,
+raw EOF and data-then-abrupt EOF. They retain the normalized taxonomy and
+terminal no-resurrection behavior. SYSTEM_TRUST was exercised only for the
+OpenSSL and Schannel roles that advertise it; CUSTOM_TRUST was not substituted
+for those gates.
+
+Combined Schannel/OpenSSL selection remains PASS for EXACT, ORDERED in both
+directions, AUTOMATIC, capability filtering before binding and no fallback
+after binding. A SERVER ALPN requirement makes Schannel and NSS ineligible and
+leaves OpenSSL eligible. Three-provider same-process composition is
+`NOT_APPLICABLE_CURRENT_TARGET_MATRIX`: NSS is x86/VC6 while the current
+Schannel/OpenSSL Combined target is x64/MSVC. Cross-process network tests do not
+change that fact.
+
+Role-scoped masks audited at SS-6 closure are:
+
+| Provider | Aggregate | CLIENT | SERVER |
+|---|---:|---:|---:|
+| OpenSSL | `0x00007fff` | `0x00007eb7` | `0x0000777b` |
+| Schannel | `0x00007efd` | `0x00007eb5` | `0x00007679` |
+| RetroZilla NSS | `0x00007aff` | `0x00007ab7` | `0x0000727b` |
+
+Ownership acceptance, consumer-owned listeners, exactly-one-close, runtime
+reuse and structured logging were reconfirmed by the provider/public lifecycle
+tests; representative SERVER runs reported `LOG_SECRET_HITS=0`. No production,
+API, SPI, NSS/NSPR source or runtime-DLL change was required by SS-6. Therefore
+the accepted real NT4 SS-5 evidence remains applicable and no gratuitous NT4
+rerun was performed.
