@@ -146,6 +146,7 @@ typedef struct pst_nss_connection_state {
     pst_u32 require_peer;
     int handshake_complete;
     pst_u32 received_close_notify;
+    pst_u32 local_close_notify_sent;
     pst_u32 minimum_version, maximum_version, alpn_requirement;
     pst_u8 *alpn; pst_size alpn_size;
 } pst_nss_connection_state;
@@ -984,28 +985,86 @@ static PST_RESULT pst_nss_shutdown_step(void *state, pst_u32 *operation, PST_RES
 {
     pst_nss_connection_state *c = (pst_nss_connection_state *)state;
     pst_nss_backend_state *s;
+    PRInt32 amount;
+    unsigned char ignored;
     if (c == NULL || c->ssl_fd == NULL || operation == NULL || error == NULL)
         return PST_RESULT_INVALID_ARGUMENT;
     s = c->runtime->backend;
-    pst_nss_trace("PR_Shutdown", "BEGIN");
-    if (s->pr_shutdown(c->ssl_fd, PR_SHUTDOWN_BOTH) == PR_SUCCESS) {
-        pst_diagnostic_clear(&c->diagnostic);
-        *operation = PST_BACKEND_OPERATION_COMPLETE; *error = PST_RESULT_OK;
+    if (c->local_close_notify_sent == 0UL) {
+        pst_nss_trace("PR_Shutdown", "BEGIN how=send");
+        if (s->pr_shutdown(c->ssl_fd, PR_SHUTDOWN_SEND) == PR_SUCCESS) {
+            c->local_close_notify_sent = 1UL;
+            *operation = PST_BACKEND_OPERATION_NEED_READ; *error = PST_RESULT_OK;
+            c->interest = PST_BACKEND_INTEREST_READ;
+            pst_nss_trace("PR_Shutdown",
+                          "END status=local_close_notify_sent need=read");
+            return PST_RESULT_OK;
+        }
+        pst_nss_capture_error(s, &c->last_error);
+        if (pst_backend_nss_is_would_block(c->last_error)) {
+            *operation = PST_BACKEND_OPERATION_NEED_READ_WRITE;
+            *error = PST_RESULT_OK;
+            c->interest = PST_BACKEND_INTEREST_READ |
+                          PST_BACKEND_INTEREST_WRITE;
+            pst_nss_trace("PR_Shutdown",
+                          "END status=would_block would_block=1");
+            return PST_RESULT_OK;
+        }
+        pst_nss_record(c, PST_DIAGNOSTIC_PHASE_SHUTDOWN);
+        *operation = PST_BACKEND_OPERATION_FAILED;
+        *error = pst_backend_nss_normalize_error(c->last_error);
+        pst_nss_trace("PR_Shutdown", "END status=failed would_block=0");
         c->interest = PST_BACKEND_INTEREST_NONE;
-        pst_nss_trace("PR_Shutdown", "END status=complete error=0 would_block=0"); return PST_RESULT_OK;
-    }
-    pst_nss_capture_error(s, &c->last_error);
-    if (pst_backend_nss_is_would_block(c->last_error)) {
-        *operation = PST_BACKEND_OPERATION_NEED_READ_WRITE; *error = PST_RESULT_OK;
-        c->interest = PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE;
-        pst_nss_trace("PR_Shutdown", "END status=would_block would_block=1");
         return PST_RESULT_OK;
     }
-    pst_nss_record(c, PST_DIAGNOSTIC_PHASE_SHUTDOWN);
+    pst_nss_trace("PR_Shutdown_receive", "BEGIN");
+    amount = s->pr_read(c->ssl_fd, &ignored, 1);
+    if (amount == 0) {
+        if (c->received_close_notify != 0UL) {
+            pst_diagnostic_clear(&c->diagnostic);
+            *operation = PST_BACKEND_OPERATION_COMPLETE;
+            *error = PST_RESULT_OK;
+            c->interest = PST_BACKEND_INTEREST_NONE;
+            pst_nss_trace("PR_Shutdown_receive",
+                          "END status=complete reciprocal_close_notify=1");
+        } else {
+            pst_diagnostic_capture(&c->diagnostic, PST_RESULT_TRUNCATED,
+                PST_DIAGNOSTIC_PHASE_SHUTDOWN, "retrozilla-nss",
+                PST_DIAGNOSTIC_DOMAIN_BACKEND, 0, 0, 0);
+            *operation = PST_BACKEND_OPERATION_FAILED;
+            *error = PST_RESULT_TRUNCATED;
+            c->interest = PST_BACKEND_INTEREST_NONE;
+            pst_nss_trace("PR_Shutdown_receive",
+                          "END status=truncated reciprocal_close_notify=0");
+        }
+        return PST_RESULT_OK;
+    }
+    if (amount < 0) {
+        pst_nss_capture_error(s, &c->last_error);
+        if (pst_backend_nss_is_would_block(c->last_error)) {
+            *operation = PST_BACKEND_OPERATION_NEED_READ;
+            *error = PST_RESULT_OK;
+            c->interest = PST_BACKEND_INTEREST_READ;
+            pst_nss_trace("PR_Shutdown_receive",
+                          "END status=would_block need=read");
+            return PST_RESULT_OK;
+        }
+        pst_nss_record(c, PST_DIAGNOSTIC_PHASE_SHUTDOWN);
+        *operation = PST_BACKEND_OPERATION_FAILED;
+        *error = pst_backend_nss_normalize_error(c->last_error);
+        c->interest = PST_BACKEND_INTEREST_NONE;
+        pst_nss_trace("PR_Shutdown_receive", "END status=failed");
+        return PST_RESULT_OK;
+    }
+    pst_diagnostic_capture(&c->diagnostic, PST_RESULT_PROTOCOL_FAILURE,
+        PST_DIAGNOSTIC_PHASE_SHUTDOWN, "retrozilla-nss",
+        PST_DIAGNOSTIC_DOMAIN_BACKEND, 0, 0, 0);
     *operation = PST_BACKEND_OPERATION_FAILED;
-    *error = pst_backend_nss_normalize_error(c->last_error);
-    pst_nss_trace("PR_Shutdown", "END status=failed would_block=0");
-    c->interest = PST_BACKEND_INTEREST_NONE; return PST_RESULT_OK;
+    *error = PST_RESULT_PROTOCOL_FAILURE;
+    c->interest = PST_BACKEND_INTEREST_NONE;
+    pst_nss_trace("PR_Shutdown_receive",
+                  "END status=failed unexpected_application_data=1");
+    return PST_RESULT_OK;
 }
 typedef struct pst_nss_diagnostic_prefix { pst_i32 last_error; pst_internal_diagnostic diagnostic; } pst_nss_diagnostic_prefix;
 static void pst_nss_diagnostic_copy(const void *state,pst_internal_diagnostic *out)

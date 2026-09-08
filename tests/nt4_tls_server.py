@@ -46,7 +46,11 @@ try:
               (len(data), sent, content_match), flush=True)
         if content_match:
             try:
-                tls.recv(1)
+                closed = tls.recv(1)
+                if closed == b"":
+                    plain = tls.unwrap()
+                    plain.close()
+                    print("SHUTDOWN RECIPROCAL_CLOSE_NOTIFY=True", flush=True)
             except socket.timeout:
                 print("SHUTDOWN_WAIT_TIMEOUT", flush=True)
 except (ssl.SSLError, OSError) as error:

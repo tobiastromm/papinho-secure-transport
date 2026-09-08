@@ -127,3 +127,7 @@ A real TLS 1.3 handshake attempt failed on this Windows Schannel runtime even th
 ## Post-Phase-8 OpenSSL provider extension
 
 Historical OSSL-B checkpoint: Phase 8 was complete. OSSL-A froze OpenSSL 3.5.8 LTS as the source-based Windows x64 baseline, backend ID `openssl`, dedicated OpenSSL/combined build outputs, SPI 2.4 reuse, custom-trust-first scope and the OSSL-A through OSSL-F roadmap. See `docs/openssl-provider.md`. OSSL-B was complete: the dedicated `openssl` target proved the capability-honest skeleton, independent `OSSL_LIB_CTX` runtimes, default-provider/config isolation, error-queue discipline, and transferred Win32 socket ownership. At that point OSSL-C and Phase 9 had not started; both were completed later in the release history.
+
+## Server-side evolution
+
+SS-3 completes the first real SERVER implementation in OpenSSL under API 2.0/SPI 3.0. Combined selection proves OpenSSL as the sole SERVER-eligible built-in: EXACT OpenSSL, ORDERED `[schannel,openssl]`, and AUTOMATIC succeed; EXACT Schannel is unsupported; post-binding OpenSSL failure is terminal. Schannel SERVER is SS-4 work and RetroZilla NSS SERVER remains unimplemented.

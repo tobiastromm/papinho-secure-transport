@@ -16,7 +16,7 @@
 #include "pst_identity_internal.h"
 #include "pst_transport_internal.h"
 #include <limits.h>
-#define OSSL_CAPABILITIES (PST_BACKEND_CAP_TLS_1_2|PST_BACKEND_CAP_TLS_1_3|PST_BACKEND_CAP_ROLE_CLIENT|PST_BACKEND_CAP_LOCAL_IDENTITY|PST_BACKEND_CAP_PEER_CERT_AUTH|PST_BACKEND_CAP_CUSTOM_TRUST|PST_BACKEND_CAP_SYSTEM_TRUST|PST_BACKEND_CAP_PEER_NAME_VERIFY|PST_BACKEND_CAP_ALPN_CLIENT|PST_BACKEND_CAP_PEER_INFO|PST_BACKEND_CAP_NONBLOCKING|PST_BACKEND_CAP_BACKEND_WAIT)
+#define OSSL_CAPABILITIES (PST_BACKEND_CAP_TLS_1_2|PST_BACKEND_CAP_TLS_1_3|PST_BACKEND_CAP_ROLE_CLIENT|PST_BACKEND_CAP_ROLE_SERVER|PST_BACKEND_CAP_LOCAL_IDENTITY|PST_BACKEND_CAP_PEER_CERT_AUTH|PST_BACKEND_CAP_PEER_CERT_OPTIONAL|PST_BACKEND_CAP_CUSTOM_TRUST|PST_BACKEND_CAP_SYSTEM_TRUST|PST_BACKEND_CAP_PEER_NAME_VERIFY|PST_BACKEND_CAP_ALPN_CLIENT|PST_BACKEND_CAP_ALPN_SERVER|PST_BACKEND_CAP_PEER_INFO|PST_BACKEND_CAP_NONBLOCKING|PST_BACKEND_CAP_BACKEND_WAIT)
 #include <stdlib.h>
 #include <string.h>
 
@@ -47,6 +47,10 @@ typedef struct ossl_connection {
     char *hostname;
     unsigned long private_errors[4];
     pst_u32 private_error_count;
+    pst_u32 role;
+    pst_u32 peer_certificate_mode;
+    int peer_certificate_absent;
+    int tls_policy_mismatch;
 } ossl_connection;
 
 static void ossl_clear_errors(void){while(ERR_get_error()!=0UL){} }
@@ -57,6 +61,9 @@ if(unexpected_eof&&ERR_GET_LIB(code)==ERR_LIB_SSL&&ERR_GET_REASON(code)==SSL_R_U
 #ifdef SSL_R_TLSV13_ALERT_CERTIFICATE_REQUIRED
 if(auth_alert&&ERR_GET_LIB(code)==ERR_LIB_SSL&&reason==SSL_R_TLSV13_ALERT_CERTIFICATE_REQUIRED)*auth_alert=1;
 #endif
+#ifdef SSL_R_PEER_DID_NOT_RETURN_A_CERTIFICATE
+if(auth_alert&&ERR_GET_LIB(code)==ERR_LIB_SSL&&reason==SSL_R_PEER_DID_NOT_RETURN_A_CERTIFICATE){*auth_alert=1;c->peer_certificate_absent=1;}
+#endif
 #ifdef SSL_R_TLSV1_ALERT_UNKNOWN_CA
 if(auth_alert&&ERR_GET_LIB(code)==ERR_LIB_SSL&&reason==SSL_R_TLSV1_ALERT_UNKNOWN_CA)*auth_alert=1;
 #endif
@@ -65,6 +72,15 @@ if(auth_alert&&ERR_GET_LIB(code)==ERR_LIB_SSL&&reason==SSL_R_SSLV3_ALERT_BAD_CER
 #endif
 #ifdef SSL_R_SSLV3_ALERT_HANDSHAKE_FAILURE
 if(auth_alert&&ERR_GET_LIB(code)==ERR_LIB_SSL&&reason==SSL_R_SSLV3_ALERT_HANDSHAKE_FAILURE)*auth_alert=1;
+#endif
+#ifdef SSL_R_UNSUPPORTED_PROTOCOL
+if(ERR_GET_LIB(code)==ERR_LIB_SSL&&reason==SSL_R_UNSUPPORTED_PROTOCOL)c->tls_policy_mismatch=1;
+#endif
+#ifdef SSL_R_VERSION_TOO_LOW
+if(ERR_GET_LIB(code)==ERR_LIB_SSL&&reason==SSL_R_VERSION_TOO_LOW)c->tls_policy_mismatch=1;
+#endif
+#ifdef SSL_R_VERSION_TOO_HIGH
+if(ERR_GET_LIB(code)==ERR_LIB_SSL&&reason==SSL_R_VERSION_TOO_HIGH)c->tls_policy_mismatch=1;
 #endif
 }}
 static void ossl_capture(ossl_base *s,PST_RESULT result,pst_u32 phase){pst_diagnostic_capture(&s->diagnostic,result,phase,"openssl",PST_DIAGNOSTIC_DOMAIN_NONE,0,0,0);}
@@ -86,14 +102,14 @@ static PST_RESULT ossl_configure(void *v,const PST_CONNECTION_CONFIG *config){os
 auth_failure:if(anchor)X509_free(anchor);if(client_cert)X509_free(client_cert);if(client_key)EVP_PKEY_free(client_key);ossl_clear_errors();ossl_capture((ossl_base*)c,PST_RESULT_AUTH_FAILURE,PST_DIAGNOSTIC_PHASE_IDENTITY_SETUP);return PST_RESULT_AUTH_FAILURE;
 backend_failure:if(anchor)X509_free(anchor);if(client_cert)X509_free(client_cert);if(client_key)EVP_PKEY_free(client_key);ossl_clear_errors();ossl_capture((ossl_base*)c,PST_RESULT_BACKEND_FAILURE,PST_DIAGNOSTIC_PHASE_TLS_CONFIGURE);return PST_RESULT_BACKEND_FAILURE;}
 static int ossl_alpn_offered(const ossl_connection *c,const unsigned char *value,pst_size size){const pst_u8 *p=c->alpn_wire,*end=p+c->alpn_wire_size;while(p<end){pst_size n=*p++;if(n>(pst_size)(end-p))return 0;if(n==size&&memcmp(p,value,size)==0)return 1;p+=n;}return 0;}static PST_RESULT ossl_attach(void *v,void *native,pst_u32 ownership,pst_u32 *accepted){ossl_connection *c=(ossl_connection*)v;PST_NATIVE_TRANSPORT *t=(PST_NATIVE_TRANSPORT*)native;u_long nonblocking=1UL;if(!accepted)return PST_RESULT_INVALID_ARGUMENT;*accepted=0;if(!c||!t||!c->configured||!c->ssl||c->owns_socket)return PST_RESULT_INVALID_ARGUMENT;if(ownership!=PST_BACKEND_OWNERSHIP_TRANSFERRED)return PST_RESULT_UNSUPPORTED;if(t->struct_size<PST_NATIVE_TRANSPORT_MIN_SIZE||t->version!=PST_NATIVE_TRANSPORT_VERSION||t->kind!=PST_NATIVE_TRANSPORT_KIND_WIN32_SOCKET)return PST_RESULT_INVALID_ARGUMENT;if(ioctlsocket((SOCKET)t->native_socket,FIONBIO,&nonblocking)!=0){ossl_capture((ossl_base*)c,PST_RESULT_TRANSPORT_FAILURE,PST_DIAGNOSTIC_PHASE_TRANSPORT_ATTACH);return PST_RESULT_TRANSPORT_FAILURE;}ossl_clear_errors();if(SSL_set_fd(c->ssl,(int)(SOCKET)t->native_socket)!=1){ossl_clear_errors();ossl_capture((ossl_base*)c,PST_RESULT_BACKEND_FAILURE,PST_DIAGNOSTIC_PHASE_TRANSPORT_ATTACH);return PST_RESULT_BACKEND_FAILURE;}ossl_clear_errors();c->socket_value=(SOCKET)t->native_socket;c->owns_socket=1;c->interest=PST_BACKEND_INTEREST_WRITE;*accepted=1;return PST_RESULT_OK;}
-static PST_RESULT ossl_fail(ossl_connection *c,pst_u32 phase,PST_RESULT result,pst_u32 *operation,PST_RESULT *error){c->failed=1;c->interest=PST_BACKEND_INTEREST_NONE;*operation=PST_BACKEND_OPERATION_FAILED;*error=result;ossl_capture((ossl_base*)c,result,phase);return PST_RESULT_OK;}
+static PST_RESULT ossl_fail(ossl_connection *c,pst_u32 phase,PST_RESULT result,pst_u32 *operation,PST_RESULT *error){long verify;if(c->diagnostic.valid&&c->diagnostic.phase==PST_DIAGNOSTIC_PHASE_ALPN&&result==PST_RESULT_PROTOCOL_FAILURE){phase=PST_DIAGNOSTIC_PHASE_ALPN;result=PST_RESULT_POLICY_VIOLATION;}c->failed=1;c->interest=PST_BACKEND_INTEREST_NONE;*operation=PST_BACKEND_OPERATION_FAILED;*error=result;ossl_capture((ossl_base*)c,result,phase);c->diagnostic.role=c->role;if(c->role==PST_CONNECTION_ROLE_SERVER&&result==PST_RESULT_AUTH_FAILURE){verify=SSL_get_verify_result(c->ssl);if(c->peer_certificate_absent)c->diagnostic.reason=PST_DIAGNOSTIC_REASON_PEER_CERT_ABSENT;else if(verify!=X509_V_OK)c->diagnostic.reason=PST_DIAGNOSTIC_REASON_PEER_CERT_UNTRUSTED;else c->diagnostic.reason=PST_DIAGNOSTIC_REASON_PEER_CERT_INVALID;}else if(c->role==PST_CONNECTION_ROLE_SERVER&&c->tls_policy_mismatch)c->diagnostic.reason=PST_DIAGNOSTIC_REASON_TLS_POLICY_MISMATCH;return PST_RESULT_OK;}
 static PST_RESULT ossl_want(ossl_connection *c,int ssl_error,pst_u32 *operation,PST_RESULT *error){*error=PST_RESULT_OK;if(ssl_error==SSL_ERROR_WANT_READ){c->interest=PST_BACKEND_INTEREST_READ;*operation=PST_BACKEND_OPERATION_NEED_READ;ossl_clear_errors();return PST_RESULT_OK;}if(ssl_error==SSL_ERROR_WANT_WRITE){c->interest=PST_BACKEND_INTEREST_WRITE;*operation=PST_BACKEND_OPERATION_NEED_WRITE;ossl_clear_errors();return PST_RESULT_OK;}return PST_RESULT_UNAVAILABLE;}
 static PST_RESULT ossl_verify_result(long verify){
 #ifdef X509_V_ERR_HOSTNAME_MISMATCH
 if(verify==X509_V_ERR_HOSTNAME_MISMATCH)return PST_RESULT_PEER_NAME_MISMATCH;
 #endif
 return PST_RESULT_AUTH_FAILURE;}
-static PST_RESULT ossl_classify_failure(ossl_connection *c,int ssl_error,int ret,pst_u32 phase,pst_u32 *operation,PST_RESULT *error,pst_u32 *close_kind){int unexpected=0,auth_alert=0;PST_RESULT result;ossl_collect_errors(c,&unexpected,&auth_alert);if(close_kind)*close_kind=PST_BACKEND_CLOSE_NONE;if(ssl_error==SSL_ERROR_ZERO_RETURN){if(close_kind)*close_kind=PST_BACKEND_CLOSE_CLEAN;c->interest=PST_BACKEND_INTEREST_NONE;*operation=PST_BACKEND_OPERATION_CLOSED;*error=PST_RESULT_OK;return PST_RESULT_OK;}if(c->system_trust_result!=PST_RESULT_OK)result=c->system_trust_result;else if(unexpected||(ssl_error==SSL_ERROR_SYSCALL&&ret==0)){result=PST_RESULT_TRUNCATED;if(close_kind)*close_kind=PST_BACKEND_CLOSE_TRUNCATED;}else if(ssl_error==SSL_ERROR_SYSCALL)result=PST_RESULT_TRANSPORT_FAILURE;else if(auth_alert)result=PST_RESULT_AUTH_FAILURE;else if(ssl_error==SSL_ERROR_SSL&&SSL_get_verify_result(c->ssl)!=X509_V_OK)result=ossl_verify_result(SSL_get_verify_result(c->ssl));else if(ssl_error==SSL_ERROR_SSL)result=PST_RESULT_PROTOCOL_FAILURE;else result=PST_RESULT_BACKEND_FAILURE;return ossl_fail(c,phase,result,operation,error);}
+static PST_RESULT ossl_classify_failure(ossl_connection *c,int ssl_error,int ret,pst_u32 phase,pst_u32 *operation,PST_RESULT *error,pst_u32 *close_kind){int unexpected=0,auth_alert=0;PST_RESULT result;ossl_collect_errors(c,&unexpected,&auth_alert);if(close_kind)*close_kind=PST_BACKEND_CLOSE_NONE;if(ssl_error==SSL_ERROR_ZERO_RETURN){if(close_kind)*close_kind=PST_BACKEND_CLOSE_CLEAN;c->interest=PST_BACKEND_INTEREST_NONE;*operation=PST_BACKEND_OPERATION_CLOSED;*error=PST_RESULT_OK;return PST_RESULT_OK;}if(c->system_trust_result!=PST_RESULT_OK)result=c->system_trust_result;else if(unexpected||(ssl_error==SSL_ERROR_SYSCALL&&(ret==0||(c->established&&(phase==PST_DIAGNOSTIC_PHASE_READ||phase==PST_DIAGNOSTIC_PHASE_SHUTDOWN))))){result=PST_RESULT_TRUNCATED;if(close_kind)*close_kind=PST_BACKEND_CLOSE_TRUNCATED;}else if(ssl_error==SSL_ERROR_SYSCALL)result=PST_RESULT_TRANSPORT_FAILURE;else if(auth_alert)result=PST_RESULT_AUTH_FAILURE;else if(ssl_error==SSL_ERROR_SSL&&SSL_get_verify_result(c->ssl)!=X509_V_OK)result=ossl_verify_result(SSL_get_verify_result(c->ssl));else if(ssl_error==SSL_ERROR_SSL)result=PST_RESULT_PROTOCOL_FAILURE;else result=PST_RESULT_BACKEND_FAILURE;return ossl_fail(c,phase,result,operation,error);}
 static PST_RESULT ossl_handshake(void *v,pst_u32 *operation,PST_RESULT *error){ossl_connection *c=(ossl_connection*)v;const SSL_CIPHER *cipher;int ret,ssl_error,protocol;PST_RESULT mapped;if(!c||!operation||!error||!c->configured||!c->owns_socket||c->failed)return PST_RESULT_INVALID_ARGUMENT;ossl_clear_errors();ret=SSL_do_handshake(c->ssl);if(ret!=1){ssl_error=SSL_get_error(c->ssl,ret);mapped=ossl_want(c,ssl_error,operation,error);if(mapped==PST_RESULT_OK)return PST_RESULT_OK;return ossl_classify_failure(c,ssl_error,ret,PST_DIAGNOSTIC_PHASE_HANDSHAKE,operation,error,NULL);}ossl_clear_errors();if(SSL_get_verify_result(c->ssl)!=X509_V_OK)return ossl_fail(c,PST_DIAGNOSTIC_PHASE_HANDSHAKE,ossl_verify_result(SSL_get_verify_result(c->ssl)),operation,error);{const unsigned char *selected=NULL;unsigned int selected_size=0;SSL_get0_alpn_selected(c->ssl,&selected,&selected_size);if(selected_size){if(selected_size>sizeof(c->negotiated_alpn)||!ossl_alpn_offered(c,selected,selected_size))return ossl_fail(c,PST_DIAGNOSTIC_PHASE_ALPN,PST_RESULT_POLICY_VIOLATION,operation,error);memcpy(c->negotiated_alpn,selected,selected_size);c->negotiated_alpn_size=selected_size;}else if(c->alpn_requirement==PST_FEATURE_REQUIRED)return ossl_fail(c,PST_DIAGNOSTIC_PHASE_ALPN,PST_RESULT_POLICY_VIOLATION,operation,error);}protocol=SSL_version(c->ssl);if(protocol==TLS1_2_VERSION)c->negotiated_version=PST_TLS_VERSION_1_2;else if(protocol==TLS1_3_VERSION)c->negotiated_version=PST_TLS_VERSION_1_3;else return ossl_fail(c,PST_DIAGNOSTIC_PHASE_HANDSHAKE,PST_RESULT_PROTOCOL_FAILURE,operation,error);cipher=SSL_get_current_cipher(c->ssl);if(!cipher)return ossl_fail(c,PST_DIAGNOSTIC_PHASE_HANDSHAKE,PST_RESULT_PROTOCOL_FAILURE,operation,error);c->cipher_suite=(pst_u32)SSL_CIPHER_get_protocol_id(cipher);c->established=1;c->interest=PST_BACKEND_INTEREST_READ;*operation=PST_BACKEND_OPERATION_COMPLETE;*error=PST_RESULT_OK;return PST_RESULT_OK;}
 static PST_RESULT ossl_interest(void *v,pst_u32 *interest){ossl_connection *c=(ossl_connection*)v;if(!c||!interest||!c->owns_socket||c->failed)return PST_RESULT_INVALID_ARGUMENT;if(c->established&&(SSL_pending(c->ssl)>0||SSL_has_pending(c->ssl)))c->interest|=PST_BACKEND_INTEREST_READ;*interest=c->interest;return PST_RESULT_OK;}
 static PST_RESULT ossl_wait(void *v,pst_u32 interest,pst_u32 timeout_ms,PST_BACKEND_WAIT_RESULT *result){ossl_connection *c=(ossl_connection*)v;fd_set reads,writes,errors;struct timeval timeout;int ready;if(!c||!result||!c->owns_socket||c->failed)return PST_RESULT_INVALID_ARGUMENT;memset(result,0,sizeof(*result));if((interest&PST_BACKEND_INTEREST_READ)&&c->established&&(SSL_pending(c->ssl)>0||SSL_has_pending(c->ssl))){result->ready_interest=PST_BACKEND_INTEREST_READ;return PST_RESULT_OK;}FD_ZERO(&reads);FD_ZERO(&writes);FD_ZERO(&errors);if(interest&PST_BACKEND_INTEREST_READ)FD_SET(c->socket_value,&reads);if(interest&PST_BACKEND_INTEREST_WRITE)FD_SET(c->socket_value,&writes);FD_SET(c->socket_value,&errors);timeout.tv_sec=(long)(timeout_ms/1000UL);timeout.tv_usec=(long)((timeout_ms%1000UL)*1000UL);ready=select(0,&reads,&writes,&errors,&timeout);if(ready==SOCKET_ERROR||FD_ISSET(c->socket_value,&errors)){ossl_capture((ossl_base*)c,PST_RESULT_TRANSPORT_FAILURE,PST_DIAGNOSTIC_PHASE_WAIT);c->failed=1;c->interest=PST_BACKEND_INTEREST_NONE;return PST_RESULT_TRANSPORT_FAILURE;}if(ready==0){result->timed_out=1;return PST_RESULT_OK;}if(FD_ISSET(c->socket_value,&reads))result->ready_interest|=PST_BACKEND_INTEREST_READ;if(FD_ISSET(c->socket_value,&writes))result->ready_interest|=PST_BACKEND_INTEREST_WRITE;return PST_RESULT_OK;}
@@ -104,7 +120,233 @@ static PST_RESULT ossl_close(void *v,pst_u32 *operation,PST_RESULT *error){ossl_
 static PST_RESULT ossl_peer(void *v,void **out){ossl_connection *c=(ossl_connection*)v;X509 *cert;PST_PEER_INFO_SUMMARY summary;unsigned char *der,*cursor;int der_size;size_t digest_size=0;PST_RESULT result;if(!c||!out)return PST_RESULT_INVALID_ARGUMENT;*out=NULL;if(!c->established)return PST_RESULT_INVALID_STATE;cert=SSL_get1_peer_certificate(c->ssl);if(!cert)return PST_RESULT_UNAVAILABLE;der_size=i2d_X509(cert,NULL);if(der_size<=0){X509_free(cert);ossl_clear_errors();return PST_RESULT_BACKEND_FAILURE;}der=(unsigned char*)malloc((size_t)der_size);if(!der){X509_free(cert);return PST_RESULT_OUT_OF_MEMORY;}cursor=der;if(i2d_X509(cert,&cursor)!=der_size){free(der);X509_free(cert);ossl_clear_errors();return PST_RESULT_BACKEND_FAILURE;}X509_free(cert);memset(&summary,0,sizeof(summary));summary.struct_size=sizeof(summary);summary.api_version=PST_API_VERSION;summary.local_role=PST_CONNECTION_ROLE_CLIENT;strncpy(summary.provider_id,"openssl",sizeof(summary.provider_id)-1);summary.certificate_present=PST_KNOWN_TRUE;summary.chain_validated=PST_KNOWN_TRUE;summary.peer_name_validated=PST_KNOWN_TRUE;summary.peer_authenticated=PST_KNOWN_TRUE;summary.tls_version=c->negotiated_version;summary.cipher_suite=c->cipher_suite;summary.alpn_available=c->negotiated_alpn_size?PST_KNOWN_TRUE:PST_KNOWN_FALSE;summary.session_resumed=PST_KNOWN_UNKNOWN;summary.early_data_accepted=PST_KNOWN_UNSUPPORTED;summary.certificate_sha256_size=32;summary.leaf_der_size=(pst_size)der_size;if(EVP_Q_digest(c->runtime->library_context,"SHA256",NULL,der,(size_t)der_size,summary.certificate_sha256,&digest_size)!=1||digest_size!=32){free(der);ossl_clear_errors();return PST_RESULT_BACKEND_FAILURE;}result=pst_peer_info_create_snapshot(&summary,der,(pst_peer_info**)out);free(der);ossl_clear_errors();return result;}
 static void ossl_peer_destroy(void *v){pst_peer_info_release((pst_peer_info*)v);}
 static PST_RESULT ossl_alpn(void *v,pst_u8 *buffer,pst_size capacity,pst_size *size){ossl_connection *c=(ossl_connection*)v;if(!c||!size)return PST_RESULT_INVALID_ARGUMENT;*size=c->negotiated_alpn_size;if(!c->negotiated_alpn_size)return PST_RESULT_UNAVAILABLE;if(capacity<c->negotiated_alpn_size)return PST_RESULT_TRUNCATED;if(!buffer)return PST_RESULT_INVALID_ARGUMENT;memcpy(buffer,c->negotiated_alpn,c->negotiated_alpn_size);return PST_RESULT_OK;}static void ossl_diagnostic(const void *v,pst_internal_diagnostic *out){if(!out)return;if(v)pst_diagnostic_copy(out,&((const ossl_base*)v)->diagnostic);else pst_diagnostic_initialize(out);}
-static const PST_BACKEND_VTABLE ossl_vtable={sizeof(PST_BACKEND_VTABLE),PST_BACKEND_SPI_VERSION,ossl_initialize,ossl_shutdown,ossl_runtime_create,ossl_runtime_destroy,ossl_query,ossl_validate,ossl_connection_create,ossl_connection_destroy,ossl_attach,ossl_handshake,ossl_interest,ossl_wait,ossl_read,ossl_write,ossl_close,ossl_peer,ossl_peer_destroy,ossl_alpn,ossl_diagnostic};
+
+static int ossl_server_alpn_select(SSL *ssl,const unsigned char **out,
+ unsigned char *out_size,const unsigned char *client,unsigned int client_size,
+ void *argument)
+{
+    ossl_connection *c=(ossl_connection*)argument;
+    const unsigned char *server,*server_end,*offered,*offered_end;
+    unsigned int server_size,offered_size;
+    (void)ssl;
+    server=c->alpn_wire;server_end=server+c->alpn_wire_size;
+    while(server<server_end){
+        server_size=*server++;offered=client;offered_end=client+client_size;
+        while(offered<offered_end){
+            offered_size=*offered++;
+            if(offered_size>(unsigned int)(offered_end-offered))break;
+            if(server_size==offered_size&&!memcmp(server,offered,server_size)){
+                *out=server;*out_size=(unsigned char)server_size;
+                return SSL_TLSEXT_ERR_OK;
+            }
+            offered+=offered_size;
+        }
+        server+=server_size;
+    }
+    if(c->alpn_requirement==PST_FEATURE_REQUIRED){
+        ossl_capture((ossl_base*)c,PST_RESULT_POLICY_VIOLATION,
+            PST_DIAGNOSTIC_PHASE_ALPN);
+        c->diagnostic.role=PST_CONNECTION_ROLE_SERVER;
+        c->diagnostic.reason=PST_DIAGNOSTIC_REASON_ALPN_MISMATCH;
+        return SSL_TLSEXT_ERR_ALERT_FATAL;
+    }
+    return SSL_TLSEXT_ERR_NOACK;
+}
+
+static PST_RESULT ossl_server_configure(ossl_connection *c,
+ const PST_CONNECTION_CONFIG *config)
+{
+    const pst_credentials *credentials;
+    const pst_trust *trust;
+    const pst_u8 *der,*key_der,*alpn;
+    const unsigned char *cursor;
+    pst_size size,key_size,alpn_size,count,index;
+    pst_u32 minimum,maximum;
+    int minimum_native,maximum_native,verify_mode;
+    X509 *certificate=NULL;
+    EVP_PKEY *private_key=NULL;
+    X509_STORE *store;
+    minimum=pst_connection_config_minimum_version(config);
+    maximum=pst_connection_config_maximum_version(config);
+    minimum_native=minimum==PST_TLS_VERSION_1_2?TLS1_2_VERSION:
+        minimum==PST_TLS_VERSION_1_3?TLS1_3_VERSION:0;
+    maximum_native=maximum==PST_TLS_VERSION_1_2?TLS1_2_VERSION:
+        maximum==PST_TLS_VERSION_1_3?TLS1_3_VERSION:0;
+    if(!minimum_native||!maximum_native||maximum<minimum)
+        return PST_RESULT_INVALID_ARGUMENT;
+    credentials=pst_connection_config_local_credentials(config);
+    if(!credentials)return PST_RESULT_POLICY_VIOLATION;
+    ossl_clear_errors();
+    c->ssl_context=SSL_CTX_new_ex(c->runtime->library_context,NULL,
+        TLS_server_method());
+    if(!c->ssl_context)goto backend_failure;
+    if(!SSL_CTX_set_min_proto_version(c->ssl_context,minimum_native)||
+       !SSL_CTX_set_max_proto_version(c->ssl_context,maximum_native))
+        goto backend_failure;
+    SSL_CTX_clear_options(c->ssl_context,SSL_OP_IGNORE_UNEXPECTED_EOF);
+    count=pst_credentials_certificate_count(credentials);
+    if(!count)goto identity_failure;
+    for(index=0;index<count;index++){
+        der=pst_credentials_certificate_at(credentials,index,&size);
+        if(!der||!size||size>(pst_size)LONG_MAX)goto identity_failure;
+        cursor=der;certificate=d2i_X509(NULL,&cursor,(long)size);
+        if(!certificate||cursor!=der+size)goto identity_failure;
+        if(index==0){
+            if(SSL_CTX_use_certificate(c->ssl_context,certificate)!=1)
+                goto identity_failure;
+        }else if(SSL_CTX_add1_chain_cert(c->ssl_context,certificate)!=1)
+            goto identity_failure;
+        X509_free(certificate);certificate=NULL;
+    }
+    key_der=pst_credentials_private_key_der(credentials,&key_size);
+    if(!key_der||!key_size||key_size>(pst_size)LONG_MAX)
+        goto identity_failure;
+    cursor=key_der;
+    private_key=d2i_AutoPrivateKey(NULL,&cursor,(long)key_size);
+    if(!private_key||cursor!=key_der+key_size||
+       SSL_CTX_use_PrivateKey(c->ssl_context,private_key)!=1||
+       SSL_CTX_check_private_key(c->ssl_context)!=1)
+        goto identity_failure;
+    EVP_PKEY_free(private_key);private_key=NULL;
+    c->peer_certificate_mode=
+        pst_connection_config_peer_certificate_mode(config);
+    verify_mode=SSL_VERIFY_NONE;
+    if(c->peer_certificate_mode!=PST_PEER_CERTIFICATE_DISABLED){
+        trust=pst_connection_config_peer_trust(config);
+        if(!trust||pst_trust_kind(trust)!=PST_TRUST_SOURCE_CUSTOM_CA_DER)
+            return PST_RESULT_UNSUPPORTED;
+        store=SSL_CTX_get_cert_store(c->ssl_context);
+        count=pst_trust_anchor_count(trust);
+        if(!store||!count)goto identity_failure;
+        for(index=0;index<count;index++){
+            der=pst_trust_anchor_at(trust,index,&size);
+            if(!der||!size||size>(pst_size)LONG_MAX)
+                goto identity_failure;
+            cursor=der;certificate=d2i_X509(NULL,&cursor,(long)size);
+            if(!certificate||cursor!=der+size||
+               X509_STORE_add_cert(store,certificate)!=1)
+                goto identity_failure;
+            X509_free(certificate);certificate=NULL;
+        }
+        verify_mode=SSL_VERIFY_PEER;
+        if(c->peer_certificate_mode==PST_PEER_CERTIFICATE_REQUIRED)
+            verify_mode|=SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+    }
+    SSL_CTX_set_verify(c->ssl_context,verify_mode,NULL);
+    alpn=pst_connection_config_alpn_wire(config,&alpn_size);
+    c->alpn_requirement=pst_connection_config_alpn_mode(config);
+    if(alpn_size){
+        c->alpn_wire=(pst_u8*)malloc(alpn_size);
+        if(!c->alpn_wire)return PST_RESULT_OUT_OF_MEMORY;
+        memcpy(c->alpn_wire,alpn,alpn_size);
+        c->alpn_wire_size=alpn_size;
+        SSL_CTX_set_alpn_select_cb(c->ssl_context,
+            ossl_server_alpn_select,c);
+    }
+    c->ssl=SSL_new(c->ssl_context);
+    if(!c->ssl)goto backend_failure;
+    SSL_clear_mode(c->ssl,SSL_MODE_AUTO_RETRY|
+        SSL_MODE_ENABLE_PARTIAL_WRITE|SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER);
+    SSL_set_accept_state(c->ssl);
+    c->configured=1;ossl_clear_errors();return PST_RESULT_OK;
+identity_failure:
+    if(certificate)X509_free(certificate);
+    if(private_key)EVP_PKEY_free(private_key);
+    ossl_clear_errors();
+    ossl_capture((ossl_base*)c,PST_RESULT_AUTH_FAILURE,
+        PST_DIAGNOSTIC_PHASE_IDENTITY_SETUP);
+    return PST_RESULT_AUTH_FAILURE;
+backend_failure:
+    if(certificate)X509_free(certificate);
+    if(private_key)EVP_PKEY_free(private_key);
+    ossl_clear_errors();
+    ossl_capture((ossl_base*)c,PST_RESULT_BACKEND_FAILURE,
+        PST_DIAGNOSTIC_PHASE_TLS_CONFIGURE);
+    return PST_RESULT_BACKEND_FAILURE;
+}
+
+static PST_RESULT ossl_connection_create_role(void *runtime_state,
+ const PST_BACKEND_CONNECTION_OPTIONS *options,void **out)
+{
+    ossl_connection *c;PST_RESULT result;
+    if(!options||options->role==PST_CONNECTION_ROLE_CLIENT){
+        result=ossl_connection_create(runtime_state,options,out);
+        if(result==PST_RESULT_OK)((ossl_connection*)*out)->role=
+            PST_CONNECTION_ROLE_CLIENT;
+        return result;
+    }
+    if(!runtime_state||!out||
+       options->struct_size<PST_BACKEND_CONNECTION_OPTIONS_MIN_SIZE||
+       options->spi_version!=PST_BACKEND_SPI_VERSION||
+       options->role!=PST_CONNECTION_ROLE_SERVER||!options->configuration)
+        return PST_RESULT_INVALID_ARGUMENT;
+    *out=NULL;c=(ossl_connection*)calloc(1,sizeof(*c));
+    if(!c)return PST_RESULT_OUT_OF_MEMORY;
+    pst_diagnostic_initialize(&c->diagnostic);
+    c->runtime=(ossl_runtime*)runtime_state;
+    c->socket_value=INVALID_SOCKET;
+    c->interest=PST_BACKEND_INTEREST_NONE;
+    c->role=PST_CONNECTION_ROLE_SERVER;
+    result=ossl_server_configure(c,options->configuration);
+    if(result!=PST_RESULT_OK){ossl_connection_destroy(c);return result;}
+    *out=c;return PST_RESULT_OK;
+}
+
+static PST_RESULT ossl_server_peer(ossl_connection *c,void **out)
+{
+    X509 *certificate;PST_PEER_INFO_SUMMARY summary;
+    unsigned char *der=NULL,*cursor;int der_size=0;size_t digest_size=0;
+    PST_RESULT result;
+    if(!c||!out)return PST_RESULT_INVALID_ARGUMENT;*out=NULL;
+    if(!c->established)return PST_RESULT_INVALID_STATE;
+    certificate=SSL_get1_peer_certificate(c->ssl);
+    memset(&summary,0,sizeof(summary));summary.struct_size=sizeof(summary);
+    summary.api_version=PST_API_VERSION;
+    summary.local_role=PST_CONNECTION_ROLE_SERVER;
+    strncpy(summary.provider_id,"openssl",sizeof(summary.provider_id)-1);
+    summary.peer_name_validated=PST_KNOWN_NOT_APPLICABLE;
+    summary.tls_version=c->negotiated_version;
+    summary.cipher_suite=c->cipher_suite;
+    summary.alpn_available=c->negotiated_alpn_size?
+        PST_KNOWN_TRUE:PST_KNOWN_FALSE;
+    summary.session_resumed=PST_KNOWN_UNKNOWN;
+    summary.early_data_accepted=PST_KNOWN_UNSUPPORTED;
+    if(!certificate){
+        summary.certificate_present=PST_KNOWN_FALSE;
+        summary.chain_validated=PST_KNOWN_NOT_APPLICABLE;
+        summary.peer_authenticated=PST_KNOWN_FALSE;
+        return pst_peer_info_create_snapshot(&summary,NULL,(pst_peer_info**)out);
+    }
+    der_size=i2d_X509(certificate,NULL);
+    if(der_size<=0){X509_free(certificate);return PST_RESULT_BACKEND_FAILURE;}
+    der=(unsigned char*)malloc((size_t)der_size);
+    if(!der){X509_free(certificate);return PST_RESULT_OUT_OF_MEMORY;}
+    cursor=der;
+    if(i2d_X509(certificate,&cursor)!=der_size){
+        free(der);X509_free(certificate);return PST_RESULT_BACKEND_FAILURE;
+    }
+    X509_free(certificate);
+    summary.certificate_present=PST_KNOWN_TRUE;
+    summary.chain_validated=SSL_get_verify_result(c->ssl)==X509_V_OK?
+        PST_KNOWN_TRUE:PST_KNOWN_FALSE;
+    summary.peer_authenticated=summary.chain_validated;
+    summary.certificate_sha256_size=32;
+    summary.leaf_der_size=(pst_size)der_size;
+    if(EVP_Q_digest(c->runtime->library_context,"SHA256",NULL,der,
+       (size_t)der_size,summary.certificate_sha256,&digest_size)!=1||
+       digest_size!=32){free(der);return PST_RESULT_BACKEND_FAILURE;}
+    result=pst_peer_info_create_snapshot(&summary,der,(pst_peer_info**)out);
+    free(der);ossl_clear_errors();return result;
+}
+
+static PST_RESULT ossl_peer_role(void *state,void **out)
+{
+    ossl_connection *c=(ossl_connection*)state;
+    return c&&c->role==PST_CONNECTION_ROLE_SERVER?
+        ossl_server_peer(c,out):ossl_peer(state,out);
+}
+
+static const PST_BACKEND_VTABLE ossl_vtable={sizeof(PST_BACKEND_VTABLE),PST_BACKEND_SPI_VERSION,ossl_initialize,ossl_shutdown,ossl_runtime_create,ossl_runtime_destroy,ossl_query,ossl_validate,ossl_connection_create_role,ossl_connection_destroy,ossl_attach,ossl_handshake,ossl_interest,ossl_wait,ossl_read,ossl_write,ossl_close,ossl_peer_role,ossl_peer_destroy,ossl_alpn,ossl_diagnostic};
 static const PST_BACKEND_METADATA ossl_metadata={sizeof(PST_BACKEND_METADATA),PST_BACKEND_METADATA_VERSION,{PST_BACKEND_VERSION_AVAILABLE,0UL,3UL,0UL,"pst-openssl","identity"},1UL,{{PST_BACKEND_VERSION_AVAILABLE,3UL,5UL,8UL,"OpenSSL","LTS"},{0}}};
 static const PST_BACKEND_DESCRIPTOR ossl_descriptor={sizeof(PST_BACKEND_DESCRIPTOR),PST_BACKEND_SPI_VERSION,"openssl","OpenSSL 3.5.8",OSSL_CAPABILITIES,&ossl_vtable,&ossl_metadata};
 PST_RESULT pst_backend_openssl_connection_info(void *v,pst_u32 *tls_version,pst_u32 *cipher_suite){ossl_connection *c=(ossl_connection*)v;if(!c||!tls_version||!cipher_suite)return PST_RESULT_INVALID_ARGUMENT;if(!c->established)return PST_RESULT_INVALID_STATE;*tls_version=c->negotiated_version;*cipher_suite=c->cipher_suite;return PST_RESULT_OK;}

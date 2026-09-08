@@ -41,3 +41,7 @@ windows-x64-msvc-schannel-openssl-3.5.8
 | Windows x64 and need the validated OS-native TLS 1.2 path | `win32-x64-msvc-19.51-schannel` |
 | Windows x64 and need the validated OpenSSL 3 TLS 1.2/TLS 1.3 path | `win32-x64-msvc-19.51-openssl3` |
 | Windows x64 and explicitly need both providers in one static PST library | `win32-x64-msvc-19.51-schannel-openssl3` |
+
+## 0.5.0 development SERVER status
+
+OpenSSL SERVER is implemented and validated on the existing modern x64 target with TLS 1.2/1.3. Schannel SERVER and RetroZilla NSS SERVER are not implemented and their providers do not advertise `ROLE_SERVER`. This development status does not alter the frozen 0.4.0 release target claims above.

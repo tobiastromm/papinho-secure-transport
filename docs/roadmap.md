@@ -7,7 +7,8 @@
   - SS-0A PST-local ADR baseline: complete.
   - SS-1 API 2.0 / SPI 3.0 contract freeze: complete; x86/x64 mock selection and ABI contract pass.
   - SS-2 core implementation and CLIENT provider SPI migration: complete; transactional connection configuration, runtime registry, lazy provider state, connection-level selection/pinning and CLIENT regressions pass for RetroZilla NSS, Schannel and OpenSSL. Real provider SERVER implementations remain unstarted.
-  - SS-3 OpenSSL SERVER implementation: next; not started.
+  - SS-3 OpenSSL SERVER implementation and closure validation: complete; TLS 1.2/1.3, local identity, peer-certificate modes, server-preference ALPN, readiness, I/O, strict truncation, diagnostics/logging, ownership, repetition, NSS/Schannel clients and Combined selection pass. Schannel and NSS SERVER remain unstarted.
+  - SS-4 Schannel SERVER implementation: next; not started.
 
 - Phase 0 - Scope, Provenance & Architecture: complete
   - 0.A Legacy NSS Asset Ingestion & Provenance: complete

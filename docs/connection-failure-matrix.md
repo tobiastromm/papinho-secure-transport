@@ -168,4 +168,21 @@ No PST source, API, SPI, backend behavior, timeout, readiness, ownership or shut
 
 ## Phase 7.B closure
 
+## API 2.0/SPI 3.0 NSS CLIENT shutdown revalidation
+
+SS-3R3 changed only the PST RetroZilla NSS CLIENT provider shutdown path. Local
+`PR_Shutdown(PR_SHUTDOWN_SEND)` now begins, rather than completes, graceful
+shutdown. Bounded receive-side steps wait for the reciprocal TLS alert through
+the existing NSS alert callback. Real TLS 1.2 and TLS 1.3 NSS-client to strict
+OpenSSL-server runs each completed in two shutdown steps with one wait, while
+retaining mTLS, `fixture/1`, and 25-byte bidirectional I/O.
+
+The host failure matrix retained clean close, 29-byte data then clean close,
+and abrupt-close truncation. A dedicated `data_then_abrupt` fixture delivered
+and validated all 29 bytes before raw EOF was classified TRUNCATED. The
+`shutdown_abort` fixture observed the client's TLS EOF/close_notify, then
+aborted without a reciprocal alert; the client required three bounded shutdown
+steps and reported TRUNCATED with a SHUTDOWN diagnostic. This is current
+development evidence and does not rewrite the historical 0.4.0 results above.
+
 The formal closure audit found every original Connection Failure Matrix goal satisfied: failures remain fail-closed and bounded; terminal states do not resurrect; wait ERR/NVAL failures become FAILED; HUP preserves read progression; provider-observed close_notify distinguishes clean closure from truncation; ownership, diagnostics and logging remain coherent; and authenticated TLS 1.2/TLS 1.3 secure I/O remains intact. The final clean VC6 `/W4` suite, NSS unit test, all 11 modern failure modes and both TLS echo regressions passed with zero warnings. Real NT4 evidence covers the affected clean/data/abrupt provider path. At that closure point, Phase 7.B was complete while Phase 7 remained in progress and 7.C was next.

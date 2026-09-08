@@ -20,9 +20,9 @@ interest. Repeating that immediately is a spin, not progress.
 For an application read, READ is the primary interest and WRITE is auxiliary.
 For an application write, WRITE is primary and READ is auxiliary. Handshake is
 not assigned one fixed primary direction because a TLS stack may legitimately
-alternate reads and writes. The current RetroZilla NSS shutdown completes
-locally in one provider step, so no pending shutdown direction is observable in
-that provider.
+alternate reads and writes. The historical 0.4.0 RetroZilla NSS shutdown
+completed locally in one provider step, so no pending shutdown direction was
+observable in that provider.
 
 ## Current core guard
 
@@ -71,7 +71,8 @@ produced by the current NSS provider.
 | WRITE | READ | READ or READ/HUP | retry secure write because TLS may need inbound protocol data |
 | WRITE | READ/WRITE | WRITE or READ/WRITE | retry; primary WRITE is present and is never suppressed |
 | WRITE | READ/WRITE | READ only | retry once; if zero bytes and the same pending state recur, suppress READ for the next wait |
-| SHUTDOWN, current NSS | NONE/COMPLETE | no wait | `PR_Shutdown` completes locally in one step; connection becomes CLOSED |
+| SHUTDOWN, historical NSS 0.4.0 | NONE/COMPLETE | no wait | `PR_Shutdown` completed locally in one step; connection became CLOSED |
+| SHUTDOWN, NSS API 2.0/SPI 3.0 | READ after local send shutdown | READ readiness or timeout | `PR_Shutdown(PR_SHUTDOWN_SEND)` emits local `close_notify`; incremental `PR_Read` requires reciprocal `close_notify` before COMPLETE and maps raw EOF to TRUNCATED |
 | SHUTDOWN, generic pending provider | READ, WRITE, or READ/WRITE | matching readiness or timeout | SPI can represent this, but the current core has no operation-specific no-progress suppression proof for pending shutdown |
 | Any pending operation | any | timeout/NONE | no failure; clear temporary suppression; retain operation and permit later auxiliary readiness |
 | Any operation | any | ERR or NVAL | fatal transport/readiness failure; transition to FAILED; no resurrection |
@@ -212,3 +213,7 @@ No production, API, ABI, SPI, security-policy, trust, hostname, ALPN,
 authentication or downgrade behavior changed. Existing Phase 6 and 7.B NT4
 evidence is valid and no new NT4 run is required. Phase 7.C is complete; Phase 7
 remains in progress and 7.D is next but not started.
+
+## SS-3 OpenSSL SERVER readiness
+
+Real TLS 1.2/1.3 SERVER runs exercised incremental handshake waits, encrypted read/write, and two-step reciprocal shutdown. SERVER uses the same role-neutral interest contract; tests do not require a particular real-network mask sequence. TLS clean close completes only after peer close-notify, while application data followed by raw EOF is delivered and the subsequent read fails as TRUNCATED. Combined selection remains complete before transport attachment and never changes during progress.

@@ -138,7 +138,13 @@ The early runtime release has intermediate `RT-D=0` and `Shut=0`; after child re
 
 Release itself never increments handshake, wait, read, write, or shutdown-step counters. No destructor emits a log event. Two connections inherit the same synchronous sink; releasing A leaves B usable, final runtime release produces no callback, and the consumer context is never owned by PST. The focused lifecycle test mutates caller-owned hostname, ALPN, certificate, private-key, and CA buffers and confirms the retained copies. Existing identity tests retain the peer DER snapshot proof, and the credentials cleanup path structurally retains the volatile private-key wipe proof.
 
-The directed NSS lifecycle test passed with the canonical versioned runtime: runtime A succeeded, runtime B was rejected while A held the process-global NSS/NSPR state, A was released, and runtime C then succeeded. Real TLS 1.2 and TLS 1.3 each authenticated mTLS/`fixture/1` and completed `WRITE=25 READ=25 CONTENT_MATCH=1`. A TLS 1.3-only client against TLS 1.2-only server failed terminally with `PROTOCOL_FAILURE`, a valid HANDSHAKE diagnostic, one ERROR, and `NO_RESURRECTION=1`. The existing lifecycle runner completed three TLS 1.3 cycles, each with 25-byte echo, one-step shutdown, and `SNAPSHOT_AFTER_DESTROY=1`.
+The directed NSS lifecycle test passed with the canonical versioned runtime: runtime A succeeded, runtime B was rejected while A held the process-global NSS/NSPR state, A was released, and runtime C then succeeded. Real TLS 1.2 and TLS 1.3 each authenticated mTLS/`fixture/1` and completed `WRITE=25 READ=25 CONTENT_MATCH=1`. A TLS 1.3-only client against TLS 1.2-only server failed terminally with `PROTOCOL_FAILURE`, a valid HANDSHAKE diagnostic, one ERROR, and `NO_RESURRECTION=1`. The historical 0.4.0 lifecycle runner completed three TLS 1.3 cycles, each with 25-byte echo, one-step shutdown, and `SNAPSHOT_AFTER_DESTROY=1`.
+
+For API 2.0/SPI 3.0 development, RetroZilla NSS CLIENT graceful shutdown is
+incremental: local `close_notify` emission does not imply COMPLETE. The
+connection retains its single owned SSL/NSPR transport while waiting for the
+reciprocal TLS alert; raw EOF remains TRUNCATED, and final destruction still
+closes the aggregate exactly once.
 
 All seven deterministic gaps are closed. No production defect was reproduced and no production source changed. The formal closure audit found no mandatory untested lifecycle contract. At that closure point, Phase 7.E was complete while Phase 7 remained in progress and 7.F was next. No new NT4 run was required.
 ## Deferred housekeeping

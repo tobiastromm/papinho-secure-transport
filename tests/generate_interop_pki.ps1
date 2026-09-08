@@ -68,6 +68,8 @@ Run-OpenSsl @("x509", "-req", "-sha256", "-days", "30", "-in", (Join-Path $outpu
 Run-OpenSsl @("x509", "-in", (Join-Path $output "intermediate.pem"), "-outform", "DER", "-out", (Join-Path $output "intermediate.der"))
 Run-OpenSsl @("req", "-new", "-newkey", "rsa:2048", "-nodes", "-sha256", "-config", (Join-Path $output "server.cnf"), "-keyout", (Join-Path $output "server.key"), "-out", (Join-Path $output "server.csr"))
 Run-OpenSsl @("x509", "-req", "-sha256", "-days", "30", "-in", (Join-Path $output "server.csr"), "-CA", (Join-Path $output "intermediate.pem"), "-CAkey", (Join-Path $output "intermediate.key"), "-CAcreateserial", "-extfile", (Join-Path $output "server.ext"), "-out", (Join-Path $output "server.pem"))
+Run-OpenSsl @("x509", "-in", (Join-Path $output "server.pem"), "-outform", "DER", "-out", (Join-Path $output "server.der"))
+Run-OpenSsl @("pkcs8", "-topk8", "-nocrypt", "-in", (Join-Path $output "server.key"), "-outform", "DER", "-out", (Join-Path $output "server.pk8"))
 $chain = [IO.File]::ReadAllText((Join-Path $output "server.pem")) + [IO.File]::ReadAllText((Join-Path $output "intermediate.pem"))
 [IO.File]::WriteAllText((Join-Path $output "server-chain.pem"), $chain, [Text.Encoding]::ASCII)
 

@@ -566,7 +566,8 @@ int main(int argc, char **argv)
         !strcmp(mode, "abrupt_close") ||
         !strcmp(mode, "read_clean") ||
         !strcmp(mode, "read_abrupt") ||
-        !strcmp(mode, "data_then_close");
+        !strcmp(mode, "data_then_close") ||
+        !strcmp(mode, "data_then_abrupt");
     mode_write = !strcmp(mode, "close_around_write");
     mode_shutdown = !strcmp(mode, "shutdown_abort");
     total_read = 0;
@@ -725,7 +726,8 @@ int main(int argc, char **argv)
             console_marker("SHUTDOWN_END STEPS=%d ELAPSED_MS=%lu FINAL=%ld",
                 shutdown_calls, (unsigned long)(loop_end - loop_start),
                 (long)final_result);
-            if (final_result == PST_RESULT_CLOSED) {
+            if (final_result == PST_RESULT_CLOSED ||
+                final_result == PST_RESULT_TRUNCATED) {
                 abort_confirmed = control_receive(control_socket, 'A',
                     &control_elapsed);
                 timeline("CONTROL_ABORT_CONFIRMED=%d ELAPSED_MS=%lu BOUND_MS=%lu",
@@ -755,6 +757,12 @@ int main(int argc, char **argv)
             final_result == PST_RESULT_CLOSED &&
             final_close == PST_CLOSE_CLEAN &&
             !diagnostic.valid;
+    } else if (!strcmp(mode, "data_then_abrupt")) {
+        ok = ok && content_match &&
+            final_result == PST_RESULT_TRUNCATED &&
+            final_close == PST_CLOSE_TRUNCATED &&
+            diagnostic.valid &&
+            diagnostic.normalized_result == PST_RESULT_TRUNCATED;
     } else if (!strcmp(mode, "clean_close") ||
         !strcmp(mode, "read_clean")) {
         ok = ok && final_result == PST_RESULT_CLOSED &&
@@ -771,9 +779,11 @@ int main(int argc, char **argv)
             final_result != PST_RESULT_OK;
     } else if (mode_shutdown) {
         ok = ok && total_written == sizeof(g_client_write) - 1 &&
-            control_ready && abort_confirmed && shutdown_calls == 1 &&
-            final_result == PST_RESULT_CLOSED &&
-            final_close == PST_CLOSE_CLEAN && !diagnostic.valid;
+            control_ready && abort_confirmed && shutdown_calls > 1 &&
+            final_result == PST_RESULT_TRUNCATED &&
+            diagnostic.valid &&
+            diagnostic.normalized_result == PST_RESULT_TRUNCATED &&
+            diagnostic.operation == PST_DIAGNOSTIC_OPERATION_SHUTDOWN;
     }
     if (log_config.level == PST_LOG_LEVEL_OFF)
         ok = ok && log.total == 0UL;

@@ -11,7 +11,8 @@ OPERATION_TIMEOUT_SECONDS = 10
 MODES = {
     "pre_tls_close", "non_tls", "handshake_close", "handshake_reset",
     "clean_close", "abrupt_close", "read_clean", "read_abrupt",
-    "data_then_close", "close_around_write", "shutdown_abort"
+    "data_then_close", "data_then_abrupt", "close_around_write",
+    "shutdown_abort"
 }
 
 
@@ -100,6 +101,12 @@ try:
         plain = tls.unwrap()
         plain.close()
         print("CLOSE TYPE=TLS_CLOSE_NOTIFY", flush=True)
+    elif mode == "data_then_abrupt":
+        tls.sendall(EXPECTED)
+        print("SEND=%d CONTENT=%s" % (len(EXPECTED), EXPECTED.decode("ascii")), flush=True)
+        fd = tls.detach()
+        socket.socket(fileno=fd).close()
+        print("CLOSE TYPE=TCP_FIN_NO_CLOSE_NOTIFY", flush=True)
     elif mode in ("abrupt_close", "read_abrupt"):
         fd = tls.detach()
         socket.socket(fileno=fd).close()

@@ -15,3 +15,5 @@ Built-in providers have different advertised capabilities. Selection is constrai
 ## Tested and not claimed
 
 Real evidence covers Windows NT 4.0 SP6 for the preserved NSS package and Windows 10 build 19045 for Schannel, plus modern-host OpenSSL tests. It does not imply Windows 2000, XP, 95, 98, Win32s, every Windows build, or every enterprise domain configuration. Current public support does not claim POSIX adapters, dynamic plugins, session resumption, 0-RTT, a public full-chain API, DTLS, QUIC, Noise, FIPS certification, formal verification, or universal revocation behavior.
+
+In the 0.5.0 development line, OpenSSL is the only implemented SERVER provider. Its client-certificate trust is explicit CUSTOM trust; OpenSSL SERVER SYSTEM trust is not implemented. The aggregate provider capability mask also includes SYSTEM trust because OpenSSL CLIENT has that independently proven capability, so consumers must still submit a complete role-specific configuration and accept selection eligibility as authoritative. Raw EOF/reset before reciprocal `close_notify` remains `PST_RESULT_TRUNCATED` for SERVER as well as CLIENT.

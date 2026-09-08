@@ -10,7 +10,7 @@ int main(void)
  PST_RUNTIME_OPTIONS options;PST_RUNTIME_INFO runtime_info;PST_PROVIDER_INFO first,second;
  pst_runtime *runtime=NULL;const PST_BACKEND_DESCRIPTOR *schannel,*openssl;
  schannel=pst_backend_schannel_descriptor();openssl=pst_backend_openssl_descriptor();
- CHECK(schannel&&openssl,1);CHECK(!(schannel->capabilities&PST_CAP_ROLE_SERVER)&&!(openssl->capabilities&PST_CAP_ROLE_SERVER),2);
+ CHECK(schannel&&openssl,1);CHECK(!(schannel->capabilities&PST_CAP_ROLE_SERVER)&&(openssl->capabilities&PST_CAP_ROLE_SERVER),2);
  CHECK((schannel->capabilities&(PST_CAP_TLS_1_2|PST_CAP_SYSTEM_TRUST|PST_CAP_PEER_NAME_VERIFY))==(PST_CAP_TLS_1_2|PST_CAP_SYSTEM_TRUST|PST_CAP_PEER_NAME_VERIFY),3);
  CHECK(!(schannel->capabilities&PST_CAP_TLS_1_3)&&(openssl->capabilities&PST_CAP_TLS_1_3),4);
  CHECK(pst_backend_schannel_register()==PST_RESULT_OK&&pst_backend_openssl_register()==PST_RESULT_OK,5);

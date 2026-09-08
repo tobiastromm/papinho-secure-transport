@@ -11,3 +11,5 @@ Selection is complete before transport binding. Ineligible candidates may be ski
 The runtime may be logically shared by connections, but API 2.0 does not guarantee concurrent access from multiple threads. Each connection has independent lifecycle and provider-private state. Runtime destruction is guarded until children are gone; provider states are released in reverse successful-initialization order.
 
 Ownership and readiness retain the 0.4.0 invariants: exactly one native close root after acceptance; native readiness differs from TLS readiness; all steps and waits are bounded; release never performs a hidden peer wait.
+
+SS-3 validates this flow with the OpenSSL provider. The application retains the listener throughout. Before successful attach it owns the accepted socket; after `ownership_accepted=1`, the OpenSSL connection is the sole native close root. Successful reciprocal shutdown, handshake failure after acceptance, and truncated peer release all preserve that rule. Selection is pinned before attach, including Combined ORDERED/AUTOMATIC, and is never retried after a bound-provider failure.

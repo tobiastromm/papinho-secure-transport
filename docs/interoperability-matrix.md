@@ -129,3 +129,7 @@ Windows 2000, Windows XP, Windows 95/98, Win32s/3.11, ECDSA, exhaustive cipher c
 ## Deferred housekeeping
 
 The later RetroZilla NSS provenance housekeeping preserved the exact source lineage, revision, patchset, VC6 procedure, SDK and runtime, making the historical `C:\PSTW` workspace disposable.
+
+## API 2.0 SERVER development evidence
+
+OpenSSL SERVER passed real TLS 1.2 and TLS 1.3 with encrypted 25-byte bidirectional content, required/optional/disabled client certificates, CUSTOM trust, peer information, and reciprocal close-notify. Conflicting ALPN lists proved server preference: client `[h2,http/1.1]`, server `[http/1.1,h2]`, selected `http/1.1`. PST Schannel CLIENT interoperated over TLS 1.2; PST RetroZilla NSS CLIENT interoperated over TLS 1.2 and TLS 1.3 with mTLS and `fixture/1`. Schannel SERVER and RetroZilla NSS SERVER are not implemented.
