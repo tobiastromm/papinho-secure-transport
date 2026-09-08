@@ -225,20 +225,20 @@ int main(int argc, char **argv)
     CHECK(valid_credentials != NULL && system_trust != NULL &&
           custom_trust != NULL);
     CHECK(expect_role_result(runtime, valid_credentials, system_trust,
-          PST_BACKEND_SELECTION_EXACT, NULL, 0, PST_RESULT_UNSUPPORTED, 0));
+          PST_BACKEND_SELECTION_EXACT, NULL, 0, PST_RESULT_OK, 1));
     CHECK(expect_role_result(runtime, valid_credentials, system_trust,
           PST_BACKEND_SELECTION_ORDERED, ordered, 1,
-          PST_RESULT_UNSUPPORTED, 0));
+          PST_RESULT_OK, 1));
     CHECK(expect_role_result(runtime, valid_credentials, system_trust,
           PST_BACKEND_SELECTION_AUTOMATIC, NULL, 0,
-          PST_RESULT_UNSUPPORTED, 0));
+          PST_RESULT_OK, 1));
     CHECK(expect_server_peer_name_rejected(runtime, valid_credentials,
                                            custom_trust));
     memset(&provider_info, 0, sizeof(provider_info));
     provider_info.struct_size = sizeof(provider_info);
     provider_info.api_version = PST_API_VERSION;
     CHECK(pst_runtime_get_provider_info(runtime, 0, &provider_info) ==
-          PST_RESULT_OK && !provider_info.initialized);
+          PST_RESULT_OK && provider_info.initialized);
     CHECK(expect_role_result(runtime, valid_credentials, custom_trust,
           PST_BACKEND_SELECTION_EXACT, NULL, 0, PST_RESULT_OK, 1));
     pst_trust_release(system_trust);
@@ -275,7 +275,7 @@ int main(int argc, char **argv)
     free(wrong_key);
     printf("OPENSSL_SERVER_KEY_MATCH_VALIDATION=PASS\n");
     printf("OPENSSL_ROLE_SCOPED_ELIGIBILITY=PASS EXACT=PASS ORDERED=PASS "
-           "AUTOMATIC=PASS PRE_BINDING=PASS SERVER_SYSTEM_TRUST=UNSUPPORTED "
+           "AUTOMATIC=PASS PRE_BINDING=PASS SERVER_SYSTEM_TRUST=ELIGIBLE "
            "SERVER_CUSTOM_TRUST=ELIGIBLE SERVER_PEER_NAME=POLICY_REJECTED\n");
     printf("OPENSSL_SERVER_IDENTITY_NEGATIVE_MATRIX=PASS "
            "MISSING=PASS MALFORMED_CERT=PASS MALFORMED_KEY=PASS "

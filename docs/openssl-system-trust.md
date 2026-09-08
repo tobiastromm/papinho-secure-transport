@@ -6,7 +6,7 @@ Status: OSSL-ST-A through OSSL-ST-D and Phase 9 are complete. The OpenSSL provid
 
 ## Contract
 
-On Windows, PST system trust means that the Windows certificate chain engine is the authority for whether the peer chain terminates in trust effective for the calling user/process. It is not a copy of whichever certificates happen to be enumerable in one ROOT store. OpenSSL remains the TLS/record engine and performs an independent provider-local hostname check. Custom trust remains an exclusive connection-local OpenSSL `X509_STORE` containing only caller-supplied anchors; it is never unioned with system trust.
+On Windows, PST system trust means that the Windows certificate chain engine is the authority for whether the peer chain terminates in trust effective for the calling user/process. It is not a copy of whichever certificates happen to be enumerable in one ROOT store. OpenSSL remains the TLS/record engine. In CLIENT role it also performs the independent provider-local hostname check; SERVER role authenticates a client certificate and has no hostname semantic. Custom trust remains an exclusive connection-local OpenSSL `X509_STORE` containing only caller-supplied anchors; it is never unioned with system trust.
 
 The initial implementation should use the current-user chain engine (`HCCE_CURRENT_USER`). Windows logical CurrentUser stores include inherited LocalMachine physical stores and applicable policy stores. This matches an interactive consumer's effective identity more closely than separately merging CurrentUser and LocalMachine ROOT. A service naturally evaluates under its service identity; a future explicit machine-only policy would require a separately designed public semantic, not a hidden switch.
 
@@ -16,12 +16,12 @@ Windows documents logical ROOT, CA and Trust stores across CurrentUser, LocalMac
 
 1. OpenSSL performs TLS 1.2/1.3 negotiation and supplies the peer leaf and server-provided intermediates.
 2. A Windows-only OpenSSL trust adapter converts those certificates to temporary `CERT_CONTEXT` objects and places intermediates in a connection-local memory store.
-3. `CertGetCertificateChain(HCCE_CURRENT_USER, ...)` builds a server-auth chain with `szOID_PKIX_KP_SERVER_AUTH`, the memory store as the additional untrusted store, and current time.
+3. `CertGetCertificateChain(HCCE_CURRENT_USER, ...)` builds a role-aware chain with `szOID_PKIX_KP_SERVER_AUTH` for a CLIENT connection or `szOID_PKIX_KP_CLIENT_AUTH` for a SERVER connection, the memory store as the additional untrusted store, and current time.
 4. `CertVerifyCertificateChainPolicy(CERT_CHAIN_POLICY_BASE, ...)` checks the resulting Windows chain policy without duplicating hostname semantics. Its return value means the call executed; both chain trust status and `CERT_CHAIN_POLICY_STATUS.dwError` must be zero.
-5. Independently, OpenSSL checks the configured hostname using its supported hostname API against the leaf certificate. Windows trust success never bypasses hostname validation.
+5. For CLIENT only, OpenSSL independently checks the configured hostname using its supported hostname API against the leaf certificate. Windows trust success never bypasses CLIENT hostname validation. SERVER performs no peer-name check.
 6. All `CERT_CONTEXT`, chain-context and memory-store objects are released on every path. Native status remains provider-private and is normalized once.
 
-This is a hybrid architecture: Windows is authoritative for chain construction, effective anchors, distrust, time, constraints and server-auth usage; OpenSSL is authoritative for TLS and hostname. It does not route traffic through Schannel and does not require OpenSSL to recreate Windows root policy.
+This is a hybrid architecture: Windows is authoritative for chain construction, effective anchors, distrust, time, constraints and role-appropriate certificate usage; OpenSSL is authoritative for TLS and CLIENT hostname. It does not route traffic through Schannel and does not require OpenSSL to recreate Windows root policy.
 
 ## Deterministic network and revocation policy
 
@@ -134,3 +134,11 @@ Known limitations are explicit: no online revocation check, no PST-driven AIA re
 PapinhoAccelerator on Windows 10 using PST/OpenSSL for TLS 1.3 plus Windows SYSTEM trust is an example consumer path specific to PapinhoBrowser, not part of PST architecture. The same feature also serves enterprise, LAN, and private services whose corporate CA is trusted by effective Windows policy.
 
 OSSL-ST-A through ST-D are coherent and complete: architecture, provider-local implementation, real functional/isolation proof, selection, hardening, and documentation agree. That work did not change the public API or SPI; the frozen release baseline is API 1.3.0, library 0.4.0 and SPI 2.4. Phase 9 is complete.
+
+## API 2.0 SERVER validation
+
+SS-3B reuses the same private Windows chain adapter for OpenSSL SERVER client-certificate authentication. The adapter receives the connection role: CLIENT requests server-auth usage and retains OpenSSL hostname verification; SERVER requests client-auth usage and never applies hostname semantics. The public API 2.0 and SPI 3.0 contracts already express role and SYSTEM trust, so this extension required no contract revision.
+
+Controlled Windows validation installed only the exact fixture root in CurrentUser ROOT and removed it in a bounded cleanup block. TLS 1.2 and TLS 1.3 REQUIRED authentication passed with verified client identity, exact 25-byte bidirectional I/O, clean shutdown, and zero secret-bearing log events. TLS 1.3 OPTIONAL authentication passed both without a certificate and with the trusted client certificate. EXACT, ORDERED and AUTOMATIC SERVER selection bound OpenSSL as required.
+
+The negative matrix rejected a missing certificate under REQUIRED authentication, rejected an untrusted client chain as `AUTH_FAILURE` with normalized `PEER_CERT_UNTRUSTED`, and rejected a trusted certificate restricted to server-auth usage with normalized `PEER_CERT_INVALID`. The latter is direct functional evidence that SERVER validation requests client-auth usage rather than ANY_EKU or server-auth usage. Authentication establishes certificate trust only; application authorization remains outside PST.
