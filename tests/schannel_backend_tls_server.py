@@ -3,6 +3,7 @@ import socket
 import hashlib
 import ssl
 import sys
+import time
 
 port = int(sys.argv[1])
 certificate = sys.argv[2]
@@ -52,7 +53,20 @@ try:
                 raise RuntimeError("payload mismatch")
             tls.sendall(data)
             print("EXCHANGE=%d RECV=%d SEND=%d CONTENT_MATCH=1" % (index + 1, len(data), len(data)), flush=True)
-        if close_mode == "peer-abrupt":
+        if close_mode == "client-abrupt":
+            descriptor = tls.detach()
+            transport = socket.socket(fileno=descriptor)
+            received_close = transport.recv(4096)
+            transport.close()
+            print("CLOSE=ABRUPT_AFTER_CLIENT_NOTIFY RECV_TLS_BYTES=%d" %
+                  len(received_close), flush=True)
+        elif close_mode == "client-timeout":
+            descriptor = tls.detach()
+            transport = socket.socket(fileno=descriptor)
+            time.sleep(2)
+            transport.close()
+            print("CLOSE=NO_RESPONSE_TIMEOUT_FIXTURE", flush=True)
+        elif close_mode == "peer-abrupt":
             descriptor = tls.detach()
             socket.socket(fileno=descriptor).close()
             print("CLOSE=ABRUPT", flush=True)

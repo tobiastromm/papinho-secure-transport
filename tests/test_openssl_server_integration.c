@@ -1,8 +1,23 @@
 /* SPDX-License-Identifier: MPL-2.0 */
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+#pragma warning(disable:4115)
+#pragma warning(disable:4201)
+#pragma warning(disable:4514)
+#pragma warning(disable:4701)
+#endif
 #include "papinho_secure_transport.h"
 #include "papinho_secure_transport_win32.h"
 #include "backends/openssl/pst_backend_openssl.h"
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+#pragma warning(push, 3)
+#endif
 #include <winsock2.h>
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+#pragma warning(pop)
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,7 +34,7 @@ static int split_alpn(char*text,PST_ALPN_PROTOCOL*items,pst_size*count)
 {char*p,*comma;p=text;*count=0;if(!strcmp(text,"-"))return 1;while(*p&&*count<4){comma=strchr(p,',');if(comma)*comma='\0';items[*count].data=(const pst_u8*)p;items[*count].size=strlen(p);if(!items[*count].size||items[*count].size>255)return 0;(*count)++;if(!comma)return 1;p=comma+1;}return *p=='\0';}
 typedef struct log_capture {pst_u32 events,server_events,error_events,secret_hits,bad_events;} log_capture;
 static void PST_CALL capture_log(void*context,const PST_LOG_EVENT*event)
-{log_capture*s=(log_capture*)context;if(!s||!event)return;s->events++;if(event->role==PST_CONNECTION_ROLE_SERVER)s->server_events++;if(event->level==PST_LOG_LEVEL_ERROR)s->error_events++;if(event->struct_size!=sizeof(*event)||event->api_version!=PST_API_VERSION)s->bad_events++;if(event->backend_id[0]&&strcmp(event->backend_id,"openssl")&&strcmp(event->backend_id,"schannel"))s->bad_events++;if(event->backend_id[0]&&event->role!=PST_CONNECTION_ROLE_SERVER)s->bad_events++;if(event->normalized_result!=PST_RESULT_OK&&event->level!=PST_LOG_LEVEL_ERROR)s->bad_events++;if(strstr(event->backend_id,"PRIVATE")||strstr(event->backend_id,"pst-phase5-public-runtime")||strstr(event->backend_id,"BEGIN"))s->secret_hits++;}
+{log_capture*s=(log_capture*)context;if(!s||!event)return;s->events++;if(event->role==PST_CONNECTION_ROLE_SERVER)s->server_events++;if(event->level==PST_LOG_LEVEL_ERROR)s->error_events++;if(event->struct_size!=sizeof(*event)||event->api_version!=PST_API_VERSION)s->bad_events++;if(event->backend_id[0]&&strcmp(event->backend_id,"openssl")&&strcmp(event->backend_id,"schannel")&&strcmp(event->backend_id,"retrozilla-nss"))s->bad_events++;if(event->backend_id[0]&&event->role!=PST_CONNECTION_ROLE_SERVER)s->bad_events++;if(event->normalized_result!=PST_RESULT_OK&&event->level!=PST_LOG_LEVEL_ERROR)s->bad_events++;if(strstr(event->backend_id,"PRIVATE")||strstr(event->backend_id,"pst-phase5-public-runtime")||strstr(event->backend_id,"BEGIN"))s->secret_hits++;}
 int main(int ac,char**av)
 {
  WSADATA wd;SOCKET listener=INVALID_SOCKET,accepted_socket=INVALID_SOCKET;struct sockaddr_in a;pst_runtime*rt=NULL;pst_connection*c=NULL;pst_transport*t=NULL;pst_credentials*credentials=NULL;pst_trust*trust=NULL;pst_peer_info*peer=NULL;PST_RUNTIME_OPTIONS ro;PST_LOG_CONFIG lc;log_capture logs={0};PST_CONNECTION_CONFIG cc;PST_CREDENTIAL_SOURCE cs;PST_TRUST_SOURCE ts;PST_DER_ITEM chain[2],anchor;PST_ALPN_PROTOCOL protocols[4];PST_PEER_INFO_SUMMARY summary;PST_PROVIDER_INFO provider_info;PST_DIAGNOSTIC_INFO diagnostic;PST_IO_RESULT io;unsigned char *leaf=NULL,*intermediate=NULL,*key=NULL,*ca=NULL,buffer[64],alpn[255];pst_size leaf_n,intermediate_n,key_n,ca_n,alpn_n=0,protocol_count=0,total;int tls,mode,ok=0,truncate_mode=0;pst_u32 ownership=0,steps=0,waits=0,shutdown_steps=0;PST_RESULT final=PST_RESULT_BACKEND_FAILURE;const char*selection="exact",*scenario="echo",*trust_mode="custom";const char*order[2]={"schannel","openssl"};char alpn_text[512];

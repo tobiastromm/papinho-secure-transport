@@ -3,7 +3,7 @@ param(
     [ValidateSet("12","13")][string]$TlsVersion="12",
     [int]$Port=8472,
     [int]$Exchanges=10,
-    [ValidateSet("client","peer-clean","peer-abrupt")][string]$CloseMode="client",
+    [ValidateSet("client","client-abrupt","client-timeout","peer-clean","peer-abrupt")][string]$CloseMode="client",
     [ValidateSet("System","Custom")][string]$TrustMode="System",
     [switch]$ClientAuth,
     [string]$Alpn="fixture/1"

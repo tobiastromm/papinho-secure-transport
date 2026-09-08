@@ -10,6 +10,8 @@ NSS_DIST=
 !ENDIF
 NSS_CFLAGS=$(CFLAGS) /I$(NSS_DIST)\include\nspr /I$(NSS_DIST)\public\nss
 BUILD=build\win32-x86-vc6-retrozilla-nss
+INTEROP_FIXTURES=build\fixtures\interoperability-pki
+NSS_RUNTIME=third_party\retrozilla-nss\prebuilt\win32-x86-vc6\runtime
 LIB=$(BUILD)\papinho_secure_transport.lib
 OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_diagnostic.obj $(BUILD)\pst_log.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj $(BUILD)\pst_transport_win32.obj $(BUILD)\pst_builtin_manifest.obj $(BUILD)\pst_backend_nss.obj
 all: dirs $(LIB) $(BUILD)\test_foundation.exe $(BUILD)\test_identity.exe $(BUILD)\test_backend_spi.exe $(BUILD)\test_provider_spi_abi.exe $(BUILD)\test_multi_backend.exe $(BUILD)\test_tls_policy.exe $(BUILD)\test_diagnostic.exe $(BUILD)\test_diagnostic_transport.exe $(BUILD)\test_diagnostic_creation.exe $(BUILD)\test_public_diagnostic.exe $(BUILD)\test_public_header.exe $(BUILD)\test_public_abi.exe $(BUILD)\test_public_win32_header.obj $(BUILD)\test_public_builtin_bootstrap.exe $(BUILD)\test_logging.exe $(BUILD)\test_lifecycle_ownership.exe
@@ -150,6 +152,24 @@ test: all
 	$(BUILD)\test_lifecycle_ownership.exe
 test-nss-unit: dirs $(LIB) $(BUILD)\test_backend_nss.exe
 	$(BUILD)\test_backend_nss.exe
+$(BUILD)\test_nss_server_direct.obj: tests\test_nss_server_direct.c
+	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
+	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_nss_server_direct.exe: $(BUILD)\test_nss_server_direct.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_nss_server_direct.obj $(LIB) wsock32.lib $(LDFLAGS)
+nss-server-direct: dirs $(LIB) $(BUILD)\test_nss_server_direct.exe
+$(BUILD)\test_nss_server_public.obj: tests\test_openssl_server_integration.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_nss_server_public.exe: $(BUILD)\test_nss_server_public.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_nss_server_public.obj $(LIB) wsock32.lib $(LDFLAGS)
+nss-server-public: dirs $(LIB) $(BUILD)\test_nss_server_public.exe
+$(BUILD)\test_nss_server_validation.obj: tests\test_nss_server_validation.c
+	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
+	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_nss_server_validation.exe: $(BUILD)\test_nss_server_validation.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_nss_server_validation.obj $(LIB) wsock32.lib $(LDFLAGS)
+nss-server-validation: dirs $(LIB) $(BUILD)\test_nss_server_validation.exe
+	set PATH=$(NSS_RUNTIME);%PATH%&& $(BUILD)\test_nss_server_validation.exe $(INTEROP_FIXTURES)\server.der $(INTEROP_FIXTURES)\intermediate.der $(INTEROP_FIXTURES)\server.pk8 $(INTEROP_FIXTURES)\client.pk8
 nss-integration: dirs $(LIB) $(BUILD)\test_backend_nss_integration.exe
 test-nss-integration: nss-integration
 	@if "$(NSS_TEST_HOST)"=="" echo NSS_TEST_HOST is required & exit 2

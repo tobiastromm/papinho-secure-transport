@@ -99,6 +99,54 @@ The most recent native code remains private and can be read by backend-specific 
 
 ## Tests and current limitation
 
+### SS-5 SERVER status
+
+The API 2.0/SPI 3.0 development branch also contains the real NSS SERVER role.
+Host validation has proved TLS 1.2 and TLS 1.3 with an OpenSSL client, NSS
+CLIENT-to-NSS SERVER interoperability, CUSTOM_TRUST client authentication,
+DISABLED/OPTIONAL/REQUIRED peer-certificate modes, clientAuth EKU rejection,
+25-byte bidirectional encrypted I/O, peer information, incremental `PR_Poll`
+readiness, reciprocal `close_notify`, raw-EOF and data-then-EOF truncation, and
+12/12 bounded fresh-runtime repetitions. TLS version mismatch is retained as a
+protocol failure with diagnostic reason `TLS_POLICY_MISMATCH`.
+
+After completion of the SS-5 provider and interoperability gates, the factual
+SERVER mask is published. It excludes `SYSTEM_TRUST`,
+`ALPN_SERVER`, and SERVER peer-name verification. This NSS/NT4 integration uses a private NSS
+NoDB/custom-anchor model and does not bridge the Windows certificate stores;
+therefore SERVER `SYSTEM_TRUST` is `NOT_IMPLEMENTED_FACTUAL_LIMITATION`.
+The snapshot's ALPN callback selects by server preference for matching lists and
+can reject REQUIRED mismatch, but OPTIONAL mismatch cannot reliably continue
+without ALPN. Consequently the complete frozen PST SERVER ALPN capability is
+not advertised; no ClientHello parser was added.
+
+`SSL_RECORD_SIZE_LIMIT` is explicitly configured to 16384 on imported NSS
+descriptors. The preserved snapshot otherwise emits a zero-valued
+`record_size_limit` extension from its default option state, which its own
+SERVER parser correctly rejects as malformed. This is a provider-local use of
+the existing NSS option API; no NSS/NSPR source or runtime DLL was changed.
+
+Real Windows NT 4.0 SP6 x86 validation was executed from the test-only transfer
+directory. The preserved console and backend evidence proves:
+
+- TLS 1.2 and TLS 1.3 NSS SERVER handshakes with an OpenSSL client;
+- REQUIRED mutual TLS with CUSTOM_TRUST and complete server-chain delivery;
+- 25-byte bidirectional encrypted I/O with exact content match;
+- incremental nonblocking readiness and provider wait;
+- reciprocal clean TLS shutdown;
+- raw EOF and data-then-abrupt EOF classified as `TRUNCATED`.
+
+The NT4 run did not negotiate ALPN (`ALPN=NONE`) and is not cited as ALPN
+evidence. `SYSTEM_TRUST` and complete SERVER ALPN semantics remain deliberately
+absent from the published NSS SERVER capability mask. The runtime DLLs and
+third-party NSS/NSPR sources were not modified.
+
+During the same closure, Schannel CLIENT shutdown was corrected to remain
+incremental after sending its local alert: it now reports `NEED_READ` until it
+observes the peer `close_notify`, reports a bounded timeout while waiting, and
+classifies raw EOF/reset before the reciprocal alert as `TRUNCATED`. Real
+Schannel CLIENT-to-NSS SERVER TLS 1.2 then completed reciprocal shutdown.
+
 `test_backend_nss` validates descriptor registration, advertised capabilities, error normalization, duplicate handling, and optionally the real NSS/NSPR lifecycle. Its default mode neither loads DLLs nor uses a network.
 
 `test_backend_nss_integration` is a separately built opt-in loopback client. It accepts host, port, and certificate hostname, imports the connected socket through the PST SPI, and drives handshake through incremental step plus backend `PR_Poll`. For successful certificate authentication it requires an external test NSS DB selected with `PST_NSS_DB_DIR` and a separately managed local TLS server.

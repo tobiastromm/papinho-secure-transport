@@ -9,7 +9,7 @@ PAYLOAD = b"pst-phase5-public-runtime"
 if len(sys.argv) != 10:
     raise SystemExit(
         "usage: host port tls ca.pem client.pem|- client.key|- "
-        "alpn-list|- clean|data-abrupt expected-alpn|-"
+        "alpn-list|- clean|abrupt|data-abrupt expected-alpn|-"
     )
 
 host, port_text, tls_text = sys.argv[1:4]
@@ -38,14 +38,20 @@ elif selected != expected_alpn:
     raise SystemExit("ALPN mismatch expected=%s actual=%s" %
                      (expected_alpn, selected))
 
-tls.sendall(PAYLOAD)
-if close_mode == "data-abrupt":
+if close_mode == "abrupt":
+    descriptor = tls.detach()
+    socket.socket(fileno=descriptor).close()
+    print("CLIENT TLS=%s WRITE=0 CLOSE=TCP_NO_CLOSE_NOTIFY ALPN=%s PASS=1" %
+          (tls_text, selected or "NONE"), flush=True)
+elif close_mode == "data-abrupt":
+    tls.sendall(PAYLOAD)
     time.sleep(0.1)
     descriptor = tls.detach()
     socket.socket(fileno=descriptor).close()
     print("CLIENT TLS=%s WRITE=25 CLOSE=TCP_NO_CLOSE_NOTIFY ALPN=%s PASS=1" %
           (tls_text, selected or "NONE"), flush=True)
 else:
+    tls.sendall(PAYLOAD)
     received = b""
     while len(received) < len(PAYLOAD):
         block = tls.recv(len(PAYLOAD) - len(received))

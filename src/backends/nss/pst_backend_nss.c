@@ -31,6 +31,20 @@
 #include "prerror.h"
 #include "prerr.h"
 #include "prinrval.h"
+#define PST_NSS_CLIENT_CAPABILITIES (PST_BACKEND_CAP_TLS_1_2 | \
+    PST_BACKEND_CAP_TLS_1_3 | PST_BACKEND_CAP_ROLE_CLIENT | \
+    PST_BACKEND_CAP_PEER_CERT_AUTH | PST_BACKEND_CAP_PEER_NAME_VERIFY | \
+    PST_BACKEND_CAP_NONBLOCKING | PST_BACKEND_CAP_BACKEND_WAIT | \
+    PST_BACKEND_CAP_LOCAL_IDENTITY | PST_BACKEND_CAP_CUSTOM_TRUST | \
+    PST_BACKEND_CAP_PEER_INFO | PST_BACKEND_CAP_ALPN_CLIENT)
+#define PST_NSS_SERVER_CAPABILITIES (PST_BACKEND_CAP_TLS_1_2 | \
+    PST_BACKEND_CAP_TLS_1_3 | PST_BACKEND_CAP_ROLE_SERVER | \
+    PST_BACKEND_CAP_PEER_CERT_AUTH | PST_BACKEND_CAP_PEER_CERT_OPTIONAL | \
+    PST_BACKEND_CAP_NONBLOCKING | PST_BACKEND_CAP_BACKEND_WAIT | \
+    PST_BACKEND_CAP_LOCAL_IDENTITY | PST_BACKEND_CAP_CUSTOM_TRUST | \
+    PST_BACKEND_CAP_PEER_INFO)
+#define PST_NSS_CAPABILITIES \
+    (PST_NSS_CLIENT_CAPABILITIES | PST_NSS_SERVER_CAPABILITIES)
 #if defined(_MSC_VER) && _MSC_VER == 1200
 # pragma warning(pop)
 # pragma warning(disable:4514)
@@ -60,7 +74,11 @@ typedef SECStatus (*pst_ssl_client_auth_hook_fn)(PRFileDesc *, SSLGetClientAuthD
 typedef CERTCertificate *(*pst_ssl_peer_certificate_fn)(PRFileDesc *);
 typedef SECStatus (*pst_ssl_version_set_fn)(PRFileDesc *, const SSLVersionRange *);
 typedef SECStatus (*pst_ssl_set_alpn_fn)(PRFileDesc *, const unsigned char *, unsigned int);
+typedef SECStatus (*pst_ssl_set_alpn_callback_fn)(PRFileDesc *, SSLNextProtoCallback, void *);
 typedef SECStatus (*pst_ssl_get_alpn_fn)(PRFileDesc *, SSLNextProtoState *, unsigned char *, unsigned int *, unsigned int);
+typedef SECStatus (*pst_ssl_config_server_cert_fn)(PRFileDesc *, CERTCertificate *, SECKEYPrivateKey *, const SSLExtraServerCertData *, unsigned int);
+typedef SECStatus (*pst_ssl_config_server_cache_fn)(int, PRUint32, PRUint32, const char *);
+typedef SECStatus (*pst_ssl_shutdown_server_cache_fn)(void);
 typedef int (*pst_ssl_data_pending_fn)(PRFileDesc *);
 typedef SECStatus (*pst_ssl_alert_received_callback_fn)(PRFileDesc *, SSLAlertCallback, void *);
 typedef CERTCertDBHandle *(*pst_cert_default_db_fn)(void);
@@ -74,6 +92,11 @@ typedef SECStatus (*pst_pk11_import_key_fn)(PK11SlotInfo *, SECItem *, SECItem *
 typedef SECStatus (*pst_pk11_hash_fn)(SECOidTag, unsigned char *, const unsigned char *, PRInt32);
 typedef SECKEYPrivateKey *(*pst_key_copy_fn)(const SECKEYPrivateKey *);
 typedef void (*pst_key_destroy_fn)(SECKEYPrivateKey *);
+typedef SECKEYPublicKey *(*pst_cert_extract_public_key_fn)(CERTCertificate *);
+typedef SECKEYPublicKey *(*pst_key_convert_public_fn)(SECKEYPrivateKey *);
+typedef SECItem *(*pst_key_encode_public_fn)(const SECKEYPublicKey *);
+typedef void (*pst_public_key_destroy_fn)(SECKEYPublicKey *);
+typedef void (*pst_secitem_free_fn)(SECItem *, PRBool);
 typedef struct pst_nss_backend_state {
     pst_i32 last_error;
     pst_internal_diagnostic diagnostic;
@@ -82,6 +105,7 @@ typedef struct pst_nss_backend_state {
     HMODULE ssl_module;
     int initialized;
     int has_database;
+    int server_cache_configured;
     CERTCertificate *test_ca;
     pst_pr_init_fn pr_init;
     pst_pr_cleanup_fn pr_cleanup;
@@ -109,7 +133,11 @@ typedef struct pst_nss_backend_state {
     pst_ssl_peer_certificate_fn ssl_peer_certificate;
     pst_ssl_version_set_fn ssl_version_set;
     pst_ssl_set_alpn_fn ssl_set_alpn;
+    pst_ssl_set_alpn_callback_fn ssl_set_alpn_callback;
     pst_ssl_get_alpn_fn ssl_get_alpn;
+    pst_ssl_config_server_cert_fn ssl_config_server_cert;
+    pst_ssl_config_server_cache_fn ssl_config_server_cache;
+    pst_ssl_shutdown_server_cache_fn ssl_shutdown_server_cache;
     pst_ssl_data_pending_fn ssl_data_pending;
     pst_ssl_alert_received_callback_fn ssl_alert_received_callback;
     pst_cert_default_db_fn cert_default_db;
@@ -123,6 +151,11 @@ typedef struct pst_nss_backend_state {
     pst_pk11_hash_fn pk11_hash;
     pst_key_copy_fn key_copy;
     pst_key_destroy_fn key_destroy;
+    pst_cert_extract_public_key_fn cert_extract_public_key;
+    pst_key_convert_public_fn key_convert_public;
+    pst_key_encode_public_fn key_encode_public;
+    pst_public_key_destroy_fn public_key_destroy;
+    pst_secitem_free_fn secitem_free;
 } pst_nss_backend_state;
 typedef struct pst_nss_runtime_state {
     pst_i32 last_error;
@@ -136,6 +169,8 @@ typedef struct pst_nss_connection_state {
     PRFileDesc *ssl_fd;
     pst_u32 interest;
     pst_u32 ownership;
+    pst_u32 role;
+    pst_u32 peer_certificate_mode;
     CERTCertificate *local_certificate;
     CERTCertificate **local_chain;
     pst_size local_chain_count;
@@ -146,6 +181,7 @@ typedef struct pst_nss_connection_state {
     pst_u32 require_peer;
     int handshake_complete;
     pst_u32 received_close_notify;
+    pst_u32 alpn_failed;
     pst_u32 local_close_notify_sent;
     pst_u32 minimum_version, maximum_version, alpn_requirement;
     pst_u8 *alpn; pst_size alpn_size;
@@ -261,7 +297,11 @@ static int pst_nss_load(pst_nss_backend_state *s)
     s->ssl_peer_certificate = (pst_ssl_peer_certificate_fn)pst_nss_symbol(s->ssl_module, "SSL_PeerCertificate");
     s->ssl_version_set = (pst_ssl_version_set_fn)pst_nss_symbol(s->ssl_module, "SSL_VersionRangeSet");
     s->ssl_set_alpn = (pst_ssl_set_alpn_fn)pst_nss_symbol(s->ssl_module, "SSL_SetNextProtoNego");
+    s->ssl_set_alpn_callback = (pst_ssl_set_alpn_callback_fn)pst_nss_symbol(s->ssl_module, "SSL_SetNextProtoCallback");
     s->ssl_get_alpn = (pst_ssl_get_alpn_fn)pst_nss_symbol(s->ssl_module, "SSL_GetNextProto");
+    s->ssl_config_server_cert = (pst_ssl_config_server_cert_fn)pst_nss_symbol(s->ssl_module, "SSL_ConfigServerCert");
+    s->ssl_config_server_cache = (pst_ssl_config_server_cache_fn)pst_nss_symbol(s->ssl_module, "SSL_ConfigServerSessionIDCache");
+    s->ssl_shutdown_server_cache = (pst_ssl_shutdown_server_cache_fn)pst_nss_symbol(s->ssl_module, "SSL_ShutdownServerSessionIDCache");
     s->ssl_data_pending = (pst_ssl_data_pending_fn)pst_nss_symbol(s->ssl_module, "SSL_DataPending");
     s->ssl_alert_received_callback = (pst_ssl_alert_received_callback_fn)pst_nss_symbol(s->ssl_module, "SSL_AlertReceivedCallback");
     s->cert_dup = (pst_cert_dup_fn)pst_nss_symbol(s->nss_module, "CERT_DupCertificate");
@@ -271,6 +311,11 @@ static int pst_nss_load(pst_nss_backend_state *s)
     s->pk11_hash = (pst_pk11_hash_fn)pst_nss_symbol(s->nss_module, "PK11_HashBuf");
     s->key_copy = (pst_key_copy_fn)pst_nss_symbol(s->nss_module, "SECKEY_CopyPrivateKey");
     s->key_destroy = (pst_key_destroy_fn)pst_nss_symbol(s->nss_module, "SECKEY_DestroyPrivateKey");
+    s->cert_extract_public_key = (pst_cert_extract_public_key_fn)pst_nss_symbol(s->nss_module, "CERT_ExtractPublicKey");
+    s->key_convert_public = (pst_key_convert_public_fn)pst_nss_symbol(s->nss_module, "SECKEY_ConvertToPublicKey");
+    s->key_encode_public = (pst_key_encode_public_fn)pst_nss_symbol(s->nss_module, "SECKEY_EncodeDERSubjectPublicKeyInfo");
+    s->public_key_destroy = (pst_public_key_destroy_fn)pst_nss_symbol(s->nss_module, "SECKEY_DestroyPublicKey");
+    s->secitem_free = (pst_secitem_free_fn)pst_nss_symbol(s->nss_module, "SECITEM_FreeItem");
     return s->pr_init != NULL && s->pr_cleanup != NULL &&
         s->pr_get_error != NULL && s->pr_import_tcp != NULL &&
         s->pr_set_socket_option != NULL && s->pr_close != NULL &&
@@ -284,10 +329,15 @@ static int pst_nss_load(pst_nss_backend_state *s)
         s->ssl_channel_info != NULL && s->ssl_client_auth_hook != NULL &&
         s->ssl_peer_certificate != NULL && s->ssl_version_set != NULL &&
         s->ssl_set_alpn != NULL && s->ssl_get_alpn != NULL &&
+        s->ssl_set_alpn_callback != NULL && s->ssl_config_server_cert != NULL &&
+        s->ssl_config_server_cache != NULL && s->ssl_shutdown_server_cache != NULL &&
         s->ssl_alert_received_callback != NULL &&
         s->pk11_get_slot != NULL && s->pk11_free_slot != NULL &&
         s->pk11_import_key != NULL && s->pk11_hash != NULL &&
         s->key_copy != NULL && s->key_destroy != NULL &&
+        s->cert_extract_public_key != NULL && s->key_convert_public != NULL &&
+        s->key_encode_public != NULL && s->public_key_destroy != NULL &&
+        s->secitem_free != NULL &&
         s->cert_default_db != NULL && s->cert_new_temp != NULL &&
         s->cert_change_trust != NULL && s->cert_destroy != NULL;
 }
@@ -325,12 +375,15 @@ PST_RESULT pst_backend_nss_normalize_error(pst_i32 error)
         error == (pst_i32)SSL_ERROR_EXPIRED_CERT_ALERT ||
         error == (pst_i32)SSL_ERROR_UNSUPPORTED_CERT_ALERT ||
         error == (pst_i32)SSL_ERROR_CERTIFICATE_UNKNOWN_ALERT ||
+        error == (pst_i32)SSL_ERROR_NO_CERTIFICATE ||
         error == (pst_i32)SEC_ERROR_BAD_SIGNATURE ||
         error == (pst_i32)SEC_ERROR_EXPIRED_CERTIFICATE ||
         error == (pst_i32)SEC_ERROR_REVOKED_CERTIFICATE ||
         error == (pst_i32)SEC_ERROR_UNKNOWN_ISSUER ||
         error == (pst_i32)SEC_ERROR_UNTRUSTED_ISSUER ||
         error == (pst_i32)SEC_ERROR_UNTRUSTED_CERT ||
+        error == (pst_i32)SEC_ERROR_CERT_USAGES_INVALID ||
+        error == (pst_i32)SEC_ERROR_INADEQUATE_CERT_TYPE ||
         error == (pst_i32)SEC_ERROR_CERT_NOT_VALID ||
         error == (pst_i32)SEC_ERROR_CA_CERT_INVALID)
         return PST_RESULT_AUTH_FAILURE;
@@ -384,6 +437,20 @@ static void pst_nss_record(pst_nss_connection_state *c, pst_u32 phase)
     pst_diagnostic_capture(&c->diagnostic, result, phase, "retrozilla-nss",
         pst_nss_error_domain(c->last_error), c->last_error, 0,
         PST_DIAGNOSTIC_FLAG_NATIVE);
+    c->diagnostic.role=c->role;
+    if(c->role==PST_CONNECTION_ROLE_SERVER&&result==PST_RESULT_AUTH_FAILURE){
+        if(c->last_error==(pst_i32)SSL_ERROR_NO_CERTIFICATE)
+            c->diagnostic.reason=PST_DIAGNOSTIC_REASON_PEER_CERT_ABSENT;
+        else if(c->last_error==(pst_i32)SEC_ERROR_UNKNOWN_ISSUER||
+                c->last_error==(pst_i32)SEC_ERROR_UNTRUSTED_ISSUER||
+                c->last_error==(pst_i32)SEC_ERROR_UNTRUSTED_CERT)
+            c->diagnostic.reason=PST_DIAGNOSTIC_REASON_PEER_CERT_UNTRUSTED;
+        else c->diagnostic.reason=PST_DIAGNOSTIC_REASON_PEER_CERT_INVALID;
+    }
+    else if(c->role==PST_CONNECTION_ROLE_SERVER&&
+            (c->last_error==(pst_i32)SSL_ERROR_UNSUPPORTED_VERSION||
+             c->last_error==(pst_i32)SSL_ERROR_PROTOCOL_VERSION_ALERT))
+        c->diagnostic.reason=PST_DIAGNOSTIC_REASON_TLS_POLICY_MISMATCH;
 }pst_i32 pst_backend_nss_last_error(const void *state)
 {
     if (state == NULL) return 0;
@@ -499,6 +566,10 @@ static void pst_nss_shutdown(void *state)
         if (s->test_ca != NULL) {
             s->cert_destroy(s->test_ca); s->test_ca = NULL;
         }
+        if (s->server_cache_configured) {
+            s->ssl_shutdown_server_cache();
+            s->server_cache_configured = 0;
+        }
         if (s->nss_shutdown() != SECSuccess)
             pst_nss_capture_error(s, &s->last_error);
         s->initialized = 0;
@@ -522,12 +593,7 @@ static PST_RESULT pst_nss_query(void *state, pst_u32 *capabilities)
     pst_nss_backend_state *s = (pst_nss_backend_state *)state;
     if (s == NULL || !s->initialized || capabilities == NULL)
         return PST_RESULT_INVALID_ARGUMENT;
-    *capabilities = PST_BACKEND_CAP_TLS_1_2 | PST_BACKEND_CAP_TLS_1_3 |
-        PST_BACKEND_CAP_NONBLOCKING | PST_BACKEND_CAP_BACKEND_WAIT |
-        PST_BACKEND_CAP_ROLE_CLIENT | PST_BACKEND_CAP_PEER_CERT_AUTH |
-        PST_BACKEND_CAP_PEER_NAME_VERIFY | PST_BACKEND_CAP_LOCAL_IDENTITY |
-        PST_BACKEND_CAP_CUSTOM_TRUST | PST_BACKEND_CAP_PEER_INFO |
-        PST_BACKEND_CAP_ALPN_CLIENT;
+    *capabilities = PST_NSS_CAPABILITIES;
     return PST_RESULT_OK;
 }
 static PST_RESULT pst_nss_validate_requirements(void *state, pst_u32 required)
@@ -545,11 +611,12 @@ static PST_RESULT pst_nss_connection_create(void *state,const PST_BACKEND_CONNEC
     pst_nss_runtime_state *runtime = (pst_nss_runtime_state *)state;
     pst_nss_connection_state *connection;PST_RESULT result;
     if (runtime == NULL || options == NULL || out_connection == NULL || options->struct_size<PST_BACKEND_CONNECTION_OPTIONS_MIN_SIZE || options->spi_version!=PST_BACKEND_SPI_VERSION) return PST_RESULT_INVALID_ARGUMENT;
-    if(options->role!=PST_CONNECTION_ROLE_CLIENT)return PST_RESULT_UNSUPPORTED;
+    if(options->role!=PST_CONNECTION_ROLE_CLIENT&&options->role!=PST_CONNECTION_ROLE_SERVER)return PST_RESULT_UNSUPPORTED;
     *out_connection=NULL;
     connection = (pst_nss_connection_state *)calloc(1, sizeof(*connection));
     if (connection == NULL) return PST_RESULT_OUT_OF_MEMORY;
-    connection->runtime = runtime;result=pst_nss_configure_connection(connection,options->configuration);
+    connection->runtime = runtime;connection->role=options->role;result=pst_nss_configure_connection(connection,options->configuration);
+    if(result==PST_RESULT_OK&&options->role==PST_CONNECTION_ROLE_SERVER&&!runtime->backend->server_cache_configured){if(runtime->backend->ssl_config_server_cache(0,0,0,NULL)!=SECSuccess)result=PST_RESULT_BACKEND_FAILURE;else runtime->backend->server_cache_configured=1;}
     if(result!=PST_RESULT_OK){pst_nss_connection_destroy(connection);return result;}
     *out_connection = connection;
     return PST_RESULT_OK;
@@ -591,22 +658,46 @@ static void PR_CALLBACK pst_nss_alert_received(const PRFileDesc *fd, void *arg,
         pst_nss_trace("TLS_alert", "close_notify_received=1");
     }
 }
+static SECStatus PR_CALLBACK pst_nss_server_alpn(void *arg,PRFileDesc *fd,const unsigned char *offered,unsigned int offered_len,unsigned char *out,unsigned int *out_len,unsigned int out_max)
+{
+ pst_nss_connection_state *c=(pst_nss_connection_state*)arg;const unsigned char *server,*client,*server_end,*client_end;unsigned int sn,cn;(void)fd;*out_len=0;if(!c)return SECFailure;
+ server=c->alpn;server_end=server+c->alpn_size;while(server<server_end){sn=*server++;if(sn>(unsigned int)(server_end-server))return SECFailure;client=offered;client_end=offered+offered_len;while(client<client_end){cn=*client++;if(cn>(unsigned int)(client_end-client))return SECFailure;if(sn==cn&&!memcmp(server,client,sn)){if(sn>out_max)return SECFailure;memcpy(out,server,sn);*out_len=sn;return SECSuccess;}client+=cn;}server+=sn;}
+ if(c->alpn_requirement==PST_FEATURE_REQUIRED){c->alpn_failed=1;return SECFailure;}
+ return SECSuccess;
+}
+static int pst_nss_key_matches_certificate(pst_nss_backend_state *s,
+ CERTCertificate *certificate,SECKEYPrivateKey *private_key)
+{
+ SECKEYPublicKey *certificate_key,*converted_key;SECItem *certificate_der,*key_der;
+ int matches=0;certificate_key=s->cert_extract_public_key(certificate);
+ converted_key=s->key_convert_public(private_key);certificate_der=NULL;key_der=NULL;
+ if(certificate_key)certificate_der=s->key_encode_public(certificate_key);
+ if(converted_key)key_der=s->key_encode_public(converted_key);
+ if(certificate_der&&key_der&&certificate_der->len==key_der->len&&
+    !memcmp(certificate_der->data,key_der->data,certificate_der->len))matches=1;
+ if(certificate_der)s->secitem_free(certificate_der,PR_TRUE);
+ if(key_der)s->secitem_free(key_der,PR_TRUE);
+ if(certificate_key)s->public_key_destroy(certificate_key);
+ if(converted_key)s->public_key_destroy(converted_key);return matches;
+}
 static PST_RESULT pst_nss_configure_connection(void *state,const PST_CONNECTION_CONFIG *config)
 {
  pst_nss_connection_state *c=(pst_nss_connection_state*)state;pst_nss_backend_state *s;
  const pst_trust *trust;const pst_credentials *credentials;const pst_u8 *data;SECItem item;CERTCertTrust flags;PK11SlotInfo *slot;const char *host;pst_size n,i,count;
- if(!c||!config||config->role!=PST_CONNECTION_ROLE_CLIENT||c->ssl_fd||c->expected_peer_name)return PST_RESULT_INVALID_ARGUMENT;
+ if(!c||!config||config->role!=c->role||c->ssl_fd||c->expected_peer_name)return PST_RESULT_INVALID_ARGUMENT;
  s=c->runtime->backend;trust=pst_connection_config_peer_trust(config);credentials=pst_connection_config_local_credentials(config);
+ c->peer_certificate_mode=pst_connection_config_peer_certificate_mode(config);
+ if(c->role==PST_CONNECTION_ROLE_SERVER){if(!credentials)return PST_RESULT_POLICY_VIOLATION;if(pst_connection_config_expected_peer_name(config)!=NULL)return PST_RESULT_POLICY_VIOLATION;}
  if(trust){if(pst_trust_kind(trust)==PST_TRUST_SOURCE_SYSTEM)return PST_RESULT_UNSUPPORTED;if(pst_trust_kind(trust)!=PST_TRUST_SOURCE_CUSTOM_CA_DER)return PST_RESULT_UNSUPPORTED;
   count=pst_trust_anchor_count(trust);c->trust_anchors=(CERTCertificate**)calloc(count,sizeof(*c->trust_anchors));if(!c->trust_anchors)return PST_RESULT_OUT_OF_MEMORY;c->trust_anchor_count=count;
   memset(&flags,0,sizeof(flags));flags.sslFlags=CERTDB_VALID_CA|CERTDB_TRUSTED_CA|CERTDB_TRUSTED_CLIENT_CA;
   for(i=0;i<count;i++){data=pst_trust_anchor_at(trust,i,&n);if(!data||n>(pst_size)UINT_MAX)return PST_RESULT_INVALID_ARGUMENT;item.type=siDERCertBuffer;item.data=(unsigned char*)data;item.len=(unsigned int)n;c->trust_anchors[i]=s->cert_new_temp(s->cert_default_db(),&item,"pst-custom-trust",PR_FALSE,PR_TRUE);if(!c->trust_anchors[i]||s->cert_change_trust(s->cert_default_db(),c->trust_anchors[i],&flags)!=SECSuccess)return PST_RESULT_AUTH_FAILURE;}s->has_database=1;}
  if(credentials){count=pst_credentials_certificate_count(credentials);c->local_chain=(CERTCertificate**)calloc(count,sizeof(*c->local_chain));if(!c->local_chain)return PST_RESULT_OUT_OF_MEMORY;c->local_chain_count=count;for(i=0;i<count;i++){data=pst_credentials_certificate_at(credentials,i,&n);if(!data||n>(pst_size)UINT_MAX)return PST_RESULT_INVALID_ARGUMENT;item.type=siDERCertBuffer;item.data=(unsigned char*)data;item.len=(unsigned int)n;c->local_chain[i]=s->cert_new_temp(s->cert_default_db(),&item,"pst-local-credential",PR_FALSE,PR_TRUE);if(!c->local_chain[i])return PST_RESULT_AUTH_FAILURE;}c->local_certificate=c->local_chain[0];
   data=pst_credentials_private_key_der(credentials,&n);if(n>(pst_size)UINT_MAX)return PST_RESULT_INVALID_ARGUMENT;item.type=siBuffer;item.data=(unsigned char*)data;item.len=(unsigned int)n;slot=s->pk11_get_slot();if(!slot)return PST_RESULT_BACKEND_FAILURE;
-  if(s->pk11_import_key(slot,&item,NULL,NULL,PR_FALSE,PR_TRUE,KU_ALL,&c->local_key,NULL)!=SECSuccess){s->pk11_free_slot(slot);return PST_RESULT_AUTH_FAILURE;}s->pk11_free_slot(slot);}
+  if(s->pk11_import_key(slot,&item,NULL,NULL,PR_FALSE,PR_TRUE,KU_ALL,&c->local_key,NULL)!=SECSuccess){s->pk11_free_slot(slot);return PST_RESULT_AUTH_FAILURE;}s->pk11_free_slot(slot);if(!pst_nss_key_matches_certificate(s,c->local_certificate,c->local_key))return PST_RESULT_AUTH_FAILURE;}
  host=pst_connection_config_expected_peer_name(config);if(host){n=strlen(host);c->expected_peer_name=(char*)malloc(n+1);if(!c->expected_peer_name)return PST_RESULT_OUT_OF_MEMORY;memcpy(c->expected_peer_name,host,n+1);}
  data=pst_connection_config_alpn_wire(config,&n);if(n){c->alpn=(pst_u8*)malloc(n);if(!c->alpn)return PST_RESULT_OUT_OF_MEMORY;memcpy(c->alpn,data,n);c->alpn_size=n;}c->minimum_version=pst_connection_config_minimum_version(config);c->maximum_version=pst_connection_config_maximum_version(config);c->alpn_requirement=pst_connection_config_alpn_mode(config);
- c->require_peer=pst_connection_config_peer_certificate_mode(config)!=PST_PEER_CERTIFICATE_DISABLED;pst_nss_trace("PST_identity_config","ok");return PST_RESULT_OK;
+ c->require_peer=c->peer_certificate_mode!=PST_PEER_CERTIFICATE_DISABLED;pst_nss_trace("PST_identity_config","ok");return PST_RESULT_OK;
 }
 static PST_RESULT pst_nss_attach(void *state, void *transport, pst_u32 ownership,
                                  pst_u32 *ownership_accepted)
@@ -628,7 +719,7 @@ static PST_RESULT pst_nss_attach(void *state, void *transport, pst_u32 ownership
     if (t->struct_size < PST_NSS_NATIVE_TRANSPORT_MIN_SIZE ||
         t->version != PST_NSS_NATIVE_TRANSPORT_VERSION ||
         t->kind != PST_NSS_NATIVE_TRANSPORT_KIND_WIN32_SOCKET ||
-        (c->expected_peer_name == NULL && (t->hostname == NULL || t->hostname[0] == '\0')))
+        (c->role==PST_CONNECTION_ROLE_CLIENT&&c->expected_peer_name == NULL && (t->hostname == NULL || t->hostname[0] == '\0')))
         return PST_RESULT_INVALID_ARGUMENT;
     s = c->runtime->backend; socket_value = (SOCKET)t->native_socket;
     nonblocking = 1UL;
@@ -672,13 +763,14 @@ static PST_RESULT pst_nss_attach(void *state, void *transport, pst_u32 ownership
         return pst_backend_nss_alert_registration_result(0);
     }
     pst_nss_trace("SSL_AlertReceivedCallback", "ok");
-    { SSLVersionRange range; range.min=(PRUint16)(c->minimum_version==PST_TLS_VERSION_1_3?SSL_LIBRARY_VERSION_TLS_1_3:SSL_LIBRARY_VERSION_TLS_1_2);range.max=(PRUint16)(c->maximum_version==PST_TLS_VERSION_1_3?SSL_LIBRARY_VERSION_TLS_1_3:SSL_LIBRARY_VERSION_TLS_1_2);if(s->ssl_version_set(ssl_fd,&range)!=SECSuccess||(c->alpn_size&&s->ssl_set_alpn(ssl_fd,c->alpn,(unsigned int)c->alpn_size)!=SECSuccess)){pst_nss_capture_error(s,&c->last_error);s->pr_close(ssl_fd);return pst_backend_nss_normalize_error(c->last_error);}}
+    { SSLVersionRange range; range.min=(PRUint16)(c->minimum_version==PST_TLS_VERSION_1_3?SSL_LIBRARY_VERSION_TLS_1_3:SSL_LIBRARY_VERSION_TLS_1_2);range.max=(PRUint16)(c->maximum_version==PST_TLS_VERSION_1_3?SSL_LIBRARY_VERSION_TLS_1_3:SSL_LIBRARY_VERSION_TLS_1_2);if(s->ssl_version_set(ssl_fd,&range)!=SECSuccess||(c->alpn_size&&(c->role==PST_CONNECTION_ROLE_SERVER?s->ssl_set_alpn_callback(ssl_fd,pst_nss_server_alpn,c):s->ssl_set_alpn(ssl_fd,c->alpn,(unsigned int)c->alpn_size))!=SECSuccess)){pst_nss_capture_error(s,&c->last_error);s->pr_close(ssl_fd);return pst_backend_nss_normalize_error(c->last_error);}}
     if (s->ssl_option_set(ssl_fd, SSL_SECURITY, PR_TRUE) != SECSuccess ||
-        s->ssl_option_set(ssl_fd, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE) != SECSuccess ||
+        s->ssl_option_set(ssl_fd, SSL_RECORD_SIZE_LIMIT, 16384) != SECSuccess ||
+        s->ssl_option_set(ssl_fd, c->role==PST_CONNECTION_ROLE_SERVER?SSL_HANDSHAKE_AS_SERVER:SSL_HANDSHAKE_AS_CLIENT, PR_TRUE) != SECSuccess ||
         s->ssl_option_set(ssl_fd, SSL_ENABLE_SSL3, PR_FALSE) != SECSuccess ||
         (c->alpn_size != 0 && s->ssl_option_set(ssl_fd, SSL_ENABLE_ALPN, PR_TRUE) != SECSuccess) ||
-        s->ssl_set_url(ssl_fd, c->expected_peer_name != NULL ? c->expected_peer_name : t->hostname) != SECSuccess ||
-        s->ssl_reset_handshake(ssl_fd, PR_FALSE) != SECSuccess) {
+        (c->role==PST_CONNECTION_ROLE_CLIENT&&s->ssl_set_url(ssl_fd, c->expected_peer_name != NULL ? c->expected_peer_name : t->hostname) != SECSuccess) ||
+        s->ssl_reset_handshake(ssl_fd, c->role==PST_CONNECTION_ROLE_SERVER?PR_TRUE:PR_FALSE) != SECSuccess) {
         pst_nss_capture_error(s, &c->last_error); s->pr_close(ssl_fd);
         return pst_backend_nss_normalize_error(c->last_error);
     }
@@ -688,7 +780,8 @@ static PST_RESULT pst_nss_attach(void *state, void *transport, pst_u32 ownership
         pst_nss_capture_error(s, &c->last_error); s->pr_close(ssl_fd);
         return pst_backend_nss_normalize_error(c->last_error);
     }
-    if (c->local_certificate != NULL &&
+    if(c->role==PST_CONNECTION_ROLE_SERVER){SSLExtraServerCertData extra;CERTCertificateList chain;SECItem *items=NULL;pst_size i;memset(&extra,0,sizeof(extra));memset(&chain,0,sizeof(chain));if(c->local_chain_count){items=(SECItem*)calloc(c->local_chain_count,sizeof(*items));if(!items){s->pr_close(ssl_fd);return PST_RESULT_OUT_OF_MEMORY;}for(i=0;i<c->local_chain_count;i++)items[i]=c->local_chain[i]->derCert;chain.certs=items;chain.len=(int)c->local_chain_count;extra.certChain=&chain;}if(s->ssl_config_server_cert(ssl_fd,c->local_certificate,c->local_key,&extra,sizeof(extra))!=SECSuccess){free(items);pst_nss_capture_error(s,&c->last_error);s->pr_close(ssl_fd);return pst_backend_nss_normalize_error(c->last_error);}free(items);if(s->ssl_option_set(ssl_fd,SSL_REQUEST_CERTIFICATE,c->peer_certificate_mode==PST_PEER_CERTIFICATE_DISABLED?PR_FALSE:PR_TRUE)!=SECSuccess||s->ssl_option_set(ssl_fd,SSL_REQUIRE_CERTIFICATE,c->peer_certificate_mode==PST_PEER_CERTIFICATE_REQUIRED?SSL_REQUIRE_ALWAYS:PR_FALSE)!=SECSuccess){pst_nss_capture_error(s,&c->last_error);s->pr_close(ssl_fd);return pst_backend_nss_normalize_error(c->last_error);}}
+    if (c->role==PST_CONNECTION_ROLE_CLIENT&&c->local_certificate != NULL &&
         s->ssl_client_auth_hook(ssl_fd,pst_nss_client_auth,c)!=SECSuccess) {
         pst_nss_capture_error(s,&c->last_error);s->pr_close(ssl_fd);
         return pst_backend_nss_normalize_error(c->last_error);
@@ -724,7 +817,7 @@ static PST_RESULT pst_nss_handshake(void *state, pst_u32 *operation, PST_RESULT 
             (unsigned long)(handshake_end - handshake_start));
     pst_nss_trace("SSL_ForceHandshake", detail);
     if (handshake_status == SECSuccess) {
-        if(c->alpn_requirement==PST_FEATURE_REQUIRED){unsigned char value[256];unsigned int n=0;SSLNextProtoState st;char alpn_detail[64];SECStatus ar=s->ssl_get_alpn(c->ssl_fd,&st,value,&n,sizeof(value));sprintf(alpn_detail,"status=%d state=%d length=%u",(int)ar,(int)st,n);pst_nss_trace("ALPN",alpn_detail);if(ar!=SECSuccess||(st!=SSL_NEXT_PROTO_NEGOTIATED&&st!=SSL_NEXT_PROTO_SELECTED)){pst_diagnostic_capture(&c->diagnostic,PST_RESULT_POLICY_VIOLATION,PST_DIAGNOSTIC_PHASE_ALPN,"retrozilla-nss",PST_DIAGNOSTIC_DOMAIN_NONE,0,0,0);c->interest=PST_BACKEND_INTEREST_NONE;*operation=PST_BACKEND_OPERATION_FAILED;*error=PST_RESULT_POLICY_VIOLATION;return PST_RESULT_OK;}}
+        if(c->alpn_requirement==PST_FEATURE_REQUIRED){unsigned char value[256];unsigned int n=0;SSLNextProtoState st;char alpn_detail[64];SECStatus ar=s->ssl_get_alpn(c->ssl_fd,&st,value,&n,sizeof(value));sprintf(alpn_detail,"status=%d state=%d length=%u",(int)ar,(int)st,n);pst_nss_trace("ALPN",alpn_detail);if(ar!=SECSuccess||(st!=SSL_NEXT_PROTO_NEGOTIATED&&st!=SSL_NEXT_PROTO_SELECTED)){pst_diagnostic_capture(&c->diagnostic,PST_RESULT_POLICY_VIOLATION,PST_DIAGNOSTIC_PHASE_ALPN,"retrozilla-nss",PST_DIAGNOSTIC_DOMAIN_NONE,0,0,0);c->diagnostic.role=c->role;c->diagnostic.reason=PST_DIAGNOSTIC_REASON_ALPN_MISMATCH;c->interest=PST_BACKEND_INTEREST_NONE;*operation=PST_BACKEND_OPERATION_FAILED;*error=PST_RESULT_POLICY_VIOLATION;return PST_RESULT_OK;}}
         c->interest = PST_BACKEND_INTEREST_NONE;
         *operation = PST_BACKEND_OPERATION_COMPLETE; *error = PST_RESULT_OK;
         c->handshake_complete = 1;
@@ -746,6 +839,12 @@ static PST_RESULT pst_nss_handshake(void *state, pst_u32 *operation, PST_RESULT 
     pst_nss_record(c, PST_DIAGNOSTIC_PHASE_HANDSHAKE);
     *operation = PST_BACKEND_OPERATION_FAILED;
     *error = pst_backend_nss_normalize_error(c->last_error);
+    if(c->alpn_failed){*error=PST_RESULT_POLICY_VIOLATION;
+        pst_diagnostic_capture(&c->diagnostic,*error,PST_DIAGNOSTIC_PHASE_ALPN,
+            "retrozilla-nss",pst_nss_error_domain(c->last_error),
+            c->last_error,0,PST_DIAGNOSTIC_FLAG_NATIVE);
+        c->diagnostic.role=c->role;
+        c->diagnostic.reason=PST_DIAGNOSTIC_REASON_ALPN_MISMATCH;}
     return PST_RESULT_OK;
 }
 static PST_RESULT pst_nss_interest(void *state, pst_u32 *interest)
@@ -950,21 +1049,39 @@ static PST_RESULT pst_nss_peer_info_create(void *state, void **out)
     memset(&info, 0, sizeof(info));
     if (c->runtime->backend->ssl_channel_info(c->ssl_fd, &info, sizeof(info)) != SECSuccess)
         return PST_RESULT_BACKEND_FAILURE;
-    cert = c->runtime->backend->ssl_peer_certificate(c->ssl_fd);
-    if (cert == NULL) return PST_RESULT_UNAVAILABLE;
     memset(&summary, 0, sizeof(summary)); summary.struct_size = sizeof(summary);
     summary.api_version = PST_API_VERSION;
-    summary.local_role = PST_CONNECTION_ROLE_CLIENT;
+    summary.local_role = c->role;
     strncpy(summary.provider_id,"retrozilla-nss",sizeof(summary.provider_id)-1);
-    summary.certificate_present = PST_KNOWN_TRUE;
-    summary.chain_validated = c->require_peer ? PST_KNOWN_TRUE : PST_KNOWN_UNKNOWN;
-    summary.peer_name_validated = c->require_peer ? PST_KNOWN_TRUE : PST_KNOWN_NOT_APPLICABLE;
-    summary.peer_authenticated = c->require_peer ? PST_KNOWN_TRUE : PST_KNOWN_UNKNOWN;
+    summary.peer_name_validated = c->role == PST_CONNECTION_ROLE_SERVER ?
+        PST_KNOWN_NOT_APPLICABLE : (c->require_peer ? PST_KNOWN_TRUE :
+        PST_KNOWN_NOT_APPLICABLE);
     summary.tls_version = (pst_u32)info.protocolVersion;
     summary.cipher_suite = (pst_u32)info.cipherSuite;
-    summary.alpn_available = PST_KNOWN_UNSUPPORTED;
+    summary.alpn_available = c->alpn_size ? PST_KNOWN_TRUE : PST_KNOWN_FALSE;
     summary.session_resumed = info.resumed ? PST_KNOWN_TRUE : PST_KNOWN_FALSE;
     summary.early_data_accepted = PST_KNOWN_UNSUPPORTED;
+    if (c->role == PST_CONNECTION_ROLE_SERVER &&
+        c->peer_certificate_mode == PST_PEER_CERTIFICATE_DISABLED) {
+        summary.certificate_present = PST_KNOWN_FALSE;
+        summary.chain_validated = PST_KNOWN_NOT_APPLICABLE;
+        summary.peer_authenticated = PST_KNOWN_FALSE;
+        return pst_peer_info_create_snapshot(&summary, NULL,
+                                               (pst_peer_info **)out);
+    }
+    cert = c->runtime->backend->ssl_peer_certificate(c->ssl_fd);
+    if (cert == NULL) {
+        if (c->role != PST_CONNECTION_ROLE_SERVER)
+            return PST_RESULT_UNAVAILABLE;
+        summary.certificate_present = PST_KNOWN_FALSE;
+        summary.chain_validated = PST_KNOWN_NOT_APPLICABLE;
+        summary.peer_authenticated = PST_KNOWN_FALSE;
+        return pst_peer_info_create_snapshot(&summary, NULL,
+                                               (pst_peer_info **)out);
+    }
+    summary.certificate_present = PST_KNOWN_TRUE;
+    summary.chain_validated = c->require_peer ? PST_KNOWN_TRUE : PST_KNOWN_UNKNOWN;
+    summary.peer_authenticated = c->require_peer ? PST_KNOWN_TRUE : PST_KNOWN_UNKNOWN;
     summary.certificate_sha256_size = 32;
     summary.leaf_der_size = (pst_size)cert->derCert.len;
     if (c->runtime->backend->pk11_hash(SEC_OID_SHA256,
@@ -1094,18 +1211,8 @@ static const PST_BACKEND_METADATA pst_nss_metadata = {
 static const PST_BACKEND_DESCRIPTOR pst_nss_descriptor = {
     sizeof(PST_BACKEND_DESCRIPTOR), PST_BACKEND_SPI_VERSION,
     "retrozilla-nss", "RetroZilla NSS/NSPR",
-    PST_BACKEND_CAP_TLS_1_2 | PST_BACKEND_CAP_TLS_1_3 |
-    PST_BACKEND_CAP_ROLE_CLIENT | PST_BACKEND_CAP_PEER_CERT_AUTH |
-    PST_BACKEND_CAP_PEER_NAME_VERIFY | PST_BACKEND_CAP_NONBLOCKING |
-    PST_BACKEND_CAP_BACKEND_WAIT | PST_BACKEND_CAP_LOCAL_IDENTITY |
-    PST_BACKEND_CAP_CUSTOM_TRUST | PST_BACKEND_CAP_PEER_INFO |
-    PST_BACKEND_CAP_ALPN_CLIENT, &pst_nss_vtable, &pst_nss_metadata,
-    PST_BACKEND_CAP_TLS_1_2 | PST_BACKEND_CAP_TLS_1_3 |
-    PST_BACKEND_CAP_ROLE_CLIENT | PST_BACKEND_CAP_PEER_CERT_AUTH |
-    PST_BACKEND_CAP_PEER_NAME_VERIFY | PST_BACKEND_CAP_NONBLOCKING |
-    PST_BACKEND_CAP_BACKEND_WAIT | PST_BACKEND_CAP_LOCAL_IDENTITY |
-    PST_BACKEND_CAP_CUSTOM_TRUST | PST_BACKEND_CAP_PEER_INFO |
-    PST_BACKEND_CAP_ALPN_CLIENT, 0UL
+    PST_NSS_CAPABILITIES, &pst_nss_vtable, &pst_nss_metadata,
+    PST_NSS_CLIENT_CAPABILITIES, PST_NSS_SERVER_CAPABILITIES
 };
 const PST_BACKEND_DESCRIPTOR *pst_backend_nss_descriptor(void)
 {
