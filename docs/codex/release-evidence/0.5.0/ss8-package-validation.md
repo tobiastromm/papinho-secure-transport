@@ -11,12 +11,12 @@ Package/Library `0.5.0`, public API `2.0.0`, provider SPI `3.0`.
 | Package | SHA-256 |
 |---|---|
 | `papinho-secure-transport-0.5.0-src.zip` | `4df9945b0a219c9a04bc9429faeeeb10fb449fcc945bfdcbd6b1fe605e53c673` |
-| `papinho-secure-transport-0.5.0-win32-x86-vc6-retrozilla-nss.zip` | `4bb841731606a0a4e803fe16bb8da110b1929b1e98f4f14cb656417d29240056` |
-| `papinho-secure-transport-0.5.0-win32-x64-msvc-19.51-schannel.zip` | `5eb2f2c7f2f044c4630bdd866af9e9c382254632306a3fdcc9198aecc9382151` |
+| `papinho-secure-transport-0.5.0-win32-x86-vc6-retrozilla-nss.zip` | `91d004e113c662386bc947658d0a11d7c3022066b647a8d361ba2c862de39a9f` |
+| `papinho-secure-transport-0.5.0-win32-x64-msvc-19.51-schannel.zip` | `6e9ed7467051c2946ebc146f8fec49724759ed102b9e733191f0345125ce8a63` |
 | `papinho-secure-transport-0.5.0-win32-x64-msvc-19.51-openssl3.zip` | `625959d8fd73cd3a73ea0f6ee23761fb19a1b20899016e3cb74f5aa9388b6635` |
 | `papinho-secure-transport-0.5.0-win32-x64-msvc-19.51-schannel-openssl3.zip` | `19c43680e981a01cbd48a486fd12c53d5c50167d42b9f2cebf9955fa7c823707` |
 
-`SHA256SUMS-packages.txt` SHA-256: `4fe50b51fe6616b1a280af98267f54195c86ac6c78aa71b07f503e639266c34e`.
+`SHA256SUMS-packages.txt` SHA-256: `900ba5d74d5c9c8a84a9fe7c2464891ef17000a0df3ded8384a2e34958f0cae1`.
 
 These are the final SS-8D documentation/package-layout candidates. Their PST libraries and provider runtimes are byte-identical to the SS-8 clean-machine/NT4-tested inputs; only source documentation, public examples, SDK documentation/manifests and their internal checksum records changed.
 
