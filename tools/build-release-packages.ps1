@@ -7,6 +7,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
+& git -C $repo diff --quiet --
+if ($LASTEXITCODE -ne 0) { throw "Canonical package build requires a clean tracked worktree" }
+& git -C $repo diff --cached --quiet --
+if ($LASTEXITCODE -ne 0) { throw "Canonical package build requires a clean Git index" }
 $dist = Join-Path $repo "dist"
 $stageRoot = Join-Path $dist "staging\$Version"
 if (-not $OutputDirectory) { $OutputDirectory = Join-Path $dist "packages\$Version" }

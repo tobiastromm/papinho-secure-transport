@@ -10,6 +10,7 @@ $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 $version = $Version
 $root = Join-Path $repo "dist\staging\$version"
+. (Join-Path $PSScriptRoot "package-staging-policy.ps1")
 $targets = @("win32-x86-vc6-retrozilla-nss", "win32-x64-msvc-19.51-schannel", "win32-x64-msvc-19.51-openssl3", "win32-x64-msvc-19.51-schannel-openssl3")
 if ($Target -ne "all") { $targets = @($Target) }
 
@@ -17,12 +18,10 @@ function Copy-Required($Source, $Destination) {
     if (-not (Test-Path -LiteralPath $Source -PathType Leaf)) { throw "Required staging input is missing: $Source" }
     $parent = Split-Path -Parent $Destination
     if (-not (Test-Path -LiteralPath $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
-    Copy-Item -LiteralPath $Source -Destination $Destination -Force
+    Copy-PstPackageInput $repo $Source $Destination
 }
 function Write-Utf8NoBom($Path, $Text) {
-    $parent = Split-Path -Parent $Path
-    if (-not (Test-Path -LiteralPath $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
-    [IO.File]::WriteAllText($Path, $Text, (New-Object Text.UTF8Encoding($false)))
+    Write-PstUtf8Lf $Path $Text
 }
 
 foreach ($id in $targets) {

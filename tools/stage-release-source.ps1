@@ -5,6 +5,7 @@ $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 $version = $Version
 $stage = Join-Path $repo "dist\staging\$version\source"
+. (Join-Path $PSScriptRoot "package-staging-policy.ps1")
 
 function Copy-RequiredFile($RelativePath) {
     $source = Join-Path $repo $RelativePath
@@ -12,7 +13,7 @@ function Copy-RequiredFile($RelativePath) {
     if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { throw "Required source-package input is missing: $RelativePath" }
     $parent = Split-Path -Parent $destination
     if (-not (Test-Path -LiteralPath $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
-    Copy-Item -LiteralPath $source -Destination $destination -Force
+    Copy-PstPackageInput $repo $source $destination
 }
 
 function Copy-RequiredTree($RelativePath) {
@@ -63,10 +64,10 @@ foreach ($excluded in @(".git", "build", "dist\staging", ".vs", ".vscode")) {
 }
 
 $licenseStatus = "present"
-[IO.File]::WriteAllText((Join-Path $stage "SOURCE-PACKAGE-STATUS.txt"), "package_version=$version`nlicense=$licenseStatus`npolicy=allowlist`ninternal_docs=excluded`n", (New-Object Text.UTF8Encoding($false)))
+Write-PstUtf8Lf (Join-Path $stage "SOURCE-PACKAGE-STATUS.txt") "package_version=$version`nlicense=$licenseStatus`npolicy=allowlist`ninternal_docs=excluded`n"
 $hashLines = Get-ChildItem $stage -File -Recurse | Where-Object { $_.Name -ne "SHA256SUMS.txt" } | Sort-Object FullName | ForEach-Object {
     $relative = $_.FullName.Substring($stage.Length + 1).Replace("\", "/")
     "{0}  {1}" -f (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant(), $relative
 }
-[IO.File]::WriteAllText((Join-Path $stage "SHA256SUMS.txt"), (($hashLines -join "`n") + "`n"), (New-Object Text.UTF8Encoding($false)))
+Write-PstUtf8Lf (Join-Path $stage "SHA256SUMS.txt") (($hashLines -join "`n") + "`n")
 Write-Host "STAGED source $stage LICENSE=$licenseStatus"
