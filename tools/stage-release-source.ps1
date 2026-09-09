@@ -20,7 +20,8 @@ function Copy-RequiredTree($RelativePath) {
     if (-not (Test-Path -LiteralPath $source -PathType Container)) { throw "Required source-package tree is missing: $RelativePath" }
     Get-ChildItem -LiteralPath $source -Recurse -File | ForEach-Object {
         $relative = $_.FullName.Substring($repo.Length + 1)
-        Copy-RequiredFile $relative
+        $temporarySs8Tool = $relative -match '^tools\\(prepare|run)-ss8-.*\.ps1$'
+        if (-not $temporarySs8Tool) { Copy-RequiredFile $relative }
     }
 }
 
@@ -56,6 +57,7 @@ foreach ($relative in $required) {
     if (-not (Test-Path -LiteralPath (Join-Path $stage $relative) -PathType Leaf)) { throw "Source-package verification failed: $relative" }
 }
 if (Test-Path -LiteralPath (Join-Path $stage "docs\codex")) { throw "Internal docs leaked into source package" }
+if (Get-ChildItem -LiteralPath (Join-Path $stage "tools") -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '^(prepare|run)-ss8-.*\.ps1$' }) { throw "Temporary SS-8 transfer runner leaked into source package" }
 foreach ($excluded in @(".git", "build", "dist\staging", ".vs", ".vscode")) {
     if (Test-Path -LiteralPath (Join-Path $stage $excluded)) { throw "Excluded path leaked into source package: $excluded" }
 }

@@ -23,3 +23,18 @@ The published v0.4.0 contract remains historical and unchanged. The 0.5.0 develo
 | SPI configure-identity hook | transactional role-aware SPI connection create |
 
 Existing target IDs do not change: platform, architecture, toolchain and provider identity are unchanged. Versions become API 2.0.0, SPI 3.0 and library/package 0.5.0 development; nothing is published by this migration.
+
+## Consumer migration checklist
+
+1. Register the built-in providers before creating a runtime, but move provider selection from runtime options into each `PST_CONNECTION_CONFIG`.
+2. Set an explicit CLIENT or SERVER role. Construct Local Identity separately from Peer Authentication and its exclusive Peer Trust object. CLIENT Expected Peer Name is independent of trust; omit it for SERVER.
+3. Split TLS and ALPN configuration. Treat CLIENT ALPN as an offer and SERVER ALPN as local preference, and request only capabilities present in that provider's role mask.
+4. Pass PST only an already-connected transport. SERVER consumers retain listener ownership. Honor `ownership_accepted`: before acceptance the caller closes; after acceptance PST/provider owns the single close root.
+5. Drive handshake, I/O, wait and reciprocal shutdown incrementally. Do not interpret local close_notify emission as completed shutdown or established raw EOF as clean closure.
+6. Query the selected provider from the connection, and use copied Peer Info/diagnostics. Authentication facts are not application authorization.
+
+## Provider-author SPI migration checklist
+
+Replace the SPI 2.4 construction/configuration split with one transactional `connection_create` receiving immutable `PST_BACKEND_CONNECTION_OPTIONS`. Publish aggregate, CLIENT and SERVER masks; aggregate is only their discovery union. Validate the requested role and configuration before publishing state. Implement only factual role-scoped capabilities, preserve provider-neutral transport/ownership semantics, copy diagnostics/Peer Info, and keep all native state private.
+
+Initialization remains lazy. Selection may continue past an ineligible or initialization-failed candidate only before binding. Once transport ownership is accepted, no backend result can request fallback. Provider cleanup must cover partial creation, attach failure, terminal handshake/auth/trust failures, shutdown and destroy with exactly one transport close.

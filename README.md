@@ -2,63 +2,48 @@
 
 # PapinhoSecureTransport
 
-**PapinhoSecureTransport (PST)** gives applications a common interface for secure communication while keeping provider-specific security code out of the application's main logic.
+PapinhoSecureTransport (PST) is a provider-neutral TLS transport layer for CLIENT and SERVER applications. Library/package 0.5.0 exposes public API 2.0.0 and provider SPI 3.0. TLS is the only secure-transport protocol currently implemented.
 
-Instead of making an application depend directly on the APIs, types, lifecycle, and particular behavior of a specific TLS implementation, PST places a common boundary between the application and compatible security providers.
+An application creates and connects a native transport. For SERVER use, the application also owns bind, listen, accept, admission and session policy. PST receives one already-connected transport and, after explicit ownership acceptance, drives TLS handshake, encrypted I/O and reciprocal shutdown incrementally. PST is not an HTTP server, listener or application authorization framework.
 
-TLS is the secure-transport protocol implemented by PST today. Current providers include **RetroZilla NSS**, **Windows Schannel**, and **OpenSSL**.
+## Core model
 
-Validated scenarios include **TLS 1.2 and TLS 1.3 on Windows NT 4.0 SP6 x86 through RetroZilla NSS**, **TLS 1.2 on Windows 10 build 19045 x64 through Schannel**, and **TLS 1.2 and TLS 1.3 with Windows system trust on Windows 10 build 19045 x64 through OpenSSL**. The 0.4.0 packages were also validated on a separate clean Windows 10 Pro 22H2 x64 system.
+- Every connection explicitly chooses `PST_CONNECTION_ROLE_CLIENT` or `PST_CONNECTION_ROLE_SERVER`.
+- Provider selection is per connection, so CLIENT and SERVER connections sharing one runtime may select different providers.
+- EXACT tries one provider; ORDERED considers a copied preference list; AUTOMATIC uses target registration order.
+- Role-scoped capabilities eliminate ineligible providers before binding. After binding the provider is pinned: handshake, authentication, trust, transport or shutdown failure never triggers provider fallback.
+- Local Identity is what this endpoint presents. Peer Authentication controls whether a peer certificate is disabled, optional or required. Peer Trust is exactly CUSTOM or SYSTEM, without silent union or fallback. Expected Peer Name is CLIENT-side name validation and is not applicable to SERVER.
+- Authentication establishes TLS identity facts; application authorization remains the consumer's responsibility.
+- CLIENT ALPN is an ordered offer. SERVER ALPN is local preference. REQUIRED, OPTIONAL and DISABLED retain distinct semantics.
+- `NEED_READ`, `NEED_WRITE` and `NEED_READ_WRITE` expose bounded nonblocking progress. Local close_notify emission alone is not completion; successful shutdown requires reciprocal TLS closure. Established EOF/reset without peer close_notify is `TRUNCATED`.
 
-PST is not limited to Internet software. It can sit underneath browsers, e-mail clients, business client/server applications, LAN services, messaging systems, and custom protocols.
+## Providers and factual asymmetry
 
-The same separation can also help software age more gracefully: as operating systems, security libraries, and standards evolve, provider-specific changes can remain concentrated in the secure-transport layer instead of spreading throughout the application.
+| Provider | CLIENT | SERVER | TLS | Important SERVER limitations |
+|---|---:|---:|---|---|
+| RetroZilla NSS/NSPR | yes | yes | 1.2, 1.3 | no SYSTEM_TRUST or complete PST SERVER ALPN |
+| Windows Schannel | yes | yes | CLIENT 1.2; SERVER 1.2 on validated Win10 19045 | no validated SERVER TLS 1.3 or complete PST SERVER ALPN; chain delivery may temporarily use CurrentUser\\CA |
+| OpenSSL 3.5.8 | yes | yes | 1.2, 1.3 | SERVER peer-name verification is not applicable |
 
-## Documentation
+CUSTOM_TRUST is supported by all three. SYSTEM_TRUST is advertised only by the role/provider masks that implement it. See [Providers](docs/providers.md) and the canonical [Target Matrix](docs/target-matrix.md); do not assume provider symmetry.
 
-| Language | Project introduction | Practical guide |
+## Start here
+
+| Language | Overview | Getting started |
 |---|---|---|
-| 🇬🇧 English | [Full project introduction](docs/en/README.md) | [Build, integration, and examples](docs/en/getting-started.md) |
-| 🇧🇷 Português (Brasil) | [Apresentação completa do projeto](docs/pt-BR/README.md) | [Build, integração e exemplos](docs/pt-BR/getting-started.md) |
+| English | [Project guide](docs/en/README.md) | [Build and integration](docs/en/getting-started.md) |
+| Português (Brasil) | [Guia do projeto](docs/pt-BR/README.md) | [Build e integração](docs/pt-BR/getting-started.md) |
 
-## Current highlights
+Public examples include [basic CLIENT](examples/basic_client.c), [basic SERVER](examples/basic_server.c), trust, mTLS, provider selection, diagnostics and logging. The API contract is [API 2.0](docs/api-2.0.md), the provider-author contract is [SPI 3.0](docs/provider-spi-3.0.md), and migration is covered by [API 1.3/SPI 2.4 to API 2.0/SPI 3.0](docs/api-1.3-to-2.0-migration.md).
 
-- TLS 1.2 validated with all three current providers
-- TLS 1.3 validated with RetroZilla NSS and OpenSSL
-- Windows NT 4.0 SP6 x86 validation with RetroZilla NSS
-- Windows 10 build 19045 x64 validation with Schannel and OpenSSL
-- Public API 1.3.0
-- Provider SPI 2.4
-- Explicit built-in provider bootstrap through `pst_win32_register_builtin_providers()`
+## Packages
 
-The current release baseline is **0.4.0**, with public API **1.3.0** and provider SPI **2.4**. It is distributed as target-specific static libraries and SDKs. Platforms outside the documented validation matrix remain unvalidated.
+The 0.5.0 release-candidate set contains a source archive and static SDKs for the four canonical target IDs: RetroZilla NSS x86/VC6, Schannel x64, OpenSSL x64, and optional Combined Schannel/OpenSSL x64. Combined is a provider-selection package, not a fourth TLS implementation. Package manifests state exact architecture, toolchain, providers, role masks, link libraries and runtime files.
 
-## Distribution
+Validated environments include real Windows NT 4.0 SP6 x86 for NSS CLIENT/SERVER TLS 1.2 and TLS 1.3, and Windows 10 build 19045 x64 for Schannel/OpenSSL/Combined. Toolchain identifiers are not claims about OS support. Platforms outside the [validation matrix](docs/target-matrix.md) remain unvalidated.
 
-The 0.4.0 distribution consists of a source package and separate static SDKs for RetroZilla NSS, Schannel, OpenSSL 3.5.8, and the optional combined Schannel/OpenSSL target. The combined SDK is an official optional package, not a default recommendation. See the practical guides above, the canonical [Target Matrix](docs/target-matrix.md), and [release packaging](docs/release-packaging.md) for target selection and integration details.
+## Security, contribution and license
 
-## Development transparency
+Read [Security and limitations](docs/security-and-limitations.md) and [SECURITY.md](SECURITY.md) before deployment. Contributions are welcome, especially for reproducible NSS/NSPR work, legacy Windows, provider ports, interoperability and documentation.
 
-PapinhoSecureTransport was developed with the assistance of OpenAI Codex, which was used extensively as an engineering assistant for implementation, testing, auditing, and documentation workflows. Architectural, product, and release decisions remained the responsibility of the project maintainer.
-
-The repository preserves selected [engineering history and release evidence](docs/codex/README.md) for transparency and auditability.
-
-## Contributing
-
-Contributions are welcome in documentation, real-hardware testing, legacy Windows, NSS/NSPR research, Schannel, OpenSSL, modern TLS on older systems, new providers, platform ports, examples, dependency origin and reproducibility, and licensing review.
-
-**TLS is the only secure-transport protocol implemented by PST today.** If there is a real use case, an appropriate architecture, and community interest, contributors may also explore other secure-transport families in the future.
-
-A particularly valuable area of research is maintaining or developing reproducible NSS/NSPR-based paths capable of bringing modern TLS to older operating systems.
-
-See the documentation above for the project's motivation, architecture, provider model, trust concepts, retrocomputing perspective, practical integration, and community goals.
-
-## Support the project
-
-PapinhoSecureTransport is free and open-source software under MPL-2.0. If the project is useful to you and you would like to voluntarily support the work done around it, you can do so through GitHub Sponsors.
-
-Sponsorship does not change access to the software or the rights granted by its license, and it does not constitute a contract for support, maintenance, or future development.
-
-## License
-
-PapinhoSecureTransport is licensed under the [Mozilla Public License 2.0](LICENSE). Redistributed dependencies retain their own terms; see [Third-party notices](THIRD_PARTY_NOTICES.md).
+PST is licensed under the [Mozilla Public License 2.0](LICENSE). Redistributed dependencies retain their own terms; see [Third-party notices](THIRD_PARTY_NOTICES.md).

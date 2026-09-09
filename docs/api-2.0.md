@@ -36,6 +36,8 @@ Runtime info reports provider count and no selected backend. `PST_PROVIDER_INFO`
 
 Provider runtime state is lazy: first eligible use initializes provider-global and provider-runtime state transactionally. A failed candidate retains a normalized selection diagnostic and may be skipped according to selection mode. Successfully initialized states live until the last dependent connection is destroyed and runtime release completes. Runtime release while children exist is guarded. Providers are destroyed in reverse successful-initialization order. No thread-safety guarantee is implied.
 
+The public surface groups are: version/result initialization and queries; credential and trust snapshot creation/release; runtime creation, logging, diagnostics and provider enumeration; connection creation/provider query/diagnostics; transport attach; handshake/interest/wait; read/write; Peer Info and negotiated ALPN; incremental shutdown and release. Every object created by PST is released by its matching PST release function.
+
 ## Transport, progress, and lifetime
 
 PST accepts only a connected transport. Consumer owns socket creation, bind, listen, accept, admission and scheduling. Before `ownership_accepted != 0`, caller owns and closes after failure. After acceptance, the selected provider is the sole close root even if attach later fails. Destroy without graceful shutdown performs bounded local cleanup. Graceful shutdown remains incremental.
@@ -51,3 +53,5 @@ Diagnostics add role and a normalized reason: NONE, PEER_CERT_ABSENT, PEER_CERT_
 ## Validation and forward compatibility
 
 All input records begin with size/version. Undersized records fail; API-major mismatch fails; larger same-major records preserve unknown tails. Closed enum domains reject unknown values. Outputs are initialized deterministically. API 2.0 intentionally removes API 1.3's mutable `pst_config`, `PST_IDENTITY_CONFIG`, runtime-time selection, `CLIENT_AUTH`, combined ALPN/TLS policy, and hostname-specific peer fact.
+
+The authoritative declarations are `include/papinho_secure_transport.h` and the platform bootstrap/transport functions in `include/papinho_secure_transport_win32.h`. This document describes their semantics; it does not add listener ownership, application protocol framing or authorization behavior.

@@ -6,7 +6,7 @@
 
 Phase 7.C is complete. This document records its historical audit baseline and closure
 evidence; no readiness or progress behavior was changed there. The frozen release
-baseline is public API 1.3.0, library 0.4.0 and SPI 2.4.
+historical baseline was public API 1.3.0, library 0.4.0 and SPI 2.4; the current contract is API 2.0.0, library 0.5.0 and SPI 3.0.
 
 ## Readiness is not progress
 

@@ -4,7 +4,7 @@
 
 SPI version is `0x00030000`. This is an in-process provider contract, not a public application ABI or dynamic plugin ABI.
 
-SS-2 implementation baseline: the core registry and all three existing providers use SPI 3.0 for CLIENT behavior. SS-3 implemented and validated `ROLE_SERVER` in OpenSSL. SS-4 implemented a capability-limited Schannel TLS 1.2 SERVER; its role mask deliberately excludes TLS 1.3 on the validated environment, `ALPN_SERVER`, and SERVER peer-name verification. RetroZilla NSS remains CLIENT-only and does not advertise `ROLE_SERVER`.
+The core registry and all three providers use SPI 3.0 for CLIENT and their factual SERVER behavior. OpenSSL implements CLIENT/SERVER TLS 1.2 and TLS 1.3. Schannel implements a capability-limited TLS 1.2 SERVER; its SERVER mask excludes TLS 1.3 on the validated environment, `ALPN_SERVER`, and SERVER peer-name verification. RetroZilla NSS implements CLIENT/SERVER TLS 1.2 and TLS 1.3; its SERVER mask excludes SYSTEM_TRUST, `ALPN_SERVER`, and SERVER peer-name verification.
 
 ## Descriptor and capabilities
 
@@ -26,6 +26,8 @@ The core rejects requirements absent from the candidate's role-specific mask bef
 ## Remaining operations
 
 `connection_destroy`, `attach_transport`, `handshake_step`, `get_interest`, `wait`, `read`, `write`, `shutdown_step`, peer snapshot creation/destruction, negotiated ALPN query and diagnostic copy remain role-neutral. Their SPI 2.4 boundedness, partial-I/O, clean/truncated close, output initialization and terminality rules remain in force.
+
+The vtable also owns global initialize/shutdown, provider runtime create/destroy and effective-capability query/connection validation. State lifetime is provider-global -> runtime -> connection; partial failure unwinds in reverse order. Expensive native initialization remains lazy until an eligible provider is attempted.
 
 Transport attach receives the provider-neutral native envelope and explicit ownership. Before acceptance the core owns it; after acceptance the provider owns the aggregate and is the only close root. Providers receive connected transports only and never implement listener policy.
 

@@ -10,13 +10,15 @@ Package/Library `0.5.0`, public API `2.0.0`, provider SPI `3.0`.
 
 | Package | SHA-256 |
 |---|---|
-| `papinho-secure-transport-0.5.0-src.zip` | `1271bffd68f82d817208b0da4487cc59aea1fb918528a7221ef6d2e5ad281113` |
-| `papinho-secure-transport-0.5.0-win32-x86-vc6-retrozilla-nss.zip` | `a0dfcd756213f2613a42a906119027519e4743e67ceb1092684c37f9a5cfd301` |
-| `papinho-secure-transport-0.5.0-win32-x64-msvc-19.51-schannel.zip` | `8ad13bd6466cedfc04705e72440378b8cecebf8d83580fcce9d272b2c0037869` |
-| `papinho-secure-transport-0.5.0-win32-x64-msvc-19.51-openssl3.zip` | `5b63eba6d6aa3653e7d824805429cb120f93f1978defa6b8348142c5335ca62b` |
-| `papinho-secure-transport-0.5.0-win32-x64-msvc-19.51-schannel-openssl3.zip` | `dfed8c5c9209df3d37d178ba5588ba30f628586b00572c6317fdf45e60d791ee` |
+| `papinho-secure-transport-0.5.0-src.zip` | `4df9945b0a219c9a04bc9429faeeeb10fb449fcc945bfdcbd6b1fe605e53c673` |
+| `papinho-secure-transport-0.5.0-win32-x86-vc6-retrozilla-nss.zip` | `4bb841731606a0a4e803fe16bb8da110b1929b1e98f4f14cb656417d29240056` |
+| `papinho-secure-transport-0.5.0-win32-x64-msvc-19.51-schannel.zip` | `5eb2f2c7f2f044c4630bdd866af9e9c382254632306a3fdcc9198aecc9382151` |
+| `papinho-secure-transport-0.5.0-win32-x64-msvc-19.51-openssl3.zip` | `625959d8fd73cd3a73ea0f6ee23761fb19a1b20899016e3cb74f5aa9388b6635` |
+| `papinho-secure-transport-0.5.0-win32-x64-msvc-19.51-schannel-openssl3.zip` | `19c43680e981a01cbd48a486fd12c53d5c50167d42b9f2cebf9955fa7c823707` |
 
-`SHA256SUMS-packages.txt` SHA-256: `18e512176fcaaf987017ab3cb1de9badae6bcd300bf89fe1dfb21a3f59778748`.
+`SHA256SUMS-packages.txt` SHA-256: `4fe50b51fe6616b1a280af98267f54195c86ac6c78aa71b07f503e639266c34e`.
+
+These are the final SS-8D documentation/package-layout candidates. Their PST libraries and provider runtimes are byte-identical to the SS-8 clean-machine/NT4-tested inputs; only source documentation, public examples, SDK documentation/manifests and their internal checksum records changed.
 
 ## Development-host evidence
 

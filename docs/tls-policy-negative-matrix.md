@@ -6,7 +6,7 @@
 
 Phase 7.D is complete. The formal closure audit found every original mandatory TLS-policy goal satisfied by deterministic tests, real RetroZilla NSS fixtures, or preserved Phase 4/5/6/7 evidence. `PROVED` means existing deterministic, implementation-boundary, or recorded functional evidence establishes the contracted result. Existing NT4 evidence is reused because the 7.D production corrections affect only invalid oversized ALPN rejection and diagnostic observability, not valid TLS behavior or policy decisions.
 
-The current release baseline is API 1.3.0, library 0.4.0, and SPI 2.4.
+The matrix originated under API 1.3.0/library 0.4.0/SPI 2.4. Its current CLIENT/SERVER contract references are API 2.0.0, library 0.5.0 and SPI 3.0.
 
 ## Enforcement ownership
 

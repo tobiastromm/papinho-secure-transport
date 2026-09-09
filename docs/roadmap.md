@@ -157,13 +157,15 @@
     - ADR-0002 durable target naming review: future controlled migration; frozen 0.4.0 names unchanged
   - documentation handoff: concise root README linking complete English and pt-BR paths, written for non-experts
   - scope wording: PST is generic secure transport for Internet, LAN, and private/corporate networks; PapinhoBrowser/PapinhoAccelerator are examples only
-  - future-transport note: TLS is the current implementation; DTLS, QUIC, Noise, or other transports require future study and are not claims of SPI 2.4
+  - future-transport note: TLS is the current implementation; DTLS, QUIC, Noise, or other transports require future study and are not claims of SPI 3.0
   - community/contribution handoff: contribution guide, retrocomputing relevance, and invitation for old-Windows TLS 1.3/NSS/NSPR contributors
   - dependency handoff: provider/library contributions require license and provenance review; document vendored and external dependency models
   - release handoff: integration examples, release-validation BATs, NT4/NSS to OpenSSL TLS 1.3, and NT4/NSS to Schannel TLS 1.2 validation
 - CLIENT/SERVER API 2.0 / SPI 3.0 evolution: in progress on `feature/server-side`
   - SS-1 contract freeze through SS-7 security/lifecycle matrix: complete
-  - SS-8 Packaging / Consumer SDK / Clean-Machine Validation: current
-    - five canonical 0.5.0 package candidates and deterministic builder: host-ready
-    - extracted CLIENT/SERVER consumer compile/link/runtime validation: host-ready
-    - separate clean-machine validation and NT4 package binary/retest decision: pending
+  - SS-8 Packaging / Consumer SDK / Clean-Machine Validation: complete
+    - five canonical 0.5.0 package candidates and deterministic builder: complete
+    - extracted CLIENT/SERVER consumer compile/link/runtime validation: complete
+    - separate clean-machine Combined real TLS and real NT4 package retest: complete
+  - SS-8D Documentation / Examples / Migration / Package Documentation Closure: complete
+  - SS-9 final release decision: next; no tag or publication performed by SS-8D

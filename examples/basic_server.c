@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: MPL-2.0 */
+#include <winsock.h>
 #include "papinho_secure_transport.h"
 #include "papinho_secure_transport_win32.h"
 
@@ -52,6 +53,11 @@ static PST_RESULT serve_accepted_socket(pst_runtime *runtime,
     result = pst_connection_create(runtime, &config, &connection);
     if (result != PST_RESULT_OK) return result;
     result = pst_win32_socket_transport_create(accepted_socket, &transport);
+    if (result != PST_RESULT_OK) {
+        closesocket((SOCKET)accepted_socket);
+        pst_connection_release(connection);
+        return result;
+    }
     if (result == PST_RESULT_OK)
         result = pst_connection_attach(connection, transport,
                                        PST_OWNERSHIP_TRANSFERRED,
@@ -112,6 +118,41 @@ static PST_RESULT serve_accepted_socket(pst_runtime *runtime,
     return result;
 }
 
+/*
+ * Listener ownership never crosses into PST. The application may apply its
+ * own admission policy after accept() and before this handoff.
+ */
+static PST_RESULT run_one_server_connection(pst_runtime *runtime,
+                                            unsigned short port,
+                                            pst_credentials *identity,
+                                            pst_trust *client_trust)
+{
+    struct sockaddr_in address;
+    SOCKET listener;
+    SOCKET accepted;
+    PST_RESULT result;
+
+    listener = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (listener == INVALID_SOCKET) return PST_RESULT_TRANSPORT_FAILURE;
+    memset(&address, 0, sizeof(address));
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = htonl(INADDR_ANY);
+    address.sin_port = htons(port);
+    if (bind(listener, (const struct sockaddr *)&address,
+             sizeof(address)) == SOCKET_ERROR ||
+        listen(listener, 8) == SOCKET_ERROR) {
+        closesocket(listener);
+        return PST_RESULT_TRANSPORT_FAILURE;
+    }
+    accepted = accept(listener, NULL, NULL);
+    closesocket(listener); /* The listener is always application-owned. */
+    if (accepted == INVALID_SOCKET) return PST_RESULT_TRANSPORT_FAILURE;
+    result = serve_accepted_socket(runtime, (pst_size)accepted,
+                                   identity, client_trust);
+    /* serve_accepted_socket either transfers or closes the accepted socket. */
+    return result;
+}
+
 int main(int argc, char **argv)
 {
     PST_RUNTIME_OPTIONS options;
@@ -122,8 +163,10 @@ int main(int argc, char **argv)
     options.struct_size = sizeof(options);
     options.api_version = PST_API_VERSION;
     if (pst_runtime_create(&options, &runtime) != PST_RESULT_OK) return 2;
-    printf("SERVER runtime ready; application retains its listener.\n");
-    if (argc == 999) (void)serve_accepted_socket(runtime, 0, NULL, NULL);
+    printf("SERVER runtime ready; application owns bind/listen/accept.\n");
+    /* Supply deployment credentials/trust before enabling this sample call. */
+    if (argc == 999)
+        (void)run_one_server_connection(runtime, 8443, NULL, NULL);
     pst_runtime_release(runtime);
     return 0;
 }

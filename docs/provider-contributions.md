@@ -12,4 +12,4 @@ Dynamic plugins are not supported; providers are deliberately compiled into targ
 - transport ownership acceptance, lifecycle/singleton constraints, normalized errors and diagnostic redaction;
 - deterministic tests, interoperability peers, real-platform evidence and target-separated build outputs.
 
-Read the normative [SPI 2.4 contract](provider-spi.md). Provider-private native types remain outside public API and generic SPI vocabulary. A proposal that requires changing the frozen SPI must first justify a separately reviewed version impact.
+Read the normative current [SPI 3.0 contract](provider-spi-3.0.md). The [SPI 2.4 contract](provider-spi.md) is retained only as historical/migration material. Provider-private native types remain outside public API and generic SPI vocabulary. A proposal that requires changing the frozen SPI must first justify a separately reviewed version impact.

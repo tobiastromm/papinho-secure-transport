@@ -2,7 +2,7 @@
 
 # Diagnostics and security disclosure matrix
 
-This document records the completed Phase 7.G disclosure audit, focused abuse matrix, functional logging equivalence, remote semantic equivalence, and formal closure audit. Those historical gates passed without production behavior or public ABI changes; the current public baseline is library/package 0.4.0, API 1.3.0, and SPI 2.4.
+This document records the completed historical Phase 7.G disclosure audit, focused abuse matrix, functional logging equivalence, remote semantic equivalence, and formal closure audit. Those gates passed without production behavior or public ABI changes. The current baseline is library/package 0.5.0, API 2.0.0, and SPI 3.0.
 
 ## Boundary
 
@@ -61,4 +61,4 @@ The formal closure audit found every mandatory diagnostics/security-disclosure g
 
 Phase 7.G and its successor gates are complete. The current 0.4.0 release includes RetroZilla NSS, Schannel, and OpenSSL built-in providers with capability-specific behavior; this document does not imply identical provider capabilities.
 
-The current versions are API 1.3.0, library 0.4.0, and SPI 2.4. Tests/docs-only changes require no NT4 retest.
+The versions at the time of this historical audit were API 1.3.0, library 0.4.0, and SPI 2.4. The current versions are documented above.

@@ -23,6 +23,6 @@ OpenSSL and NSS DLLs are provider runtime dependencies, not a PST shared DLL.
 
 Do not copy runtime DLLs into Windows system directories or rely on an arbitrary global PATH. Do not mix files from different target IDs.
 
-See [consumer linking](../docs/consumer-linking.md), [packaging decisions](../docs/release-packaging.md), [security and limitations](../docs/security-and-limitations.md), and [public examples](../examples/README.md). `SHA256SUMS.txt` records package integrity, not publisher authenticity.
+See [consumer linking](../docs/consumer-linking.md), [packaging decisions](../docs/release-packaging.md), [security and limitations](../docs/security-and-limitations.md), the [English guide](../docs/en/README.md), the [guia em português](../docs/pt-BR/README.md), and [public examples](../examples/README.md). `SHA256SUMS.txt` records package integrity, not publisher authenticity. The SDK stager rewrites these repository-relative links for the package-root copy.
 
 The canonical target identity, toolchain, provider provenance, and tested environments are recorded in `docs/target-matrix.md`. The `target_id` in `manifest.ini` and `consumer-link.ini` identifies this extracted SDK.

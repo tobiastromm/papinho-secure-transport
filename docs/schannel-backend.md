@@ -2,7 +2,7 @@
 
 # Schannel backend
 
-Status: Phase 8 Schannel work is complete. TLS 1.2, system/custom trust, hostname, ALPN, explicit mTLS, peer info, readiness, close, shutdown and same-runtime isolation passed; TLS 1.3 is unavailable and not advertised on the tested runtime.
+Current 0.5.0 status: Schannel implements CLIENT and capability-limited SERVER under API 2.0/SPI 3.0. SERVER TLS 1.2, CUSTOM_TRUST, SYSTEM_TRUST clientAuth, identity/chain delivery, Peer Info, readiness, encrypted I/O and reciprocal shutdown passed. SERVER TLS 1.3 and complete PST SERVER ALPN are not advertised on the validated Windows 10 build 19045 environment. The phase-by-phase material below is historical evidence and may describe earlier incomplete states.
 
 ## Boundary and lifecycle
 

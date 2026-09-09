@@ -36,7 +36,7 @@ foreach ($id in $targets) {
     Copy-Required (Join-Path $repo "THIRD_PARTY_NOTICES.md") (Join-Path $stage "THIRD_PARTY_NOTICES.md")
     Copy-Required (Join-Path $repo "LICENSE") (Join-Path $stage "LICENSE")
     foreach ($file in @("papinho_secure_transport.h", "papinho_secure_transport_win32.h")) { Copy-Required (Join-Path $repo "include\$file") (Join-Path $stage "include\$file") }
-    foreach ($file in @("target-matrix.md", "release-packaging.md", "release-licensing.md", "consumer-linking.md", "security-and-limitations.md", "api-2.0.md", "provider-spi-3.0.md", "client-server-lifecycle.md")) { Copy-Required (Join-Path $repo "docs\$file") (Join-Path $stage "docs\$file") }
+    foreach ($file in @("target-matrix.md", "release-packaging.md", "release-licensing.md", "consumer-linking.md", "security-and-limitations.md", "security-lifecycle-negative-matrix.md", "api-2.0.md", "provider-spi-3.0.md", "api-1.3-to-2.0-migration.md", "providers.md", "client-server-lifecycle.md", "en\README.md", "en\getting-started.md", "pt-BR\README.md", "pt-BR\getting-started.md")) { Copy-Required (Join-Path $repo "docs\$file") (Join-Path $stage "docs\$file") }
     Get-ChildItem (Join-Path $repo "examples") -File | ForEach-Object { Copy-Required $_.FullName (Join-Path $stage "examples\$($_.Name)") }
 
     $runtimeFiles = "none-package-supplied"
