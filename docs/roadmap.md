@@ -168,4 +168,9 @@
     - extracted CLIENT/SERVER consumer compile/link/runtime validation: complete
     - separate clean-machine Combined real TLS and real NT4 package retest: complete
   - SS-8D Documentation / Examples / Migration / Package Documentation Closure: complete
-  - SS-9 final release decision: next; no tag or publication performed by SS-8D
+  - SS-9 Final Release Audit / Publication Readiness: complete
+    - documentation/version/licensing audit: PASS
+    - five 0.5.0 packages regenerated reproducibly
+    - binary identity with SS-8 preserved
+    - clean-machine and NT4 TLS rerun not required
+    - ready for SS-10 publication; no tag/release/assets published by SS-9
