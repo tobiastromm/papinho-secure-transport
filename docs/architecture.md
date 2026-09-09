@@ -2,7 +2,7 @@
 
 # Scope and architectural boundaries
 
-The CLIENT/SERVER development line is governed by the accepted PST-local ADRs in `docs/adr/` and the frozen contracts in `api-2.0.md`, `provider-spi-3.0.md`, and `client-server-lifecycle.md`. Provider SERVER implementations are not yet present.
+The CLIENT/SERVER development line is governed by the accepted PST-local ADRs in `docs/adr/` and the frozen contracts in `api-2.0.md`, `provider-spi-3.0.md`, and `client-server-lifecycle.md`. OpenSSL, Schannel, and RetroZilla NSS implement the SERVER role within their documented role-scoped capability masks and provider-specific limitations.
 
 Phase 4 materializes immutable credentials/trust, frozen identity configuration, and an owned peer snapshot without changing this boundary. No NSS, NSPR, WinSock, certificate-parser, or crypto type enters the public API.
 

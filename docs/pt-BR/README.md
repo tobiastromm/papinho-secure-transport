@@ -362,7 +362,7 @@ No role SERVER, Expected Peer Name não se aplica; a validação de certificados
 
 ---
 
-# O que são certificado e CA?
+# O que são certificados e CAs?
 
 Antes de um programa confiar que está falando com o servidor correto — ou, quando configurado, antes de um servidor confiar no certificado apresentado por um cliente — ele precisa de uma forma de verificar a identidade TLS do peer.
 

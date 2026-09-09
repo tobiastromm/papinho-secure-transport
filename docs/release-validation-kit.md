@@ -2,9 +2,17 @@
 
 # Release validation kit
 
-Status: Phase 9.F complete. Offline package validation, isolated host consumers, real provider TLS, public selection, online system trust, and final NT4 package validation passed.
+Status: the current 0.5.0 package-validation and clean-machine evidence is recorded in `docs/codex/release-evidence/0.5.0/ss8-package-validation.md`. Offline package validation, isolated host consumers, real provider TLS, public selection, system trust, Combined real TLS, and final NT4 package validation passed. The Phase 9.F material retained below records the historical 0.4.0 validation.
 
-## Source of truth
+## Current 0.5.0 source of truth
+
+The current validator reads the five 0.5.0 ZIPs under `dist/packages/0.5.0`. Run it with:
+
+    powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate-release-packages.ps1 -Version 0.5.0 -CompileConsumers
+
+It extracts and validates package hashes, internal SHA-256 records, licensing, corresponding source, package boundaries, and separate CLIENT/SERVER consumers. The historical 0.4.0 procedure and evidence follow.
+
+## Historical 0.4.0 source of truth
 
 The validator reads only the five immutable 0.4.0 ZIPs under dist/packages/0.4.0. It recreates dist/validation/0.4.0, extracts each package, verifies its external and internal SHA-256 records, checks package boundaries and corresponding source, and compiles minimal consumers against extracted public headers and static libraries. It never reads dist/staging.
 

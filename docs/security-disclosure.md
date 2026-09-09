@@ -59,6 +59,6 @@ The functional gate is complete.
 
 The formal closure audit found every mandatory diagnostics/security-disclosure guarantee satisfied. Public diagnostics and log events remain fixed, structured, local, allocation-free value projections with reviewed field-level exclusions. Native detail remains internal; functional peer data remains available only through explicit APIs; logging levels affect only callback delivery; INFO is bounded; TRACE carries only safe structured progress; normal progress is not WARN; and representative failures emit one logical ERROR. TLS 1.2, TLS 1.3, and required-ALPN failure runs proved semantic wire equivalence across logging levels. No production disclosure defect or ABI expansion was found in that audit.
 
-Phase 7.G and its successor gates are complete. The current 0.4.0 release includes RetroZilla NSS, Schannel, and OpenSSL built-in providers with capability-specific behavior; this document does not imply identical provider capabilities.
+Phase 7.G and its successor gates are complete. The historical 0.4.0 release includes RetroZilla NSS, Schannel, and OpenSSL built-in providers with capability-specific behavior; this document does not imply identical provider capabilities. The current baseline is the 0.5.0/API 2.0/SPI 3.0 baseline stated at the beginning of this document.
 
 The versions at the time of this historical audit were API 1.3.0, library 0.4.0, and SPI 2.4. The current versions are documented above.

@@ -2,7 +2,7 @@
 
 # Repository and source-package hygiene
 
-Status: Phase 9 complete. This is the normative separation between repository history, the source package, and target binary SDKs. MPL-2.0 and Library/Package 0.4.0 are applied; release validation and clean-machine execution passed. Publication has not been performed.
+Status: the normative separation between repository history, the source package, and target binary SDKs applies to the current Library/Package 0.5.0, public API 2.0.0, and provider SPI 3.0 baseline. MPL-2.0 is applied; release validation and clean-machine execution passed. Publication has not been performed. The earlier 0.4.0 Phase 9 material retained below is historical.
 
 ## Principles
 
