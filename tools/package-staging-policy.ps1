@@ -1,14 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
 
-function Test-PstCanonicalTrackedText($RelativePath) {
-    $path = $RelativePath.Replace("\", "/")
-    if ($path.StartsWith("third_party/", [StringComparison]::OrdinalIgnoreCase)) { return $false }
-    $extension = [IO.Path]::GetExtension($path).ToLowerInvariant()
-    if (@(".md", ".txt", ".c", ".h", ".ps1", ".bat", ".py", ".ini", ".patch", ".sha256", ".json", ".yml", ".yaml", ".pl", ".pm", ".sh", ".def", ".rc", ".vc6", ".msvc") -contains $extension) { return $true }
-    $name = [IO.Path]::GetFileName($path)
-    return $name -in @(".gitattributes", ".gitignore", "LICENSE", "README", "Makefile")
-}
-
 function Write-PstGitBlob($Repo, $ObjectId, $Destination) {
     $parent = Split-Path -Parent $Destination
     if (-not (Test-Path -LiteralPath $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
@@ -39,14 +30,12 @@ function Copy-PstPackageInput($Repo, $Source, $Destination) {
     $insideRepo = $sourceFull.StartsWith($repoFull + "\", [StringComparison]::OrdinalIgnoreCase)
     if ($insideRepo) {
         $relative = $sourceFull.Substring($repoFull.Length + 1).Replace("\", "/")
-        if (Test-PstCanonicalTrackedText $relative) {
-            & git -C $repoFull ls-files --error-unmatch -- $relative *> $null
-            if ($LASTEXITCODE -eq 0) {
-                $objectId = (& git -C $repoFull rev-parse --verify ("HEAD:" + $relative)).Trim()
-                if ($LASTEXITCODE -ne 0 -or -not $objectId) { throw "Unable to resolve canonical Git blob: $relative" }
-                Write-PstGitBlob $repoFull $objectId $Destination
-                return
-            }
+        & git -C $repoFull ls-files --error-unmatch -- $relative *> $null
+        if ($LASTEXITCODE -eq 0) {
+            $objectId = (& git -C $repoFull rev-parse --verify ("HEAD:" + $relative)).Trim()
+            if ($LASTEXITCODE -ne 0 -or -not $objectId) { throw "Unable to resolve canonical Git blob: $relative" }
+            Write-PstGitBlob $repoFull $objectId $Destination
+            return
         }
     }
     $parent = Split-Path -Parent $Destination
