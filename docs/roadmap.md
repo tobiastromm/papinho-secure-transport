@@ -161,3 +161,9 @@
   - community/contribution handoff: contribution guide, retrocomputing relevance, and invitation for old-Windows TLS 1.3/NSS/NSPR contributors
   - dependency handoff: provider/library contributions require license and provenance review; document vendored and external dependency models
   - release handoff: integration examples, release-validation BATs, NT4/NSS to OpenSSL TLS 1.3, and NT4/NSS to Schannel TLS 1.2 validation
+- CLIENT/SERVER API 2.0 / SPI 3.0 evolution: in progress on `feature/server-side`
+  - SS-1 contract freeze through SS-7 security/lifecycle matrix: complete
+  - SS-8 Packaging / Consumer SDK / Clean-Machine Validation: current
+    - five canonical 0.5.0 package candidates and deterministic builder: host-ready
+    - extracted CLIENT/SERVER consumer compile/link/runtime validation: host-ready
+    - separate clean-machine validation and NT4 package binary/retest decision: pending

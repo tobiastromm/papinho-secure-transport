@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
 param(
+    [ValidateSet("0.5.0")][string]$Version = "0.5.0",
     [ValidateSet("all", "win32-x86-vc6-retrozilla-nss", "win32-x64-msvc-19.51-schannel", "win32-x64-msvc-19.51-openssl3", "win32-x64-msvc-19.51-schannel-openssl3")]
     [string]$Target = "all",
     [switch]$Clean
@@ -7,7 +8,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
-$version = "0.4.0"
+$version = $Version
 $root = Join-Path $repo "dist\staging\$version"
 $targets = @("win32-x86-vc6-retrozilla-nss", "win32-x64-msvc-19.51-schannel", "win32-x64-msvc-19.51-openssl3", "win32-x64-msvc-19.51-schannel-openssl3")
 if ($Target -ne "all") { $targets = @($Target) }
@@ -35,14 +36,14 @@ foreach ($id in $targets) {
     Copy-Required (Join-Path $repo "THIRD_PARTY_NOTICES.md") (Join-Path $stage "THIRD_PARTY_NOTICES.md")
     Copy-Required (Join-Path $repo "LICENSE") (Join-Path $stage "LICENSE")
     foreach ($file in @("papinho_secure_transport.h", "papinho_secure_transport_win32.h")) { Copy-Required (Join-Path $repo "include\$file") (Join-Path $stage "include\$file") }
-    foreach ($file in @("target-matrix.md", "release-packaging.md", "release-licensing.md", "consumer-linking.md", "security-and-limitations.md")) { Copy-Required (Join-Path $repo "docs\$file") (Join-Path $stage "docs\$file") }
+    foreach ($file in @("target-matrix.md", "release-packaging.md", "release-licensing.md", "consumer-linking.md", "security-and-limitations.md", "api-2.0.md", "provider-spi-3.0.md", "client-server-lifecycle.md")) { Copy-Required (Join-Path $repo "docs\$file") (Join-Path $stage "docs\$file") }
     Get-ChildItem (Join-Path $repo "examples") -File | ForEach-Object { Copy-Required $_.FullName (Join-Path $stage "examples\$($_.Name)") }
 
     $runtimeFiles = "none-package-supplied"
     $thirdParty = "none"
     if ($id -eq "win32-x86-vc6-retrozilla-nss") {
         $build = Join-Path $repo "build\win32-x86-vc6-retrozilla-nss"; $architecture = "x86"; $toolchain = "Visual C++ 6 SP5 plus Processor Pack; cl.exe 12.00.8804; link.exe 6.00.8447"; $crt = "compiler-default-static"; $providers = "retrozilla-nss"
-        $capabilities = "TLS1.2,TLS1.3,CUSTOM_TRUST,HOSTNAME_VERIFY,ALPN,CLIENT_AUTH,PEER_INFO,NONBLOCKING,BACKEND_WAIT"
+        $capabilities = "aggregate=0x00007aff;client=0x00007ab7;server=0x0000727b;server_absent=SYSTEM_TRUST,ALPN_SERVER,PEER_NAME_VERIFY"
         $linkLibraries = "papinho_secure_transport.lib,wsock32.lib"
         $runtime = Join-Path $repo "third_party\retrozilla-nss\prebuilt\win32-x86-vc6\runtime"
         $runtimeList = @("freebl3.chk","freebl3.dll","nspr4.dll","nss3.dll","nssutil3.dll","plc4.dll","plds4.dll","softokn3.chk","softokn3.dll","ssl3.dll")
@@ -51,11 +52,11 @@ foreach ($id in $targets) {
         $runtimeFiles = $runtimeList -join ","; $thirdParty = "RetroZilla NSS 3.42 Beta;NSPR 4.7.7"
     } elseif ($id -eq "win32-x64-msvc-19.51-schannel") {
         $build = Join-Path $repo "build\win32-x64-msvc-19.51-schannel"; $architecture = "x64"; $toolchain = "MSVC 19.51.36256.0; toolset 14.51.36231; Windows SDK 10.0.26100.0"; $crt = "dynamic-/MD"; $providers = "schannel"
-        $capabilities = "TLS1.2,CUSTOM_TRUST,SYSTEM_TRUST,HOSTNAME_VERIFY,ALPN,CLIENT_AUTH,PEER_INFO,NONBLOCKING,BACKEND_WAIT"
-        $linkLibraries = "papinho_secure_transport.lib,ws2_32.lib,secur32.lib,crypt32.lib,ncrypt.lib"
+        $capabilities = "aggregate=0x00007efd;client=0x00007eb5;server=0x00007679;server_absent=TLS1.3,ALPN_SERVER,PEER_NAME_VERIFY"
+        $linkLibraries = "papinho_secure_transport.lib,ws2_32.lib,secur32.lib,crypt32.lib,ncrypt.lib,bcrypt.lib"
     } elseif ($id -eq "win32-x64-msvc-19.51-openssl3") {
         $build = Join-Path $repo "build\win32-x64-msvc-19.51-openssl3"; $architecture = "x64"; $toolchain = "MSVC 19.51.36256.0; toolset 14.51.36231; Windows SDK 10.0.26100.0"; $crt = "dynamic-/MD"; $providers = "openssl"
-        $capabilities = "TLS1.2,TLS1.3,CUSTOM_TRUST,SYSTEM_TRUST,HOSTNAME_VERIFY,ALPN,CLIENT_AUTH,PEER_INFO,NONBLOCKING,BACKEND_WAIT"
+        $capabilities = "aggregate=0x00007fff;client=0x00007eb7;server=0x0000777b;server_absent=PEER_NAME_VERIFY"
         $linkLibraries = "papinho_secure_transport.lib,libssl.lib,libcrypto.lib,ws2_32.lib,crypt32.lib"
         foreach ($file in @("libssl.lib","libcrypto.lib")) { Copy-Required (Join-Path $repo "third_party\openssl\prebuilt\win32-x64-msvc-19.51-openssl3\3.5.8\lib\$file") (Join-Path $stage "lib\$id\$file") }
         foreach ($file in @("libssl-3-x64.dll","libcrypto-3-x64.dll")) { Copy-Required (Join-Path $repo "third_party\openssl\prebuilt\win32-x64-msvc-19.51-openssl3\3.5.8\runtime\$file") (Join-Path $stage "runtime\$id\$file") }
@@ -63,17 +64,17 @@ foreach ($id in $targets) {
         $runtimeFiles = "libssl-3-x64.dll,libcrypto-3-x64.dll"; $thirdParty = "OpenSSL 3.5.8 LTS"
     } else {
         $build = Join-Path $repo "build\win32-x64-msvc-19.51-schannel-openssl3"; $architecture = "x64"; $toolchain = "MSVC 19.51.36256.0; toolset 14.51.36231; Windows SDK 10.0.26100.0"; $crt = "dynamic-/MD"; $providers = "schannel,openssl"
-        $capabilities = "TLS1.2,TLS1.3,CUSTOM_TRUST,SYSTEM_TRUST,HOSTNAME_VERIFY,ALPN,CLIENT_AUTH,PEER_INFO,NONBLOCKING,BACKEND_WAIT"
-        $linkLibraries = "papinho_secure_transport.lib,libssl.lib,libcrypto.lib,ws2_32.lib,secur32.lib,crypt32.lib,ncrypt.lib"
+        $capabilities = "provider_role_scoped;see=docs/target-matrix.md"
+        $linkLibraries = "papinho_secure_transport.lib,libssl.lib,libcrypto.lib,ws2_32.lib,secur32.lib,crypt32.lib,ncrypt.lib,bcrypt.lib"
         foreach ($file in @("libssl.lib","libcrypto.lib")) { Copy-Required (Join-Path $repo "third_party\openssl\prebuilt\win32-x64-msvc-19.51-openssl3\3.5.8\lib\$file") (Join-Path $stage "lib\$id\$file") }
         foreach ($file in @("libssl-3-x64.dll","libcrypto-3-x64.dll")) { Copy-Required (Join-Path $repo "third_party\openssl\prebuilt\win32-x64-msvc-19.51-openssl3\3.5.8\runtime\$file") (Join-Path $stage "runtime\$id\$file") }
         Copy-Required (Join-Path $repo "third_party\openssl\LICENSE.txt") (Join-Path $stage "licenses\openssl\LICENSE-APACHE-2.0.txt")
         $runtimeFiles = "libssl-3-x64.dll,libcrypto-3-x64.dll"; $thirdParty = "OpenSSL 3.5.8 LTS"
     }
     Copy-Required (Join-Path $build "papinho_secure_transport.lib") (Join-Path $stage "lib\$id\papinho_secure_transport.lib")
-    Write-Utf8NoBom (Join-Path $stage "VERSION") "package_version=0.4.0`nlibrary_version=0.4.0`napi_version=1.3.0`nspi_version=2.4`n"
+    Write-Utf8NoBom (Join-Path $stage "VERSION") "package_version=$version`nlibrary_version=0.5.0`napi_version=2.0.0`nspi_version=3.0`n"
     Write-Utf8NoBom (Join-Path $stage "consumer-link.ini") "target_id=$id`nlink_libraries=$linkLibraries`nruntime_files=$runtimeFiles`n"
-    Write-Utf8NoBom (Join-Path $stage "manifest.ini") "format_version=1`npackage_name=PapinhoSecureTransport`npackage_version=0.4.0`nlibrary_version=0.4.0`napi_version=1.3.0`nspi_version=2.4`ntarget_id=$id`narchitecture=$architecture`ntoolchain=$toolchain`ncrt=$crt`nlinkage=static`nprovider_ids=$providers`ncapabilities=$capabilities`nruntime_files=$runtimeFiles`nthird_party_components=$thirdParty`nlicense_id=MPL-2.0`nsource_package=papinho-secure-transport-0.4.0-src.zip`nlicense_file=LICENSE`nprovenance_reference=docs/release-packaging.md`nthird_party_notice=THIRD_PARTY_NOTICES.md`n"
+    Write-Utf8NoBom (Join-Path $stage "manifest.ini") "format_version=2`npackage_name=PapinhoSecureTransport`npackage_version=$version`nlibrary_version=0.5.0`napi_version=2.0.0`nspi_version=3.0`ntarget_id=$id`narchitecture=$architecture`ntoolchain=$toolchain`ncrt=$crt`nlinkage=static`nprovider_ids=$providers`ncapabilities=$capabilities`nruntime_files=$runtimeFiles`nthird_party_components=$thirdParty`nlicense_id=MPL-2.0`nsource_package=papinho-secure-transport-$version-src.zip`nlicense_file=LICENSE`nprovenance_reference=docs/release-packaging.md`nthird_party_notice=THIRD_PARTY_NOTICES.md`n"
     $hashLines = Get-ChildItem $stage -File -Recurse | Where-Object { $_.Name -ne "SHA256SUMS.txt" } | Sort-Object FullName | ForEach-Object { $relative = $_.FullName.Substring($stage.Length + 1).Replace("\", "/"); "{0}  {1}" -f (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant(), $relative }
     Write-Utf8NoBom (Join-Path $stage "SHA256SUMS.txt") (($hashLines -join "`n") + "`n")
     Write-Host "STAGED $id"

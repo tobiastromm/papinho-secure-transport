@@ -2,6 +2,14 @@
 
 # Release packaging decision
 
+## SS-8 0.5.0 package candidates
+
+The current package line is Library/Package 0.5.0 with public API 2.0.0 and provider SPI 3.0. It adds the frozen CLIENT/SERVER role model and role-scoped provider capabilities while retaining the same four canonical target IDs and static-library distribution model. `tools/build-release-packages.ps1 -Version 0.5.0` creates exactly one source archive and four SDK archives under `dist/packages/0.5.0`; `tools/validate-release-packages.ps1 -Version 0.5.0 -CompileConsumers` validates their boundaries and compiles separate CLIENT and SERVER consumers from extracted SDK inputs.
+
+An isolated extraction on the build host proves package self-containment relative to the checkout, but is not clean-machine validation. SS-8 release closure requires execution on separate eligible machines/environments and records that evidence independently.
+
+The remainder of this document records the historical 0.4.0 Phase 9 packaging decision and evidence.
+
 Status: Phase 9 complete. Standard MPL-2.0 without Exhibit B is applied; the frozen 0.4.0 source package and four static binary SDK candidates passed canonical reproduction and clean-machine validation. Publication has not been performed.
 
 ## Distribution model

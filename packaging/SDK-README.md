@@ -4,7 +4,7 @@
 
 This target-separated SDK contains the public PST headers, one static provider build, its declared link/runtime dependencies, public examples, and release documentation.
 
-This is a local 0.4.0 release candidate SDK, not a published release. PapinhoSecureTransport is licensed under MPL-2.0; see LICENSE and THIRD_PARTY_NOTICES.md. The exact corresponding source is papinho-secure-transport-0.4.0-src.zip. The legacy NSS source package also contains the exact modified runtime snapshot and fail-closed patch.
+This is a local 0.5.0 release candidate SDK, not a published release. Public API 2.0 selects CLIENT or SERVER per connection; it does not use separate role-specific SDKs. PapinhoSecureTransport is licensed under MPL-2.0; see LICENSE and THIRD_PARTY_NOTICES.md. The exact corresponding source is papinho-secure-transport-0.5.0-src.zip. The NSS source package also contains the exact modified runtime snapshot and fail-closed patch.
 
 ## Use
 
@@ -13,6 +13,13 @@ This is a local 0.4.0 release candidate SDK, not a published release. PapinhoSec
 3. Link the libraries listed by `consumer-link.ini` from `lib/<target-id>/` and the platform SDK.
 4. For targets with package runtime DLLs, deploy the contents of `runtime/<target-id>/` beside the application executable.
 5. Call `pst_win32_register_builtin_providers()` and use only the public API.
+
+For SERVER, the consumer owns bind, listen and accept. Wrap and transfer only
+the already-connected accepted socket to PST. Read the role-scoped capability
+masks before selecting a provider: Schannel SERVER does not advertise TLS 1.3
+or complete SERVER ALPN, and NSS SERVER does not advertise SYSTEM trust or
+complete SERVER ALPN. PST itself is distributed as a static library; packaged
+OpenSSL and NSS DLLs are provider runtime dependencies, not a PST shared DLL.
 
 Do not copy runtime DLLs into Windows system directories or rely on an arbitrary global PATH. Do not mix files from different target IDs.
 

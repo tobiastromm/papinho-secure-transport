@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 param(
-    [ValidateSet("0.4.0")]
-    [string]$Version = "0.4.0",
+    [ValidateSet("0.5.0")]
+    [string]$Version = "0.5.0",
     [string]$OutputDirectory
 )
 
@@ -56,8 +56,8 @@ function New-DeterministicZip($SourceDirectory, $DestinationPath) {
     } finally { $stream.Dispose() }
 }
 
-& (Join-Path $PSScriptRoot "stage-release-source.ps1") -Clean
-& (Join-Path $PSScriptRoot "stage-release-sdk.ps1") -Target all -Clean
+& (Join-Path $PSScriptRoot "stage-release-source.ps1") -Version $Version -Clean
+& (Join-Path $PSScriptRoot "stage-release-sdk.ps1") -Version $Version -Target all -Clean
 
 Require-File $packages[0].Stage "LICENSE"
 Require-File $packages[0].Stage "THIRD_PARTY_NOTICES.md"

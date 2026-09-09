@@ -1,11 +1,9 @@
 # SPDX-License-Identifier: MPL-2.0
-param(
-    [switch]$Clean
-)
+param([ValidateSet("0.5.0")][string]$Version = "0.5.0",[switch]$Clean)
 
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
-$version = "0.4.0"
+$version = $Version
 $stage = Join-Path $repo "dist\staging\$version\source"
 
 function Copy-RequiredFile($RelativePath) {
@@ -63,7 +61,7 @@ foreach ($excluded in @(".git", "build", "dist\staging", ".vs", ".vscode")) {
 }
 
 $licenseStatus = "present"
-[IO.File]::WriteAllText((Join-Path $stage "SOURCE-PACKAGE-STATUS.txt"), "package_version=0.4.0`nlicense=$licenseStatus`npolicy=allowlist`ninternal_docs=excluded`n", (New-Object Text.UTF8Encoding($false)))
+[IO.File]::WriteAllText((Join-Path $stage "SOURCE-PACKAGE-STATUS.txt"), "package_version=$version`nlicense=$licenseStatus`npolicy=allowlist`ninternal_docs=excluded`n", (New-Object Text.UTF8Encoding($false)))
 $hashLines = Get-ChildItem $stage -File -Recurse | Where-Object { $_.Name -ne "SHA256SUMS.txt" } | Sort-Object FullName | ForEach-Object {
     $relative = $_.FullName.Substring($stage.Length + 1).Replace("\", "/")
     "{0}  {1}" -f (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant(), $relative

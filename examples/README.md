@@ -5,6 +5,7 @@
 These sources include only public PST headers. They are intentionally small building blocks; replace fixture paths, addresses and certificates with deployment-controlled values.
 
 - `basic_client.c`: bootstrap, runtime/config, transport ownership, bounded handshake and shutdown helpers.
+- `basic_server.c`: SERVER configuration for an application-owned listener and an accepted transport.
 - `custom_trust.c`: explicit CA DER with no system fallback.
 - `system_trust.c`: SYSTEM_TRUST capability selection.
 - `mtls.c`: explicit client certificate DER and PKCS#8 identity.
