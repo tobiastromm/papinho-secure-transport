@@ -30,8 +30,9 @@ function Copy-PstPackageInput($Repo, $Source, $Destination) {
     $insideRepo = $sourceFull.StartsWith($repoFull + "\", [StringComparison]::OrdinalIgnoreCase)
     if ($insideRepo) {
         $relative = $sourceFull.Substring($repoFull.Length + 1).Replace("\", "/")
-        & git -C $repoFull ls-files --error-unmatch -- $relative *> $null
-        if ($LASTEXITCODE -eq 0) {
+        $trackedPaths = @(& git -C $repoFull ls-files -- $relative)
+        if ($LASTEXITCODE -ne 0) { throw "Unable to query tracked package input: $relative" }
+        if ($trackedPaths -contains $relative) {
             $objectId = (& git -C $repoFull rev-parse --verify ("HEAD:" + $relative)).Trim()
             if ($LASTEXITCODE -ne 0 -or -not $objectId) { throw "Unable to resolve canonical Git blob: $relative" }
             Write-PstGitBlob $repoFull $objectId $Destination
