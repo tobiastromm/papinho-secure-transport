@@ -2,188 +2,140 @@
 
 # Public API and ABI baseline
 
-## API 2.1 additive wait-set foundation
+This document keeps the historical ABI work visible while recording the current development contract. The published 0.5.0 baseline is API 2.0.0 / SPI 3.0 / library 0.5.0. The `feature/multiplexed-readiness` development candidate is API **2.1.0**, SPI **3.0**, library track **0.6.0**.
 
-API 2.1 preserves the API 2.0 prefixes and adds opaque wait-set declarations, stable
-consumer tokens, bounded portable wait events/results, membership operations and the
-result-returning `pst_connection_try_release`. M1 implements connection membership and
-timeout-zero polling; M2 implements borrowed external sources through the Win32 socket
-adapter; M3 implements the already-published wake and finite blocking semantics. SPI remains 3.0 because
-M1 aggregates the existing per-connection provider readiness contract without adding a
-provider hook.
+API 2.1 is an additive evolution of API 2.0. It preserves the API 2.0 prefixes and adds the scheduler/readiness surface frozen by ADR-0005. M0–M9 found no need for an SPI change.
 
-M4 changes no ABI. `PST_IO_RESULT.bytes_transferred` continues to describe only the
-bytes delivered or accepted by one bounded call. Partial completion and `NEED_*` are
-normal incremental results; the caller owns the unread capacity, unsent suffix,
-buffering and operation deadlines.
+## What API 2.1 adds
 
-> Historical baseline: this document describes the published v0.4.0 API 1.3 ABI. The breaking CLIENT/SERVER development contract is frozen in [api-2.0.md](api-2.0.md); migration is documented in [api-1.3-to-2.0-migration.md](api-1.3-to-2.0-migration.md).
+The additive surface includes opaque `pst_wait_set` and `pst_external_source` handles, consumer-selected `pst_wait_token`, bounded `PST_WAIT_EVENT` / `PST_WAIT_SET_RESULT` records, wait-set membership operations, finite wait, cross-thread wake, external-source membership, and result-returning `pst_connection_try_release` / `pst_external_source_try_release` lifecycle helpers.
 
-Status: **Phase 9.B and the public-bootstrap addendum complete**. This document freezes the additive public API/ABI baseline at API 1.3.0 and library 0.4.0. SPI 2.4 remains internal and frozen by Phase 9.C.
+The portable API does not expose `SOCKET`, `HANDLE`, `PRFileDesc`, OpenSSL objects or SSPI handles. Win32 native integration remains behind `papinho_secure_transport_win32.h` and private platform code.
+
+M1 implements portable wait-set membership, stable registration order, bounded enumeration, timeout-zero provider-authoritative polling and persistent terminal visibility. M2 adds borrowed external Win32 socket sources without ownership transfer. M3 adds finite blocking waits and coalescing cross-thread wake without periodic polling or sequential `N * timeout` waiting. M4 confirms that the existing `PST_IO_RESULT.bytes_transferred` contract already expresses bounded partial read/write and backpressure correctly.
+
+## API 2.1 result additions
+
+API 2.1 retains the normalized results 0–15 and adds scheduler/lifecycle results:
+
+| Value | Result |
+|---:|---|
+| 16 | `PST_RESULT_INSUFFICIENT_CAPACITY` |
+| 17 | `PST_RESULT_WAIT_TIMEOUT` |
+| 18 | `PST_RESULT_WAIT_WOKEN` |
+| 19 | `PST_RESULT_ALREADY_REGISTERED` |
+| 20 | `PST_RESULT_NOT_REGISTERED` |
+| 21 | `PST_RESULT_CONCURRENT_OPERATION` |
+
+Timeout and wake are deliberately different outcomes. Neither cancels a connection or changes terminal state.
+
+## SNI / peer identity additive contract
+
+API 2.1 separates routing SNI from authenticated Expected Peer Name through the additive tail of `PST_CONNECTION_CONFIG`:
+
+```text
+PST_SNI_MODE_COMPAT   = 0
+PST_SNI_MODE_DISABLED = 1
+PST_SNI_MODE_EXPLICIT = 2
+```
+
+`COMPAT = 0` preserves zero-initialized API 2.0 behavior. `PST_CAP_SNI_CONTROL` (`0x00020000`) advertises full independent CLIENT SNI control. OpenSSL and Schannel are FULL; RetroZilla NSS remains PARTIAL because the published NSS snapshot couples hostname/SNI behavior through `SSL_SetURL`. Unsupported combinations are filtered before binding; no post-binding provider fallback is permitted.
+
+`PST_CONNECTION_CONFIG_V2_0_SIZE` is the prefix ending before the SNI tail, and `PST_CONNECTION_CONFIG_MIN_SIZE` remains that API 2.0 prefix. This is the key additive ABI mechanism for zero-initialized/older callers.
+
+## Wait-set ownership and threading
+
+A wait-set references but does not own PST connections. A registered connection must be removed before release. An external source is borrowed: the consumer owns the native resource and PST never calls `accept`, `shutdown` or `closesocket` on it. The same external-source object may belong to only one wait-set at a time; identity is the wrapper object, not the underlying native socket.
+
+One wait may be active per wait-set. `pst_wait_set_wake()` is the cross-thread operation. Membership mutation remains owner-thread-only in API 2.1 and is rejected during an active wait. Operation deadlines remain consumer-owned monotonic policy; a finite wait timeout is only the scheduler's maximum sleep.
+
+## Read/write and shutdown contract
+
+Read and write remain bounded incremental operations. A successful read may return fewer bytes than caller capacity; a successful write may accept fewer bytes than requested. The consumer retains the unsent suffix and owns buffering/framing. `NEED_READ`, `NEED_WRITE` and `NEED_READ_WRITE` are nonterminal provider-authoritative progress states, including cross-direction dependencies.
+
+Shutdown does not imply send-all. The caller completes its retained unsent application remainder before beginning shutdown. Clean close requires reciprocal TLS shutdown where the provider exposes it; raw EOF without authenticated reciprocal close remains `TRUNCATED`, and data delivered before truncation remains valid.
+
+M9 corrected two Schannel shutdown implementation defects without changing this public contract: already-observed reciprocal `close_notify` now completes correctly after draining, and already-buffered TLS is processed before requesting another socket read.
+
+## TLS after prior plaintext use
+
+M6 proved that the existing attach/ownership contract supports STARTTLS-style and HTTP CONNECT-style upgrade boundaries without a new API. Before attach acceptance the transport remains consumer-owned; after acceptance it is PST-owned even if TLS later fails. Ownership never rolls back to plaintext and PST does not reconnect.
+
+The consumer must stop at a clean boundary. TLS bytes pre-read by the consumer before attach are intentionally `NOT_SUPPORTED_IN_THIS_SCOPE`.
 
 ## Public-header boundary
 
 The intentional consumer headers are:
 
-- `include/papinho_secure_transport.h`: portable, provider-neutral API.
-- `include/papinho_secure_transport_win32.h`: optional Win32 adapter entry points; it includes the portable header but no Windows SDK or provider header.
+- `include/papinho_secure_transport.h`: portable, provider-neutral API;
+- `include/papinho_secure_transport_win32.h`: optional Win32 adapter surface without provider headers.
 
-Every header under `src/`, including `pst_backend.h`, is private. Headers under `third_party/` belong to dependencies and are not PST public API. A consumer can compile either public header first, without including Windows, Winsock, NSS/NSPR, Schannel/SSPI/CryptoAPI, or OpenSSL headers. Automated VC6 x86 and modern MSVC x64 `/W4` include-only tests prove this boundary.
+Everything under `src/` is private. Dependency headers under `third_party/` are not PST API. Public functions retain `PST_CALL` (`__cdecl` under MSVC), C linkage, and the `pst_` / `PST_` namespace. Canonical builds remain static `.lib` artifacts; a DLL ABI is not claimed merely because `PST_API` supports import/export decoration.
 
-The portable header exposes no `SOCKET`, `HANDLE`, `BOOL`, `DWORD`, `PRFileDesc`, `SECItem`, SSPI handle, OpenSSL object, provider vtable, or native certificate type. The Win32 adapter represents a socket-sized value as `pst_size`; conversion and ownership are private. Provider IDs are the case-sensitive ASCII strings `retrozilla-nss`, `schannel`, and `openssl`.
+Opaque public types include runtime/configuration/provider-independent TLS objects plus `pst_wait_set` and `pst_external_source`. Consumers never allocate or free their internals through the CRT.
 
-## Linkage and compatibility scope
+## Capability model
 
-Public functions use `PST_CALL`, which is `__cdecl` under MSVC, and C++ declarations are enclosed in `extern "C"`. `PST_API` expands to `dllexport` for `PST_BUILD_DLL`, `dllimport` for `PST_USE_DLL`, and empty otherwise. Public names occupy the `pst_`/`PST_` namespace. The headers set no packing pragma and therefore cannot leak a changed packing state.
+The current known capability mask extends through `PST_CAP_SNI_CONTROL` and remains 32-bit. M8 audited exact role-scoped masks; M9 reconfirmed them:
 
-Current canonical Makefiles produce static `.lib` files, not a PST DLL. The frozen binary layout and calling contract applies separately to VC6 Win32 x86 and modern MSVC Windows x64 with their documented default packing and toolchains. It does not promise binary compatibility across architectures, arbitrary compilers, CRT models, or unsupported DLL packaging. A future DLL must validate its export table and preserve `__cdecl`; `PST_API` alone is not evidence that a DLL release exists. Static consumers must link the library built for their exact target/toolchain model.
+| Provider | Aggregate | CLIENT | SERVER |
+|---|---:|---:|---:|
+| OpenSSL | `0x00027fff` | `0x00027eb7` | `0x0000777b` |
+| Schannel | `0x00027efd` | `0x00027eb5` | `0x00007679` |
+| RetroZilla NSS | `0x00007aff` | `0x00007ab7` | `0x0000727b` |
 
-Opaque types (`pst_runtime`, `pst_config`, `pst_credentials`, `pst_trust`, `pst_connection`, `pst_peer_info`, and `pst_transport`) have no public size or fields. Their pointer representation follows the target ABI; consumers never allocate, copy, inspect, or free them through the CRT.
+Capabilities are eligibility facts, not aspirations. Missing requirements reject a provider before binding. A failure after binding is terminal for that connection; another provider is not tried.
 
-## Scalar, boolean, string, and buffer rules
+## Provider and metadata boundary
 
-`pst_u8`, `pst_u16`, `pst_u32`, and `pst_i32` are compile-time checked as 1, 2, 4, and 4 bytes. `PST_RESULT` is signed 32-bit. Public booleans and tri-state values are `pst_u32`, never C++ `bool` or Win32 `BOOL`; valid boolean values are 0 and 1 unless a named four-state `PST_KNOWN_*` value is specified.
+Provider IDs remain the case-sensitive ASCII identifiers `retrozilla-nss`, `schannel`, and `openssl`. `PST_PROVIDER_INFO` exposes normalized aggregate and role-scoped capabilities without exposing provider-native objects.
 
-`pst_size` is `size_t`: 32-bit on the VC6 x86 target and 64-bit on the modern x64 target. It describes memory buffer sizes/counts and the adapter-sized native-socket token. Conversion to provider-native signed/count types must reject overflow before a native call. `pst_size` is therefore target-specific and not wire-format data.
+Existing provider info, peer info and diagnostics were sufficient for M7's future-safe metadata design; no new metadata API was required. Public metadata includes normalized TLS/provider/authentication facts but not native handles. Wait-set tokens remain consumer scheduler identities, not global connection IDs.
 
-Backend IDs and `pst_result_string` outputs are NUL-terminated narrow ASCII. Runtime-info backend IDs and result strings are borrowed; the former is valid while its runtime/provider descriptor remains alive and the latter has static lifetime. Hostname and ALPN inputs use explicit lengths and are copied. Hostnames reject embedded NUL and gain a private terminator; no IDNA or IP-literal expansion is promised. ALPN entries are arbitrary nonempty bytes of length 1..255 and may contain NUL. `backend_id[32]` outputs copy at most 31 bytes and always terminate. DER buffers are binary and length-delimited.
+## Configuration snapshots and isolation
 
-## Frozen numeric values
+Connection configuration is snapshot-oriented. Existing connections retain the identity/trust/configuration with which they were created; new connections can use a rotated configuration without mutating established connections. M7 proved 50 V1/V2 rotation cycles without snapshot mutation.
 
-`PST_RESULT` values are: OK 0, INVALID_ARGUMENT 1, INVALID_STATE 2, UNSUPPORTED 3, UNAVAILABLE 4, OUT_OF_MEMORY 5, RESOURCE_FAILURE 6, TRANSPORT_FAILURE 7, PROTOCOL_FAILURE 8, AUTH_FAILURE 9, HOSTNAME_MISMATCH 10, POLICY_VIOLATION 11, BACKEND_FAILURE 12, TRUNCATED 13, CLOSED 14, and INCOMPATIBLE_API 15.
+Core multi-runtime configuration isolation passes. Provider-global limitations remain factual: OpenSSL is classified FULL for the audited runtime-isolation model, Schannel PARTIAL because Windows store/state can be external/process-visible, and RetroZilla NSS has upstream process-global limitations. PST does not overclaim isolation from upstream global state.
 
-TLS versions deliberately use normalized PST values TLS1.2=12 and TLS1.3=13, not wire protocol numbers. Existing values are frozen:
+## Security and ownership invariants
 
-- selection: EXACT=1, ORDERED=2, AUTOMATIC=3;
-- features: DISABLED=0, OPTIONAL=1, REQUIRED=2;
-- progress: COMPLETE=0, NEED_READ=1, NEED_WRITE=2, NEED_READ_WRITE=3, CLOSED=4, FAILED=5;
-- interest bits: NONE=0, READ=1, WRITE=2; READ_WRITE is the bitwise union;
-- close: NONE=0, CLEAN=1, TRUNCATED=2;
-- trust: CUSTOM_CA_DER=1, SYSTEM=2; credential DER/PKCS#8 kind=1;
-- logging: OFF=0, ERROR=1, WARN=2, INFO=3, DEBUG=4, TRACE=5;
-- diagnostic operations: NONE=0 and RUNTIME through PEER_INFO=1..11;
-- log event IDs and categories are the documented values 1..8;
-- capability bits TLS1.2 through BACKEND_WAIT are `0x001` through `0x800` in successive powers of two.
+The following remain ABI/semantic invariants:
 
-These numbers and the 32-bit mask width are frozen. Future enum-like values use unused numbers; future capabilities use unused bits. Unknown inputs are rejected where an input domain is closed. Unknown output values must be handled by consumers without indexing unchecked arrays or assuming the maximum known value.
+```text
+CUSTOM_TRUST != SYSTEM_TRUST
+no silent trust union
+no automatic TLS downgrade
+no post-binding provider fallback
+terminal states do not resurrect
+exactly-one-close for accepted transports
+borrowed external sources remain consumer-owned
+Expected Peer Name is authentication, not SNI routing
+secret-safe structured diagnostics/logging
+```
 
-## Structure layout baseline
+M9's real-process closure recorded `LOG_SECRET_HITS=0`, `PRIVATE_KEY_LOG_HITS=0`, and `APPLICATION_PAYLOAD_LOG_HITS=0`.
 
-All offsets are decimal bytes using canonical default MSVC packing. `s/a/mn/mx` below means `struct_size`, `api_version`, `minimum_version`, and `maximum_version`.
+## Current validation status
 
-| Structure | x86 size / offsets | x64 size / offsets |
-|---|---|---|
-| `PST_DIAGNOSTIC_INFO` | 56: s0,a4,valid8,generation12,result16,operation20,backend24 | identical |
-| `PST_LOG_EVENT` | 60: s0,a4,level8,event12,category16,result20,operation24,backend28 | identical |
-| `PST_LOG_CONFIG` | 20: s0,a4,level8,callback12,context16 | 32: s0,a4,level8,callback16,context24 |
-| `PST_VERSION_INFO` | 32: fields at 0,4,8,12,16,20,24,28 | identical |
-| `PST_CREDENTIAL_SOURCE` | 28: s0,a4,kind8,cert12,cert_size16,key20,key_size24 | 48: s0,a4,kind8,cert16,cert_size24,key32,key_size40 |
-| `PST_TRUST_SOURCE` | 20: s0,a4,kind8,data12,size16 | 32: s0,a4,kind8,data16,size24 |
-| `PST_IDENTITY_CONFIG` | 32: s0,a4,credentials8,trust12,hostname16,size20,peer24,client28 | 48: s0,a4,credentials8,trust16,hostname24,size32,peer40,client44 |
-| `PST_PEER_INFO_SUMMARY` | 84: u32 fields 0..40,hash44,hash_size76,leaf_size80 | 96: u32 fields 0..40,hash44,hash_size80,leaf_size88 |
-| `PST_RUNTIME_OPTIONS` | 28: s0,a4,selection8,exact12,preferred16,count20,caps24 | 48: s0,a4,selection8,exact16,preferred24,count32,caps40 |
-| `PST_RUNTIME_INFO` | 16: s0,a4,backend8,caps12 | 24: s0,a4,backend8,caps16 |
-| `PST_ALPN_PROTOCOL` | 8: data0,size4 | 16: data0,size8 |
-| `PST_TLS_POLICY` | 40: s0,a4,mn8,mx12,alpn16,count20,requirement24,resumption28,early32,graceful36 | 48: s0,a4,mn8,mx12,alpn16,count24,requirement32,resumption36,early40,graceful44 |
-| `PST_IO_RESULT` | 16: bytes0,operation4,close8,error12 | 24: bytes0,operation8,close12,error16 |
-| `PST_WAIT_RESULT` | 8: interest0,timeout4 | identical |
+M9 completed the development candidate's cross-provider scheduler/security/stress matrix:
 
-`PST_DIAGNOSTIC_INFO` and `PST_LOG_EVENT` have fixed provider-neutral value layouts. Their backend buffers are inline and contain no pointer. `PST_LOG_EVENT` is ephemeral and callback-only. `PST_IO_RESULT`, `PST_WAIT_RESULT`, and `PST_ALPN_PROTOCOL` are complete value records and are not independently version tagged.
+- TLS 1.2: all 9 CLIENT×SERVER provider pairs PASS;
+- TLS 1.3: all 4 eligible pairs PASS; 5 Schannel-ineligible pairs rejected before binding;
+- wait-set, finite wait, wake races, bounded enumeration and external-source scheduling PASS;
+- partial I/O/backpressure and hot/slow scheduling PASS with no duplication/loss;
+- STARTTLS-style and CONNECT-style same-transport upgrade proofs PASS;
+- trust/auth negative matrix, clean shutdown, strict truncation and terminal no-resurrection PASS;
+- 250 mixed stress cycles PASS with zero crashes/hangs.
 
-Versioned structures begin with `struct_size` and `api_version`. Current minimum sizes equal the current complete records, except the explicitly fixed diagnostic/log-event constants. Callers initialize the current complete record; same-major API versions and larger records are accepted where an API consumes a versioned record. The implementation reads only the frozen known prefix and preserves caller bytes beyond it. Existing prefixes and offsets cannot move. Future compatible growth appends optional tail fields, raises the initializer's size, and reads each tail only after a complete-field size guard. A required prefix change is an API-major ABI break.
+API remains `2.1.0`; SPI remains `3.0`. Final 0.6.0 ABI/package publication is **not yet claimed**: M10 still owns physical NT4 validation, clean-machine package consumers, deterministic packaging and release verification.
 
-Initializers deterministically zero their known record and set current size/version. `pst_version_info_init`, `pst_diagnostic_info_init`, and `pst_log_config_init` reject NULL. Reserved/unknown future fields supplied by callers must be zero unless their defining API says otherwise.
+## Historical baselines
 
-## Public function inventory
+The earlier published baselines remain historical facts rather than being rewritten by this document:
 
-All 42 declarations have matching implementations in the applicable target build: 39 portable functions and 3 Win32 functions. Recounting the original 9.B headers found 41 rather than the previously written 40; the old table itself contained those 41 functions. API 1.3 adds exactly one declaration, `pst_win32_register_builtin_providers`, producing the verified 41-to-42 delta. No duplicate, obsolete, or experimental declaration was found. Historical compatible constructors remain.
+- v0.4.0: API 1.3 / library 0.4.0, with the earlier SPI 2.4 release baseline;
+- v0.5.0: API 2.0.0 / SPI 3.0 / library 0.5.0, introducing the CLIENT/SERVER contract and published provider SDKs;
+- current development candidate: API 2.1.0 / SPI 3.0 / library 0.6.0.
 
-| Domain | Functions | Ownership, state, and failure contract |
-|---|---|---|
-| version/result | `pst_api_version`, `pst_library_version`, `pst_version_info_init`, `pst_get_version`, `pst_result_string` | value/static outputs; no allocation; version record validates size and API major |
-| diagnostics/logging | `pst_diagnostic_info_init`, `pst_log_config_init`, `pst_runtime_copy_diagnostic`, `pst_connection_copy_diagnostic` | copied caller-owned snapshots; larger tail preserved; no native detail or pointer |
-| credentials/trust | `pst_credentials_create/release`, `pst_trust_create/release` | constructors copy DER and return NULL on failure; release accepts NULL; handles are retained by config |
-| config | `pst_config_create`, `pst_config_set_identity`, `pst_config_set_tls_policy`, `pst_config_freeze`, `pst_config_release` | setters are transactional and allowed before freeze; frozen setters fail; connection retains config |
-| peer | `pst_peer_info_get_summary`, `pst_peer_info_copy_leaf_der`, `pst_peer_info_release` | owned snapshot independent of connection; summary/DER copied; release accepts NULL |
-| runtime | `pst_runtime_create`, `pst_runtime_create_ex`, `pst_runtime_create_with_logging`, `pst_runtime_get_info`, `pst_runtime_release` | output NULL on failure; `_ex` preserves diagnostic; early release is guarded while children exist |
-| connection | `pst_connection_create`, `pst_connection_create_ex`, `pst_connection_attach`, `pst_connection_release` | constructor transactional and retains config; attach reports explicit ownership acceptance; release closes owned transport exactly once |
-| progress/I/O | `pst_connection_handshake`, `pst_connection_get_interest`, `pst_connection_wait`, `pst_connection_read`, `pst_connection_write`, `pst_connection_shutdown` | bounded incremental calls; deterministic outputs; readiness is not progress; terminal states do not resurrect |
-| negotiated data | `pst_connection_get_peer_info`, `pst_connection_get_negotiated_alpn` | only established state; owned peer handle or copied ALPN; outputs reset on failure |
-| transport | `pst_transport_release` | accepts NULL; releases only caller-owned/unaccepted transport |
-| Win32 adapter | `pst_win32_register_retrozilla_nss`, `pst_win32_register_builtin_providers`, `pst_win32_socket_transport_create` | explicit target-manifest registration and socket factory; no discovery or native type leakage; output NULL on failure |
-
-API 1.0 established versions/results, opaque handles, configuration/runtime/connection/transport, TLS policy, readiness and I/O. API 1.1 added structured diagnostics and compatible `_ex` constructors. API 1.2 added consumer logging and `pst_runtime_create_with_logging`. Exact per-symbol introduction metadata before those recorded milestones is historical documentation, not a runtime dispatch mechanism.
-
-## Lifecycle and ownership
-
-Create functions require an output pointer and set it to NULL before validation. Release functions accept NULL. No public handle may be passed to `free`; each is released through its matching PST function. Double release of a stale non-NULL pointer is undefined misuse; the ABI does not promise tombstone tracking.
-
-Credential/trust inputs are copied, including private PKCS#8 bytes; caller mutation or release after successful creation does not affect PST. Configuration retains credential/trust handles and copies hostname/ALPN. A connection retains its frozen config. A runtime owns provider state and tracks live connections; an attempted early runtime release is a guarded no-op, and the caller must release it again after all children. Peer snapshots own their DER and outlive the connection.
-
-Before `pst_connection_attach`, the caller owns the transport. `ownership_accepted=0` means the caller still owns it on every failure path. `ownership_accepted=1` means PST/provider owns it even if the call subsequently fails; exactly one close occurs through connection destruction. Only `PST_OWNERSHIP_TRANSFERRED` is accepted.
-
-PST allocations never cross the CRT boundary: handles are released by PST, callback events are borrowed, string pointers are static/borrowed, and variable outputs use consumer-provided buffers. The API has no function requiring the consumer to free PST-allocated raw memory.
-
-## Configuration and policy
-
-CUSTOM and SYSTEM trust are exclusive source kinds; PST does not union or silently fall back between them. A provider without the requested capability returns UNSUPPORTED during selection/validation. Credentials remain certificate DER plus unencrypted PKCS#8 DER only.
-
-Setters validate before committing. Rejected identity/TLS policies leave the previous config unchanged. Freeze is idempotent; post-freeze setters return INVALID_STATE. Peer authentication requires trust and hostname; client authentication requires credentials.
-
-TLS min/max must be normalized supported constants with min <= max. PST does not clamp, widen, or downgrade. ALPN preserves caller order and copies multiple protocols. Required ALPN absence/mismatch is POLICY_VIOLATION; optional absence is represented by an empty negotiated output. Unsupported requested features fail rather than silently enabling a weaker policy.
-
-## State and operation matrix
-
-| Operation | CREATED | ATTACHED/HANDSHAKING | ESTABLISHED | SHUTTING | CLOSED/FAILED |
-|---|---|---|---|---|---|
-| attach | allowed once | INVALID_STATE | INVALID_STATE | INVALID_STATE | INVALID_STATE |
-| handshake | INVALID_STATE | incremental | INVALID_STATE | INVALID_STATE | INVALID_STATE |
-| get interest / wait | INVALID_STATE | allowed while progress needs readiness | allowed for pending I/O | allowed | INVALID_STATE |
-| read/write | INVALID_STATE | INVALID_STATE | incremental | INVALID_STATE | INVALID_STATE |
-| peer info / ALPN | INVALID_STATE | INVALID_STATE | allowed | INVALID_STATE | INVALID_STATE |
-| shutdown | INVALID_STATE | INVALID_STATE | begins/increments | incremental | INVALID_STATE |
-| release | allowed | allowed | allowed without shutdown | allowed/aborts bounded work | allowed |
-
-A successful handshake transitions to ESTABLISHED. Authenticated `close_notify` yields CLOSED/CLEAN. Data received before a clean close remains deliverable. Unexpected EOF/reset yields FAILED/TRUNCATED. Fatal operation/wait errors yield FAILED. CLOSED and FAILED are terminal.
-
-Handshake, read, write, and shutdown report progress separately from API-call validity. NEED_READ/WRITE/READ_WRITE means retry only after appropriate readiness. Wait is bounded by `timeout_ms`; timeout is a successful wait result with `timed_out=1`, not operation progress. No public API creates a hidden infinite wait. Partial read/write byte counts are authoritative; callers advance only by `bytes_transferred`, preventing duplication.
-
-On validation/state failure, handshake/shutdown return operation FAILED plus the normalized error; interest returns NONE; wait returns NONE/not-timed-out; I/O returns zero bytes, FAILED, close NONE, and the normalized error. Constructor and owned-handle outputs are NULL; size outputs are zero unless an API deliberately returns the required capacity (`pst_peer_info_copy_leaf_der`). This deterministic-output rule was hardened during 9.B without changing signatures/layouts or valid-call behavior.
-
-## Diagnostics, logging, callbacks, and peer data
-
-`PST_DIAGNOSTIC_INFO` is a copied, allocation-free snapshot. It carries only validity, modular generation, normalized result, coarse operation, and copied backend ID. Clear/reset increments generation; generation is neither time nor a global correlation ID. Larger caller tails remain untouched. Hostnames, ALPN, DER, keys, payload, paths, handles, native codes, and arbitrary text never cross this boundary.
-
-`PST_LOG_CALLBACK` is `void PST_CALL callback(void *context, const PST_LOG_EVENT *event)`. Delivery is synchronous on the calling thread. The event pointer is valid only during the callback; consumers copy it if needed. Context is consumer-owned and must outlive the runtime. There are no worker-thread or late callbacks. Same-object reentrancy from a callback is unsupported; callbacks must not mutate/release the object currently emitting. Threshold only changes observation and cannot affect TLS behavior.
-
-Peer summary exposes normalized TLS version, cipher-suite number, authentication/validation state, negotiated-ALPN availability, resumption/early-data knowledge, SHA-256 leaf fingerprint, and leaf-DER sizes. Leaf DER is copied separately. It exposes neither a provider-native certificate nor a full public chain API.
-
-## Forward and hostile-input policy
-
-Tests cover undersized, exact, and larger versioned records where the APIs support them; incompatible API major; preserved larger tails; unknown enum/flag values; NULL/count-pointer mismatches; empty and embedded-NUL strings; fixed backend-ID truncation/termination; ALPN item/count/aggregate overflow; DER pointer/size pairs; transactional setter rejection; output initialization; ownership acceptance; and lifecycle retain/release balance.
-
-Smaller records below their frozen minimum fail INVALID_ARGUMENT. Equal records are accepted. Larger same-major records are accepted and unknown tails are not read or overwritten. Unknown closed-domain selector, feature, TLS, trust, logging, and ownership values fail. Unknown required capability bits cannot be silently satisfied. Integer overflow is rejected before allocation or native conversion.
-
-No public ABI change may weaken fail-closed trust, hostname, mTLS, ALPN, no-downgrade, terminality, disclosure, ownership, or bounded-progress invariants.
-
-## ABI regression artifact
-
-`tests/test_public_abi.c` is the executable frozen baseline. Compile-time C89 assertions cover every public structure size and all alignment-sensitive/fixed-buffer offsets for VC6 x86 and modern MSVC x64. Runtime checks cover versions, result/value sets, capabilities, logging/progress/close constants, and deterministic failure outputs. `tests/test_public_header.c` and `tests/test_public_win32_header.c` separately prove standalone header compilation without prior platform/provider headers.
-
-The test deliberately excludes compiler-specific debug records, object timestamps, library member order, and internal symbol layout. Those are not public ABI. The static archive contains internal link-visible C symbols because it is not a DLL export boundary; consumers contract only with declarations in the two public headers.
-
-## Threading and release decision
-
-PST makes no general thread-safety guarantee in API 1.3.0. Registry setup is caller-serialized; a connection and its configuration/lifecycle must not be concurrently mutated; callbacks are synchronous. Independent provider/runtime behavior is only guaranteed where explicitly tested and documented. This avoids inventing locking or reentrancy promises during an ABI freeze.
-
-Phase 9.B found one release-blocking deterministic-output defect and fixed it at the portable core boundary. The public-bootstrap addendum freezes API 1.3.0 as a strictly additive evolution of API 1.2.0: all prior layouts, values, signatures and semantics remain unchanged, while one explicit Win32 target-manifest bootstrap is added. Library is promoted compatibly to 0.4.0 for release packaging; SPI remains 2.4.
-
-The public source/ABI baseline is frozen for the two canonical target/toolchain pairs above. Phase 9.C, the internal SPI/provider contract freeze, is next but remains not started until explicitly requested.
-
-## API 1.3 public-bootstrap addendum
-
-`pst_win32_register_builtin_providers(void)` is frozen with `PST_API`, `PST_CALL` (`__cdecl` on MSVC), C linkage, and no parameters. It is declared only in the self-contained Win32 public header. The function explicitly registers the target-defined built-in set and does not discover providers, initialize TLS implicitly, or change EXACT, ORDERED, AUTOMATIC, or no-post-selection-fallback semantics.
-
-Before the first runtime-create attempt it is idempotent for identical canonical descriptors. A same-ID/different-descriptor conflict returns `PST_RESULT_INVALID_STATE`. Full preflight protects descriptor validity and capacity; injected unexpected failure rolls back only additions from that call. The first runtime-create attempt, successful or unsuccessful, seals registration. Empty manifests return `PST_RESULT_UNAVAILABLE`; capacity exhaustion returns `PST_RESULT_RESOURCE_FAILURE`. The existing NSS-specific helper remains available.
-
-The frozen target manifests are VC6/NT4 NSS, modern Schannel, modern OpenSSL, and deliberate combined Schannel-then-OpenSSL. The built-in set is a package property. Public-only VC6 x86 and modern x64 consumers, real NSS TLS 1.2, Schannel TLS 1.2, OpenSSL TLS 1.3 SYSTEM_TRUST, and combined selection passed. API 1.2 consumers retain their canonical x86/x64 layouts and numeric contracts; this is not a cross-architecture or arbitrary-compiler ABI promise.
+Detailed historical release evidence remains under `docs/codex/release-evidence/` and the API 2.0 migration documents. M10 will freeze the final 0.6.0 package/ABI evidence rather than retroactively changing the published 0.4.0 or 0.5.0 contracts.
