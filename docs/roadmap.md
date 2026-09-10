@@ -5,15 +5,15 @@
 - Multiplexed readiness evolution on `feature/multiplexed-readiness`:
   - M0 API 2.1 / library 0.6 contract freeze and R6 tri-state SNI: complete; zero-initialized compatibility, provider-scoped SNI control and pre-binding capability filtering pass without RetroZilla NSS/NSPR changes.
   - M1 portable wait-set core: complete; opaque membership, stable consumer tokens, duplicate rejection, remove-before-release, bounded stable enumeration, timeout-zero provider-authoritative polling and persistent terminal visibility pass for deterministic mixed-provider tests and real OpenSSL, Schannel and RetroZilla NSS TLS connections.
-  - M2 external/native aggregation: complete for timeout-zero Win32 socket sources; single-wait-set object membership, mixed connection/source enumeration, listener readiness, borrowed ownership, VC6/NT4 compatibility audit and provider regressions pass.
-  - M3 wake/blocking scheduler semantics: complete; cross-thread coalescing wake, finite monotonic waits, owner-thread membership enforcement, bounded provider confirmation and mixed listener plus multiple-PST aggregation pass without periodic polling or sequential per-member timeouts.
-  - M4 partial I/O/backpressure hardening: complete; bounded partial reads/writes, caller-owned remainders, cross-direction readiness, exact byte preservation, truncation after delivered data and hot/slow multi-connection scheduling pass without provider or ABI changes.
+  - M2 external/native aggregation: complete for Win32 socket sources; single-wait-set object membership, mixed connection/source enumeration, listener readiness, borrowed ownership, VC6/NT4 compatibility audit and provider regressions pass.
+  - M3 wake/blocking scheduler semantics: complete; cross-thread coalescing wake, finite monotonic waits, owner-thread membership enforcement, bounded provider confirmation and mixed listener plus multiple-PST aggregation pass without periodic polling or sequential per-member timeouts. PapinhoAccelerator Phase 3.B4's architectural blocker is resolved here.
+  - M4 partial I/O/backpressure hardening: complete; bounded partial reads/writes, caller-owned remainders, cross-direction readiness, exact byte preservation, truncation after delivered data and hot/slow multi-connection scheduling pass without API/SPI changes.
   - M5 was absorbed by the M0/R6 contract work.
-  - M6 TLS-upgrade proofs: complete; generic STARTTLS-style and CONNECT-style fixtures reuse the same connected transport after fragmented plaintext boundaries, then pass authenticated TLS, wait-set I/O and reciprocal shutdown across OpenSSL, Schannel and RetroZilla NSS without protocol parsing or plaintext rollback in PST.
-  - M7 future-safe design: complete; runtime/profile isolation and provider-global limitations are documented, immutable V1/V2 identity/trust rotation is proven for 50 cycles, and the existing provider/Peer Info/diagnostic surfaces provide a native-handle-free connection metadata shape without API/SPI growth.
+  - M6 TLS-upgrade proofs: complete; generic STARTTLS-style and CONNECT-style fixtures reuse the same connected transport after fragmented plaintext boundaries, then pass authenticated TLS, wait-set I/O and reciprocal shutdown across OpenSSL, Schannel and RetroZilla NSS without protocol parsing, reconnect or plaintext rollback in PST. PapinhoLegacyMail STARTTLS and PapinhoBrowser CONNECT-to-TLS foundations are ready.
+  - M7 future-safe design: complete; runtime/profile isolation and provider-global limitations are documented, immutable V1/V2 identity/trust rotation is proven for 50 cycles, and the existing provider/Peer Info/diagnostic surfaces provide a native-handle-free connection metadata shape without API/SPI growth. Browser profile, LegacyMail account and Accelerator long-lived-runtime foundations are ready.
   - M8 provider consolidation: complete; exact role-scoped masks are locked by provider tests, M0-M7 behavior remains green across all three providers, real TLS-after-plaintext and strict-truncation representatives pass, and provider asymmetries remain factual without capability expansion.
-  - PapinhoAccelerator Phase 3.B4 architectural blocker: resolved by M3; final product handoff/release remains later work.
-  - M9 and later multiplexed-readiness phases: pending and not started.
+  - M9 cross-provider scheduler/security/stress: complete; all 9 TLS 1.2 CLIENT/SERVER network pairs pass, all 4 TLS 1.3-eligible pairs pass while 5 Schannel-ineligible TLS 1.3 pairs are rejected by capability before binding, the mixed scheduler/wake/backpressure/lifecycle/failure matrices pass, and 250 mixed stress cycles complete with zero crashes/hangs. Real-process trust/auth, clean shutdown, strict truncation, diagnostics and secret-safe logging pass. M9 found and fixed two Schannel shutdown defects: reciprocal `close_notify` completion after a previously observed peer alert, and processing already-buffered TLS before requesting another socket read. API 2.1 and SPI 3.0 remain unchanged.
+  - M10 NT4 / clean-machine / packaging / 0.6.0 release: pending and not started. It must perform final physical NT4 validation for the changed readiness/shutdown candidate, separate clean-machine package-only validation, deterministic package reproduction, documentation/package audit, publication verification and final Accelerator/Browser/LegacyMail handoffs.
 
 - Server-side evolution on `feature/server-side`:
   - SS-0 CLIENT/SERVER architecture audit: complete.
@@ -69,62 +69,13 @@
   - Repeated full TLS lifecycle, bounded shutdown and peer snapshot lifetime: complete
 - Phase 7 - Interoperability / Hardening: complete
   - 7.A Error & Diagnostic Model Hardening: complete
-    - 7.A1 internal diagnostic snapshot: complete
-    - 7.A2 internal diagnostic transport, copy and redaction: complete
-    - 7.A3 pre-runtime diagnostic retention and internal operation context: complete
-    - 7.A4 controlled diagnostic exposure design: complete
-    - 7.A5 public diagnostic ABI foundation: complete
-    - 7.A6 public diagnostic API hardening and abuse resistance: complete
-    - 7.A7 consumer-controlled logging/event sink design: complete
-    - 7.A8 logging event ABI review and minimal public sink: complete
-    - 7.A closure audit: complete
   - 7.B Connection Failure Matrix: complete
-    - audit and readiness/wait defect correction: host complete
-    - deterministic functional fixtures: host complete
-    - real NT4 clean_close and data_then_close: complete
-    - real NT4 abrupt_close provider blocker reproduction: complete
-    - RetroZilla NSS close_notify observability audit: complete
-    - provider-local close_notify implementation and host validation: complete
-    - targeted NT4 clean/data/abrupt revalidation: complete
-    - shutdown-abort contract proof: complete; pending-during-step is not observable with this provider
-    - 7.B closure audit: complete
   - 7.C Readiness / Progress Hardening: complete
-    - audit and operation/interest matrix: complete
-    - deterministic READ/WRITE, timeout, partial-I/O and interest-change coverage: complete
-    - isolation, operation-transition, handshake and generic-shutdown coverage: complete
-    - host TLS 1.2/TLS 1.3 and failure-fixture revalidation: complete
-    - 7.C closure audit: complete
   - 7.D TLS Policy Negative Matrix: complete
-    - existing policy surface and Phase 4/5/6/7 evidence audit: complete
-    - canonical negative matrix and real-gap inventory: complete
-    - focused deterministic policy coverage: complete
-    - real NSS functional policy matrix: complete
-    - 7.D closure audit: complete
   - 7.E Lifecycle / Ownership Hardening: complete
-    - existing lifecycle and ownership evidence audit: complete
-    - canonical object graph and cleanup rules: complete
-    - focused deterministic lifecycle/counter matrix: complete
-    - real NSS lifecycle revalidation: complete
-    - 7.E closure audit: complete
   - 7.F Interoperability Matrix: complete
-    - bounded scope and existing-evidence audit: complete
-    - canonical interoperability matrix: complete
-    - independent non-OpenSSL server proof: complete
-    - intermediate certificate-chain proof: complete
-    - negotiated-cipher functional assertion: complete
-    - bounded functional gap closure: complete
-    - 7.F closure audit: complete
   - 7.G Diagnostics / Security Disclosure: complete
-    - existing surface and disclosure-boundary audit: complete
-    - canonical cross-surface disclosure matrix: complete
-    - focused malicious-memory and fixed-buffer regressions: complete
-    - functional logging/wire-equivalence revalidation: complete
-    - 7.G closure audit: complete
   - 7.H Stress / Long-run Stability: complete
-    - existing repetition/resource evidence audit: complete
-    - bounded soak plan and closure matrix: complete
-    - bounded soak implementation and execution: complete
-    - 7.H closure audit: complete
   - Phase 7 overall closure audit: complete
 - Phase 8 - Multiple Backends / Provider Evolution: complete
   - 8.A SPI and provider-neutral architecture audit: complete
@@ -136,7 +87,7 @@
   - 8.G cross-backend interoperability and legacy regression: complete
   - RetroZilla NSS provenance/reproducibility housekeeping: complete
   - 8.H Phase 8 closure audit: complete
-- Post-Phase-8 OpenSSL provider extension: in progress
+- Post-Phase-8 OpenSSL provider extension: complete
   - OSSL-A architecture / version / build / provenance: complete
   - OSSL-B backend skeleton / registration / modern build integration: complete
   - OSSL-C TLS 1.2 / TLS 1.3 / readiness / secure I/O: complete
@@ -144,46 +95,17 @@
   - OSSL-E failure / close / diagnostics / logging / lifecycle hardening: complete
   - OSSL-F three-provider validation and extension closure: complete
   - OSSL-ST Windows SYSTEM_TRUST follow-up: complete
-    - OSSL-ST-A architecture / policy audit: complete
-    - OSSL-ST-B provider-local Win32 implementation: complete
-    - OSSL-ST-C functional and isolation matrix: complete
-    - OSSL-ST-D hardening / closure audit: complete
-- Phase 9 - Release / ABI Stabilization: complete; ready for owner release approval, not published
+- Phase 9 - Release / ABI Stabilization: complete
   - 9.A Release scope / version policy / canonical inventory: complete
   - 9.B Public API / ABI freeze audit: complete
   - 9.C SPI / provider contract freeze: complete
-    - descriptor/vtable prefix and x86/x64 ABI baseline: complete
-    - provider ID, capability, registration, selection and lifecycle contract: complete
-    - provider-neutral transport/readiness/I/O/diagnostic/metadata freeze: complete
-    - append-only optional-hook gate and bounded-ID defects fixed: complete
   - 9.D Documentation / community / examples: complete
-    - 9.D0-A public built-in provider bootstrap architecture: complete
-    - 9.D0-B public built-in provider bootstrap implementation / validation: complete
-    - limited 9.B additive API addendum / API 1.3.0 freeze: complete
-  - 9.E Packaging / dependencies / licenses / provenance: complete; standard MPL-2.0 without Exhibit B applied; Library/Package 0.4.0 and five local package candidates validated
-    - 9.E-H repository/source-package hygiene: complete
-    - Combined Schannel/OpenSSL: official optional binary SDK candidate; not default or recommended
-  - 9.F Release validation kit: complete; extracted-package, real NT4, x64 provider, online system-trust, Combined selection and provenance gates pass; clean-machine execution deferred to 9.G
-  - 9.G Release candidate / clean-machine validation and final Phase 9 closure: complete; separate physical Windows 10 build 19045.6332 x64 package-only execution passed
-    - 9.G-R1 canonical package builder / package reproduction: complete; deterministic content and byte-identical RUN1/RUN2 archives, historical 0.4.0 candidates preserved
-    - OpenSSL shutdown investigation: expected peer behavior preserved; EOF without reciprocal close_notify remains TRUNCATED, final Cloudflare graceful gate passed
-    - ADR-0002 durable target naming review: future controlled migration; frozen 0.4.0 names unchanged
-  - documentation handoff: concise root README linking complete English and pt-BR paths, written for non-experts
-  - scope wording: PST is generic secure transport for Internet, LAN, and private/corporate networks; PapinhoBrowser/PapinhoAccelerator are examples only
-  - future-transport note: TLS is the current implementation; DTLS, QUIC, Noise, or other transports require future study and are not claims of SPI 3.0
-  - community/contribution handoff: contribution guide, retrocomputing relevance, and invitation for old-Windows TLS 1.3/NSS/NSPR contributors
-  - dependency handoff: provider/library contributions require license and provenance review; document vendored and external dependency models
-  - release handoff: integration examples, release-validation BATs, NT4/NSS to OpenSSL TLS 1.3, and NT4/NSS to Schannel TLS 1.2 validation
-- CLIENT/SERVER API 2.0 / SPI 3.0 evolution: in progress on `feature/server-side`
+  - 9.E Packaging / dependencies / licenses / provenance: complete
+  - 9.F Release validation kit: complete
+  - 9.G Release candidate / clean-machine validation and final Phase 9 closure: complete
+- CLIENT/SERVER API 2.0 / SPI 3.0 evolution: complete and published as 0.5.0
   - SS-1 contract freeze through SS-7 security/lifecycle matrix: complete
   - SS-8 Packaging / Consumer SDK / Clean-Machine Validation: complete
-    - five canonical 0.5.0 package candidates and deterministic builder: complete
-    - extracted CLIENT/SERVER consumer compile/link/runtime validation: complete
-    - separate clean-machine Combined real TLS and real NT4 package retest: complete
   - SS-8D Documentation / Examples / Migration / Package Documentation Closure: complete
   - SS-9 Final Release Audit / Publication Readiness: complete
-    - documentation/version/licensing audit: PASS
-    - five 0.5.0 packages regenerated reproducibly
-    - binary identity with SS-8 preserved
-    - clean-machine and NT4 TLS rerun not required
-    - ready for SS-10 publication; no tag/release/assets published by SS-9
+  - SS-10 0.5.0 Publication + Accelerator Handoff: complete; published `v0.5.0` with five canonical ZIPs plus checksum manifest, post-publication hash verification, and PapinhoAccelerator Phase 3.B2 handoff.
