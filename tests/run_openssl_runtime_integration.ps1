@@ -35,7 +35,8 @@ if(-not$ready){if(Test-Path $serverOut){Get-Content $serverOut};if(Test-Path $se
 $clientArgs=@("127.0.0.1",$Port,$MinimumTls,$MaximumTls,$Exchanges,$CloseMode,(Join-Path $pki "root.der"),$Expected,$PayloadSize)
 $client=Start-Process (Join-Path $repo "build\win32-x64-msvc-19.51-openssl3\test_openssl_runtime_integration.exe") -ArgumentList $clientArgs -RedirectStandardOutput $clientOut -RedirectStandardError $clientErr -PassThru -WindowStyle Hidden
 $null=$client.Handle
-if(-not$client.WaitForExit(60000)){$client.Kill();$server.Kill();throw "client timeout"};$client.Refresh()
+$clientTimeout=if($PayloadSize -gt 65536){300000}else{60000}
+if(-not$client.WaitForExit($clientTimeout)){$client.Kill();$server.Kill();throw "client timeout"};$client.Refresh()
 if(-not$server.WaitForExit(30000)){$server.Kill();throw "server timeout"};$server.Refresh()
 Get-Content $clientOut;if(Test-Path $clientErr){Get-Content $clientErr};Get-Content $serverOut;if(Test-Path $serverErr){Get-Content $serverErr}
 $summary="CASE=$CaseName CLIENT_EXIT=$($client.ExitCode) SERVER_EXIT=$($server.ExitCode) RUNTIME_HASH_MATCH=1"

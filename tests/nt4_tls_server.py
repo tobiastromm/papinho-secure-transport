@@ -2,8 +2,11 @@
 import ssl
 import socket
 import sys
+import os
+import time
 
 EXPECTED = b"pst-phase5-public-runtime"
+FRAGMENT_SIZE = int(os.environ.get("PST_TEST_FRAGMENT_SIZE", "0"))
 
 if len(sys.argv) not in (9, 10):
     raise SystemExit("usage: bind port cert.pem key.pem ca.pem 12|13 alpn required|optional [expected-sni|-]")
@@ -54,7 +57,12 @@ try:
         content_match = data == EXPECTED
         sent = 0
         if content_match:
-            tls.sendall(EXPECTED)
+            if FRAGMENT_SIZE > 0:
+                for offset in range(0, len(EXPECTED), FRAGMENT_SIZE):
+                    tls.sendall(EXPECTED[offset:offset + FRAGMENT_SIZE])
+                    time.sleep(0.02)
+            else:
+                tls.sendall(EXPECTED)
             sent = len(EXPECTED)
         print("IO RECV=%d SEND=%d CONTENT_MATCH=%s" %
               (len(data), sent, content_match), flush=True)

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 import socket
 import hashlib
+import os
 import ssl
 import sys
 import time
@@ -15,6 +16,7 @@ alpn_protocols = sys.argv[7] if len(sys.argv) > 7 else "-"
 client_ca = sys.argv[8] if len(sys.argv) > 8 else "-"
 expected_client_sha256 = sys.argv[9].lower() if len(sys.argv) > 9 else "-"
 expected = b"pst-phase5-public-runtime"
+fragment_size = int(os.environ.get("PST_TEST_FRAGMENT_SIZE", "0"))
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 selected = ssl.TLSVersion.TLSv1_3 if version == "13" else ssl.TLSVersion.TLSv1_2
 context.minimum_version = selected
@@ -51,7 +53,12 @@ try:
             match = data == expected
             if not match:
                 raise RuntimeError("payload mismatch")
-            tls.sendall(data)
+            if fragment_size > 0:
+                for offset in range(0, len(data), fragment_size):
+                    tls.sendall(data[offset:offset + fragment_size])
+                    time.sleep(0.02)
+            else:
+                tls.sendall(data)
             print("EXCHANGE=%d RECV=%d SEND=%d CONTENT_MATCH=1" % (index + 1, len(data), len(data)), flush=True)
         if close_mode == "client-abrupt":
             descriptor = tls.detach()

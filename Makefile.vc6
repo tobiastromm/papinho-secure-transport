@@ -14,7 +14,7 @@ INTEROP_FIXTURES=build\fixtures\interoperability-pki
 NSS_RUNTIME=third_party\retrozilla-nss\prebuilt\win32-x86-vc6\runtime
 LIB=$(BUILD)\papinho_secure_transport.lib
 OBJS=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_diagnostic.obj $(BUILD)\pst_log.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj $(BUILD)\pst_wait_set.obj $(BUILD)\pst_transport_win32.obj $(BUILD)\pst_builtin_manifest.obj $(BUILD)\pst_backend_nss.obj
-all: dirs $(LIB) $(BUILD)\test_foundation.exe $(BUILD)\test_identity.exe $(BUILD)\test_backend_spi.exe $(BUILD)\test_provider_spi_abi.exe $(BUILD)\test_multi_backend.exe $(BUILD)\test_wait_set.exe $(BUILD)\test_wait_set_m3.exe $(BUILD)\test_external_source_win32.exe $(BUILD)\test_tls_policy.exe $(BUILD)\test_diagnostic.exe $(BUILD)\test_diagnostic_transport.exe $(BUILD)\test_diagnostic_creation.exe $(BUILD)\test_public_diagnostic.exe $(BUILD)\test_public_header.exe $(BUILD)\test_public_abi.exe $(BUILD)\test_public_win32_header.obj $(BUILD)\test_public_builtin_bootstrap.exe $(BUILD)\test_logging.exe $(BUILD)\test_lifecycle_ownership.exe $(BUILD)\test_security_lifecycle_negative.exe
+all: dirs $(LIB) $(BUILD)\test_foundation.exe $(BUILD)\test_identity.exe $(BUILD)\test_backend_spi.exe $(BUILD)\test_provider_spi_abi.exe $(BUILD)\test_multi_backend.exe $(BUILD)\test_wait_set.exe $(BUILD)\test_wait_set_m3.exe $(BUILD)\test_partial_io_m4.exe $(BUILD)\test_external_source_win32.exe $(BUILD)\test_tls_policy.exe $(BUILD)\test_diagnostic.exe $(BUILD)\test_diagnostic_transport.exe $(BUILD)\test_diagnostic_creation.exe $(BUILD)\test_public_diagnostic.exe $(BUILD)\test_public_header.exe $(BUILD)\test_public_abi.exe $(BUILD)\test_public_win32_header.obj $(BUILD)\test_public_builtin_bootstrap.exe $(BUILD)\test_logging.exe $(BUILD)\test_lifecycle_ownership.exe $(BUILD)\test_security_lifecycle_negative.exe
 dirs:
 	@if not exist build mkdir build
 	@if not exist $(BUILD) mkdir $(BUILD)
@@ -70,6 +70,10 @@ $(BUILD)\test_wait_set_m3.obj: tests\test_wait_set_m3.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_wait_set_m3.exe: $(BUILD)\test_wait_set_m3.obj $(LIB)
 	$(CC) /nologo /Fe$@ $(BUILD)\test_wait_set_m3.obj $(LIB) wsock32.lib $(LDFLAGS)
+$(BUILD)\test_partial_io_m4.obj: tests\test_partial_io_m4.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_partial_io_m4.exe: $(BUILD)\test_partial_io_m4.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_partial_io_m4.obj $(LIB) $(LDFLAGS)
 $(BUILD)\test_external_source_win32.obj: tests\test_external_source_win32.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_external_source_win32.exe: $(BUILD)\test_external_source_win32.obj $(LIB)
@@ -161,6 +165,7 @@ test: all
 	$(BUILD)\test_multi_backend.exe
 	$(BUILD)\test_wait_set.exe
 	$(BUILD)\test_wait_set_m3.exe
+	$(BUILD)\test_partial_io_m4.exe
 	$(BUILD)\test_external_source_win32.exe
 	$(BUILD)\test_tls_policy.exe
 	$(BUILD)\test_diagnostic.exe

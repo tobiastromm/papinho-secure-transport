@@ -91,6 +91,27 @@ destroy is rejected during a wait or while members remain. The deterministic mat
 covers an external listener plus two PST connections, stable multiple-ready results,
 wake before/during wait, timeout and concurrent-operation rejection.
 
+## M4 partial I/O and backpressure
+
+Read and write are single bounded progress attempts. A successful read may return
+fewer bytes than the supplied capacity; a successful write may accept fewer bytes
+than requested. The application retains the unsent suffix and owns all application
+buffering and framing. PST promises neither send-all nor read-until-full.
+
+`NEED_READ`, `NEED_WRITE` and `NEED_READ_WRITE` are nonterminal backpressure states,
+including cross-direction cases where a read needs transport write readiness or a
+write needs transport read readiness. The provider's current interest remains
+authoritative. After readiness, the consumer performs a bounded I/O attempt and
+returns to the wait-set instead of draining a hot connection internally. Stable
+enumeration makes every ready member visible; scheduling fairness remains an
+application policy.
+
+Bytes reported as transferred have been accepted by the provider for that call.
+Unreported bytes remain caller-owned. Shutdown does not create an implicit flush or
+send-all operation, so the consumer completes its retained application remainder
+before beginning shutdown. Data delivered before a later truncated terminal remains
+valid application data; the terminal cause stays immutable and cannot resurrect.
+
 ## Readiness is not progress
 
 Readiness says that a backend descriptor may be attempted without an ordinary

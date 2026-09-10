@@ -6,7 +6,7 @@ LDFLAGS=/link
 CFLAGS=/nologo /W4 /O2 /TC /MD /DWIN32_LEAN_AND_MEAN /D_CRT_SECURE_NO_WARNINGS /Iinclude /Isrc
 CORE=$(BUILD)\pst_version.obj $(BUILD)\pst_result.obj $(BUILD)\pst_diagnostic.obj $(BUILD)\pst_log.obj $(BUILD)\pst_validation.obj $(BUILD)\pst_identity.obj $(BUILD)\pst_backend.obj $(BUILD)\pst_runtime.obj $(BUILD)\pst_wait_set.obj $(BUILD)\pst_transport_win32.obj $(BUILD)\pst_builtin_manifest.obj $(BUILD)\pst_backend_schannel.obj
 PSTLIB=$(BUILD)\papinho_secure_transport.lib
-all: dirs $(PSTLIB) $(BUILD)\test_public_header.exe $(BUILD)\test_public_abi.exe $(BUILD)\test_provider_spi_abi.exe $(BUILD)\test_public_win32_header.obj $(BUILD)\test_public_builtin_bootstrap.exe $(BUILD)\test_backend_schannel.exe $(BUILD)\test_wait_set.exe $(BUILD)\test_wait_set_m3.exe $(BUILD)\test_external_source_win32.exe $(BUILD)\test_schannel_runtime_integration.exe $(BUILD)\test_schannel_runtime_isolation.exe $(BUILD)\test_schannel_buffers.exe $(BUILD)\test_schannel_server_direct.exe $(BUILD)\test_security_lifecycle_negative.exe
+all: dirs $(PSTLIB) $(BUILD)\test_public_header.exe $(BUILD)\test_public_abi.exe $(BUILD)\test_provider_spi_abi.exe $(BUILD)\test_public_win32_header.obj $(BUILD)\test_public_builtin_bootstrap.exe $(BUILD)\test_backend_schannel.exe $(BUILD)\test_wait_set.exe $(BUILD)\test_wait_set_m3.exe $(BUILD)\test_partial_io_m4.exe $(BUILD)\test_external_source_win32.exe $(BUILD)\test_schannel_runtime_integration.exe $(BUILD)\test_schannel_runtime_isolation.exe $(BUILD)\test_schannel_buffers.exe $(BUILD)\test_schannel_server_direct.exe $(BUILD)\test_security_lifecycle_negative.exe
 dirs:
 	@if not exist build mkdir build
 	@if not exist $(BUILD) mkdir $(BUILD)
@@ -62,6 +62,10 @@ $(BUILD)\test_wait_set_m3.obj: tests\test_wait_set_m3.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_wait_set_m3.exe: $(BUILD)\test_wait_set_m3.obj $(PSTLIB)
 	$(CC) /nologo /Fe$@ $** $(LDFLAGS) ws2_32.lib secur32.lib crypt32.lib ncrypt.lib bcrypt.lib
+$(BUILD)\test_partial_io_m4.obj: tests\test_partial_io_m4.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_partial_io_m4.exe: $(BUILD)\test_partial_io_m4.obj $(PSTLIB)
+	$(CC) /nologo /Fe$@ $** $(LDFLAGS) ws2_32.lib secur32.lib crypt32.lib ncrypt.lib bcrypt.lib
 $(BUILD)\test_external_source_win32.obj: tests\test_external_source_win32.c
 	$(CC) $(CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_external_source_win32.exe: $(BUILD)\test_external_source_win32.obj $(PSTLIB)
@@ -93,6 +97,7 @@ test: all
 	$(BUILD)\test_backend_schannel.exe
 	$(BUILD)\test_wait_set.exe
 	$(BUILD)\test_wait_set_m3.exe
+	$(BUILD)\test_partial_io_m4.exe
 	$(BUILD)\test_external_source_win32.exe
 	$(BUILD)\test_schannel_buffers.exe
 	$(BUILD)\test_security_lifecycle_negative.exe
