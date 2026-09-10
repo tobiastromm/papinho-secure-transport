@@ -2,7 +2,7 @@
 
 # Public API and ABI baseline
 
-This document keeps the historical ABI work visible while recording the current development contract. The published 0.5.0 baseline is API 2.0.0 / SPI 3.0 / library 0.5.0. The `feature/multiplexed-readiness` development candidate is API **2.1.0**, SPI **3.0**, library track **0.6.0**.
+This document keeps the historical ABI work visible while recording the current release contract. The published 0.5.0 baseline is API 2.0.0 / SPI 3.0 / library 0.5.0. The current 0.6.0 release candidate is API **2.1.0**, SPI **3.0**, library **0.6.0**.
 
 API 2.1 is an additive evolution of API 2.0. It preserves the API 2.0 prefixes and adds the scheduler/readiness surface frozen by ADR-0005. M0–M9 found no need for an SPI change.
 
@@ -118,7 +118,7 @@ M9's real-process closure recorded `LOG_SECRET_HITS=0`, `PRIVATE_KEY_LOG_HITS=0`
 
 ## Current validation status
 
-M9 completed the development candidate's cross-provider scheduler/security/stress matrix:
+M9 completed the release candidate's cross-provider scheduler/security/stress matrix:
 
 - TLS 1.2: all 9 CLIENT×SERVER provider pairs PASS;
 - TLS 1.3: all 4 eligible pairs PASS; 5 Schannel-ineligible pairs rejected before binding;
@@ -128,7 +128,7 @@ M9 completed the development candidate's cross-provider scheduler/security/stres
 - trust/auth negative matrix, clean shutdown, strict truncation and terminal no-resurrection PASS;
 - 250 mixed stress cycles PASS with zero crashes/hangs.
 
-API remains `2.1.0`; SPI remains `3.0`. Final 0.6.0 ABI/package publication is **not yet claimed**: M10 still owns physical NT4 validation, clean-machine package consumers, deterministic packaging and release verification.
+API remains `2.1.0`; SPI remains `3.0`. M10 owns final physical NT4 validation, clean-machine package consumers, deterministic packaging and release verification for the 0.6.0 candidate.
 
 ## Historical baselines
 
@@ -136,6 +136,6 @@ The earlier published baselines remain historical facts rather than being rewrit
 
 - v0.4.0: API 1.3 / library 0.4.0, with the earlier SPI 2.4 release baseline;
 - v0.5.0: API 2.0.0 / SPI 3.0 / library 0.5.0, introducing the CLIENT/SERVER contract and published provider SDKs;
-- current development candidate: API 2.1.0 / SPI 3.0 / library 0.6.0.
+- current release candidate: API 2.1.0 / SPI 3.0 / library 0.6.0.
 
 Detailed historical release evidence remains under `docs/codex/release-evidence/` and the API 2.0 migration documents. M10 will freeze the final 0.6.0 package/ABI evidence rather than retroactively changing the published 0.4.0 or 0.5.0 contracts.

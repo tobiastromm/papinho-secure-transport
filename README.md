@@ -8,7 +8,7 @@ Instead of making an application depend directly on the APIs, types, lifecycle, 
 
 TLS is the secure-transport protocol implemented by PST today. Current providers include **RetroZilla NSS**, **Windows Schannel**, and **OpenSSL**.
 
-The current published release is **0.5.0**, with public API **2.0.0** and provider SPI **3.0**. Development on `feature/multiplexed-readiness` is preparing **0.6.0 / API 2.1.0**, preserving SPI 3.0 while adding a portable wait-set and scheduler foundation for applications that manage many secure connections.
+The current 0.6.0 release candidate uses public API **2.1.0** and provider SPI **3.0**. It preserves the CLIENT/SERVER contract while adding a portable wait-set and scheduler foundation for applications that manage many secure connections.
 
 PST is not limited to Internet software. It can sit underneath browsers, e-mail clients, business client/server applications, LAN services, messaging systems, and custom protocols.
 
@@ -34,7 +34,7 @@ Role-scoped capability masks eliminate providers that cannot satisfy the request
 
 ## API 2.1: many connections without exposing provider internals
 
-The 0.6.0 development track extends the common boundary to multiplexed readiness.
+The 0.6.0 release track extends the common boundary to multiplexed readiness.
 
 A portable **wait-set** can observe multiple PST connections through stable consumer tokens. On Win32, it can also include borrowed application-owned native sources such as a listening socket. The listener remains owned by the application: PST does not call `accept`, `shutdown`, or `closesocket` on it.
 
@@ -59,7 +59,7 @@ TLS authentication does not perform application authorization. A valid certifica
 
 ## TLS after plaintext: STARTTLS and CONNECT foundations
 
-PST remains protocol-agnostic, but the 0.6.0 development track proves a useful boundary for browsers and e-mail software: an application may use a connected transport for plaintext protocol negotiation, stop exactly at a clean upgrade boundary, and then transfer that **same connected transport** to PST for TLS.
+PST remains protocol-agnostic, but the 0.6.0 release track proves a useful boundary for browsers and e-mail software: an application may use a connected transport for plaintext protocol negotiation, stop exactly at a clean upgrade boundary, and then transfer that **same connected transport** to PST for TLS.
 
 That model was validated across OpenSSL, Schannel, and RetroZilla NSS for generic **STARTTLS-style** and **HTTP CONNECT-style** flows. PST does not parse SMTP, IMAP, or HTTP and does not reconnect behind the application's back.
 
@@ -73,7 +73,7 @@ Handshake, readiness, encrypted I/O, and shutdown are incremental. `NEED_READ`, 
 
 Graceful TLS shutdown requires reciprocal `close_notify`. Local emission alone is not treated as complete shutdown. After TLS is established, EOF/reset without the peer's `close_notify` is classified as truncation, including the case where authenticated application data was delivered first.
 
-The M9 cross-provider closure also corrected two Schannel shutdown defects in the 0.6.0 development tree: completion after a reciprocal `close_notify` had already been observed, and processing already-buffered TLS before requesting another socket read.
+The M9 cross-provider closure also corrected two Schannel shutdown defects in the 0.6.0 release tree: completion after a reciprocal `close_notify` had already been observed, and processing already-buffered TLS before requesting another socket read.
 
 ## Providers and factual asymmetry
 
@@ -96,12 +96,12 @@ Do not assume that a capability available in one role or provider is automatical
 | 🇬🇧 English | [Full project introduction](docs/en/README.md) | [Build, integration, and examples](docs/en/getting-started.md) |
 | 🇧🇷 Português (Brasil) | [Apresentação completa do projeto](docs/pt-BR/README.md) | [Build, integração e exemplos](docs/pt-BR/getting-started.md) |
 
-The public examples include [basic CLIENT](examples/basic_client.c) and [basic SERVER](examples/basic_server.c). The API 2.0 CLIENT/SERVER contract remains documented in [API 2.0](docs/api-2.0.md); the additive API 2.1 wait-set/SNI development baseline is recorded in [Public API and ABI](docs/public-api-abi.md) and [Readiness / Progress](docs/readiness-progress.md). Provider authors use [SPI 3.0](docs/provider-spi-3.0.md).
+The public examples include [basic CLIENT](examples/basic_client.c) and [basic SERVER](examples/basic_server.c). The API 2.0 CLIENT/SERVER contract remains documented in [API 2.0](docs/api-2.0.md); the additive API 2.1 wait-set/SNI release contract is recorded in [Public API and ABI](docs/public-api-abi.md) and [Readiness / Progress](docs/readiness-progress.md). Provider authors use [SPI 3.0](docs/provider-spi-3.0.md).
 
 ## Current highlights
 
-- Published **0.5.0 / API 2.0.0 / SPI 3.0** baseline
-- Development **0.6.0 / API 2.1.0 / SPI 3.0** candidate after M9
+- Current **0.6.0 / API 2.1.0 / SPI 3.0** release candidate
+- Published **0.5.0 / API 2.0.0 / SPI 3.0** historical baseline
 - CLIENT and SERVER roles with per-connection provider selection
 - TLS 1.2 validated with all three providers
 - TLS 1.3 validated with RetroZilla NSS and OpenSSL
@@ -117,15 +117,15 @@ The public examples include [basic CLIENT](examples/basic_client.c) and [basic S
 - Reciprocal TLS shutdown and explicit truncation detection
 - 250-cycle mixed M9 scheduler/security/lifecycle stress with no crashes or hangs
 
-The **published release remains 0.5.0** until M10 completes physical NT4, clean-machine, packaging, reproduction, documentation, and release validation for 0.6.0. Platforms outside the documented validation matrix remain unvalidated.
+The 0.6.0 release candidate is in final M10 physical NT4, clean-machine, packaging, reproduction, documentation, and publication validation. Platforms outside the documented validation matrix remain unvalidated.
 
 ## Distribution
 
-The published 0.5.0 distribution consists of a source package and separate static SDKs for the canonical targets based on RetroZilla NSS, Schannel, OpenSSL 3.5.8, and the optional Combined Schannel/OpenSSL target.
+The 0.6.0 distribution consists of a source package and separate static SDKs for the canonical targets based on RetroZilla NSS, Schannel, OpenSSL 3.5.8, and the optional Combined Schannel/OpenSSL target.
 
 The Combined SDK is an official optional package for provider selection, not a fourth TLS implementation and not a default recommendation.
 
-The 0.6.0 development branch has not yet published replacement SDKs. See the practical guides above, the canonical [Target Matrix](docs/target-matrix.md), and [release packaging](docs/release-packaging.md) for target selection and integration details.
+See the practical guides above, the canonical [Target Matrix](docs/target-matrix.md), and [release packaging](docs/release-packaging.md) for target selection and integration details.
 
 ## Development transparency
 

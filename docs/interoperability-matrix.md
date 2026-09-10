@@ -6,7 +6,7 @@
 
 This document preserves the historical interoperability work while making the current cross-provider state explicit. `TESTED` means an execution is recorded, `SUPPORTED` is an implemented contract, `NOT TESTED` has no evidence, `UNSUPPORTED` is explicitly unavailable, and `NOT APPLICABLE` means the current target matrix cannot form that composition.
 
-M9 completed the 0.6.0 development candidate's cross-provider scheduler/security/stress matrix. Final physical NT4, clean-machine/package and publication validation remain M10 work; this is not yet a published 0.6.0 release claim.
+M9 completed the 0.6.0 release candidate's cross-provider scheduler/security/stress matrix. Final physical NT4, clean-machine/package and publication validation are M10 work.
 
 ### M9 CLIENT × SERVER network matrix
 
@@ -189,4 +189,4 @@ Likewise, successful execution on one Windows generation does not create a forma
 
 ## Next gate
 
-M0–M9 are complete on `feature/multiplexed-readiness`. M10 must perform final real NT4 validation for the changed 0.6.0 candidate, separate clean-machine package-only validation, deterministic package reproduction, documentation/package audit and post-publication asset/hash verification before 0.6.0 can be claimed as released.
+M0–M9 are complete on `feature/multiplexed-readiness`. M10 performs final real NT4 validation for the changed 0.6.0 candidate, separate clean-machine package-only validation, deterministic package reproduction, documentation/package audit and post-publication asset/hash verification.

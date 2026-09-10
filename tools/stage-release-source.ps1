@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-param([ValidateSet("0.5.0")][string]$Version = "0.5.0",[switch]$Clean)
+param([ValidateSet("0.5.0", "0.6.0")][string]$Version = "0.6.0",[switch]$Clean)
 
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot

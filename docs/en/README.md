@@ -296,7 +296,7 @@ TLS can, among other things:
 
 PST currently works with **TLS 1.2 and TLS 1.3**, depending on the provider, role, and target capabilities.
 
-The published release remains **0.5.0 / API 2.0.0 / SPI 3.0**. Current development is preparing **0.6.0 / API 2.1.0**, while keeping SPI **3.0**.
+The current 0.6.0 release candidate uses **API 2.1.0 / SPI 3.0**. The published 0.5.0 / API 2.0.0 baseline remains historical.
 
 ### Currently validated state
 
@@ -710,7 +710,7 @@ Depending on configuration, Accelerator may also create external connections on 
 
 # Current project state
 
-The published release remains **0.5.0 / API 2.0.0 / SPI 3.0**. The current branch is preparing **0.6.0 / API 2.1.0**, keeping SPI 3.0. Through M9 it has proven wait-set, external sources, finite wait, wake, backpressure, tri-state SNI, and TLS-after-plaintext. M9 passed 9/9 TLS 1.2 pairs and 4/4 eligible TLS 1.3 pairs; M10 will perform final physical/package validation.
+The current 0.6.0 release candidate uses **API 2.1.0 / SPI 3.0**. Through M9 it has proven wait-set, external sources, finite wait, wake, backpressure, tri-state SNI, and TLS-after-plaintext. M9 passed 9/9 TLS 1.2 pairs and 4/4 eligible TLS 1.3 pairs; M10 performs final physical/package and publication validation.
 
 TLS 1.2 was validated with all three providers. TLS 1.3 was validated with RetroZilla NSS and OpenSSL. SERVER was validated with all three providers within their factual role-scoped capability masks.
 
@@ -720,7 +720,7 @@ Platforms outside the documented validation matrix remain unvalidated.
 
 # Distribution
 
-Version 0.5.0 provides a source package and separate static SDKs for:
+Version 0.6.0 provides a source package and separate static SDKs for:
 
 - `win32-x86-vc6-retrozilla-nss`;
 - `win32-x64-msvc-19.51-schannel`;

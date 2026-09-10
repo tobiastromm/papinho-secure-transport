@@ -42,7 +42,7 @@ The project has different targets because platforms, architectures, compilers, a
 
 You do not need to prepare every environment. **Choose the target you intend to use and install only the tools required for that target.**
 
-The four targets published in 0.5.0 and retained by the 0.6.0 development track are:
+The four targets in the 0.6.0 release track are:
 
 | Target | Provider(s) | Architecture | Actually validated environment |
 |---|---|---:|---|
@@ -1194,7 +1194,7 @@ The goal of these examples is to teach PST, not the full native API of NSS, Scha
 
 # 23. Using an SDK instead of building the repository
 
-Version 0.5.0 is distributed as target-specific SDKs.
+Version 0.6.0 is distributed as target-specific SDKs.
 
 An SDK contains, as applicable:
 

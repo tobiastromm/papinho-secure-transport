@@ -4,11 +4,11 @@ This is the canonical PapinhoSecureTransport target matrix. The ecosystem-wide n
 
 Target identity, build inputs, operating-system support policy, and observed validation are separate facts. A toolchain name is not an operating-system support claim.
 
-## 0.6.0 development candidate after M9
+## 0.6.0 release candidate after M9
 
-The 0.6.0 development track keeps the same four build-target identities used by 0.5.0. The new work changes the public secure-transport/scheduler contract, not the target naming model.
+The 0.6.0 release track keeps the same four build-target identities used by 0.5.0. The new work changes the public secure-transport/scheduler contract, not the target naming model.
 
-Current development versions are API `2.1.0`, SPI `3.0`, and library track `0.6.0`. M9 has completed the cross-provider scheduler/security/stress matrix. Final physical NT4, clean-machine, package reproduction and release validation remain M10 work; therefore the rows below are **development-candidate evidence**, not yet a published 0.6.0 release claim.
+Current release versions are API `2.1.0`, SPI `3.0`, and library `0.6.0`. M9 has completed the cross-provider scheduler/security/stress matrix. Final physical NT4, clean-machine, package reproduction and publication validation are M10 work; the rows below record the factual release-candidate evidence.
 
 | Target ID | Architecture | Provider(s) | M0–M9 development status |
 |---|---:|---|---|
@@ -27,7 +27,7 @@ M8 locked the current role-scoped capability masks and M9 reconfirmed them witho
 
 Important asymmetries remain intentional and factual: OpenSSL and Schannel provide full independent CLIENT SNI control; RetroZilla NSS remains partial because its published snapshot couples the client hostname/SNI behavior through `SSL_SetURL`. RetroZilla NSS is not patched to manufacture parity. Complete SERVER ALPN and SERVER SYSTEM_TRUST remain absent from the NSS role mask, while Schannel TLS 1.3 remains unadvertised for the validated target/environment. Unsupported requirements are filtered before provider binding; M9 observed zero post-binding provider switches.
 
-M9 also found and corrected two real Schannel shutdown defects in the 0.6.0 development tree: reciprocal `close_notify` completion after the peer alert had already been observed, and processing of already-buffered TLS before requesting another socket read. The fixes changed production code but did not change API, SPI or target identity.
+M9 also found and corrected two real Schannel shutdown defects in the 0.6.0 release tree: reciprocal `close_notify` completion after the peer alert had already been observed, and processing of already-buffered TLS before requesting another socket read. The fixes changed production code but did not change API, SPI or target identity.
 
 ---
 

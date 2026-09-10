@@ -42,7 +42,7 @@ O projeto possui targets diferentes porque plataformas, arquiteturas, compilador
 
 Você não precisa preparar todos os ambientes. **Escolha o target que pretende utilizar e instale apenas as ferramentas necessárias para ele.**
 
-Os quatro targets publicados na 0.5.0 e mantidos na trilha de desenvolvimento 0.6.0 são:
+Os quatro targets da trilha de release 0.6.0 são:
 
 | Target | Provider(s) | Arquitetura | Ambiente efetivamente validado |
 |---|---|---:|---|
@@ -1194,7 +1194,7 @@ O objetivo desses exemplos é mostrar o PST, não ensinar toda a API nativa de N
 
 # 23. Usando um SDK em vez de compilar o repositório
 
-A versão 0.5.0 é distribuída com SDKs específicos por target.
+A versão 0.6.0 é distribuída com SDKs específicos por target.
 
 Um SDK contém, conforme aplicável:
 

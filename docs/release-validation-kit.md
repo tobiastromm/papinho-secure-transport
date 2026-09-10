@@ -2,13 +2,13 @@
 
 # Release validation kit
 
-Status: the current 0.5.0 package-validation and clean-machine evidence is recorded in `docs/codex/release-evidence/0.5.0/ss8-package-validation.md`. Offline package validation, isolated host consumers, real provider TLS, public selection, system trust, Combined real TLS, and final NT4 package validation passed. The Phase 9.F material retained below records the historical 0.4.0 validation.
+Status: M10 validates the current 0.6.0 / API 2.1.0 / SPI 3.0 release candidate. The 0.5.0 package-validation and clean-machine evidence remains recorded in `docs/codex/release-evidence/0.5.0/ss8-package-validation.md`; the Phase 9.F material retained below records the historical 0.4.0 validation.
 
-## Current 0.5.0 source of truth
+## Current 0.6.0 source of truth
 
-The current validator reads the five 0.5.0 ZIPs under `dist/packages/0.5.0`. Run it with:
+The current validator reads the five 0.6.0 ZIPs under `dist/packages/0.6.0`. Run it with:
 
-    powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate-release-packages.ps1 -Version 0.5.0 -CompileConsumers
+    powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate-release-packages.ps1 -Version 0.6.0 -CompileConsumers
 
 It extracts and validates package hashes, internal SHA-256 records, licensing, corresponding source, package boundaries, and separate CLIENT/SERVER consumers. The historical 0.4.0 procedure and evidence follow.
 

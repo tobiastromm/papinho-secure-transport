@@ -82,6 +82,11 @@ Run-CombinedServer "automatic" "automatic" 12 "-" "clean" ($BasePort+9) "schanne
 Run-CombinedServer "alpn-prebinding-filter" "ordered" 12 "fixture/1" "clean" ($BasePort+10) "openssl"
 Run-CombinedServer "no-post-binding-fallback" "ordered" 12 "fixture/1" "data-abrupt" ($BasePort+11) "openssl"
 foreach($dll in @("libssl-3-x64.dll","libcrypto-3-x64.dll")){$a=(Get-FileHash (Join-Path $runtime $dll) -Algorithm SHA256).Hash;$b=(Get-FileHash (Join-Path $bin $dll) -Algorithm SHA256).Hash;if($a-ne$b){throw("runtime hash mismatch: "+$dll)};Write-Output("COMBINED_RUNTIME_HASH="+$dll+" SHA256="+$a.ToLower()+" PASS=1")}
+$api21Consumer=Join-Path $packages "consumer-win32-x64-msvc-19.51-schannel-openssl3\release_package_api21_consumer.exe"
+if(-not(Test-Path -LiteralPath $api21Consumer -PathType Leaf)){throw "missing Combined API 2.1 package-only consumer"}
+$api21=Start-Process -FilePath $api21Consumer -WorkingDirectory (Split-Path -Parent $api21Consumer) -Wait -PassThru
+if($api21.ExitCode-ne 0){throw "Combined API 2.1 wait-set consumer failed"}
+Write-Output "COMBINED_API21_WAITSET=PASS"
 $secretHits=@(Get-ChildItem $logs -File|Select-String -Pattern 'BEGIN (RSA |EC |)PRIVATE KEY|PRIVATE_KEY').Count;if($secretHits-ne 0){throw "secret found in logs"}
 Write-Output "COMBINED_LOG_SECRET_HITS=0"
 Write-Output "COMBINED_REAL_TLS_CLEAN_MACHINE=PASS"

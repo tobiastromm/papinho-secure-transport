@@ -4,7 +4,7 @@
 
 Status: **OSSL-F and the post-Phase-8 OpenSSL provider extension complete**. This is a deliberate post-Phase-8 provider extension; Phase 8 and Phase 9 are complete, and the release remains unpublished.
 
-Current 0.5.0 status: OpenSSL implements API 2.0/SPI 3.0 CLIENT and SERVER TLS 1.2/TLS 1.3, CUSTOM_TRUST, Windows SYSTEM_TRUST where advertised, and role-scoped ALPN. The OSSL-ST-A through OSSL-ST-D material below is retained as historical 0.4.0 implementation evidence.
+Current 0.6.0 status: OpenSSL implements API 2.1/SPI 3.0 CLIENT and SERVER TLS 1.2/TLS 1.3, CUSTOM_TRUST, Windows SYSTEM_TRUST where advertised, role-scoped ALPN and independent CLIENT SNI control. The OSSL-ST-A through OSSL-ST-D material below is retained as historical 0.4.0 implementation evidence.
 
 ## Frozen baseline and provenance
 

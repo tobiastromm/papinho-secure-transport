@@ -2,9 +2,9 @@
 
 # Readiness and progress audit
 
-The historical Phase 7.C work established the provider-neutral rule that **readiness is not progress**. API 2.0/SPI 3.0 made that rule role-neutral for CLIENT and SERVER. The current API 2.1/library 0.6 development track builds a multiplexed scheduler on top of that same contract rather than replacing it.
+The historical Phase 7.C work established the provider-neutral rule that **readiness is not progress**. API 2.0/SPI 3.0 made that rule role-neutral for CLIENT and SERVER. The current API 2.1/library 0.6 release track builds a multiplexed scheduler on top of that same contract rather than replacing it.
 
-Current development versions: API `2.1.0`, SPI `3.0`, library track `0.6.0`.
+Current release versions: API `2.1.0`, SPI `3.0`, library `0.6.0`.
 
 ## M1 — portable wait-set core
 
@@ -102,4 +102,4 @@ RetroZilla NSS continues to map readiness through `PR_Poll`; raw HUP is not itse
 
 M0–M9 are complete on `feature/multiplexed-readiness`. API remains `2.1.0`, SPI remains `3.0`, library track remains `0.6.0`.
 
-The scheduler architecture is complete, but the 0.6.0 release is not yet claimed. M10 must perform final physical NT4 validation for the changed candidate, separate clean-machine/package-only validation, deterministic packaging and publication verification.
+The scheduler architecture is complete. M10 performs final physical NT4 validation for the 0.6.0 candidate, separate clean-machine/package-only validation, deterministic packaging and publication verification.

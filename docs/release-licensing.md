@@ -10,7 +10,7 @@ PapinhoSecureTransport project-authored files are licensed under the standard Mo
 
 The authority audit found only Tobias Tromm and tobiastromm with the same email identity in the history of the project-owned trees, and no external notices outside third_party. No known authority blocker remains. This is a repository-evidence conclusion, not legal advice.
 
-The four static SDKs preserve file-level source availability through papinho-secure-transport-0.5.0-src.zip. Third-party files retain their independent terms and are not relicensed as PST code.
+The four static 0.6.0 SDKs preserve file-level source availability through papinho-secure-transport-0.6.0-src.zip. Third-party files retain their independent terms and are not relicensed as PST code.
 
 ## Third-party classification
 

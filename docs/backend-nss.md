@@ -2,7 +2,7 @@
 
 # RetroZilla NSS/NSPR backend
 
-Current 0.5.0 status: RetroZilla NSS implements API 2.0/SPI 3.0 CLIENT and SERVER TLS 1.2/TLS 1.3, CUSTOM_TRUST, local identity, peer-certificate authentication, Peer Info, incremental I/O and reciprocal shutdown. SERVER SYSTEM_TRUST and complete PST SERVER ALPN are not advertised. Real Windows NT 4.0 SP6 x86 package validation passed. The phase-by-phase material below is retained as historical engineering evidence; superseded capability statements are not the current mask. See [providers.md](providers.md) and [credentials-trust-peer.md](credentials-trust-peer.md).
+Current 0.6.0 status: RetroZilla NSS implements API 2.1/SPI 3.0 CLIENT and SERVER TLS 1.2/TLS 1.3, CUSTOM_TRUST, local identity, peer-certificate authentication, Peer Info, incremental I/O and reciprocal shutdown. SERVER SYSTEM_TRUST and complete PST SERVER ALPN are not advertised. Independent CLIENT SNI control remains partial. Real Windows NT 4.0 SP6 x86 package validation is an M10 release gate. The phase-by-phase material below is retained as historical engineering evidence; superseded capability statements are not the current mask. See [providers.md](providers.md) and [credentials-trust-peer.md](credentials-trust-peer.md).
 
 Status: Phase 3 backend implementation. The backend is private and opt-in; it is not part of the default core build and exposes no NSS/NSPR type through the public header.
 

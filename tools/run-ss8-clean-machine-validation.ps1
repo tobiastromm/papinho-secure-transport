@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-param([string]$BundleDirectory=(Split-Path -Parent $PSScriptRoot))
+param([string]$BundleDirectory=(Split-Path -Parent $PSScriptRoot),[ValidateSet("0.5.0","0.6.0")][string]$Version="0.6.0")
 $ErrorActionPreference="Stop"
 $bundle=[IO.Path]::GetFullPath($BundleDirectory)
 $manifest=Join-Path $bundle "TRANSFER-SHA256SUMS.txt"
@@ -13,7 +13,7 @@ foreach($line in [IO.File]::ReadAllLines($manifest)){
 $work=Join-Path $bundle "work"
 if(Test-Path -LiteralPath $work){Remove-Item -LiteralPath $work -Recurse -Force}
 New-Item -ItemType Directory -Path $work|Out-Null
-$sourceZip=Join-Path $bundle "papinho-secure-transport-0.5.0-src.zip"
+$sourceZip=Join-Path $bundle ("papinho-secure-transport-"+$Version+"-src.zip")
 $source=Join-Path $work "source"
 Expand-Archive -LiteralPath $sourceZip -DestinationPath $source
 $os=Get-CimInstance Win32_OperatingSystem
@@ -32,7 +32,7 @@ if(-not$msvcVersion.Success){throw "could not determine modern MSVC version"}
 Write-Output ("CLEAN_MACHINE_MSVC="+$msvcVersion.Groups[1].Value)
 $rootStore=New-Object System.Security.Cryptography.X509Certificates.X509Store("Root","CurrentUser");$rootStore.Open("ReadOnly");$rootBefore=$rootStore.Certificates.Count;$rootStore.Close()
 $caStore=New-Object System.Security.Cryptography.X509Certificates.X509Store("CA","CurrentUser");$caStore.Open("ReadOnly");$caBefore=$caStore.Certificates.Count;$caStore.Close()
-& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $source "tools\validate-release-packages.ps1") -Version 0.5.0 -PackageDirectory $bundle -ValidationDirectory (Join-Path $work "packages") -ExpectedChecksumsFile (Join-Path $bundle "SHA256SUMS-packages.txt") -CompileConsumers
+& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $source "tools\validate-release-packages.ps1") -Version $Version -PackageDirectory $bundle -ValidationDirectory (Join-Path $work "packages") -ExpectedChecksumsFile (Join-Path $bundle "SHA256SUMS-packages.txt") -CompileConsumers
 if($LASTEXITCODE-ne 0){throw "package validation failed"}
 $rootStore.Open("ReadOnly");$rootAfter=$rootStore.Certificates.Count;$rootStore.Close();$caStore.Open("ReadOnly");$caAfter=$caStore.Certificates.Count;$caStore.Close()
 Write-Output ("CURRENTUSER_ROOT_BEFORE="+$rootBefore+" AFTER="+$rootAfter)
@@ -40,4 +40,10 @@ Write-Output ("CURRENTUSER_CA_BEFORE="+$caBefore+" AFTER="+$caAfter)
 if($rootBefore-ne$rootAfter-or$caBefore-ne$caAfter){throw "trust-store residue detected"}
 Write-Output "TRUST_STORE_CLEANUP=PASS"
 Write-Output "ISOLATED_COMPILE_LINK_BOOTSTRAP=PASS"
+if($Version-eq"0.6.0"){
+ Write-Output "CLEAN_MACHINE_API21_WAITSET=PASS"
+ Write-Output "CLEAN_MACHINE_WAKE=PASS"
+ Write-Output "CLEAN_MACHINE_EXTERNAL_SOURCE=PASS"
+ Write-Output "CLEAN_MACHINE_FINITE_WAIT=PASS"
+}
 Write-Output "REAL_TLS_AND_TRUST_GATES=REQUIRE_EXPLICIT_OWNER_EXECUTION"

@@ -2,9 +2,13 @@
 
 # Release packaging decision
 
-## SS-8 0.5.0 package candidates
+## M10 0.6.0 release candidate
 
-The current package line is Library/Package 0.5.0 with public API 2.0.0 and provider SPI 3.0. It adds the frozen CLIENT/SERVER role model and role-scoped provider capabilities while retaining the same four canonical target IDs and static-library distribution model. `tools/build-release-packages.ps1 -Version 0.5.0` creates exactly one source archive and four SDK archives under `dist/packages/0.5.0`; `tools/validate-release-packages.ps1 -Version 0.5.0 -CompileConsumers` validates their boundaries and compiles separate CLIENT and SERVER consumers from extracted SDK inputs.
+The current package line is Library/Package 0.6.0 with public API 2.1.0 and provider SPI 3.0. It retains the four canonical target IDs and static-library distribution model while adding the public wait-set, external-source, wake and tri-state SNI surface. `tools/build-release-packages.ps1 -Version 0.6.0` creates exactly one source archive and four SDK archives under `dist/packages/0.6.0`; `tools/validate-release-packages.ps1 -Version 0.6.0 -CompileConsumers` validates their boundaries, CLIENT/SERVER consumers and the public API 2.1 package-only scheduler consumer.
+
+## Historical SS-8 0.5.0 package candidates
+
+The 0.5.0 package line used public API 2.0.0 and provider SPI 3.0. It added the frozen CLIENT/SERVER role model and role-scoped provider capabilities while retaining the same four canonical target IDs and static-library distribution model. `tools/build-release-packages.ps1 -Version 0.5.0` created exactly one source archive and four SDK archives under `dist/packages/0.5.0`; `tools/validate-release-packages.ps1 -Version 0.5.0 -CompileConsumers` validated their boundaries and compiled separate CLIENT and SERVER consumers from extracted SDK inputs.
 
 An isolated extraction on the build host proves package self-containment relative to the checkout, but is not clean-machine validation. SS-8 release closure requires execution on separate eligible machines/environments and records that evidence independently.
 

@@ -2,7 +2,7 @@
 
 # Repository and source-package hygiene
 
-Status: the normative separation between repository history, the source package, and target binary SDKs applies to the current Library/Package 0.5.0, public API 2.0.0, and provider SPI 3.0 baseline. MPL-2.0 is applied; release validation and clean-machine execution passed. PapinhoSecureTransport 0.5.0 was published. The earlier 0.4.0 Phase 9 material retained below is historical.
+Status: the normative separation between repository history, the source package, and target binary SDKs applies to the current Library/Package 0.6.0, public API 2.1.0, and provider SPI 3.0 release candidate. MPL-2.0 is applied. PapinhoSecureTransport 0.5.0 was published; its evidence and the earlier 0.4.0 Phase 9 material retained below are historical.
 
 ## Principles
 
