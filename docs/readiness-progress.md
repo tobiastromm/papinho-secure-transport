@@ -2,322 +2,104 @@
 
 # Readiness and progress audit
 
-> API 2.0/SPI 3.0 preserve this role-neutral contract for both CLIENT and SERVER. No readiness sequence implies connection role, and provider selection is fixed before handshake progress begins.
+The historical Phase 7.C work established the provider-neutral rule that **readiness is not progress**. API 2.0/SPI 3.0 made that rule role-neutral for CLIENT and SERVER. The current API 2.1/library 0.6 development track builds a multiplexed scheduler on top of that same contract rather than replacing it.
 
-Phase 7.C is complete. This document records its historical audit baseline and closure
-evidence; no readiness or progress behavior was changed there. The frozen release
-historical baseline was public API 1.3.0, library 0.4.0 and SPI 2.4; the current development contract is API 2.1.0, library 0.6.0 and SPI 3.0.
+Current development versions: API `2.1.0`, SPI `3.0`, library track `0.6.0`.
 
-## M1 portable wait-set core
+## M1 — portable wait-set core
 
-M1 adds a provider-neutral, opaque `pst_wait_set` for PST connections. Consumer-selected
-tokens remain stable while registered and do not expose connection pointers, provider
-pointers, sockets or native handles. A connection may belong to at most one wait-set.
-Duplicate connections and tokens are rejected, and removing then re-adding a connection
-places it at the end of the stable registration order.
+M1 adds opaque `pst_wait_set` membership for PST connections. Consumer-selected tokens remain stable while registered and expose no connection/provider/native pointer. A connection may belong to at most one wait-set. Duplicate connection/token registration is rejected; remove/re-add creates a new registration position.
 
-`pst_wait_set_wait(..., 0, ...)` performs one bounded, nonblocking observation per
-registered nonterminal connection through the existing provider-authoritative
-`pst_connection_wait` path. Consequently RetroZilla NSS continues to use NSPR `PR_Poll`;
-the portable core does not substitute raw socket readiness. No-ready returns
-`PST_RESULT_WAIT_TIMEOUT`.
+`pst_wait_set_wait(..., 0, ...)` is a bounded nonblocking poll. PST asks each provider through the existing provider-authoritative readiness path; raw socket readiness does not replace TLS readiness. RetroZilla NSS therefore continues to use NSPR `PR_Poll`. Capacity exhaustion reports exact ready/event counts and does not consume readiness. Terminal members remain visible until explicitly removed.
 
-## M2 external Win32 sources
+A registered connection must be removed before release. The wait-set references rather than owns the connection.
 
-M2 is complete and adds `pst_win32_socket_external_source_create()` as the first platform adapter.
-The portable wait-set stores only an opaque source, portable READ/WRITE interests and
-the consumer token. The private Win32 implementation uses timeout-zero `select()` to
-observe sockets, including listener readability; PST does not call `accept()`,
-`shutdown()` or `closesocket()` for an external source.
+## M2 — external Win32 sources
 
-One external-source object may belong to at most one wait-set. Duplicate registration
-in the same or another wait-set returns `PST_RESULT_ALREADY_REGISTERED`; successful
-removal permits later registration anywhere. Identity is the wrapper object, not its
-native socket: two wrappers for one socket are not deduplicated in M2. The consumer must
-keep both wrapper and native resource valid and unchanged while registered.
+M2 adds borrowed external-source membership through the Win32 adapter. The portable core stores only an opaque source, portable READ/WRITE interests and the consumer token. Native `SOCKET`, `fd_set`, `timeval`, `INVALID_SOCKET` and `select()` remain private to the Win32 platform implementation.
 
-This uses the Winsock `select()` surface available on NT4. M2 originally polled each
-source separately for timeout-zero operation; M3 now aggregates the bounded native
-sources in one `select()` call and documents the `FD_SETSIZE` membership bound.
+The consumer owns the native resource. PST does not `accept`, `shutdown` or `closesocket` it. One `pst_external_source` object may belong to at most one wait-set at a time. Identity is the wrapper object, not the native socket; two distinct wrappers around one socket are not deduplicated.
 
-The VC6 i386 artifact has OS/subsystem version 4.00 and imports the socket surface
-through `WSOCK32.dll`. Its adapter uses Winsock 1.1-era `fd_set`, `timeval`, `select()`
-and `INVALID_SOCKET` only; it introduces no post-NT4 Windows API. VC6 `/W4` and modern
-MSVC `/W4` builds pass without warnings. Real TLS regressions preserve provider
-authority: NSS still reports `NSS_M1_WAITSET_POLL=PASS`, and OpenSSL and Schannel
-likewise complete their M1 wait-set polls before authenticated echo and reciprocal
-shutdown.
+The chosen surface is compatible with the VC6/NT4 target: the audited i386 artifact uses OS/subsystem 4.00 and `WSOCK32.dll` with Winsock 1.1-era mechanisms.
 
-The result reports exact total-ready and copied-event counts. Capacity exhaustion returns
-`PST_RESULT_INSUFFICIENT_CAPACITY`, preserves stable registration ordering for copied
-events, and does not consume readiness. Terminal connections remain visible with their
-retained normalized terminal cause until explicitly removed.
-
-Deterministic VC6 and modern-MSVC tests cover mixed mock providers, multiple and partial
-readiness, terminal-plus-ready enumeration, invalid arguments, allocation failure,
-transactional membership, remove-before-release and exactly-once cleanup. Real TLS
-proofs exercised the M1 timeout-zero path before ordinary progress waits for OpenSSL,
-Schannel and RetroZilla NSS; each completed authenticated 25-byte encrypted echo and
-reciprocal shutdown.
-
-## M3 wake and finite blocking scheduler
+## M3 — wake and finite blocking scheduler
 
 M3 completes finite `timeout_ms > 0` waits and cross-thread `pst_wait_set_wake()`.
-The Win32 adapter owns a private nonblocking loopback socket pair created with
-Winsock 1.1-era APIs. Its read side participates in the same `select()` as external
-sources and non-owning native hints for attached PST transports. Wake writes one byte;
-the reporting wait drains queued bytes, so requests coalesce without becoming a
-terminal or cancellation signal. No hidden worker, timer or periodic polling loop is
-used.
 
-Before blocking and after a native signal, PST performs bounded timeout-zero provider
-confirmation in stable registration order. Raw socket readiness is only a hint. If a
-provider rejects one hinted READ/WRITE bit, that bit is suppressed for the remainder
-of the same application wait and `select()` continues with the remaining monotonic
-duration. At most the finite set of member interest bits can be suppressed, avoiding
-both a writable-socket spin and sequential `N * timeout` behavior. RetroZilla NSS
-validation confirmed that raw WRITE readiness is not published until `PR_Poll`
-confirms provider readiness.
+The Win32 adapter uses a private nonblocking loopback socket pair as the wake source. Its read side participates in the same bounded `select()` as external sockets and non-owning native hints for attached PST transports. Wake is thread-safe, coalescing, reusable, nonterminal and does not cancel connections or change membership.
 
-Timeout zero remains an immediate poll. A positive timeout is only the maximum
-scheduler sleep and never cancels an operation. Applications compute their own
-handshake/read/write/shutdown deadlines with a monotonic clock and pass the remaining
-bounded duration. Wake returns `PST_RESULT_WAIT_WOKEN` when no member is also ready;
-the result's `woken` field independently records a wake coincident with readiness.
+Before blocking and after native signalling, PST performs bounded timeout-zero provider confirmation in stable registration order. Raw socket readiness is only a hint. If a provider rejects a hinted interest bit, that bit can be suppressed for the remainder of the current application wait while the monotonic timeout continues. This prevents writable-socket spin without creating sequential `N * timeout` waits.
 
-One wait may be active per wait-set. Wake is allowed from another thread. Add/remove
-are restricted to the creating owner thread and rejected during an active wait;
-destroy is rejected during a wait or while members remain. The deterministic matrix
-covers an external listener plus two PST connections, stable multiple-ready results,
-wake before/during wait, timeout and concurrent-operation rejection.
+There is no hidden worker and no mandatory periodic polling loop. A positive timeout is only the scheduler's maximum wait; application handshake/read/write/shutdown deadlines remain consumer-owned monotonic policy.
 
-## M4 partial I/O and backpressure
+One wait may be active per wait-set. Wake may come from another thread. Membership changes are owner-thread operations and are rejected during an active wait. Destroy is rejected during a wait or while members remain.
 
-Read and write are single bounded progress attempts. A successful read may return
-fewer bytes than the supplied capacity; a successful write may accept fewer bytes
-than requested. The application retains the unsent suffix and owns all application
-buffering and framing. PST promises neither send-all nor read-until-full.
+M3 proved an external listener plus multiple PST connections, wake before/during wait, wake/timeout distinction, stable multiple-ready enumeration, bounded provider confirmation and 100-cycle stress without leaks or busy-loop behavior. This resolved the PapinhoAccelerator Phase 3.B4 architectural blocker.
 
-`NEED_READ`, `NEED_WRITE` and `NEED_READ_WRITE` are nonterminal backpressure states,
-including cross-direction cases where a read needs transport write readiness or a
-write needs transport read readiness. The provider's current interest remains
-authoritative. After readiness, the consumer performs a bounded I/O attempt and
-returns to the wait-set instead of draining a hot connection internally. Stable
-enumeration makes every ready member visible; scheduling fairness remains an
-application policy.
+## M4 — partial I/O and backpressure
 
-Bytes reported as transferred have been accepted by the provider for that call.
-Unreported bytes remain caller-owned. Shutdown does not create an implicit flush or
-send-all operation, so the consumer completes its retained application remainder
-before beginning shutdown. Data delivered before a later truncated terminal remains
-valid application data; the terminal cause stays immutable and cannot resurrect.
+Read/write remain single bounded progress attempts. A successful read may deliver fewer bytes than caller capacity; a successful write may accept fewer bytes than requested. The application owns buffering and retains the unsent suffix. PST promises neither send-all nor read-until-full.
+
+`NEED_READ`, `NEED_WRITE` and `NEED_READ_WRITE` are normal nonterminal states, including cross-direction cases where a read needs transport write readiness or a write needs transport read readiness. The provider's interest remains authoritative. After readiness the consumer performs bounded work and returns to the scheduler rather than draining a hot connection indefinitely.
+
+Deterministic tests forced writes to 7-byte chunks and reads to 5-byte chunks, exercised `write -> NEED_READ` and `read -> NEED_WRITE`, and compared a 257-byte stream byte-for-byte. Real OpenSSL transferred 4 MiB under forced backpressure; Schannel and NSS used 3-byte server fragmentation. All providers preserved exact data and reciprocal shutdown. Hot/slow multi-connection tests proved that a continuously ready connection does not hide another ready member. Scheduling fairness itself remains application policy.
+
+Shutdown is not an implicit flush/send-all operation. The caller completes its retained unsent application remainder before beginning shutdown. Data already delivered before a later truncation remains valid.
+
+## M6 — TLS after prior plaintext use
+
+M6 proved that the same connected transport can be used by the consumer for plaintext protocol setup, transferred to PST at an exact boundary, and then used for TLS without reconnecting.
+
+The generic STARTTLS-style and CONNECT-style fixtures deliberately contain no SMTP, IMAP or HTTP parser inside PST. Fragmented plaintext boundaries, exact boundary consumption, wait-set use after attach, custom trust, mTLS where applicable, encrypted I/O and reciprocal shutdown passed across OpenSSL, Schannel and RetroZilla NSS.
+
+Ownership is explicit: before attach acceptance the consumer owns the transport; after acceptance PST owns it even if TLS subsequently fails. There is no ownership rollback and no plaintext fallback. TLS bytes pre-read by the consumer before attach remain intentionally unsupported in this scope; the negative test terminates as protocol failure rather than attempting unsafe recovery.
+
+This establishes the PST foundation for PapinhoLegacyMail STARTTLS and PapinhoBrowser HTTP CONNECT-to-origin TLS.
+
+## M7/M8 — future safety and provider consolidation
+
+M7 proved core multi-runtime/configuration snapshot isolation and immutable V1/V2 identity rotation without changing production/API/SPI. Existing connections keep their old snapshot while new connections can use a rotated identity/trust configuration. Provider-global limitations remain documented rather than hidden: OpenSSL FULL for the audited model, Schannel PARTIAL, RetroZilla NSS with factual upstream process-global limitations.
+
+M8 consolidated exact role-scoped provider capability masks and reran representative wait-set, partial-I/O, TLS-after-plaintext, shutdown/truncation, ownership and diagnostic gates. Unsupported capability combinations are rejected before binding; no provider switch occurs after binding.
+
+## M9 — cross-provider scheduler/security/stress closure
+
+M9 combines the previously isolated guarantees. TLS 1.2 passed for all 9 CLIENT×SERVER provider pairs. TLS 1.3 passed for all 4 eligible pairs; the 5 combinations involving an ineligible Schannel role were classified before binding rather than attempted and downgraded.
+
+The deterministic scheduler matrix passed finite wait, wake races, timeout/wake distinction, stable registration order, bounded enumeration, membership/lifetime negatives, hot/slow backpressure and failure injection. Combined selection reconfirmed AUTOMATIC, EXACT, ORDERED and connection-level pinning with zero post-binding provider switches.
+
+A 250-cycle mixed stress campaign alternated VC6/NSS, OpenSSL, Schannel and Combined security/lifecycle matrices with zero crashes and zero hangs. Real-process closure also passed trust/authentication negatives, reciprocal clean shutdown, raw-EOF truncation, preservation of data before truncation, terminal no-resurrection and secret-safe diagnostics/logging.
+
+M9 found two real Schannel shutdown defects and fixed them without API/SPI changes:
+
+1. when the reciprocal peer `close_notify` had already been observed, shutdown now completes after draining that alert instead of waiting for a condition already satisfied;
+2. Schannel now processes TLS data already buffered by SSPI before requesting another socket read.
+
+The Schannel, Combined and full relevant regressions pass after these corrections.
 
 ## Readiness is not progress
 
-Readiness says that a backend descriptor may be attempted without an ordinary
-blocking wait. It does not promise that the current TLS operation will consume
-or produce application bytes, complete, change its required interest, or enter
-a terminal state. In particular, a TLS read may report `NEED_READ_WRITE`, see
-only WRITE ready, and still return zero bytes with the same operation and
-interest. Repeating that immediately is a spin, not progress.
+Readiness says that a backend may be attempted without an ordinary blocking wait. It does **not** promise that the current TLS operation will consume/produce application bytes, complete, change interest or enter a terminal state.
 
-For an application read, READ is the primary interest and WRITE is auxiliary.
-For an application write, WRITE is primary and READ is auxiliary. Handshake is
-not assigned one fixed primary direction because a TLS stack may legitimately
-alternate reads and writes. The historical 0.4.0 RetroZilla NSS shutdown
-completed locally in one provider step, so no pending shutdown direction was
-observable in that provider.
+For application READ, READ is the primary direction and WRITE can be auxiliary. For application WRITE, WRITE is primary and READ can be auxiliary. Handshake has no fixed primary direction because TLS may alternate both. Provider interest and confirmation remain authoritative.
 
-## Current core guard
+The core's no-progress guard is private per connection. Repeating the same auxiliary-ready, zero-byte, same-operation, same-interest state is not useful progress. Temporary suppression is reset by positive byte progress, operation/interest transition, COMPLETE/CLOSED/FAILED, provider failure or normal timeout. No global/thread-local suppression state is used.
 
-The guard in `src/pst_runtime.c` is private and stored in each
-`pst_connection`: pending I/O kind, pending interest, last ready mask,
-suppressed interest and whether a non-empty wait result was observed. It has no
-global or thread-local state.
+## Operation/interest summary
 
-After READ or WRITE returns zero bytes in a nonterminal pending operation, the
-core remembers the operation kind and mapped interest. If the next wait reports
-only auxiliary readiness and retrying the same operation produces the same
-zero-byte state, that observed auxiliary bit is suppressed from the next wait.
-If suppression would remove every requested bit, the core falls back to the
-provider's complete interest mask rather than issuing an empty wait.
+| Operation | Interest / readiness | Required behavior |
+|---|---|---|
+| HANDSHAKE | READ, WRITE or both | retry only after provider-confirmed readiness; either direction may be legitimate |
+| READ | READ primary; WRITE may be auxiliary | bounded read attempt; partial bytes are progress |
+| WRITE | WRITE primary; READ may be auxiliary | bounded write attempt; caller retains unsent suffix |
+| SHUTDOWN | provider-specific incremental interest | reciprocal TLS close required for CLEAN where provider exposes it; raw EOF remains TRUNCATED |
+| Any pending operation | timeout | normal bounded scheduler result; not failure/cancellation |
+| Any operation | fatal provider/readiness error | terminal FAILED; no resurrection |
 
-The guard resets on transferred bytes, COMPLETE, CLOSED, FAILED, provider
-failure, a normal wait timeout, handshake entry and shutdown entry. A changed
-I/O kind or changed interest cannot satisfy the equality needed to carry stale
-suppression forward. This implementation is symmetric between application READ
-and WRITE; it is not a generic guard applied blindly to handshake and shutdown.
+RetroZilla NSS continues to map readiness through `PR_Poll`; raw HUP is not itself authenticated TLS close. Fatal ERR/NVAL takes precedence over useful readiness bits. OpenSSL and Schannel likewise retain provider-authoritative TLS progression behind the common scheduler.
 
-A timeout is bounded normal progress control, not a failure. It clears the
-temporary suppression so an auxiliary dependency can become eligible again.
-`NEED_*`, timeout, partial I/O and suppression do not create failure diagnostics
-or WARN/ERROR logging. A fatal backend wait does transition the connection to
-FAILED and retains the WAIT diagnostic.
+## Current closure and next validation
 
-## Operation and interest matrix
+M0–M9 are complete on `feature/multiplexed-readiness`. API remains `2.1.0`, SPI remains `3.0`, library track remains `0.6.0`.
 
-`NONE` is meaningful only for complete or terminal provider state. Returning a
-zero-byte pending operation with `NONE` is not a useful wait contract and is not
-produced by the current NSS provider.
-
-| Operation | Provider interest | Readiness result | Core action and expected progress |
-| --- | --- | --- | --- |
-| HANDSHAKE | READ | timeout/NONE | remain pending; later wait remains bounded |
-| HANDSHAKE | READ | READ or READ/HUP | retry handshake; HUP is not TLS close classification |
-| HANDSHAKE | WRITE | timeout/NONE | remain pending; later wait remains bounded |
-| HANDSHAKE | WRITE | WRITE or WRITE/HUP | retry handshake |
-| HANDSHAKE | READ/WRITE | READ, WRITE, READ/WRITE, or those masks with HUP | retry; either direction may be a legitimate dependency, so no auxiliary suppression is applied |
-| READ | READ | READ or HUP-derived READ | retry secure read; bytes, interest/state change, close or failure determine progress |
-| READ | WRITE | WRITE | retry secure read because TLS may need to emit protocol data |
-| READ | READ/WRITE | READ or READ/WRITE | retry; primary READ is present and is never suppressed |
-| READ | READ/WRITE | WRITE only | retry once; if zero bytes and the same pending state recur, suppress WRITE for the next wait |
-| WRITE | WRITE | WRITE | retry secure write; bytes or state/interest change determine progress |
-| WRITE | READ | READ or READ/HUP | retry secure write because TLS may need inbound protocol data |
-| WRITE | READ/WRITE | WRITE or READ/WRITE | retry; primary WRITE is present and is never suppressed |
-| WRITE | READ/WRITE | READ only | retry once; if zero bytes and the same pending state recur, suppress READ for the next wait |
-| SHUTDOWN, historical NSS 0.4.0 | NONE/COMPLETE | no wait | `PR_Shutdown` completed locally in one step; connection became CLOSED |
-| SHUTDOWN, NSS API 2.0/SPI 3.0 | READ after local send shutdown | READ readiness or timeout | `PR_Shutdown(PR_SHUTDOWN_SEND)` emits local `close_notify`; incremental `PR_Read` requires reciprocal `close_notify` before COMPLETE and maps raw EOF to TRUNCATED |
-| SHUTDOWN, generic pending provider | READ, WRITE, or READ/WRITE | matching readiness or timeout | SPI can represent this, but the current core has no operation-specific no-progress suppression proof for pending shutdown |
-| Any pending operation | any | timeout/NONE | no failure; clear temporary suppression; retain operation and permit later auxiliary readiness |
-| Any operation | any | ERR or NVAL | fatal transport/readiness failure; transition to FAILED; no resurrection |
-
-The RetroZilla NSS adapter maps `PR_POLL_HUP` to READ readiness, including
-WRITE/HUP becoming READ/WRITE. This deliberately permits one secure read so the
-provider can classify CLOSE/CLEAN versus FAILED/TRUNCATED from observed TLS
-close_notify state. HUP alone never means CLOSED. `PR_POLL_ERR` and
-`PR_POLL_NVAL` take fatal precedence even when useful readiness bits coexist.
-
-## Progress and reset rules
-
-The following are useful progress and reset the no-progress history:
-
-- any positive byte count, including a partial read or partial write;
-- COMPLETE, CLOSED or FAILED;
-- a provider call failure;
-- an operation-kind transition such as READ to WRITE;
-- an interest transition, because stale suppression no longer matches;
-- a normal timeout, which deliberately re-enables auxiliary readiness.
-
-The same ready auxiliary bit, zero transferred bytes, the same pending
-operation, the same interest and another immediate poll are not progress.
-Accumulated byte totals remain the caller's responsibility and must use the
-provider's truthful per-call `bytes_transferred` value.
-
-## Existing evidence
-
-Deterministic SPI tests currently prove the READ-side `NEED_READ_WRITE` case in
-which WRITE-only readiness produces no progress and is removed from the next
-wait, the case where WRITE-only readiness does produce a byte, combined
-READ/WRITE readiness, timeout as nonfailure, and fatal wait transition with no
-terminal-state resurrection. NSS unit tests prove READ, WRITE, READ/WRITE,
-HUP, READ/HUP, WRITE/HUP, ERR and NVAL classification.
-
-Real TLS 1.2/TLS 1.3 host and NT4 evidence proves nonblocking WOULD_BLOCK,
-provider `PR_Poll`, authenticated ALPN, 25-byte bidirectional secure I/O and
-content matching. Phase 7.B proves clean close, data before clean close,
-provider-observed close_notify, abrupt-close truncation and fatal wait/terminal
-behavior. Phase 6 also proved the original WRITE-only readiness spin correction
-on real NT4.
-
-## Coverage gaps identified by the audit
-
-The implementation was not changed by this audit. At that historical audit
-checkpoint, Phase 7.C remained in progress until deterministic coverage
-addressed these gaps:
-
-- mirror the no-progress and real-progress sequences for WRITE with READ as the
-  auxiliary direction;
-- prove timeout re-enable end to end: suppress auxiliary, time out on the
-  primary wait, then permit auxiliary readiness that makes real progress;
-- assert that partial READ and partial WRITE clear stale suppression even when
-  the provider remains pending;
-- assert interest transitions `READ/WRITE -> READ` and `READ/WRITE -> WRITE`;
-- assert READ/WRITE operation transitions cannot inherit suppression;
-- use distinct mock connection states to prove connection A cannot affect B;
-- cover alternating handshake readiness and fatal/timeout outcomes without
-  adding speculative handshake suppression;
-- document/test the generic pending-shutdown path if a provider that exposes it
-  is introduced; the current NSS one-step completion cannot prove it;
-- explicitly cover ready masks containing READ/WRITE/HUP together where the
-  provider classifier can report them.
-
-These are test-evidence gaps, except that generic pending-shutdown resilience is
-an unproved capability. No current failing behavior justifies a core, backend,
-SPI or public API change. Deterministic mock evidence must precede any such
-correction.
-
-## NT4 decision and housekeeping
-
-Because this audit changes documentation only, existing real-NT4 Phase 6 and
-7.B evidence remains applicable. If later 7.C work changes core readiness or
-progress behavior, a targeted real-NT4 regression becomes mandatory.
-
-Deferred housekeeping remains unchanged: preserve and vendor the exact
-The later housekeeping preserved RetroZilla NSS source/provenance, so `C:\PSTW` is disposable. It
-is not part of this audit.
-## Phase 7.C2 deterministic regression matrix
-
-The existing SPI mock now exercises the application-I/O guard symmetrically.
-Deterministic sequences prove WRITE NEED_READ_WRITE plus READ-only readiness
-suppresses auxiliary READ after a zero-byte retry; positive WRITE progress
-clears suppression; timeout re-enables auxiliary WRITE for READ; partial READ
-and WRITE clear stale suppression; and changes to NEED_WRITE or NEED_READ take
-effect immediately. Assertions use call counts and requested-interest masks,
-not wall-clock timing.
-
-The first run exposed a test-provider defect: its new WRITE script returned
-NEED_READ_WRITE but updated mock interest as NONE. The mock now maps all three
-pending operations consistently. No production behavior changed.
-
-The completed matrix also proves two-connection isolation, READ-to-WRITE
-transition reset, alternating handshake readiness, and stale-guard clearing on
-entry to generic pending shutdown. Existing fatal-wait, provider HUP/ERR/NVAL
-classification and no-resurrection tests remain passing. No production behavior
-changed, so existing NT4 evidence remains applicable. Fresh host TLS 1.2/TLS 1.3 and failure-fixture execution passed in Phase 7.C3.
-## Phase 7.C3 host functional revalidation
-
-Using the canonical versioned RetroZilla NSS runtime only, TLS 1.2 on port 18443
-passed with TLS=0x0303, WRITE=25, READ=25, CONTENT_MATCH=1, ALPN=9 and AUTH=2.
-TLS 1.3 on port 18444 passed with TLS=0x0304 and the same secure-I/O,
-authentication and ALPN results. Both servers independently reported AUTH=True,
-ALPN=fixture/1, RECV=25, SEND=25 and CONTENT_MATCH=True.
-
-The real provider exercised incremental readiness naturally. TLS 1.2 read
-returned NEED_READ_WRITE with zero bytes, waited first on WRITE and then READ,
-and completed with 25 bytes. TLS 1.3 exercised repeated WRITE/READ readiness,
-including a 32 ms real wait, before completing with 25 bytes.
-
-The existing clean_close, data_then_close and abrupt_close fixtures passed on
-ports 18445, 18446 and 18447. Client exit was zero for every mode. Clean close
-ended CLOSED/CLEAN; data_then_close delivered 29 matching bytes before
-CLOSED/CLEAN; abrupt close ended FAILED/TRUNCATED with diagnostic result
-TRUNCATED and operation READ. Server output confirmed TLS 1.3, authenticated
-fixture/1 and the intended close mechanism for every mode.
-
-No production change was required. Existing Phase 6 and 7.B real-NT4 evidence
-remains applicable. Phase 7.C is ready for its separate closure audit.
-## Phase 7.C closure audit
-
-The formal closure audit found every original readiness/progress goal satisfied.
-The guard remains private per connection and symmetric for application READ and
-WRITE. Deterministic requested-interest assertions prove READ and WRITE
-auxiliary suppression, timeout re-enable, positive partial-I/O reset,
-READ|WRITE-to-single-interest adaptation, both READ-to-WRITE and WRITE-to-READ
-operation transitions, two-connection isolation, alternating handshake
-readiness, pending-shutdown entry reset, fatal wait and terminal
-no-resurrection.
-
-Provider tests retain HUP-to-READ progression and fatal ERR/NVAL precedence.
-Phase 7.B close_notify classification remains unchanged. Phase 7.C3 proved real
-TLS 1.2/TLS 1.3 authenticated ALPN echo and clean/data/abrupt closure behavior
-through the canonical runtime. The final clean VC6 C89 /W4 suite and NSS unit
-test passed with zero warnings; integration runners rebuilt successfully.
-
-No production, API, ABI, SPI, security-policy, trust, hostname, ALPN,
-authentication or downgrade behavior changed. Existing Phase 6 and 7.B NT4
-evidence is valid and no new NT4 run is required. Phase 7.C is complete; Phase 7
-remains in progress and 7.D is next but not started.
-
-## SS-3 OpenSSL SERVER readiness
-
-Real TLS 1.2/1.3 SERVER runs exercised incremental handshake waits, encrypted read/write, and two-step reciprocal shutdown. SERVER uses the same role-neutral interest contract; tests do not require a particular real-network mask sequence. TLS clean close completes only after peer close-notify, while application data followed by raw EOF is delivered and the subsequent read fails as TRUNCATED. Combined selection remains complete before transport attachment and never changes during progress.
+The scheduler architecture is complete, but the 0.6.0 release is not yet claimed. M10 must perform final physical NT4 validation for the changed candidate, separate clean-machine/package-only validation, deterministic packaging and publication verification.
