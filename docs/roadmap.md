@@ -10,8 +10,9 @@
   - M4 partial I/O/backpressure hardening: complete; bounded partial reads/writes, caller-owned remainders, cross-direction readiness, exact byte preservation, truncation after delivered data and hot/slow multi-connection scheduling pass without provider or ABI changes.
   - M5 was absorbed by the M0/R6 contract work.
   - M6 TLS-upgrade proofs: complete; generic STARTTLS-style and CONNECT-style fixtures reuse the same connected transport after fragmented plaintext boundaries, then pass authenticated TLS, wait-set I/O and reciprocal shutdown across OpenSSL, Schannel and RetroZilla NSS without protocol parsing or plaintext rollback in PST.
+  - M7 future-safe design: complete; runtime/profile isolation and provider-global limitations are documented, immutable V1/V2 identity/trust rotation is proven for 50 cycles, and the existing provider/Peer Info/diagnostic surfaces provide a native-handle-free connection metadata shape without API/SPI growth.
   - PapinhoAccelerator Phase 3.B4 architectural blocker: resolved by M3; final product handoff/release remains later work.
-  - M7 and later multiplexed-readiness phases: pending and not started.
+  - M8 and later multiplexed-readiness phases: pending and not started.
 
 - Server-side evolution on `feature/server-side`:
   - SS-0 CLIENT/SERVER architecture audit: complete.
