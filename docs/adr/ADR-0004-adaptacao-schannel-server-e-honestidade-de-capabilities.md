@@ -3,9 +3,10 @@ adr: ADR-0004
 title: Adaptação Schannel SERVER e honestidade de capabilities
 status: accepted
 decision-date: 2026-09-08
-last-revised: 2026-09-08
-revision: 1
-scope: project
+last-revised: 2026-09-09
+revision: 2
+scope-level: project
+scope-target: PapinhoSecureTransport
 decision-makers:
   - Tobias Tromm
 supersedes: []
@@ -334,3 +335,4 @@ Não se aplica atualmente.
 | Revisão | Data | Descrição |
 |---:|---|---|
 | 1 | 2026-09-08 | Registra bridging de intermediários Schannel SERVER e rejeição de parser ClientHello para fabricar ALPN_SERVER OPTIONAL. |
+| 2 | 2026-09-09 | Migração de metadata para `scope-level: project` e `scope-target: PapinhoSecureTransport`, sem alteração da decisão técnica. |
