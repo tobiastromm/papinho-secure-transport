@@ -6,7 +6,34 @@
 
 Phase 7.C is complete. This document records its historical audit baseline and closure
 evidence; no readiness or progress behavior was changed there. The frozen release
-historical baseline was public API 1.3.0, library 0.4.0 and SPI 2.4; the current contract is API 2.0.0, library 0.5.0 and SPI 3.0.
+historical baseline was public API 1.3.0, library 0.4.0 and SPI 2.4; the current development contract is API 2.1.0, library 0.6.0 and SPI 3.0.
+
+## M1 portable wait-set core
+
+M1 adds a provider-neutral, opaque `pst_wait_set` for PST connections. Consumer-selected
+tokens remain stable while registered and do not expose connection pointers, provider
+pointers, sockets or native handles. A connection may belong to at most one wait-set.
+Duplicate connections and tokens are rejected, and removing then re-adding a connection
+places it at the end of the stable registration order.
+
+`pst_wait_set_wait(..., 0, ...)` performs one bounded, nonblocking observation per
+registered nonterminal connection through the existing provider-authoritative
+`pst_connection_wait` path. Consequently RetroZilla NSS continues to use NSPR `PR_Poll`;
+the portable core does not substitute raw socket readiness. No-ready returns
+`PST_RESULT_WAIT_TIMEOUT`. Finite aggregate waits return `PST_RESULT_UNSUPPORTED` in M1;
+M2 external/native aggregation and M3 wake/blocking scheduler semantics remain pending.
+
+The result reports exact total-ready and copied-event counts. Capacity exhaustion returns
+`PST_RESULT_INSUFFICIENT_CAPACITY`, preserves stable registration ordering for copied
+events, and does not consume readiness. Terminal connections remain visible with their
+retained normalized terminal cause until explicitly removed.
+
+Deterministic VC6 and modern-MSVC tests cover mixed mock providers, multiple and partial
+readiness, terminal-plus-ready enumeration, invalid arguments, allocation failure,
+transactional membership, remove-before-release and exactly-once cleanup. Real TLS
+proofs exercised the M1 timeout-zero path before ordinary progress waits for OpenSSL,
+Schannel and RetroZilla NSS; each completed authenticated 25-byte encrypted echo and
+reciprocal shutdown.
 
 ## Readiness is not progress
 

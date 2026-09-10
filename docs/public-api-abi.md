@@ -2,6 +2,16 @@
 
 # Public API and ABI baseline
 
+## API 2.1 additive wait-set foundation
+
+API 2.1 preserves the API 2.0 prefixes and adds opaque wait-set declarations, stable
+consumer tokens, bounded portable wait events/results, membership operations and the
+result-returning `pst_connection_try_release`. M1 implements connection membership and
+timeout-zero polling only. External sources and wake/blocking behavior remain reserved
+for M2/M3 and must not be inferred from the declarations alone. SPI remains 3.0 because
+M1 aggregates the existing per-connection provider readiness contract without adding a
+provider hook.
+
 > Historical baseline: this document describes the published v0.4.0 API 1.3 ABI. The breaking CLIENT/SERVER development contract is frozen in [api-2.0.md](api-2.0.md); migration is documented in [api-1.3-to-2.0-migration.md](api-1.3-to-2.0-migration.md).
 
 Status: **Phase 9.B and the public-bootstrap addendum complete**. This document freezes the additive public API/ABI baseline at API 1.3.0 and library 0.4.0. SPI 2.4 remains internal and frozen by Phase 9.C.

@@ -33,6 +33,21 @@ consumer
 
 There are no worker threads, timers, asynchronous queues, or callbacks retained beyond the runtime. Public handles are invalid after their release function returns; double release of a stale opaque pointer is outside the contract.
 
+## M1 wait-set membership lifetime
+
+A wait-set borrows registered connections and never owns or releases them. Each
+connection stores only its private membership link and may be registered in at most one
+wait-set. The consumer must remove a connection before releasing it. The result-returning
+`pst_connection_try_release` rejects release while registered and leaves the connection
+and accepted transport intact; the compatibility `pst_connection_release` likewise does
+not free or close a registered connection.
+
+Destroying a nonempty wait-set is rejected and leaves both the set and its members valid.
+Removal changes neither connection ownership nor transport ownership, performs no close,
+and permits later registration or release. Allocation or duplicate-registration failure
+does not alter existing membership. M1 adds no worker, wake object, listener ownership or
+external-source ownership; those later contracts remain outside this implementation.
+
 ## Ownership table
 
 | Object or edge | Rule | Failure and release rule |

@@ -14,5 +14,9 @@ PST_RESULT pst_runtime_create_internal(const PST_RUNTIME_OPTIONS *options,pst_ru
 PST_RESULT pst_connection_create_internal(pst_runtime *runtime,const PST_CONNECTION_CONFIG *config,pst_connection **out_connection,pst_internal_operation_context *context);
 void pst_runtime_diagnostic_copy(const pst_runtime *runtime,pst_internal_diagnostic *out);
 void pst_connection_diagnostic_copy(const pst_connection *connection,pst_internal_diagnostic *out);
+PST_RESULT pst_connection_wait_set_bind(pst_connection *,pst_wait_set *);
+void pst_connection_wait_set_unbind(pst_connection *,pst_wait_set *);
+int pst_connection_is_terminal(const pst_connection *,PST_RESULT *);
+void pst_wait_set_test_fail_next_growth(void);
 PST_RESULT pst_validate_public_struct(const void *value, pst_u32 minimum_size);
 #endif
