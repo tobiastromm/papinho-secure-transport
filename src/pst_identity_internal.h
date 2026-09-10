@@ -20,6 +20,8 @@ pst_u32 pst_connection_config_tls_capabilities(const pst_connection_config_snaps
 const pst_credentials *pst_connection_config_local_credentials(const PST_CONNECTION_CONFIG *);
 const pst_trust *pst_connection_config_peer_trust(const PST_CONNECTION_CONFIG *);
 const char *pst_connection_config_expected_peer_name(const PST_CONNECTION_CONFIG *);
+const char *pst_connection_config_server_name_indication(const PST_CONNECTION_CONFIG *);
+pst_u32 pst_connection_config_server_name_indication_mode(const PST_CONNECTION_CONFIG *);
 pst_u32 pst_connection_config_peer_certificate_mode(const PST_CONNECTION_CONFIG *);
 pst_u32 pst_connection_config_minimum_version(const PST_CONNECTION_CONFIG *);
 pst_u32 pst_connection_config_maximum_version(const PST_CONNECTION_CONFIG *);

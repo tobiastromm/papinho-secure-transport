@@ -7,9 +7,11 @@ const char *PST_CALL pst_result_string(PST_RESULT r)
         "unavailable", "out of memory", "resource failure", "transport failure",
         "secure protocol failure", "authentication failure", "hostname mismatch",
         "policy violation", "backend failure", "truncated secure transport",
-        "closed", "incompatible API version"
+        "closed", "incompatible API version", "insufficient capacity",
+        "wait timeout", "wait woken", "already registered",
+        "not registered", "concurrent operation"
     };
-    if (r < PST_RESULT_OK || r > PST_RESULT_INCOMPATIBLE_API)
+    if (r < PST_RESULT_OK || r > PST_RESULT_CONCURRENT_OPERATION)
         return "unknown result";
     return s[(unsigned int)r];
 }

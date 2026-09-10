@@ -12,8 +12,8 @@ int main(void)
     if (pst_get_version(NULL)!=PST_RESULT_INVALID_ARGUMENT) return 3;
     memset(&i,0,sizeof(i)); if (pst_version_info_init(&i)!=PST_RESULT_OK) return 4;
     if (pst_get_version(&i)!=PST_RESULT_OK) return 5;
-    if (i.api_major!=2UL || i.api_minor!=0UL || i.api_patch!=0UL ||
-        i.library_major!=0UL || i.library_minor!=5UL || i.library_patch!=0UL)
+    if (i.api_major!=2UL || i.api_minor!=1UL || i.api_patch!=0UL ||
+        i.library_major!=0UL || i.library_minor!=6UL || i.library_patch!=0UL)
         return 12;
     if (pst_api_version()!=PST_API_VERSION || pst_library_version()!=PST_LIBRARY_VERSION) return 6;
     i.struct_size=PST_VERSION_INFO_MIN_SIZE-1UL;
@@ -23,7 +23,7 @@ int main(void)
     memset(&l,0,sizeof(l)); l.base.struct_size=(pst_u32)sizeof(l);
     l.base.api_version=PST_API_VERSION; l.extra=0xa5a5a5a5UL;
     if (pst_get_version(&l.base)!=PST_RESULT_OK || l.extra!=0xa5a5a5a5UL) return 9;
-    for (r=PST_RESULT_OK;r<=PST_RESULT_INCOMPATIBLE_API;++r)
+    for (r=PST_RESULT_OK;r<=PST_RESULT_CONCURRENT_OPERATION;++r)
         if (!strcmp(pst_result_string(r),"unknown result")) return 10;
     if (strcmp(pst_result_string((PST_RESULT)9999),"unknown result")) return 11;
     printf("test_foundation: PASS\n"); return 0;

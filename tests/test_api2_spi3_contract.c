@@ -6,25 +6,27 @@
 #include <string.h>
 #define ASSERT_C(name,expr) typedef char assert_##name[(expr)?1:-1]
 #define CHECK(expr,n) if(!(expr))return fail(n)
-ASSERT_C(api_version,PST_API_VERSION==0x00020000UL);
-ASSERT_C(library_version,PST_LIBRARY_VERSION==0x00000500UL);
+ASSERT_C(api_version,PST_API_VERSION==0x00020100UL);
+ASSERT_C(library_version,PST_LIBRARY_VERSION==0x00000600UL);
 ASSERT_C(spi_version,PST_BACKEND_SPI_VERSION==0x00030000UL);
 ASSERT_C(role_client,PST_CONNECTION_ROLE_CLIENT==1UL);
 ASSERT_C(role_server,PST_CONNECTION_ROLE_SERVER==2UL);
-ASSERT_C(cap_last,PST_CAP_EARLY_DATA==0x00010000UL);
+ASSERT_C(cap_last,PST_CAP_SNI_CONTROL==0x00020000UL);
 ASSERT_C(config_role_first,offsetof(PST_CONNECTION_CONFIG,role)==8);
 ASSERT_C(spi_options_role,offsetof(PST_BACKEND_CONNECTION_OPTIONS,role)==8);
 ASSERT_C(spi_options_config,offsetof(PST_BACKEND_CONNECTION_OPTIONS,configuration)>offsetof(PST_BACKEND_CONNECTION_OPTIONS,required_capabilities));
 ASSERT_C(provider_info_size,sizeof(PST_PROVIDER_INFO)==60);
 #if defined(_WIN64)
-ASSERT_C(connection_config_size,sizeof(PST_CONNECTION_CONFIG)==184);
+ASSERT_C(connection_config_v20_size,PST_CONNECTION_CONFIG_V2_0_SIZE==184);
+ASSERT_C(connection_config_size,sizeof(PST_CONNECTION_CONFIG)==208);
 ASSERT_C(provider_selection_size,sizeof(PST_PROVIDER_SELECTION)==48);
 ASSERT_C(peer_info_size,sizeof(PST_PEER_INFO_SUMMARY)==128);
 ASSERT_C(spi_options_size,sizeof(PST_BACKEND_CONNECTION_OPTIONS)==24);
 ASSERT_C(spi_vtable_size,sizeof(PST_BACKEND_VTABLE)==160);
 ASSERT_C(spi_descriptor_size,sizeof(PST_BACKEND_DESCRIPTOR)==56);
 #else
-ASSERT_C(connection_config_size,sizeof(PST_CONNECTION_CONFIG)==124);
+ASSERT_C(connection_config_v20_size,PST_CONNECTION_CONFIG_V2_0_SIZE==124);
+ASSERT_C(connection_config_size,sizeof(PST_CONNECTION_CONFIG)==136);
 ASSERT_C(provider_selection_size,sizeof(PST_PROVIDER_SELECTION)==28);
 ASSERT_C(peer_info_size,sizeof(PST_PEER_INFO_SUMMARY)==120);
 ASSERT_C(spi_options_size,sizeof(PST_BACKEND_CONNECTION_OPTIONS)==20);

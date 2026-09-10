@@ -20,13 +20,13 @@
 extern "C" {
 #endif
 #define PST_API_VERSION_MAJOR 2UL
-#define PST_API_VERSION_MINOR 0UL
+#define PST_API_VERSION_MINOR 1UL
 #define PST_API_VERSION_PATCH 0UL
-#define PST_API_VERSION 0x00020000UL
+#define PST_API_VERSION 0x00020100UL
 #define PST_LIBRARY_VERSION_MAJOR 0UL
-#define PST_LIBRARY_VERSION_MINOR 5UL
+#define PST_LIBRARY_VERSION_MINOR 6UL
 #define PST_LIBRARY_VERSION_PATCH 0UL
-#define PST_LIBRARY_VERSION 0x00000500UL
+#define PST_LIBRARY_VERSION 0x00000600UL
 typedef unsigned char pst_u8;
 #if USHRT_MAX == 0xffffU
 typedef unsigned short pst_u16;
@@ -62,9 +62,17 @@ typedef pst_i32 PST_RESULT;
 #define PST_RESULT_TRUNCATED ((PST_RESULT)13)
 #define PST_RESULT_CLOSED ((PST_RESULT)14)
 #define PST_RESULT_INCOMPATIBLE_API ((PST_RESULT)15)
+#define PST_RESULT_INSUFFICIENT_CAPACITY ((PST_RESULT)16)
+#define PST_RESULT_WAIT_TIMEOUT ((PST_RESULT)17)
+#define PST_RESULT_WAIT_WOKEN ((PST_RESULT)18)
+#define PST_RESULT_ALREADY_REGISTERED ((PST_RESULT)19)
+#define PST_RESULT_NOT_REGISTERED ((PST_RESULT)20)
+#define PST_RESULT_CONCURRENT_OPERATION ((PST_RESULT)21)
 typedef struct pst_runtime pst_runtime; typedef struct pst_credentials pst_credentials;
 typedef struct pst_trust pst_trust; typedef struct pst_connection pst_connection;
 typedef struct pst_peer_info pst_peer_info; typedef struct pst_transport pst_transport;
+typedef struct pst_wait_set pst_wait_set; typedef struct pst_external_source pst_external_source;
+typedef pst_size pst_wait_token;
 #define PST_CONNECTION_ROLE_INVALID 0UL
 #define PST_CONNECTION_ROLE_CLIENT 1UL
 #define PST_CONNECTION_ROLE_SERVER 2UL
@@ -99,7 +107,8 @@ typedef struct pst_peer_info pst_peer_info; typedef struct pst_transport pst_tra
 #define PST_CAP_BACKEND_WAIT 0x00004000UL
 #define PST_CAP_RESUMPTION 0x00008000UL
 #define PST_CAP_EARLY_DATA 0x00010000UL
-#define PST_CAP_KNOWN_MASK 0x0001ffffUL
+#define PST_CAP_SNI_CONTROL 0x00020000UL
+#define PST_CAP_KNOWN_MASK 0x0003ffffUL
 #define PST_TLS_VERSION_1_2 12UL
 #define PST_TLS_VERSION_1_3 13UL
 #define PST_OPERATION_COMPLETE 0UL
@@ -111,10 +120,15 @@ typedef struct pst_peer_info pst_peer_info; typedef struct pst_transport pst_tra
 #define PST_INTEREST_NONE 0UL
 #define PST_INTEREST_READ 1UL
 #define PST_INTEREST_WRITE 2UL
+#define PST_WAIT_READY_TERMINAL 0x00000001UL
+#define PST_WAIT_READY_EXTERNAL 0x00000002UL
 #define PST_CLOSE_NONE 0UL
 #define PST_CLOSE_CLEAN 1UL
 #define PST_CLOSE_TRUNCATED 2UL
 #define PST_OWNERSHIP_TRANSFERRED 1UL
+#define PST_SNI_MODE_COMPAT 0UL
+#define PST_SNI_MODE_DISABLED 1UL
+#define PST_SNI_MODE_EXPLICIT 2UL
 #define PST_DIAGNOSTIC_BACKEND_ID_CAPACITY 32UL
 #define PST_DIAGNOSTIC_OPERATION_NONE 0UL
 #define PST_DIAGNOSTIC_OPERATION_RUNTIME 1UL
@@ -175,13 +189,15 @@ typedef struct PST_PEER_AUTH_CONFIG { pst_u32 struct_size,api_version,certificat
 typedef struct PST_ALPN_PROTOCOL { const pst_u8 *data; pst_size size; } PST_ALPN_PROTOCOL;
 typedef struct PST_ALPN_CONFIG { pst_u32 struct_size,api_version,mode; const PST_ALPN_PROTOCOL *protocols; pst_size protocol_count; } PST_ALPN_CONFIG;
 typedef struct PST_TLS_POLICY { pst_u32 struct_size,api_version,minimum_version,maximum_version,resumption,early_data,require_graceful_shutdown; } PST_TLS_POLICY;
-typedef struct PST_CONNECTION_CONFIG { pst_u32 struct_size,api_version,role; PST_PROVIDER_SELECTION provider_selection; PST_LOCAL_IDENTITY local_identity; PST_PEER_AUTH_CONFIG peer_authentication; PST_TLS_POLICY tls; PST_ALPN_CONFIG alpn; } PST_CONNECTION_CONFIG;
+typedef struct PST_CONNECTION_CONFIG { pst_u32 struct_size,api_version,role; PST_PROVIDER_SELECTION provider_selection; PST_LOCAL_IDENTITY local_identity; PST_PEER_AUTH_CONFIG peer_authentication; PST_TLS_POLICY tls; PST_ALPN_CONFIG alpn; const char *server_name_indication; pst_size server_name_indication_size; pst_u32 server_name_indication_mode; } PST_CONNECTION_CONFIG;
 typedef struct PST_RUNTIME_OPTIONS { pst_u32 struct_size,api_version; } PST_RUNTIME_OPTIONS;
 typedef struct PST_RUNTIME_INFO { pst_u32 struct_size,api_version; pst_size provider_count; } PST_RUNTIME_INFO;
 typedef struct PST_PROVIDER_INFO { pst_u32 struct_size,api_version,available,initialized,capabilities; char provider_id[PST_DIAGNOSTIC_BACKEND_ID_CAPACITY]; pst_u32 client_capabilities,server_capabilities; } PST_PROVIDER_INFO;
 typedef struct PST_PEER_INFO_SUMMARY { pst_u32 struct_size,api_version,local_role,certificate_present,chain_validated,peer_name_validated,peer_authenticated,tls_version,cipher_suite,alpn_available,session_resumed,early_data_accepted; char provider_id[PST_DIAGNOSTIC_BACKEND_ID_CAPACITY]; pst_u8 certificate_sha256[32]; pst_size certificate_sha256_size,leaf_der_size; } PST_PEER_INFO_SUMMARY;
 typedef struct PST_IO_RESULT { pst_size bytes_transferred; pst_u32 operation,close_kind; PST_RESULT error; } PST_IO_RESULT;
 typedef struct PST_WAIT_RESULT { pst_u32 ready_interest,timed_out; } PST_WAIT_RESULT;
+typedef struct PST_WAIT_EVENT { pst_wait_token token; pst_u32 ready_interest,flags; PST_RESULT result; } PST_WAIT_EVENT;
+typedef struct PST_WAIT_SET_RESULT { pst_size ready_count,event_count; pst_u32 timed_out,woken; } PST_WAIT_SET_RESULT;
 #define PST_DIAGNOSTIC_INFO_MIN_SIZE ((pst_u32)sizeof(PST_DIAGNOSTIC_INFO))
 #define PST_LOG_CONFIG_MIN_SIZE ((pst_u32)sizeof(PST_LOG_CONFIG))
 #define PST_LOG_EVENT_MIN_SIZE ((pst_u32)sizeof(PST_LOG_EVENT))
@@ -193,7 +209,8 @@ typedef struct PST_WAIT_RESULT { pst_u32 ready_interest,timed_out; } PST_WAIT_RE
 #define PST_PEER_AUTH_CONFIG_MIN_SIZE ((pst_u32)sizeof(PST_PEER_AUTH_CONFIG))
 #define PST_ALPN_CONFIG_MIN_SIZE ((pst_u32)sizeof(PST_ALPN_CONFIG))
 #define PST_TLS_POLICY_MIN_SIZE ((pst_u32)sizeof(PST_TLS_POLICY))
-#define PST_CONNECTION_CONFIG_MIN_SIZE ((pst_u32)sizeof(PST_CONNECTION_CONFIG))
+#define PST_CONNECTION_CONFIG_V2_0_SIZE ((pst_u32)offsetof(PST_CONNECTION_CONFIG,server_name_indication))
+#define PST_CONNECTION_CONFIG_MIN_SIZE PST_CONNECTION_CONFIG_V2_0_SIZE
 #define PST_RUNTIME_OPTIONS_MIN_SIZE ((pst_u32)sizeof(PST_RUNTIME_OPTIONS))
 #define PST_RUNTIME_INFO_MIN_SIZE ((pst_u32)sizeof(PST_RUNTIME_INFO))
 #define PST_PROVIDER_INFO_MIN_SIZE ((pst_u32)sizeof(PST_PROVIDER_INFO))
@@ -213,8 +230,14 @@ PST_API PST_RESULT PST_CALL pst_connection_get_interest(pst_connection *,pst_u32
 PST_API PST_RESULT PST_CALL pst_connection_read(pst_connection *,void *,pst_size,PST_IO_RESULT *); PST_API PST_RESULT PST_CALL pst_connection_write(pst_connection *,const void *,pst_size,PST_IO_RESULT *);
 PST_API PST_RESULT PST_CALL pst_connection_get_peer_info(pst_connection *,pst_peer_info **); PST_API PST_RESULT PST_CALL pst_connection_get_negotiated_alpn(pst_connection *,pst_u8 *,pst_size,pst_size *);
 PST_API PST_RESULT PST_CALL pst_connection_shutdown(pst_connection *,pst_u32 *,PST_RESULT *); PST_API void PST_CALL pst_connection_release(pst_connection *);
+PST_API PST_RESULT PST_CALL pst_connection_try_release(pst_connection *);
 PST_API PST_RESULT PST_CALL pst_peer_info_get_summary(const pst_peer_info *,PST_PEER_INFO_SUMMARY *); PST_API PST_RESULT PST_CALL pst_peer_info_copy_leaf_der(const pst_peer_info *,pst_u8 *,pst_size,pst_size *); PST_API void PST_CALL pst_peer_info_release(pst_peer_info *);
 PST_API void PST_CALL pst_transport_release(pst_transport *);
+PST_API PST_RESULT PST_CALL pst_wait_set_create(pst_wait_set **); PST_API PST_RESULT PST_CALL pst_wait_set_destroy(pst_wait_set *);
+PST_API PST_RESULT PST_CALL pst_wait_set_add_connection(pst_wait_set *,pst_connection *,pst_wait_token); PST_API PST_RESULT PST_CALL pst_wait_set_remove_connection(pst_wait_set *,pst_connection *);
+PST_API PST_RESULT PST_CALL pst_wait_set_add_external_source(pst_wait_set *,pst_external_source *,pst_u32,pst_wait_token); PST_API PST_RESULT PST_CALL pst_wait_set_remove_external_source(pst_wait_set *,pst_external_source *);
+PST_API PST_RESULT PST_CALL pst_wait_set_wait(pst_wait_set *,pst_u32,PST_WAIT_EVENT *,pst_size,PST_WAIT_SET_RESULT *); PST_API PST_RESULT PST_CALL pst_wait_set_wake(pst_wait_set *);
+PST_API PST_RESULT PST_CALL pst_external_source_try_release(pst_external_source *); PST_API void PST_CALL pst_external_source_release(pst_external_source *);
 #ifdef __cplusplus
 }
 #endif
