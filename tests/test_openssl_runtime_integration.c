@@ -11,9 +11,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "test_upgrade_plaintext.h"
 
 static unsigned char *load_file(const char *path,pst_size *size){FILE*f;long n;unsigned char*p;*size=0;f=fopen(path,"rb");if(!f)return NULL;if(fseek(f,0,SEEK_END)||((n=ftell(f))<0)||fseek(f,0,SEEK_SET)){fclose(f);return NULL;}p=(unsigned char*)malloc((size_t)n);if(!p){fclose(f);return NULL;}if(n&&fread(p,1,(size_t)n,f)!=(size_t)n){free(p);fclose(f);return NULL;}fclose(f);*size=(pst_size)n;return p;}
-static int connect4(const char *address,unsigned short port,SOCKET *out){SOCKET s;struct sockaddr_in a;memset(&a,0,sizeof(a));a.sin_family=AF_INET;a.sin_port=htons(port);a.sin_addr.s_addr=inet_addr(address);s=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);if(s==INVALID_SOCKET)return 0;if(connect(s,(struct sockaddr*)&a,sizeof(a))==SOCKET_ERROR){closesocket(s);return 0;}*out=s;return 1;}
+static int connect4(const char *address,unsigned short port,SOCKET *out){SOCKET s;struct sockaddr_in a;memset(&a,0,sizeof(a));a.sin_family=AF_INET;a.sin_port=htons(port);a.sin_addr.s_addr=inet_addr(address);s=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);if(s==INVALID_SOCKET)return 0;if(connect(s,(struct sockaddr*)&a,sizeof(a))==SOCKET_ERROR||!pst_test_plaintext_upgrade(s)){closesocket(s);return 0;}*out=s;return 1;}
 static void fill_payload(unsigned char *buffer,pst_size size){static const unsigned char pattern[]="pst-phase5-public-runtime";pst_size i;for(i=0;i<size;i++)buffer[i]=pattern[i%(sizeof(pattern)-1)];}
 static PST_RESULT parse_result(const char *text){if(!strcmp(text,"OK"))return PST_RESULT_OK;if(!strcmp(text,"PROTOCOL"))return PST_RESULT_PROTOCOL_FAILURE;if(!strcmp(text,"AUTH"))return PST_RESULT_AUTH_FAILURE;if(!strcmp(text,"TRUNCATED"))return PST_RESULT_TRUNCATED;return PST_RESULT_BACKEND_FAILURE;}
 static int wait_ready(const PST_BACKEND_DESCRIPTOR *d,void *connection,pst_u32 *waits){pst_u32 interest;PST_BACKEND_WAIT_RESULT result;if(d->vtable->get_interest(connection,&interest)!=PST_RESULT_OK||interest==0UL)return 0;memset(&result,0,sizeof(result));(*waits)++;return d->vtable->wait(connection,interest,2000UL,&result)==PST_RESULT_OK&&!result.timed_out&&result.ready_interest!=0UL;}

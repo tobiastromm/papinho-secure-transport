@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "test_upgrade_plaintext.h"
 
 typedef struct integration_log_sink { pst_u32 total,error,warn,trace; } integration_log_sink;
 static void PST_CALL integration_log(void *context,const PST_LOG_EVENT *event){integration_log_sink*s=(integration_log_sink*)context;s->total++;if(event->level==PST_LOG_LEVEL_ERROR)s->error++;if(event->level==PST_LOG_LEVEL_WARN)s->warn++;if(event->level==PST_LOG_LEVEL_TRACE)s->trace++;}
@@ -15,7 +16,7 @@ static int m1_poll(void){PST_WAIT_EVENT e;PST_WAIT_SET_RESULT w;PST_RESULT r;mem
 static void m1_cleanup(void){if(m1_wait_set){if(m1_connection)pst_wait_set_remove_connection(m1_wait_set,m1_connection);pst_wait_set_destroy(m1_wait_set);}m1_wait_set=NULL;m1_connection=NULL;}
 
 static unsigned char *load_file(const char *path,pst_size *size){FILE*f;long n;unsigned char*p;*size=0;if(!path||!strcmp(path,"-"))return NULL;f=fopen(path,"rb");if(!f)return NULL;if(fseek(f,0,SEEK_END)||((n=ftell(f))<0)||fseek(f,0,SEEK_SET)){fclose(f);return NULL;}p=(unsigned char*)malloc((size_t)n);if(!p){fclose(f);return NULL;}if(n&&fread(p,1,(size_t)n,f)!=(size_t)n){free(p);fclose(f);return NULL;}fclose(f);*size=(pst_size)n;return p;}
-static int connect4(const char *address,unsigned short port,SOCKET *out){SOCKET s;struct sockaddr_in a;memset(&a,0,sizeof(a));a.sin_family=AF_INET;a.sin_port=htons(port);a.sin_addr.s_addr=inet_addr(address);s=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);if(s==INVALID_SOCKET)return 0;if(connect(s,(struct sockaddr*)&a,sizeof(a))==SOCKET_ERROR){closesocket(s);return 0;}*out=s;return 1;}
+static int connect4(const char *address,unsigned short port,SOCKET *out){SOCKET s;struct sockaddr_in a;memset(&a,0,sizeof(a));a.sin_family=AF_INET;a.sin_port=htons(port);a.sin_addr.s_addr=inet_addr(address);s=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);if(s==INVALID_SOCKET)return 0;if(connect(s,(struct sockaddr*)&a,sizeof(a))==SOCKET_ERROR||!pst_test_plaintext_upgrade(s)){closesocket(s);return 0;}*out=s;return 1;}
 static int wait_step(pst_connection*c){(void)c;return m1_poll();}
 static int wait_times_out(pst_connection*c){PST_WAIT_RESULT w;PST_RESULT r;memset(&w,0,sizeof(w));r=pst_connection_wait(c,250,&w);return r==PST_RESULT_OK&&w.timed_out&&w.ready_interest==0;}
 static PST_RESULT expected_result(const char*s){if(!strcmp(s,"OK"))return PST_RESULT_OK;if(!strcmp(s,"AUTH"))return PST_RESULT_AUTH_FAILURE;if(!strcmp(s,"HOSTNAME"))return PST_RESULT_PEER_NAME_MISMATCH;if(!strcmp(s,"POLICY"))return PST_RESULT_POLICY_VIOLATION;return PST_RESULT_BACKEND_FAILURE;}

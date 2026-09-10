@@ -66,6 +66,15 @@ wake may run concurrently and does not cancel, remove, release or close a member
 Destroy during an active wait is rejected, as is destroy with registered members.
 Timeout and wake leave all connection and external-source ownership unchanged.
 
+## TLS upgrade boundary
+
+A connected transport may be used by its consumer for plaintext before attach. The
+consumer remains owner until attach acceptance and must stop raw access at an exact,
+fully consumed upgrade boundary. Acceptance transfers the same transport to PST;
+subsequent TLS failure neither returns ownership nor permits plaintext rollback. PST
+then performs exactly one close. A failure before acceptance leaves close responsibility
+with the consumer. Pre-read TLS record recovery is not part of this contract.
+
 ## Ownership table
 
 | Object or edge | Rule | Failure and release rule |

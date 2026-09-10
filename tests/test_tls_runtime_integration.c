@@ -10,13 +10,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "test_upgrade_plaintext.h"
 #if defined(_MSC_VER) && _MSC_VER == 1200
 # pragma warning(pop)
 # pragma warning(disable:4514)
 # pragma warning(disable:4701)
 #endif
 static unsigned char *load(const char *p,pst_size *n){FILE *f;long z;unsigned char *b;*n=0;f=fopen(p,"rb");if(!f)return NULL;if(fseek(f,0,SEEK_END)||(z=ftell(f))<=0||fseek(f,0,SEEK_SET)){fclose(f);return NULL;}b=(unsigned char*)malloc((size_t)z);if(!b||fread(b,1,(size_t)z,f)!=(size_t)z){free(b);fclose(f);return NULL;}fclose(f);*n=(pst_size)z;return b;}
-static int connect4(const char *host,unsigned short port,SOCKET *out){struct sockaddr_in a;SOCKET s;memset(&a,0,sizeof(a));a.sin_family=AF_INET;a.sin_port=htons(port);a.sin_addr.s_addr=inet_addr(host);s=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);if(s==INVALID_SOCKET)return 0;if(connect(s,(struct sockaddr*)&a,sizeof(a))){closesocket(s);return 0;}*out=s;return 1;}
+static int connect4(const char *host,unsigned short port,SOCKET *out){struct sockaddr_in a;SOCKET s;memset(&a,0,sizeof(a));a.sin_family=AF_INET;a.sin_port=htons(port);a.sin_addr.s_addr=inet_addr(host);s=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);if(s==INVALID_SOCKET)return 0;if(connect(s,(struct sockaddr*)&a,sizeof(a))||!pst_test_plaintext_upgrade(s)){closesocket(s);return 0;}*out=s;return 1;}
 static pst_wait_set *m1_wait_set;static pst_connection *m1_connection;static int m1_polls;
 static int m1_register(pst_connection*c){if(pst_wait_set_create(&m1_wait_set)!=PST_RESULT_OK)return 0;if(pst_wait_set_add_connection(m1_wait_set,c,1)!=PST_RESULT_OK){pst_wait_set_destroy(m1_wait_set);m1_wait_set=NULL;return 0;}m1_connection=c;return 1;}
 static int m1_poll(void){PST_WAIT_EVENT e;PST_WAIT_SET_RESULT w;PST_RESULT r;memset(&e,0,sizeof(e));memset(&w,0,sizeof(w));r=pst_wait_set_wait(m1_wait_set,1000UL,&e,1,&w);m1_polls++;return r==PST_RESULT_OK&&w.ready_count!=0UL;}
