@@ -4,6 +4,33 @@ This is the canonical PapinhoSecureTransport target matrix. The ecosystem-wide n
 
 Target identity, build inputs, operating-system support policy, and observed validation are separate facts. A toolchain name is not an operating-system support claim.
 
+## 0.6.0 development candidate after M9
+
+The 0.6.0 development track keeps the same four build-target identities used by 0.5.0. The new work changes the public secure-transport/scheduler contract, not the target naming model.
+
+Current development versions are API `2.1.0`, SPI `3.0`, and library track `0.6.0`. M9 has completed the cross-provider scheduler/security/stress matrix. Final physical NT4, clean-machine, package reproduction and release validation remain M10 work; therefore the rows below are **development-candidate evidence**, not yet a published 0.6.0 release claim.
+
+| Target ID | Architecture | Provider(s) | M0–M9 development status |
+|---|---:|---|---|
+| `win32-x86-vc6-retrozilla-nss` | x86 | RetroZilla NSS/NSPR | scheduler/readiness, TLS-after-plaintext, partial I/O and cross-provider network gates PASS; final 0.6.0 NT4/package rerun pending M10 |
+| `win32-x64-msvc-19.51-schannel` | x64 | Schannel | scheduler/readiness and M9 TLS 1.2 matrix PASS; TLS 1.3 remains outside the validated Schannel capability set; final clean-machine/package rerun pending M10 |
+| `win32-x64-msvc-19.51-openssl3` | x64 | OpenSSL 3.5.8 LTS | scheduler/readiness and M9 TLS 1.2/1.3 matrix PASS; final clean-machine/package rerun pending M10 |
+| `win32-x64-msvc-19.51-schannel-openssl3` | x64 | Schannel + OpenSSL 3.5.8 LTS | EXACT/ORDERED/AUTOMATIC and capability pre-binding selection PASS; final clean-machine/package rerun pending M10 |
+
+M8 locked the current role-scoped capability masks and M9 reconfirmed them without API/SPI changes:
+
+| Provider | Aggregate | CLIENT | SERVER |
+|---|---:|---:|---:|
+| OpenSSL | `0x00027fff` | `0x00027eb7` | `0x0000777b` |
+| Schannel | `0x00027efd` | `0x00027eb5` | `0x00007679` |
+| RetroZilla NSS | `0x00007aff` | `0x00007ab7` | `0x0000727b` |
+
+Important asymmetries remain intentional and factual: OpenSSL and Schannel provide full independent CLIENT SNI control; RetroZilla NSS remains partial because its published snapshot couples the client hostname/SNI behavior through `SSL_SetURL`. RetroZilla NSS is not patched to manufacture parity. Complete SERVER ALPN and SERVER SYSTEM_TRUST remain absent from the NSS role mask, while Schannel TLS 1.3 remains unadvertised for the validated target/environment. Unsupported requirements are filtered before provider binding; M9 observed zero post-binding provider switches.
+
+M9 also found and corrected two real Schannel shutdown defects in the 0.6.0 development tree: reciprocal `close_notify` completion after the peer alert had already been observed, and processing of already-buffered TLS before requesting another socket read. The fixes changed production code but did not change API, SPI or target identity.
+
+---
+
 ## 0.5.0 candidate targets at a glance
 
 | Target ID | Architecture | Provider(s) | TLS | Tested on |
