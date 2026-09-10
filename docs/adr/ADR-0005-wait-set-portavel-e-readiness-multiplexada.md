@@ -4,8 +4,9 @@ title: Wait-set portavel e readiness multiplexada controlada pelo consumer
 status: accepted
 decision-date: 2026-09-09
 last-revised: 2026-09-09
-revision: 1
-scope: project
+revision: 2
+scope-level: project
+scope-target: PapinhoSecureTransport
 decision-makers:
   - Tobias Tromm
 supersedes: []
@@ -277,3 +278,4 @@ A library version da implementacao sera 0.6.0.
 | Revisao | Data | Descricao |
 |---:|---|---|
 | 1 | 2026-09-09 | Congela wait-set, wake, fonte externa, threading, SNI, upgrade apos plaintext e versionamento da trilha. |
+| 2 | 2026-09-09 | Migração de metadata para `scope-level: project` e `scope-target: PapinhoSecureTransport`, sem alteração da decisão técnica. |
