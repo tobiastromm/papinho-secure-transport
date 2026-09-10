@@ -157,7 +157,7 @@ E isso vale tanto para uma conexão pela Internet quanto para computadores dentr
 
 # CLIENT e SERVER: o que muda?
 
-A API 2.0 torna o **role da conexão explícito**.
+A API 2.x torna o **role da conexão explícito**.
 
 Em uma conexão **CLIENT**, a aplicação cria e conecta o socket nativo e então entrega ao PST esse transporte já conectado.
 
@@ -187,6 +187,35 @@ Ou seja: o consumidor possui `bind`, `listen`, `accept`, admissão e sessões da
 Isso permite que o mesmo contrato sirva tanto para software cliente quanto para software servidor, sem transformar o PST em um servidor HTTP, framework de sessões ou sistema de autorização.
 
 Uma aplicação também pode ter conexões CLIENT e SERVER no mesmo runtime e escolher providers diferentes para cada conexão, quando o target e as capabilities permitirem.
+
+---
+
+# Muitas conexões sem entregar o event loop ao PST
+
+A evolução API 2.1 acrescenta uma peça importante sem mudar essa filosofia: o PST pode participar de um scheduler da aplicação sem virar o dono da arquitetura do programa.
+
+O **wait-set portátil** reúne várias conexões PST através de tokens escolhidos pelo consumidor. No Win32, ele também pode observar fontes externas emprestadas, como o socket de um listener que continua pertencendo à aplicação.
+
+```text
+                 thread de I/O da aplicação
+                           │
+                           ▼
+                      PST wait-set
+                           │
+          ┌────────────────┼────────────────┐
+          │                │                │
+          ▼                ▼                ▼
+     conexão PST A    conexão PST B    listener/socket
+                                      da aplicação
+```
+
+O PST não executa `accept()` no listener e não fecha uma fonte externa emprestada. Ele apenas ajuda a aplicação a descobrir **onde existe trabalho possível**.
+
+Uma espera finita pode bloquear até que uma conexão, uma fonte externa ou um `wake` explícito precise de atenção. O `wake` pode vir de outra thread e serve para acordar o scheduler; ele não cancela conexões e não é confundido com timeout.
+
+Isso evita exigir um loop do tipo “testa tudo, dorme alguns milissegundos e tenta novamente”. Também evita esperar `N × timeout`, uma vez para cada conexão.
+
+Ainda assim, o PST não inventa uma política de fairness para a aplicação. Read e write continuam incrementais e bounded: uma conexão muito ativa não autoriza o PST a drenar dados indefinidamente enquanto as outras esperam. A aplicação continua dona dos seus buffers, do restante ainda não enviado, de seus deadlines e de sua política de atendimento.
 
 ---
 
@@ -281,20 +310,20 @@ TLS permite, entre outras coisas:
 
 O PST atualmente trabalha com **TLS 1.2 e TLS 1.3**, dependendo das capacidades do provider, do role e do target utilizado.
 
-A API pública atual é **2.0.0**, a SPI de providers é **3.0** e a versão do package/library é **0.5.0**.
+A versão pública publicada continua sendo **0.5.0 / API 2.0.0 / SPI 3.0**. O desenvolvimento atual prepara **0.6.0 / API 2.1.0**, mantendo a SPI **3.0**.
 
-### Estado atualmente validado
+### Estado validado no desenvolvimento 0.6.0 até M9
 
-| Testado em | Provider | CLIENT | SERVER | TLS 1.2 | TLS 1.3 |
-|---|---|:---:|:---:|:---:|:---:|
-| Windows NT 4.0 SP6 x86 | RetroZilla NSS | ✅ | ✅ | ✅ | ✅ |
-| Windows 10 build 19045 x64 | Schannel | ✅ | ✅ | ✅ | SERVER não anunciado |
-| Windows 10 build 19045 x64 | OpenSSL 3.5.8 | ✅ | ✅ | ✅ | ✅ |
-| Windows 10 build 19045 x64 | Combined Schannel/OpenSSL | ✅ | ✅ | ✅ | ✅ quando OpenSSL é elegível |
+| Provider | CLIENT | SERVER | TLS 1.2 | TLS 1.3 elegível |
+|---|:---:|:---:|:---:|:---:|
+| RetroZilla NSS | ✅ | ✅ | ✅ | ✅ |
+| Schannel | ✅ | ✅ | ✅ | não anunciado no ambiente validado |
+| OpenSSL 3.5.8 | ✅ | ✅ | ✅ | ✅ |
+| Combined Schannel/OpenSSL | ✅ | ✅ | ✅ | ✅ quando OpenSSL é elegível |
 
-Esta tabela registra configurações efetivamente testadas, não todos os sistemas em que o PST ou um provider subjacente talvez funcione.
+Na matriz M9, **todos os 9 pares CLIENT×SERVER passaram TLS 1.2** e **todos os 4 pares elegíveis passaram TLS 1.3**. Os cinco pares TLS 1.3 envolvendo Schannel foram considerados inelegíveis antes do binding, conforme as capabilities, em vez de serem tentados e depois “rebaixados”.
 
-Os SDKs x64 empacotados também foram compilados e exercitados a partir dos packages extraídos em uma máquina física separada com Windows 10 Pro x64, sem utilizar o checkout de desenvolvimento nem uma instalação global do OpenSSL para o runtime dos testes.
+A validação física final de NT4, clean machine e packages da futura 0.6.0 pertence à M10. Até ela terminar, não transformamos a evidência de desenvolvimento em uma afirmação de release publicada.
 
 ---
 
@@ -324,11 +353,11 @@ Entre as capacidades comprovadas no role CLIENT estão TLS 1.2/TLS 1.3, validaç
 
 O role SERVER também foi validado em TLS 1.2 e TLS 1.3, incluindo Local Identity, autenticação de certificado de cliente, CUSTOM_TRUST, mTLS, I/O incremental, shutdown recíproco e detecção de truncation.
 
-Foi validado inclusive no Windows NT 4.0 SP6 x86.
-
-A versão utilizada pelo PST deriva da linhagem RetroZilla NSS/NSPR, e o projeto preserva e documenta sua origem, versões, modificações, processo de build e licenças.
+Foi validado inclusive no Windows NT 4.0 SP6 x86 na release anterior; a revalidação física da 0.6.0 ocorrerá em M10.
 
 No role SERVER atual, `SYSTEM_TRUST` e ALPN SERVER com a semântica completa do PST **não são anunciados**.
+
+Na API 2.1 existe ainda uma assimetria CLIENT importante: `Expected Peer Name` e SNI são conceitos separados no contrato, mas o snapshot RetroZilla NSS associa hostname/SNI através de `SSL_SetURL`. Por isso, o provider suporta o modo compatível e permanece **parcial** para controle independente de SNI. O PST não modifica o NSS para fingir uma capability que ele não possui.
 
 ---
 
@@ -336,396 +365,8 @@ No role SERVER atual, `SYSTEM_TRUST` e ALPN SERVER com a semântica completa do 
 
 Utiliza a infraestrutura de segurança fornecida pelo próprio Windows.
 
-No ambiente atualmente validado pelo projeto — Windows 10 build 19045 — o role CLIENT oferece TLS 1.2, confiança SYSTEM/CUSTOM, validação de hostname, ALPN, mTLS, Peer Info e operações nonblocking de acordo com a capability mask publicada.
+No ambiente atualmente validado pelo projeto — Windows 10 build 19045 — CLIENT e SERVER foram validados em TLS 1.2 dentro das capability masks publicadas.
 
-O role SERVER foi validado em TLS 1.2 com Local Identity, CUSTOM_TRUST, SYSTEM_TRUST, autenticação de certificado de cliente, I/O incremental, shutdown recíproco e truncation.
+TLS 1.3 e ALPN SERVER com a semântica completa do PST não são anunciados nesse ambiente.
 
-TLS 1.3 SERVER e ALPN SERVER com a semântica completa do PST não são anunciados nesse ambiente.
-
-Para entregar a cadeia intermediária da Local Identity no role SERVER, o backend pode utilizar temporariamente `CurrentUser\CA`, com preservação de certificados preexistentes, refcount e remoção normal controlada. Existe uma limitação documentada de possível resíduo após crash.
-
-Isso descreve o ambiente validado, não uma afirmação universal sobre todas as versões do Schannel.
-
----
-
-## OpenSSL
-
-O target atualmente validado utiliza **OpenSSL 3.5.8 LTS**.
-
-CLIENT e SERVER foram validados em TLS 1.2 e TLS 1.3.
-
-Entre as capacidades comprovadas estão CUSTOM_TRUST, SYSTEM_TRUST do Windows onde anunciado, hostname no CLIENT, ALPN, mTLS, Peer Info, operações nonblocking, I/O bidirecional, shutdown recíproco e truncation.
-
-Para `SYSTEM_TRUST` no Windows, o PST combina o TLS do OpenSSL com a avaliação de confiança realizada pelas APIs de certificados do Windows.
-
-No role SERVER, Expected Peer Name não se aplica; a validação de certificados de cliente usa a finalidade adequada de `clientAuth`.
-
----
-
-# O que são certificados e CAs?
-
-Antes de um programa confiar que está falando com o servidor correto — ou, quando configurado, antes de um servidor confiar no certificado apresentado por um cliente — ele precisa de uma forma de verificar a identidade TLS do peer.
-
-Em TLS isso normalmente envolve um **certificado digital**.
-
-De forma simplificada, o certificado funciona como uma identificação apresentada por um endpoint.
-
-Mas simplesmente receber uma identificação não basta: é preciso saber **quem declarou que ela é confiável**.
-
-É aí que entram as **Autoridades Certificadoras**, ou **CAs — Certificate Authorities**.
-
-Podemos pensar assim:
-
-```text
-Autoridade Certificadora confiável
-              │
-              │ assina / valida
-              ▼
-      certificado do endpoint
-              │
-              │ apresentado durante TLS
-              ▼
-           outro endpoint
-```
-
-O sistema verifica se existe uma cadeia de confiança válida e, no CLIENT, quando solicitado, se a identidade apresentada corresponde ao nome esperado.
-
-O PST separa quatro conceitos que não devem ser confundidos:
-
-- **Local Identity**: cadeia + chave privada que este endpoint apresenta;
-- **Peer Authentication**: certificado do peer DISABLED, OPTIONAL ou REQUIRED;
-- **Peer Trust**: exatamente CUSTOM ou SYSTEM;
-- **Expected Peer Name**: validação de nome no role CLIENT.
-
-`CUSTOM_TRUST` e `SYSTEM_TRUST` não são unidos nem substituídos silenciosamente.
-
-Autenticação TLS também não equivale à autorização da aplicação: um certificado válido não se torna automaticamente um usuário, conta ou Principal do sistema.
-
----
-
-# Exemplo: rede corporativa com CA própria
-
-Imagine novamente o sistema de estoque.
-
-A empresa possui servidores internos e uma autoridade certificadora própria.
-
-```text
-             CA DA EMPRESA
-                  │
-             assina certificados
-                  │
-                  ▼
-             Servidor ERP
-                  ▲
-                  │ TLS
-                  │
-             ┌────┴────┐
-             │   PST   │
-             └────┬────┘
-                  │
-             Cliente ERP
-```
-
-A aplicação pode fornecer essa CA ao PST através de `CUSTOM_TRUST`.
-
-Se a empresa também exigir certificado do cliente, o servidor PST pode configurar `Peer Authentication=REQUIRED` e validar o certificado apresentado pelo cliente contra o trust configurado.
-
-O provider então valida a conexão de acordo com a política solicitada, sem precisar modificar o protocolo empresarial.
-
----
-
-# Selecionando providers
-
-A seleção é **por conexão**.
-
-## AUTOMATIC
-
-O PST segue a ordem de registro do target e escolhe o primeiro provider elegível para o role e para **todas** as capabilities solicitadas.
-
-Exemplo em um target combinado:
-
-```text
-Providers do target:
-
-1. Schannel
-2. OpenSSL
-```
-
-Pedido SERVER A:
-
-```text
-TLS 1.2
-```
-
-Se ambos forem elegíveis e Schannel aparecer primeiro, Schannel pode ser selecionado.
-
-Pedido SERVER B:
-
-```text
-TLS 1.2 + ALPN SERVER
-```
-
-Como Schannel SERVER não anuncia ALPN SERVER com a semântica completa do PST no ambiente validado, ele é eliminado **antes do binding**. OpenSSL pode então ser escolhido.
-
-## EXACT
-
-A aplicação solicita explicitamente um provider.
-
-Se ele não puder atender ao role/política solicitados, a operação falha.
-
-## ORDERED
-
-A aplicação fornece uma ordem própria de preferência. Providers inelegíveis podem ser descartados antes do binding e o próximo candidato pode ser considerado.
-
-Depois que um provider aceita o binding/ownership do transporte, porém, ele fica **fixado**. Falha posterior de handshake, certificado, trust, ALPN, I/O, transporte ou shutdown não provoca troca para outro provider.
-
-Isso é seleção pré-binding, não fallback pós-handshake.
-
----
-
-# Inicializando os providers
-
-Uma aplicação Win32 registra explicitamente os providers incluídos naquele target através do bootstrap público do PST.
-
-A aplicação não precisa incluir headers privados de NSS, Schannel ou OpenSSL para realizar esse bootstrap.
-
-Os providers disponíveis continuam sendo definidos pelo target que foi compilado.
-
-```text
-win32-x86-vc6-retrozilla-nss
-    └── RetroZilla NSS
-
-win32-x64-msvc-19.51-schannel
-    └── Schannel
-
-win32-x64-msvc-19.51-openssl3
-    └── OpenSSL
-
-win32-x64-msvc-19.51-schannel-openssl3
-    ├── Schannel
-    └── OpenSSL
-```
-
-O bootstrap é explícito: o PST não procura aleatoriamente bibliotecas instaladas no computador nem registra providers escondido da aplicação.
-
----
-
-# TLS hoje; outras formas de transporte seguro talvez amanhã
-
-**TLS é atualmente o único protocolo de transporte seguro implementado e contratado pelo PST.**
-
-A arquitetura foi desenvolvida para evitar dependência de uma implementação TLS específica.
-
-Isso também deixa espaço para que, **se houver interesse e colaboração da comunidade**, outras famílias de transporte seguro sejam estudadas no futuro.
-
-Por exemplo:
-
-- DTLS;
-- transportes relacionados a QUIC;
-- protocolos baseados em Noise;
-- outras tecnologias que façam sentido para o projeto.
-
-Nenhuma delas é suportada hoje.
-
-Também não existe garantia de que a SPI atual possa recebê-las sem mudanças.
-
-A inclusão de uma nova tecnologia dependeria de um caso de uso real, desenho arquitetural adequado, segurança, testes, manutenção e pessoas interessadas em desenvolvê-la.
-
----
-
-# Novos providers também podem surgir com colaboração
-
-Os três providers atuais não precisam representar para sempre todas as implementações possíveis.
-
-A comunidade pode propor integrações com outras bibliotecas ou tecnologias de segurança.
-
-Mas um novo provider não entra no projeto apenas porque “funciona”.
-
-Também precisam ser considerados:
-
-- segurança;
-- manutenção;
-- sistemas e compiladores suportados;
-- licença;
-- possibilidade de redistribuição;
-- obrigações de código-fonte e notices;
-- origem e histórico das dependências (provenance);
-- capacidade de reproduzir o build;
-- testes independentes de interoperabilidade.
-
-Em alguns casos, pode fazer mais sentido que o usuário forneça separadamente a biblioteca necessária em vez de o PST redistribuí-la.
-
-Cada caso precisa ser analisado individualmente.
-
----
-
-# Nota para a comunidade de retrocomputação
-
-Um dos objetivos importantes do projeto é ajudar a reduzir a distância entre software antigo e padrões modernos de segurança.
-
-À medida que padrões de segurança evoluem, programas e sistemas antigos podem perder a capacidade de se comunicar com serviços atuais mesmo quando continuam sendo úteis para aquilo para o qual foram criados.
-
-Uma maneira de contornar isso seria fazer o lado moderno voltar a aceitar versões antigas e menos seguras dos protocolos.
-
-O PST ajuda a explorar outra direção:
-
-> **até onde podemos levar padrões modernos de segurança às aplicações e sistemas antigos sem exigir que o outro lado reduza sua segurança?**
-
-Isso permite investigar casos como:
-
-- navegadores antigos;
-- clientes de e-mail;
-- aplicações corporativas;
-- programas cliente-servidor;
-- software especializado;
-- outros sistemas preservados pela comunidade.
-
-A mesma arquitetura que hoje permite estudar essa ponte para sistemas antigos também ajuda a reduzir o acoplamento de programas criados hoje às tecnologias de segurança disponíveis hoje.
-
-Afinal, o que hoje chamamos de moderno também envelhece.
-
----
-
-# Um convite especial: NSS, NSPR e TLS moderno em sistemas antigos
-
-Existe uma área de contribuição particularmente interessante.
-
-O provider para o target `win32-x86-vc6-retrozilla-nss` utiliza trabalho proveniente da linhagem **RetroZilla / Mozilla NSS / NSPR**.
-
-Seria muito valioso para a comunidade ver pessoas interessadas em:
-
-- NSS;
-- NSPR;
-- TLS 1.3;
-- criptografia moderna;
-- VC6 e outros compiladores históricos;
-- Win32 em sistemas antigos;
-- versões antigas do Windows;
-
-estudando como manter, atualizar ou criar uma linhagem reproduzível e mantida dessas tecnologias para plataformas antigas.
-
-O PST não promete criar ou manter sozinho essa futura linhagem. É justamente uma área onde **colaboração externa pode ampliar aquilo que o projeto consegue alcançar**.
-
----
-
-# Onde o PST pode ser usado?
-
-Alguns exemplos:
-
-```text
-Navegador
-    │ HTTP
-    ▼
-   PST
-    │ TLS
-    ▼
-Internet
-```
-
-```text
-Cliente de e-mail
-    │ SMTP / IMAP
-    ▼
-   PST
-    │ TLS
-    ▼
-Servidor de e-mail
-```
-
-```text
-Cliente ERP
-    │ protocolo empresarial
-    ▼
-   PST
-    │ TLS
-    ▼
-LAN / rede corporativa
-    │
-    ▼
-Servidor ERP
-```
-
-```text
-Aplicação própria
-    │ protocolo próprio
-    ▼
-   PST
-    │ transporte seguro
-    ▼
-Outro computador
-```
-
-HTTP, SMTP, IMAP e o protocolo empresarial **não fazem parte do PST**.
-
-Eles aparecem apenas para mostrar o tipo de software que pode utilizar a camada de transporte seguro.
-
----
-
-# PST no ecossistema Papinho
-
-O PST é um projeto independente.
-
-Alguns projetos do ecossistema Papinho ajudam a ilustrar usos diferentes.
-
-### PapinhoBrowser
-
-Usa o PST como camada segura abaixo de HTTP/HTTPS.
-
-### PapinhoLegacyMail
-
-Usa o PST abaixo de SMTP e IMAP.
-
-OAuth, contas, providers de e-mail, XOAUTH2 e os próprios protocolos de e-mail continuam responsabilidade do PapinhoLegacyMail.
-
-### PapinhoAccelerator
-
-PapinhoAccelerator é um componente **específico do PapinhoBrowser**.
-
-Usa o PST para estabelecer a conexão segura entre o PapinhoBrowser e o PapinhoAccelerator, protegendo os dados trocados entre eles.
-
-Dependendo da configuração, o Accelerator também pode realizar conexões externas em nome do Browser, utilizando novamente o PST como camada de transporte seguro.
-
----
-
-# Estado atual do projeto
-
-O PST 0.5.0 possui três providers funcionais e roles CLIENT e SERVER explícitos por conexão através da API pública 2.0.0 e SPI de providers 3.0.
-
-TLS 1.2 foi validado nos três providers. TLS 1.3 foi validado em RetroZilla NSS e OpenSSL. O role SERVER foi validado nos três providers dentro de suas capability masks factuais.
-
-A validação inclui execução real no Windows NT 4.0 SP6 x86, execução no Windows 10 build 19045 x64, interoperabilidade cruzada entre providers, seleção EXACT/ORDERED/AUTOMATIC, matriz negativa de segurança/lifecycle, consumers extraídos dos packages e testes em uma máquina Windows limpa separada.
-
-Plataformas fora da matriz documentada permanecem sem validação.
-
-# Distribuição
-
-A versão 0.5.0 possui um package de código-fonte e SDKs estáticos separados para:
-
-- `win32-x86-vc6-retrozilla-nss`;
-- `win32-x64-msvc-19.51-schannel`;
-- `win32-x64-msvc-19.51-openssl3`;
-- `win32-x64-msvc-19.51-schannel-openssl3`.
-
-O Combined Schannel/OpenSSL é um package oficial opcional para seleção de providers; ele não representa uma quarta implementação TLS e não é uma recomendação padrão.
-
-Consulte o [guia prático](getting-started.md), a [matriz de targets](../target-matrix.md), a [API 2.0](../api-2.0.md), a [SPI 3.0](../provider-spi-3.0.md), o [guia de migração](../api-1.3-to-2.0-migration.md) e a [documentação de packaging](../release-packaging.md).
-
-# Segurança e limitações
-
-Para conhecer as fronteiras de segurança, limitações por provider e detalhes como shutdown, truncation, trust e adaptação Schannel SERVER, consulte [Segurança e limitações](../security-and-limitations.md).
-
-# Transparência no desenvolvimento
-
-O PapinhoSecureTransport foi desenvolvido com o auxílio do OpenAI Codex, utilizado extensivamente como assistente de engenharia em atividades de implementação, testes, auditoria e documentação. As decisões arquiteturais, de produto e de release permaneceram sob responsabilidade do mantenedor do projeto.
-
-O repositório preserva uma seleção do [histórico de engenharia e das evidências de release](../codex/README.md) para transparência e auditabilidade.
-
-# Apoie o projeto
-
-PapinhoSecureTransport é software livre e de código aberto sob a MPL-2.0. Se o projeto for útil para você e você quiser apoiar voluntariamente o trabalho realizado em torno dele, poderá fazê-lo pelo GitHub Sponsors.
-
-O patrocínio não altera o acesso ao software nem os direitos concedidos por sua licença e não representa contratação de suporte, manutenção ou desenvolvimento futuro.
-
-## Licença
-
-O PapinhoSecureTransport é licenciado sob a [Mozilla Public License 2.0](../../LICENSE). Dependências redistribuídas preservam seus próprios termos; consulte os [avisos de terceiros](../../THIRD_PARTY_NOTICES.md).
+Para entregar a cadeia intermediária da Local Identity no role SERVER, o backend pode utilizar temporariamente `CurrentUser\CA`, com preservação de certificados preexistentes, refcount e remoção normal controlada. Existe uma limitação documentada de
