@@ -3,8 +3,8 @@ adr: ADR-0005
 title: Wait-set portavel e readiness multiplexada controlada pelo consumer
 status: accepted
 decision-date: 2026-09-09
-last-revised: 2026-09-09
-revision: 2
+last-revised: 2026-09-10
+revision: 3
 scope-level: project
 scope-target: PapinhoSecureTransport
 decision-makers:
@@ -121,6 +121,52 @@ tempo monotonico; PST nao inventa deadline global.
 O wait-set registra a conexao em exatamente um wait-set por vez. Duplicata,
 remocao ausente e token duplicado sao erros deterministas.
 
+### Membership de fontes externas
+
+Um mesmo objeto `pst_external_source` pode estar registrado em **no maximo um
+wait-set por vez**.
+
+Enquanto o objeto estiver registrado:
+
+```text
+add do mesmo objeto ao mesmo wait-set
+→ PST_RESULT_ALREADY_REGISTERED
+
+add do mesmo objeto a outro wait-set
+→ PST_RESULT_ALREADY_REGISTERED
+```
+
+Apos remocao bem-sucedida, o mesmo objeto pode ser registrado novamente no mesmo
+wait-set ou em qualquer outro wait-set.
+
+O objeto `pst_external_source` deve permanecer valido e nao modificado enquanto
+estiver registrado.
+
+A identidade acompanhada pelo core portavel e a **identidade do objeto
+`pst_external_source`**, nao a identidade do recurso nativo subjacente.
+
+Portanto, se o consumer criar dois objetos `pst_external_source` distintos que
+encapsulam o mesmo `SOCKET`, `HANDLE` ou outro recurso nativo:
+
+```text
+external_source_object_A
+external_source_object_B
+        ↓
+mesmo recurso nativo
+        ↓
+PST nao executa deduplicacao nativa cross-object em M2
+```
+
+Essa deduplicacao permanece responsabilidade do consumer, salvo se um futuro
+contrato especifico de plataforma adicionar validacao explicita.
+
+Essa regra nao altera ownership:
+
+- o recurso nativo continua pertencendo ao consumer;
+- PST nunca fecha o recurso nativo;
+- remove, destroy e error paths nao fecham o recurso nativo;
+- membership do objeto nao transfere ownership do recurso.
+
 ### Fronteira provider/plataforma
 
 Provider readiness permanece encapsulada. Em Win32, o adaptador pode usar a
@@ -223,6 +269,7 @@ A library version da implementacao sera 0.6.0.
 - Browser ganha SNI independente de identidade autenticada;
 - STARTTLS e CONNECT compartilham a mesma fronteira generica;
 - providers continuam substituiveis e factuais;
+- membership de fonte externa fica deterministico sem expor identidade nativa;
 - API/SPI major permanecem estaveis.
 
 ### Negativas / trade-offs
@@ -230,6 +277,8 @@ A library version da implementacao sera 0.6.0.
 - cada plataforma precisa de adaptador real de multiplexacao;
 - a primeira implementacao Win32 herda limites factuais de `select()`;
 - add/remove concorrente fica fora da primeira versao;
+- dois objetos externos distintos que encapsulam o mesmo recurso nativo nao sao
+  deduplicados pelo core em M2;
 - pre-read de records TLS nao e recuperado pelo PST.
 
 ## Regras derivadas
@@ -238,26 +287,38 @@ A library version da implementacao sera 0.6.0.
 2. Fontes nativas entram somente por adapter publico de plataforma.
 3. Handles privados de provider nunca sao publicos.
 4. Fonte externa e sempre emprestada e consumer-owned.
-5. Wake e thread-safe, reutilizavel e distinto de timeout.
-6. Deadline de operacao pertence ao consumer.
-7. Enumeracao insuficiente e explicita e repetivel.
-8. Terminal permanece observavel ate remocao.
-9. Remove precede release.
-10. Readiness nativa nao substitui confirmacao do provider.
-11. Trabalho apos readiness continua bounded e incremental.
-12. SNI e Expected Peer Name sao independentes.
-13. Upgrade exige fronteira limpa e transfere ownership sem rollback.
-14. Nenhuma falha pos-binding seleciona outro provider.
+5. Um objeto `pst_external_source` pode pertencer a no maximo um wait-set por vez.
+6. Registro duplicado do mesmo objeto, no mesmo ou em outro wait-set, retorna `PST_RESULT_ALREADY_REGISTERED`.
+7. Apos remocao, o objeto pode ser registrado novamente no mesmo ou em outro wait-set.
+8. O core rastreia identidade do objeto externo, nao identidade do recurso nativo subjacente.
+9. M2 nao executa deduplicacao cross-object de `SOCKET`/`HANDLE`/recurso nativo.
+10. O objeto externo deve permanecer valido e nao modificado enquanto registrado.
+11. Remove/destroy/error paths nunca fecham o recurso nativo emprestado.
+12. Wake e thread-safe, reutilizavel e distinto de timeout.
+13. Deadline de operacao pertence ao consumer.
+14. Enumeracao insuficiente e explicita e repetivel.
+15. Terminal permanece observavel ate remocao.
+16. Remove precede release.
+17. Readiness nativa nao substitui confirmacao do provider.
+18. Trabalho apos readiness continua bounded e incremental.
+19. SNI e Expected Peer Name sao independentes.
+20. Upgrade exige fronteira limpa e transfere ownership sem rollback.
+21. Nenhuma falha pos-binding seleciona outro provider.
 
 ## Verificacao de conformidade
 
 - headers portaveis nao contem tipos Win32/provider;
 - testes cobrem zero/um/muitos/mistos, overflow, terminal e lifecycle;
 - testes cobrem fonte externa e wake antes/durante/depois de timeout;
+- o mesmo `pst_external_source` nao pode ser registrado em dois wait-sets simultaneamente;
+- duplicata do mesmo objeto no mesmo wait-set retorna `PST_RESULT_ALREADY_REGISTERED`;
+- remocao permite registrar o mesmo objeto em outro wait-set;
+- dois objetos distintos sobre o mesmo recurso nativo nao sao deduplicados pelo core em M2;
+- fonte externa permanece valida/imutavel enquanto registrada;
 - `timeout=0` nao bloqueia;
 - NSS continua confirmando readiness por `PR_Poll`;
 - release registrada falha sem liberar;
-- fonte emprestada permanece aberta apos remove/destroy;
+- fonte emprestada permanece aberta apos remove/destroy/error path;
 - SNI diferente do Expected Peer Name chega corretamente a cada provider;
 - fixtures STARTTLS-style e CONNECT-style usam o mesmo transporte apos plaintext;
 - builds VC6 `/W4` e MSVC moderno permanecem sem warnings.
@@ -279,3 +340,4 @@ A library version da implementacao sera 0.6.0.
 |---:|---|---|
 | 1 | 2026-09-09 | Congela wait-set, wake, fonte externa, threading, SNI, upgrade apos plaintext e versionamento da trilha. |
 | 2 | 2026-09-09 | Migração de metadata para `scope-level: project` e `scope-target: PapinhoSecureTransport`, sem alteração da decisão técnica. |
+| 3 | 2026-09-10 | Define membership single-wait-set por objeto `pst_external_source`, rejeicao deterministica de duplicata, re-registro apos remove e ausencia de deduplicacao cross-object do recurso nativo em M2. |
