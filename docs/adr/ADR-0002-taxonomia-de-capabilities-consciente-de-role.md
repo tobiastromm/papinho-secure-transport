@@ -3,9 +3,10 @@ adr: ADR-0002
 title: Taxonomia de capabilities de provider consciente de role
 status: accepted
 decision-date: 2026-09-07
-last-revised: 2026-09-07
-revision: 2
-scope: project
+last-revised: 2026-09-09
+revision: 3
+scope-level: project
+scope-target: PapinhoSecureTransport
 decision-makers:
   - Tobias Tromm
 supersedes: []
@@ -164,3 +165,4 @@ Não se aplica atualmente.
 |---:|---|---|
 | 1 | 2026-09-07 | Registro inicial da taxonomia de capabilities consciente de role. |
 | 2 | 2026-09-07 | Substitui a interpretação plana por máscaras CLIENT/SERVER explícitas; a máscara agregada passa a ser somente a união para descoberta. |
+| 3 | 2026-09-09 | Migração de metadata para `scope-level: project` e `scope-target: PapinhoSecureTransport`, sem alteração da decisão técnica. |
