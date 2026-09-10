@@ -19,8 +19,10 @@ function Copy-RequiredFile($RelativePath) {
 function Copy-RequiredTree($RelativePath) {
     $source = Join-Path $repo $RelativePath
     if (-not (Test-Path -LiteralPath $source -PathType Container)) { throw "Required source-package tree is missing: $RelativePath" }
-    Get-ChildItem -LiteralPath $source -Recurse -File | ForEach-Object {
-        $relative = $_.FullName.Substring($repo.Length + 1)
+    $tracked = @(& git -C $repo ls-files -- $RelativePath)
+    if ($LASTEXITCODE -ne 0) { throw "Unable to enumerate tracked package tree: $RelativePath" }
+    foreach ($relativeGit in $tracked) {
+        $relative = $relativeGit.Replace("/", "\")
         $temporarySs8Tool = $relative -match '^tools\\(prepare|run)-ss8-.*\.ps1$'
         if (-not $temporarySs8Tool) { Copy-RequiredFile $relative }
     }
@@ -36,10 +38,10 @@ foreach ($file in @(".gitattributes", "README.md", "LICENSE", "THIRD_PARTY_NOTIC
 foreach ($tree in @("include", "src", "tests", "examples", "tools", "packaging", "third_party")) {
     Copy-RequiredTree $tree
 }
-Get-ChildItem -LiteralPath (Join-Path $repo "docs") -Recurse -File | Where-Object {
-    $_.FullName -notlike (Join-Path $repo "docs\codex\*")
+@(& git -C $repo ls-files -- docs) | Where-Object {
+    $_ -notmatch '^docs/codex/'
 } | ForEach-Object {
-    Copy-RequiredFile $_.FullName.Substring($repo.Length + 1)
+    Copy-RequiredFile $_.Replace("/", "\")
 }
 
 $required = @(
