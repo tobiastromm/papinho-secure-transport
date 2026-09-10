@@ -45,8 +45,19 @@ not free or close a registered connection.
 Destroying a nonempty wait-set is rejected and leaves both the set and its members valid.
 Removal changes neither connection ownership nor transport ownership, performs no close,
 and permits later registration or release. Allocation or duplicate-registration failure
-does not alter existing membership. M1 adds no worker, wake object, listener ownership or
-external-source ownership; those later contracts remain outside this implementation.
+does not alter existing membership. M1 adds no worker or wake object.
+
+## M2 borrowed external-source lifetime
+
+An external source and its native resource remain consumer-owned. PST borrows the
+wrapper while registered and never closes, shuts down, accepts from or otherwise assumes
+ownership of the native resource. `pst_external_source_try_release()` rejects a
+registered wrapper; the consumer removes it first, then releases the wrapper and closes
+the native resource on its own schedule.
+
+The same wrapper can be registered in only one wait-set at a time. Successful removal
+clears that membership. Distinct wrappers around the same native resource are distinct
+to the portable core and require consumer-side coordination.
 
 ## Ownership table
 

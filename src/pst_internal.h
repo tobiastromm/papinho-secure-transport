@@ -17,6 +17,13 @@ void pst_connection_diagnostic_copy(const pst_connection *connection,pst_interna
 PST_RESULT pst_connection_wait_set_bind(pst_connection *,pst_wait_set *);
 void pst_connection_wait_set_unbind(pst_connection *,pst_wait_set *);
 int pst_connection_is_terminal(const pst_connection *,PST_RESULT *);
+typedef PST_RESULT (*pst_external_source_poll_fn)(pst_external_source *,pst_u32,pst_u32 *);
+typedef void (*pst_external_source_destroy_fn)(pst_external_source *);
+struct pst_external_source {
+    pst_external_source_poll_fn poll;
+    pst_external_source_destroy_fn destroy;
+    pst_wait_set *wait_set;
+};
 void pst_wait_set_test_fail_next_growth(void);
 PST_RESULT pst_validate_public_struct(const void *value, pst_u32 minimum_size);
 #endif

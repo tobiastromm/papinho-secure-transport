@@ -20,8 +20,34 @@ places it at the end of the stable registration order.
 registered nonterminal connection through the existing provider-authoritative
 `pst_connection_wait` path. Consequently RetroZilla NSS continues to use NSPR `PR_Poll`;
 the portable core does not substitute raw socket readiness. No-ready returns
-`PST_RESULT_WAIT_TIMEOUT`. Finite aggregate waits return `PST_RESULT_UNSUPPORTED` in M1;
-M2 external/native aggregation and M3 wake/blocking scheduler semantics remain pending.
+`PST_RESULT_WAIT_TIMEOUT`. Finite aggregate waits return `PST_RESULT_UNSUPPORTED`;
+M3 wake/blocking scheduler semantics remain pending.
+
+## M2 external Win32 sources
+
+M2 is complete and adds `pst_win32_socket_external_source_create()` as the first platform adapter.
+The portable wait-set stores only an opaque source, portable READ/WRITE interests and
+the consumer token. The private Win32 implementation uses timeout-zero `select()` to
+observe sockets, including listener readability; PST does not call `accept()`,
+`shutdown()` or `closesocket()` for an external source.
+
+One external-source object may belong to at most one wait-set. Duplicate registration
+in the same or another wait-set returns `PST_RESULT_ALREADY_REGISTERED`; successful
+removal permits later registration anywhere. Identity is the wrapper object, not its
+native socket: two wrappers for one socket are not deduplicated in M2. The consumer must
+keep both wrapper and native resource valid and unchanged while registered.
+
+This uses the Winsock `select()` surface available on NT4. Each source is polled
+separately in M2 timeout-zero operation, so one `fd_set` never approaches `FD_SETSIZE`;
+aggregate blocking and its scaling model belong to M3.
+
+The VC6 i386 artifact has OS/subsystem version 4.00 and imports the socket surface
+through `WSOCK32.dll`. Its adapter uses Winsock 1.1-era `fd_set`, `timeval`, `select()`
+and `INVALID_SOCKET` only; it introduces no post-NT4 Windows API. VC6 `/W4` and modern
+MSVC `/W4` builds pass without warnings. Real TLS regressions preserve provider
+authority: NSS still reports `NSS_M1_WAITSET_POLL=PASS`, and OpenSSL and Schannel
+likewise complete their M1 wait-set polls before authenticated echo and reciprocal
+shutdown.
 
 The result reports exact total-ready and copied-event counts. Capacity exhaustion returns
 `PST_RESULT_INSUFFICIENT_CAPACITY`, preserves stable registration ordering for copied
