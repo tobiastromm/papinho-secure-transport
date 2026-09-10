@@ -4,7 +4,7 @@ title: Role explícito de conexão e seleção de provider por conexão
 status: accepted
 decision-date: 2026-09-07
 last-revised: 2026-09-09
-revision: 2
+revision: 3
 scope-level: project
 scope-target: PapinhoSecureTransport
 decision-makers:
@@ -147,7 +147,7 @@ Testar EXACT, ORDERED e AUTOMATIC para ambos os roles, elegibilidade, ausência 
 ## Relações
 
 ### ADRs relacionadas
-- PapinhoEngineering/ADR-0001 — Adoção e governança de Architecture Decision Records.
+- OrganizationEngineering/ADR-0002 — Adoção e governança de Architecture Decision Records.
 - PapinhoEngineering/ADR-0004 — Modelo compartilhado de configuração, fonte única de verdade e separação entre Core e Frontends.
 - PapinhoEngineering/ADR-0007 — Fronteiras portáveis entre core, plataforma e backends substituíveis.
 - PapinhoEngineering/ADR-0009 — Separação entre identidade local, autenticação, confiança e nome do peer.
@@ -170,3 +170,4 @@ Não se aplica atualmente.
 |---:|---|---|
 | 1 | 2026-09-07 | Registro inicial do role explícito e da seleção de provider por conexão. |
 | 2 | 2026-09-09 | Migração de metadata para `scope-level: project` e `scope-target: PapinhoSecureTransport`, sem alteração da decisão técnica. |
+| 3 | 2026-09-09 | Atualiza a referência de governança de ADRs para `OrganizationEngineering/ADR-0002`, sucessora da antiga `PapinhoEngineering/ADR-0001`, sem alteração técnica. |
