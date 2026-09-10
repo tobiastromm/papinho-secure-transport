@@ -1008,7 +1008,7 @@ Read/write podem fazer progresso parcial. Se `pst_write` aceitar apenas parte do
 
 ---
 
-# 15. Read e write
+# 16. Read e write
 
 Depois do handshake:
 
@@ -1049,7 +1049,7 @@ Esse framing continua responsabilidade da aplicação.
 
 ---
 
-# 16. Shutdown e truncation
+# 17. Shutdown e truncation
 
 Encerrar o TCP não é a mesma coisa que encerrar TLS corretamente.
 
@@ -1080,7 +1080,7 @@ Isso permite que a aplicação diferencie um fechamento TLS limpo de um encerram
 
 ---
 
-# 17. Peer Info
+# 18. Peer Info
 
 Depois de uma conexão estabelecida, a aplicação pode consultar fatos normalizados sobre o peer e a sessão.
 
@@ -1101,7 +1101,7 @@ A decisão de associá-las a uma identidade da aplicação continua fora do PST.
 
 ---
 
-# 18. Diagnósticos e logging
+# 19. Diagnósticos e logging
 
 Quando algo falha, saber apenas:
 
@@ -1129,7 +1129,7 @@ Os testes de release incluem gates explícitos para evitar esse tipo de vazament
 
 ---
 
-# 19. Ownership do transporte
+# 20. Ownership do transporte
 
 Uma regra importante é saber quem fecha o socket.
 
@@ -1156,7 +1156,7 @@ No SERVER, essa regra vale para o **socket conectado retornado por `accept`**, n
 
 ---
 
-# 20. TLS depois de plaintext: STARTTLS e CONNECT
+# 21. TLS depois de plaintext: STARTTLS e CONNECT
 
 PST pode receber o **mesmo transporte já conectado** depois de a aplicação usá-lo em plaintext e alcançar uma boundary limpa de upgrade.
 
@@ -1169,7 +1169,7 @@ A aplicação continua responsável por SMTP, IMAP, HTTP e pela detecção da bo
 
 ---
 
-# 20. Exemplos públicos
+# 22. Exemplos públicos
 
 O repositório inclui exemplos mínimos destinados a mostrar o contrato público sem acoplamento às APIs privadas dos providers.
 
@@ -1192,7 +1192,7 @@ O objetivo desses exemplos é mostrar o PST, não ensinar toda a API nativa de N
 
 ---
 
-# 21. Usando um SDK em vez de compilar o repositório
+# 23. Usando um SDK em vez de compilar o repositório
 
 A versão 0.5.0 é distribuída com SDKs específicos por target.
 
@@ -1222,7 +1222,7 @@ O target Combined é opcional.
 
 ---
 
-# 22. Qual caminho escolher?
+# 24. Qual caminho escolher?
 
 Uma forma prática de pensar:
 
@@ -1252,7 +1252,7 @@ Consulte sempre a [Target Matrix](../target-matrix.md).
 
 ---
 
-# 23. Onde continuar
+# 25. Onde continuar
 
 Depois deste guia, os documentos mais importantes são:
 

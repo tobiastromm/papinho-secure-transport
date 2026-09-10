@@ -1008,7 +1008,7 @@ Read/write may make partial progress. If `pst_write` accepts only part of a buff
 
 ---
 
-# 15. Read and write
+# 16. Read and write
 
 After the handshake:
 
@@ -1049,7 +1049,7 @@ Application framing remains the application's responsibility.
 
 ---
 
-# 16. Shutdown and truncation
+# 17. Shutdown and truncation
 
 Closing TCP is not the same as shutting down TLS correctly.
 
@@ -1080,7 +1080,7 @@ That lets the application distinguish a clean TLS close from an abrupt transport
 
 ---
 
-# 17. Peer Info
+# 18. Peer Info
 
 After a connection is established, the application can query normalized facts about the peer and session.
 
@@ -1101,7 +1101,7 @@ Mapping them to application identity remains outside PST.
 
 ---
 
-# 18. Diagnostics and logging
+# 19. Diagnostics and logging
 
 When something fails, knowing only:
 
@@ -1129,7 +1129,7 @@ Release tests include explicit gates for those leaks.
 
 ---
 
-# 19. Transport ownership
+# 20. Transport ownership
 
 One important rule is knowing who closes the socket.
 
@@ -1156,7 +1156,7 @@ On SERVER, this rule applies to the **connected socket returned by `accept`**, n
 
 ---
 
-# 20. TLS after plaintext: STARTTLS and CONNECT
+# 21. TLS after plaintext: STARTTLS and CONNECT
 
 PST can receive the **same already-connected transport** after the application has used it for plaintext and reached a clean upgrade boundary.
 
@@ -1169,7 +1169,7 @@ The application remains responsible for SMTP, IMAP, HTTP, and boundary detection
 
 ---
 
-# 20. Public examples
+# 22. Public examples
 
 The repository contains minimal public examples intended to demonstrate the public contract without coupling the application to private provider APIs.
 
@@ -1192,7 +1192,7 @@ The goal of these examples is to teach PST, not the full native API of NSS, Scha
 
 ---
 
-# 21. Using an SDK instead of building the repository
+# 23. Using an SDK instead of building the repository
 
 Version 0.5.0 is distributed as target-specific SDKs.
 
@@ -1222,7 +1222,7 @@ The Combined target is optional.
 
 ---
 
-# 22. Which path should I choose?
+# 24. Which path should I choose?
 
 A practical way to think about it:
 
@@ -1252,7 +1252,7 @@ Always consult the [Target Matrix](../target-matrix.md).
 
 ---
 
-# 23. Where to go next
+# 25. Where to go next
 
 After this guide, the most important documents are:
 
