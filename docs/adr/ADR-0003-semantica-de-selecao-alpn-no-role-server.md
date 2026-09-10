@@ -3,9 +3,10 @@ adr: ADR-0003
 title: Semântica de seleção ALPN no role SERVER
 status: accepted
 decision-date: 2026-09-07
-last-revised: 2026-09-07
-revision: 1
-scope: project
+last-revised: 2026-09-09
+revision: 2
+scope-level: project
+scope-target: PapinhoSecureTransport
 decision-makers:
   - Tobias Tromm
 supersedes: []
@@ -164,3 +165,4 @@ Não se aplica atualmente.
 | Revisão | Data | Descrição |
 |---:|---|---|
 | 1 | 2026-09-07 | Registro inicial da semântica ALPN para o role SERVER. |
+| 2 | 2026-09-09 | Migração de metadata para `scope-level: project` e `scope-target: PapinhoSecureTransport`, sem alteração da decisão técnica. |
