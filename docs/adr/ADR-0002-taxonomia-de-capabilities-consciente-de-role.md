@@ -4,7 +4,7 @@ title: Taxonomia de capabilities de provider consciente de role
 status: accepted
 decision-date: 2026-09-07
 last-revised: 2026-09-09
-revision: 3
+revision: 4
 scope-level: project
 scope-target: PapinhoSecureTransport
 decision-makers:
@@ -142,7 +142,7 @@ Cada role/capability anunciada precisa de gates positivos e negativos, incluindo
 ## Relações
 
 ### ADRs relacionadas
-- PapinhoEngineering/ADR-0001 — Adoção e governança de Architecture Decision Records.
+- OrganizationEngineering/ADR-0002 — Adoção e governança de Architecture Decision Records.
 - PapinhoEngineering/ADR-0005 — Governança da documentação viva de capabilities.
 - PapinhoEngineering/ADR-0007 — Fronteiras portáveis entre core, plataforma e backends substituíveis.
 - PapinhoEngineering/ADR-0009 — Separação entre identidade local, autenticação, confiança e nome do peer.
@@ -166,3 +166,4 @@ Não se aplica atualmente.
 | 1 | 2026-09-07 | Registro inicial da taxonomia de capabilities consciente de role. |
 | 2 | 2026-09-07 | Substitui a interpretação plana por máscaras CLIENT/SERVER explícitas; a máscara agregada passa a ser somente a união para descoberta. |
 | 3 | 2026-09-09 | Migração de metadata para `scope-level: project` e `scope-target: PapinhoSecureTransport`, sem alteração da decisão técnica. |
+| 4 | 2026-09-09 | Atualiza a referência de governança de ADRs para `OrganizationEngineering/ADR-0002`, sem alteração técnica. |
