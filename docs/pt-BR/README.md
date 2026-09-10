@@ -157,7 +157,7 @@ E isso vale tanto para uma conexão pela Internet quanto para computadores dentr
 
 # CLIENT e SERVER: o que muda?
 
-A API 2.0 torna o **role da conexão explícito**.
+A API 2.x torna o **role da conexão explícito**.
 
 Em uma conexão **CLIENT**, a aplicação cria e conecta o socket nativo e então entrega ao PST esse transporte já conectado.
 
@@ -187,6 +187,21 @@ Ou seja: o consumidor possui `bind`, `listen`, `accept`, admissão e sessões da
 Isso permite que o mesmo contrato sirva tanto para software cliente quanto para software servidor, sem transformar o PST em um servidor HTTP, framework de sessões ou sistema de autorização.
 
 Uma aplicação também pode ter conexões CLIENT e SERVER no mesmo runtime e escolher providers diferentes para cada conexão, quando o target e as capabilities permitirem.
+
+---
+
+# Muitas conexões sem entregar o event loop ao PST
+
+A API 2.1 acrescenta uma peça importante sem mudar a filosofia do projeto: um **wait-set portátil** pode observar várias conexões PST e, no Win32, fontes externas emprestadas como o socket de um listener que continua pertencendo à aplicação.
+
+```text
+conexão PST A ─┐
+conexão PST B ─┼──> wait-set ──> membros prontos
+listener app ──┤
+wake ──────────┘
+```
+
+Uma espera finita pode dormir até existir trabalho, timeout ou `wake` cross-thread. PST não executa `accept()` nem fecha fontes externas. Read/write continuam incrementais e bounded; buffers, deadlines e fairness continuam sendo política da aplicação.
 
 ---
 
@@ -281,7 +296,7 @@ TLS permite, entre outras coisas:
 
 O PST atualmente trabalha com **TLS 1.2 e TLS 1.3**, dependendo das capacidades do provider, do role e do target utilizado.
 
-A API pública atual é **2.0.0**, a SPI de providers é **3.0** e a versão do package/library é **0.5.0**.
+A release publicada continua sendo **0.5.0 / API 2.0.0 / SPI 3.0**. O desenvolvimento atual prepara **0.6.0 / API 2.1.0**, mantendo a SPI **3.0**.
 
 ### Estado atualmente validado
 
@@ -510,6 +525,14 @@ O bootstrap é explícito: o PST não procura aleatoriamente bibliotecas instala
 
 ---
 
+# Expected Peer Name, SNI e upgrade para TLS
+
+Na API 2.1, **Expected Peer Name** autentica o nome do certificado; **SNI** é informação de roteamento TLS. O CLIENT possui modos `COMPAT`, `DISABLED` e `EXPLICIT`. OpenSSL e Schannel comprovaram controle independente; RetroZilla NSS permanece factualmente parcial por causa do comportamento de `SSL_SetURL`, e combinações não suportadas são rejeitadas antes do binding.
+
+A trilha 0.6.0 também comprovou TLS no **mesmo transporte conectado depois de uma fase plaintext**, cobrindo fluxos genéricos STARTTLS-style e CONNECT-style nos três providers. SMTP, IMAP e HTTP continuam fora do PST. A aplicação deve parar numa boundary limpa: bytes TLS já lidos antecipadamente não são recuperados nesta versão. Depois que PST aceita ownership, falha TLS não volta para plaintext.
+
+---
+
 # TLS hoje; outras formas de transporte seguro talvez amanhã
 
 **TLS é atualmente o único protocolo de transporte seguro implementado e contratado pelo PST.**
@@ -689,7 +712,7 @@ Dependendo da configuração, o Accelerator também pode realizar conexões exte
 
 # Estado atual do projeto
 
-O PST 0.5.0 possui três providers funcionais e roles CLIENT e SERVER explícitos por conexão através da API pública 2.0.0 e SPI de providers 3.0.
+A release publicada continua sendo **0.5.0 / API 2.0.0 / SPI 3.0**. A branch atual prepara **0.6.0 / API 2.1.0**, mantendo SPI 3.0. Até M9 foram comprovados wait-set, external sources, finite wait, wake, backpressure, SNI tri-state e TLS-after-plaintext. M9 passou 9/9 pares TLS 1.2 e 4/4 pares TLS 1.3 elegíveis; M10 fará a validação física/package final.
 
 TLS 1.2 foi validado nos três providers. TLS 1.3 foi validado em RetroZilla NSS e OpenSSL. O role SERVER foi validado nos três providers dentro de suas capability masks factuais.
 

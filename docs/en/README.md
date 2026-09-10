@@ -157,7 +157,7 @@ This applies equally to Internet communication and to computers inside a LAN or 
 
 # CLIENT and SERVER: what changes?
 
-API 2.0 makes the **connection role explicit**.
+API 2.x makes the **connection role explicit**.
 
 For a **CLIENT** connection, the application creates and connects the native socket and then gives PST that already-connected transport.
 
@@ -187,6 +187,21 @@ In other words, the consumer owns `bind`, `listen`, `accept`, admission, and app
 That lets the same contract serve both client and server software without turning PST into an HTTP server, session framework, or authorization system.
 
 One application may also have CLIENT and SERVER connections in the same runtime and choose different providers for each connection when the target and requested capabilities allow it.
+
+---
+
+# Many connections without handing your event loop to PST
+
+API 2.1 adds an important piece without changing the project's philosophy: a portable **wait-set** can observe multiple PST connections and, on Win32, borrowed external sources such as a listening socket that remains application-owned.
+
+```text
+PST connection A ─┐
+PST connection B ─┼──> wait-set ──> ready members
+app listener ─────┤
+wake ─────────────┘
+```
+
+A finite wait can sleep until useful work, timeout, or a cross-thread `wake`. PST does not call `accept()` or close borrowed sources. Read/write remain incremental and bounded; buffers, deadlines, and fairness remain application policy.
 
 ---
 
@@ -281,7 +296,7 @@ TLS can, among other things:
 
 PST currently works with **TLS 1.2 and TLS 1.3**, depending on the provider, role, and target capabilities.
 
-The current public API is **2.0.0**, the provider SPI is **3.0**, and the library/package version is **0.5.0**.
+The published release remains **0.5.0 / API 2.0.0 / SPI 3.0**. Current development is preparing **0.6.0 / API 2.1.0**, while keeping SPI **3.0**.
 
 ### Currently validated state
 
@@ -508,6 +523,14 @@ The bootstrap is explicit: PST does not randomly search for installed libraries 
 
 ---
 
+# Expected Peer Name, SNI, and upgrading to TLS
+
+In API 2.1, **Expected Peer Name** authenticates the certificate name while **SNI** is TLS routing information. CLIENT supports `COMPAT`, `DISABLED`, and `EXPLICIT`. OpenSSL and Schannel have validated independent control; RetroZilla NSS remains factually partial because of `SSL_SetURL`, and unsupported combinations are rejected before binding.
+
+The 0.6.0 track also proved TLS on the **same connected transport after a plaintext phase**, covering generic STARTTLS-style and CONNECT-style flows across all three providers. SMTP, IMAP, and HTTP remain outside PST. The application must stop at a clean boundary: TLS bytes already pre-read are not recovered in this version. Once PST accepts ownership, TLS failure does not roll back to plaintext.
+
+---
+
 # TLS today; maybe other secure transports tomorrow
 
 **TLS is currently the only secure-transport protocol implemented and contracted by PST.**
@@ -687,7 +710,7 @@ Depending on configuration, Accelerator may also create external connections on 
 
 # Current project state
 
-PST 0.5.0 has three functional providers and explicit CLIENT/SERVER roles per connection through public API 2.0.0 and provider SPI 3.0.
+The published release remains **0.5.0 / API 2.0.0 / SPI 3.0**. The current branch is preparing **0.6.0 / API 2.1.0**, keeping SPI 3.0. Through M9 it has proven wait-set, external sources, finite wait, wake, backpressure, tri-state SNI, and TLS-after-plaintext. M9 passed 9/9 TLS 1.2 pairs and 4/4 eligible TLS 1.3 pairs; M10 will perform final physical/package validation.
 
 TLS 1.2 was validated with all three providers. TLS 1.3 was validated with RetroZilla NSS and OpenSSL. SERVER was validated with all three providers within their factual role-scoped capability masks.
 

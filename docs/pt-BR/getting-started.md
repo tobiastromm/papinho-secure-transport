@@ -42,7 +42,7 @@ O projeto possui targets diferentes porque plataformas, arquiteturas, compilador
 
 Você não precisa preparar todos os ambientes. **Escolha o target que pretende utilizar e instale apenas as ferramentas necessárias para ele.**
 
-Os targets candidatos à versão 0.5.0 são:
+Os quatro targets publicados na 0.5.0 e mantidos na trilha de desenvolvimento 0.6.0 são:
 
 | Target | Provider(s) | Arquitetura | Ambiente efetivamente validado |
 |---|---|---:|---|
@@ -498,9 +498,9 @@ O target NSS utiliza o runtime NSS/NSPR preparado pelo projeto. Você não preci
 
 ---
 
-# 5. A API pública: o modelo mental da versão 2.0
+# 5. A API pública: o modelo mental da versão 2.1
 
-A API 2.0 gira em torno de alguns conceitos simples.
+A API 2.1 preserva os conceitos da API 2.0 e acrescenta readiness multiplexada sem entregar o event loop ao PST.
 
 ```text
 providers registrados
@@ -852,7 +852,7 @@ A autenticação do certificado de cliente no SERVER usa a finalidade apropriada
 
 # 12. Selecionando providers
 
-A API 2.0 move a seleção para **cada conexão**.
+A API 2.x mantém a seleção **por conexão**.
 
 Existem três modos.
 
@@ -995,6 +995,16 @@ Significa que a operação precisa ser tentada novamente quando houver a condiç
 O backend pode ter necessidades de readiness próprias. Por isso, a aplicação não deve assumir que observar diretamente o socket nativo é sempre suficiente para representar o interesse TLS interno de todos os providers.
 
 Use as operações públicas de interesse/wait do PST.
+
+---
+
+# 15. Wait-set, fontes externas, wake e backpressure
+
+A API 2.1 oferece um **wait-set portátil** para observar várias conexões usando tokens definidos pelo consumidor. No Win32, `pst_external_source` permite incluir uma fonte nativa emprestada, como um listener, sem transferir seu ownership.
+
+`timeout=0` faz poll imediato; timeout positivo é uma espera máxima do scheduler. `wake` pode ser chamado por outra thread e é diferente de timeout e cancelamento. A aplicação continua dona de seus deadlines.
+
+Read/write podem fazer progresso parcial. Se `pst_write` aceitar apenas parte do buffer, a aplicação mantém o sufixo ainda não enviado e o retoma quando houver readiness. PST não implementa `send-all` implícito e não drena uma conexão indefinidamente.
 
 ---
 
@@ -1143,6 +1153,19 @@ PST/provider
 Isso evita double-close e ambiguidades de lifecycle.
 
 No SERVER, essa regra vale para o **socket conectado retornado por `accept`**, não para o listener. O listener continua pertencendo à aplicação.
+
+---
+
+# 20. TLS depois de plaintext: STARTTLS e CONNECT
+
+PST pode receber o **mesmo transporte já conectado** depois de a aplicação usá-lo em plaintext e alcançar uma boundary limpa de upgrade.
+
+```text
+SMTP/IMAP-like: plaintext -> STARTTLS aceito -> attach PST -> TLS
+proxy-like:     plaintext -> CONNECT aceito  -> attach PST -> TLS
+```
+
+A aplicação continua responsável por SMTP, IMAP, HTTP e pela detecção da boundary. PST não reconecta e não faz rollback para plaintext depois de aceitar ownership. Bytes TLS pré-lidos antes do attach não são suportados nesta versão.
 
 ---
 
