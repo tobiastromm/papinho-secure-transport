@@ -9,5 +9,6 @@ typedef struct PST_NATIVE_TRANSPORT {
     pst_size native_socket; const char *hostname;
 } PST_NATIVE_TRANSPORT;
 #define PST_NATIVE_TRANSPORT_MIN_SIZE ((pst_u32)sizeof(PST_NATIVE_TRANSPORT))
-struct pst_transport { const char *backend_id; void *native; void (*destroy)(pst_transport *,int); };
+typedef PST_RESULT (*pst_transport_wait_source_fn)(const pst_transport *,pst_size *);
+struct pst_transport { const char *backend_id; void *native; void (*destroy)(pst_transport *,int); pst_transport_wait_source_fn wait_source; };
 #endif

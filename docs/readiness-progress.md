@@ -20,8 +20,7 @@ places it at the end of the stable registration order.
 registered nonterminal connection through the existing provider-authoritative
 `pst_connection_wait` path. Consequently RetroZilla NSS continues to use NSPR `PR_Poll`;
 the portable core does not substitute raw socket readiness. No-ready returns
-`PST_RESULT_WAIT_TIMEOUT`. Finite aggregate waits return `PST_RESULT_UNSUPPORTED`;
-M3 wake/blocking scheduler semantics remain pending.
+`PST_RESULT_WAIT_TIMEOUT`.
 
 ## M2 external Win32 sources
 
@@ -37,9 +36,9 @@ removal permits later registration anywhere. Identity is the wrapper object, not
 native socket: two wrappers for one socket are not deduplicated in M2. The consumer must
 keep both wrapper and native resource valid and unchanged while registered.
 
-This uses the Winsock `select()` surface available on NT4. Each source is polled
-separately in M2 timeout-zero operation, so one `fd_set` never approaches `FD_SETSIZE`;
-aggregate blocking and its scaling model belong to M3.
+This uses the Winsock `select()` surface available on NT4. M2 originally polled each
+source separately for timeout-zero operation; M3 now aggregates the bounded native
+sources in one `select()` call and documents the `FD_SETSIZE` membership bound.
 
 The VC6 i386 artifact has OS/subsystem version 4.00 and imports the socket surface
 through `WSOCK32.dll`. Its adapter uses Winsock 1.1-era `fd_set`, `timeval`, `select()`
@@ -60,6 +59,37 @@ transactional membership, remove-before-release and exactly-once cleanup. Real T
 proofs exercised the M1 timeout-zero path before ordinary progress waits for OpenSSL,
 Schannel and RetroZilla NSS; each completed authenticated 25-byte encrypted echo and
 reciprocal shutdown.
+
+## M3 wake and finite blocking scheduler
+
+M3 completes finite `timeout_ms > 0` waits and cross-thread `pst_wait_set_wake()`.
+The Win32 adapter owns a private nonblocking loopback socket pair created with
+Winsock 1.1-era APIs. Its read side participates in the same `select()` as external
+sources and non-owning native hints for attached PST transports. Wake writes one byte;
+the reporting wait drains queued bytes, so requests coalesce without becoming a
+terminal or cancellation signal. No hidden worker, timer or periodic polling loop is
+used.
+
+Before blocking and after a native signal, PST performs bounded timeout-zero provider
+confirmation in stable registration order. Raw socket readiness is only a hint. If a
+provider rejects one hinted READ/WRITE bit, that bit is suppressed for the remainder
+of the same application wait and `select()` continues with the remaining monotonic
+duration. At most the finite set of member interest bits can be suppressed, avoiding
+both a writable-socket spin and sequential `N * timeout` behavior. RetroZilla NSS
+validation confirmed that raw WRITE readiness is not published until `PR_Poll`
+confirms provider readiness.
+
+Timeout zero remains an immediate poll. A positive timeout is only the maximum
+scheduler sleep and never cancels an operation. Applications compute their own
+handshake/read/write/shutdown deadlines with a monotonic clock and pass the remaining
+bounded duration. Wake returns `PST_RESULT_WAIT_WOKEN` when no member is also ready;
+the result's `woken` field independently records a wake coincident with readiness.
+
+One wait may be active per wait-set. Wake is allowed from another thread. Add/remove
+are restricted to the creating owner thread and rejected during an active wait;
+destroy is rejected during a wait or while members remain. The deterministic matrix
+covers an external listener plus two PST connections, stable multiple-ready results,
+wake before/during wait, timeout and concurrent-operation rejection.
 
 ## Readiness is not progress
 

@@ -151,6 +151,7 @@ void PST_CALL pst_connection_release(pst_connection *c){if(c&&!c->wait_set)(void
 PST_RESULT pst_connection_wait_set_bind(pst_connection *c,pst_wait_set *s){if(!c||!s)return PST_RESULT_INVALID_ARGUMENT;if(c->wait_set)return PST_RESULT_ALREADY_REGISTERED;c->wait_set=s;return PST_RESULT_OK;}
 void pst_connection_wait_set_unbind(pst_connection *c,pst_wait_set *s){if(c&&c->wait_set==s)c->wait_set=NULL;}
 int pst_connection_is_terminal(const pst_connection *c,PST_RESULT *result){if(result)*result=PST_RESULT_OK;if(!c)return 0;if(c->state!=C_CLOSED&&c->state!=C_FAILED)return 0;if(result)*result=c->terminal_result?c->terminal_result:(c->state==C_CLOSED?PST_RESULT_CLOSED:PST_RESULT_BACKEND_FAILURE);return 1;}
+PST_RESULT pst_connection_native_wait_source(const pst_connection *c,pst_size *source){if(source)*source=0;if(!c||!source)return PST_RESULT_INVALID_ARGUMENT;if(!c->transport||!c->transport->wait_source)return PST_RESULT_UNSUPPORTED;return c->transport->wait_source(c->transport,source);}
 void PST_CALL pst_transport_release(pst_transport *t){if(t)t->destroy(t,0);}
 void pst_runtime_diagnostic_copy(const pst_runtime *r,pst_internal_diagnostic *out){if(!out)return;if(!r){pst_diagnostic_initialize(out);return;}pst_diagnostic_copy(out,&r->diagnostic);}
 void pst_connection_diagnostic_copy(const pst_connection *c,pst_internal_diagnostic *out){if(!out)return;if(!c){pst_diagnostic_initialize(out);return;}pst_diagnostic_copy(out,&c->diagnostic);}

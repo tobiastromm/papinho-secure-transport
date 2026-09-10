@@ -6,8 +6,9 @@
   - M0 API 2.1 / library 0.6 contract freeze and R6 tri-state SNI: complete; zero-initialized compatibility, provider-scoped SNI control and pre-binding capability filtering pass without RetroZilla NSS/NSPR changes.
   - M1 portable wait-set core: complete; opaque membership, stable consumer tokens, duplicate rejection, remove-before-release, bounded stable enumeration, timeout-zero provider-authoritative polling and persistent terminal visibility pass for deterministic mixed-provider tests and real OpenSSL, Schannel and RetroZilla NSS TLS connections.
   - M2 external/native aggregation: complete for timeout-zero Win32 socket sources; single-wait-set object membership, mixed connection/source enumeration, listener readiness, borrowed ownership, VC6/NT4 compatibility audit and provider regressions pass.
-  - M3 wake/blocking scheduler semantics: pending and not started.
-  - PapinhoAccelerator Phase 3.B4 blocker: not resolved by M1 alone.
+  - M3 wake/blocking scheduler semantics: complete; cross-thread coalescing wake, finite monotonic waits, owner-thread membership enforcement, bounded provider confirmation and mixed listener plus multiple-PST aggregation pass without periodic polling or sequential per-member timeouts.
+  - PapinhoAccelerator Phase 3.B4 architectural blocker: resolved by M3; final product handoff/release remains later work.
+  - M4 and later multiplexed-readiness phases: pending and not started.
 
 - Server-side evolution on `feature/server-side`:
   - SS-0 CLIENT/SERVER architecture audit: complete.

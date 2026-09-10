@@ -8,7 +8,7 @@ API 2.1 preserves the API 2.0 prefixes and adds opaque wait-set declarations, st
 consumer tokens, bounded portable wait events/results, membership operations and the
 result-returning `pst_connection_try_release`. M1 implements connection membership and
 timeout-zero polling; M2 implements borrowed external sources through the Win32 socket
-adapter. Wake and finite blocking remain reserved for M3. SPI remains 3.0 because
+adapter; M3 implements the already-published wake and finite blocking semantics. SPI remains 3.0 because
 M1 aggregates the existing per-connection provider readiness contract without adding a
 provider hook.
 

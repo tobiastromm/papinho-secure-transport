@@ -45,7 +45,9 @@ not free or close a registered connection.
 Destroying a nonempty wait-set is rejected and leaves both the set and its members valid.
 Removal changes neither connection ownership nor transport ownership, performs no close,
 and permits later registration or release. Allocation or duplicate-registration failure
-does not alter existing membership. M1 adds no worker or wake object.
+does not alter existing membership. M3 adds one private platform wake object per
+wait-set. It owns no member transport and is released exactly once when an empty,
+inactive wait-set is destroyed. No worker thread is created.
 
 ## M2 borrowed external-source lifetime
 
@@ -58,6 +60,11 @@ the native resource on its own schedule.
 The same wrapper can be registered in only one wait-set at a time. Successful removal
 clears that membership. Distinct wrappers around the same native resource are distinct
 to the portable core and require consumer-side coordination.
+
+For M3, one wait may be active at a time. Add/remove remain owner-thread operations;
+wake may run concurrently and does not cancel, remove, release or close a member.
+Destroy during an active wait is rejected, as is destroy with registered members.
+Timeout and wake leave all connection and external-source ownership unchanged.
 
 ## Ownership table
 
