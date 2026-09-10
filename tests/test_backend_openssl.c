@@ -27,6 +27,7 @@ int main(void)
  CHECK(descriptor&&strcmp(descriptor->id,"openssl")==0,4);CHECK(descriptor->spi_version==PST_BACKEND_SPI_VERSION&&descriptor->metadata&&descriptor->metadata->components[0].major==3UL&&descriptor->metadata->components[0].minor==5UL&&descriptor->metadata->components[0].patch==8UL,5);
  CHECK((descriptor->capabilities&PST_BACKEND_CAP_ROLE_SERVER)&&(descriptor->capabilities&PST_BACKEND_CAP_ALPN_SERVER)&&(descriptor->capabilities&PST_BACKEND_CAP_PEER_CERT_OPTIONAL),6);
  CHECK((descriptor->client_capabilities&PST_BACKEND_CAP_SYSTEM_TRUST)&&(descriptor->client_capabilities&PST_BACKEND_CAP_PEER_NAME_VERIFY)&&(descriptor->server_capabilities&PST_BACKEND_CAP_SYSTEM_TRUST)&&!(descriptor->server_capabilities&PST_BACKEND_CAP_PEER_NAME_VERIFY)&&(descriptor->server_capabilities&PST_BACKEND_CAP_CUSTOM_TRUST)&&(descriptor->server_capabilities&PST_BACKEND_CAP_ALPN_SERVER),18);
+ CHECK(descriptor->client_capabilities==0x00027eb7UL&&descriptor->server_capabilities==0x0000777bUL&&descriptor->capabilities==0x00027fffUL,19);
  for(i=0;i<100;i++){state=NULL;CHECK(descriptor->vtable->initialize(&state)==PST_RESULT_OK&&state,7);descriptor->vtable->shutdown(state);}
  ERR_raise(ERR_LIB_USER,1);CHECK(ERR_peek_error()!=0UL,8);state=NULL;CHECK(descriptor->vtable->initialize(&state)==PST_RESULT_OK&&ERR_peek_error()==0UL,9);descriptor->vtable->shutdown(state);
  pst_backend_registry_reset();CHECK(pst_backend_openssl_register()==PST_RESULT_OK&&pst_backend_count()==1&&pst_backend_openssl_register()==PST_RESULT_INVALID_STATE,10);
@@ -38,6 +39,6 @@ int main(void)
  config.provider_selection.exact_provider_id="openssl";CHECK(pst_connection_create(runtime_b,&config,&connection)==PST_RESULT_OK&&connection,15);
  memset(&provider_info,0,sizeof(provider_info));provider_info.struct_size=sizeof(provider_info);provider_info.api_version=PST_API_VERSION;CHECK(pst_connection_get_provider_info(connection,&provider_info)==PST_RESULT_OK&&!strcmp(provider_info.provider_id,"openssl")&&(provider_info.capabilities&PST_CAP_TLS_1_3)&&(provider_info.capabilities&PST_CAP_ROLE_SERVER)&&(provider_info.client_capabilities&PST_CAP_SYSTEM_TRUST)&&(provider_info.server_capabilities&PST_CAP_SYSTEM_TRUST),16);
  pst_connection_release(connection);pst_trust_release(trust);pst_runtime_release(runtime_a);pst_runtime_release(runtime_b);pst_backend_registry_reset();CHECK(ERR_peek_error()==0UL,17);
- printf("OPENSSL_BACKEND=PASS VERSION=3.5.8 SPI3=PASS ROLE_CLIENT=ADVERTISED ROLE_SERVER=ADVERTISED TLS12=ADVERTISED TLS13=ADVERTISED INIT_CYCLES=100 MULTI_RUNTIME=PASS ERROR_QUEUE=ISOLATED\n");
+ printf("OPENSSL_BACKEND=PASS VERSION=3.5.8 SPI3=PASS ROLE_CLIENT=ADVERTISED ROLE_SERVER=ADVERTISED TLS12=ADVERTISED TLS13=ADVERTISED CLIENT_MASK=0x00027eb7 SERVER_MASK=0x0000777b AGGREGATE_MASK=0x00027fff INIT_CYCLES=100 MULTI_RUNTIME=PASS ERROR_QUEUE=ISOLATED\n");
  printf("test_backend_openssl: PASS\n");return 0;
 }

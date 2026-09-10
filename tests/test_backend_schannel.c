@@ -20,6 +20,7 @@ int main(void)
  descriptor=pst_backend_schannel_descriptor();CHECK(descriptor&&!strcmp(descriptor->id,"schannel"),1);
  CHECK(descriptor->spi_version==PST_BACKEND_SPI_VERSION&&descriptor->metadata&&descriptor->metadata->implementation.major==1UL,2);
  CHECK((descriptor->server_capabilities&(PST_BACKEND_CAP_TLS_1_2|PST_BACKEND_CAP_ROLE_SERVER|PST_BACKEND_CAP_NONBLOCKING|PST_BACKEND_CAP_BACKEND_WAIT|PST_BACKEND_CAP_LOCAL_IDENTITY|PST_BACKEND_CAP_PEER_CERT_AUTH|PST_BACKEND_CAP_PEER_CERT_OPTIONAL|PST_BACKEND_CAP_CUSTOM_TRUST|PST_BACKEND_CAP_SYSTEM_TRUST|PST_BACKEND_CAP_PEER_INFO))==(PST_BACKEND_CAP_TLS_1_2|PST_BACKEND_CAP_ROLE_SERVER|PST_BACKEND_CAP_NONBLOCKING|PST_BACKEND_CAP_BACKEND_WAIT|PST_BACKEND_CAP_LOCAL_IDENTITY|PST_BACKEND_CAP_PEER_CERT_AUTH|PST_BACKEND_CAP_PEER_CERT_OPTIONAL|PST_BACKEND_CAP_CUSTOM_TRUST|PST_BACKEND_CAP_SYSTEM_TRUST|PST_BACKEND_CAP_PEER_INFO)&&!(descriptor->server_capabilities&(PST_BACKEND_CAP_TLS_1_3|PST_BACKEND_CAP_ALPN_SERVER|PST_BACKEND_CAP_PEER_NAME_VERIFY)),3);
+ CHECK(descriptor->client_capabilities==0x00027eb5UL&&descriptor->server_capabilities==0x00007679UL&&descriptor->capabilities==0x00027efdUL,12);
  for(i=0;i<100;i++){state=NULL;CHECK(descriptor->vtable->initialize(&state)==PST_RESULT_OK&&state,4);descriptor->vtable->shutdown(state);}
  pst_backend_registry_reset();CHECK(pst_backend_schannel_register()==PST_RESULT_OK,5);
  memset(&options,0,sizeof(options));options.struct_size=sizeof(options);options.api_version=PST_API_VERSION;runtime=NULL;CHECK(pst_runtime_create(&options,&runtime)==PST_RESULT_OK,6);
@@ -29,6 +30,6 @@ int main(void)
  config.provider_selection.exact_provider_id="schannel";result=pst_connection_create(runtime,&config,&connection);CHECK(result==PST_RESULT_OK&&connection,10);pst_connection_release(connection);connection=NULL;
  memset(&provider_info,0,sizeof(provider_info));provider_info.struct_size=sizeof(provider_info);provider_info.api_version=PST_API_VERSION;CHECK(pst_runtime_get_provider_info(runtime,0,&provider_info)==PST_RESULT_OK&&provider_info.initialized&&!strcmp(provider_info.provider_id,"schannel")&&(provider_info.server_capabilities&PST_CAP_ROLE_SERVER)&&!(provider_info.server_capabilities&(PST_CAP_TLS_1_3|PST_CAP_ALPN_SERVER|PST_CAP_PEER_NAME_VERIFY)),11);
  pst_trust_release(trust);pst_runtime_release(runtime);pst_backend_registry_reset();
- printf("SCHANNEL_BACKEND=PASS SPI3=PASS ROLE_CLIENT=ADVERTISED ROLE_SERVER=ADVERTISED TLS12_SERVER=ADVERTISED TLS13_SERVER=UNAVAILABLE_NOT_ADVERTISED ALPN_SERVER=NOT_ADVERTISED INIT_CYCLES=100 CLIENT_NO_LOCAL_IDENTITY=PASS\n");
+ printf("SCHANNEL_BACKEND=PASS SPI3=PASS ROLE_CLIENT=ADVERTISED ROLE_SERVER=ADVERTISED TLS12_SERVER=ADVERTISED TLS13_SERVER=UNAVAILABLE_NOT_ADVERTISED ALPN_SERVER=NOT_ADVERTISED CLIENT_MASK=0x00027eb5 SERVER_MASK=0x00007679 AGGREGATE_MASK=0x00027efd INIT_CYCLES=100 CLIENT_NO_LOCAL_IDENTITY=PASS\n");
  printf("test_backend_schannel: PASS\n");return 0;
 }

@@ -11,8 +11,9 @@
   - M5 was absorbed by the M0/R6 contract work.
   - M6 TLS-upgrade proofs: complete; generic STARTTLS-style and CONNECT-style fixtures reuse the same connected transport after fragmented plaintext boundaries, then pass authenticated TLS, wait-set I/O and reciprocal shutdown across OpenSSL, Schannel and RetroZilla NSS without protocol parsing or plaintext rollback in PST.
   - M7 future-safe design: complete; runtime/profile isolation and provider-global limitations are documented, immutable V1/V2 identity/trust rotation is proven for 50 cycles, and the existing provider/Peer Info/diagnostic surfaces provide a native-handle-free connection metadata shape without API/SPI growth.
+  - M8 provider consolidation: complete; exact role-scoped masks are locked by provider tests, M0-M7 behavior remains green across all three providers, real TLS-after-plaintext and strict-truncation representatives pass, and provider asymmetries remain factual without capability expansion.
   - PapinhoAccelerator Phase 3.B4 architectural blocker: resolved by M3; final product handoff/release remains later work.
-  - M8 and later multiplexed-readiness phases: pending and not started.
+  - M9 and later multiplexed-readiness phases: pending and not started.
 
 - Server-side evolution on `feature/server-side`:
   - SS-0 CLIENT/SERVER architecture audit: complete.

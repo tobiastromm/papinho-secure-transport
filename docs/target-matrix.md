@@ -188,8 +188,8 @@ Cross-process network interoperability between x86 NSS and both x64 providers is
 
 | Provider | Aggregate | CLIENT | SERVER |
 |---|---:|---:|---:|
-| OpenSSL | `0x00007fff` | `0x00007eb7` | `0x0000777b` |
-| Schannel | `0x00007efd` | `0x00007eb5` | `0x00007679` |
+| OpenSSL | `0x00027fff` | `0x00027eb7` | `0x0000777b` |
+| Schannel | `0x00027efd` | `0x00027eb5` | `0x00007679` |
 | RetroZilla NSS | `0x00007aff` | `0x00007ab7` | `0x0000727b` |
 
 ---
