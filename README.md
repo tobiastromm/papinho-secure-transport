@@ -4,13 +4,11 @@
 
 **PapinhoSecureTransport (PST)** gives applications a common interface for secure communication while keeping provider-specific security code out of the application's main logic.
 
-Instead of making an application depend directly on the APIs, types, lifecycle, and particular behavior of a specific TLS implementation, PST places a common boundary between the application and compatible security providers.
+Instead of making an application depend directly on the APIs, types, lifecycle, readiness model, and particular behavior of a specific TLS implementation, PST places a common boundary between the application and compatible security providers.
 
 TLS is the secure-transport protocol implemented by PST today. Current providers include **RetroZilla NSS**, **Windows Schannel**, and **OpenSSL**.
 
-PST supports both **CLIENT** and **SERVER** TLS connections through public API **2.0.0** and provider SPI **3.0**. The role is explicit per connection, provider selection is also per connection, and capabilities are evaluated for the requested role before the transport is bound.
-
-Validated scenarios include **TLS 1.2 and TLS 1.3 on Windows NT 4.0 SP6 x86 through RetroZilla NSS**, **TLS 1.2 on Windows 10 build 19045 x64 through Schannel**, and **TLS 1.2 and TLS 1.3 through OpenSSL 3.5.8 on Windows 10 build 19045 x64**. The 0.5.0 package candidates were also validated from extracted SDKs on a separate clean Windows 10 Pro x64 system, including real TLS with the Combined Schannel/OpenSSL package.
+The current published release is **0.5.0**, with public API **2.0.0** and provider SPI **3.0**. Development on `feature/multiplexed-readiness` is preparing **0.6.0 / API 2.1.0**, preserving SPI 3.0 while adding a portable wait-set and scheduler foundation for applications that manage many secure connections.
 
 PST is not limited to Internet software. It can sit underneath browsers, e-mail clients, business client/server applications, LAN services, messaging systems, and custom protocols.
 
@@ -34,19 +32,40 @@ Provider selection is also per connection:
 
 Role-scoped capability masks eliminate providers that cannot satisfy the requested connection before binding. After binding, the selected provider is pinned: handshake, authentication, trust, ALPN, I/O, transport, or shutdown failure does **not** cause fallback to another provider.
 
-This also means an application can use different providers for different connections—for example, one provider for outbound CLIENT traffic and another for accepted SERVER connections—when the target contains both and the requested capabilities allow it.
+## API 2.1: many connections without exposing provider internals
 
-## Identity, authentication, trust, and peer name
+The 0.6.0 development track extends the common boundary to multiplexed readiness.
 
-API 2.0 keeps several security concepts deliberately separate:
+A portable **wait-set** can observe multiple PST connections through stable consumer tokens. On Win32, it can also include borrowed application-owned native sources such as a listening socket. The listener remains owned by the application: PST does not call `accept`, `shutdown`, or `closesocket` on it.
+
+Finite blocking waits and an explicit cross-thread wake allow one application-owned I/O thread to sleep until useful work exists without mandatory periodic polling or a sequential `N × timeout` loop. Provider-specific readiness remains authoritative: in particular, raw socket readiness never replaces RetroZilla NSS/NSPR `PR_Poll` semantics.
+
+Read and write remain bounded and incremental. Partial progress and `NEED_READ`, `NEED_WRITE`, or `NEED_READ_WRITE` are normal states; the application owns its buffers, unsent suffixes, operation deadlines, and fairness policy.
+
+## Identity, authentication, trust, peer name, and SNI
+
+PST deliberately keeps several security concepts separate:
 
 - **Local Identity** is the certificate chain and private key this endpoint presents.
 - **Peer Authentication** controls whether a peer certificate is disabled, optional, or required.
 - **Peer Trust** is either **CUSTOM** or **SYSTEM**; PST does not silently union the two or fall back from one to the other.
-- **Expected Peer Name** is independent CLIENT-side peer-name validation and is not applicable to SERVER.
+- **Expected Peer Name** is independent CLIENT-side certificate-name validation and is not applicable to SERVER.
+- **SNI** is routing information sent by a CLIENT and, in API 2.1, has explicit `COMPAT`, `DISABLED`, and `EXPLICIT` modes.
 - **Peer Info** reports copied TLS/certificate facts after negotiation.
 
+Expected Peer Name and SNI are therefore not the same setting. OpenSSL and Schannel have validated independent SNI control. The current RetroZilla NSS snapshot remains factually partial because its CLIENT hostname/SNI behavior is coupled through `SSL_SetURL`; PST filters unsupported combinations before binding instead of patching NSS or pretending the capability exists.
+
 TLS authentication does not perform application authorization. A valid certificate is not automatically an application Principal, and `authenticated != authorized`.
+
+## TLS after plaintext: STARTTLS and CONNECT foundations
+
+PST remains protocol-agnostic, but the 0.6.0 development track proves a useful boundary for browsers and e-mail software: an application may use a connected transport for plaintext protocol negotiation, stop exactly at a clean upgrade boundary, and then transfer that **same connected transport** to PST for TLS.
+
+That model was validated across OpenSSL, Schannel, and RetroZilla NSS for generic **STARTTLS-style** and **HTTP CONNECT-style** flows. PST does not parse SMTP, IMAP, or HTTP and does not reconnect behind the application's back.
+
+Once PST accepts ownership, a TLS failure does not roll the connection back to plaintext and does not return transport ownership. Pre-reading bytes that already belong to the TLS stream before attach is deliberately outside the current supported boundary.
+
+This provides the secure-transport foundation needed by projects such as PapinhoLegacyMail and PapinhoBrowser without moving their application protocols into PST.
 
 ## Incremental operation and shutdown
 
@@ -54,15 +73,19 @@ Handshake, readiness, encrypted I/O, and shutdown are incremental. `NEED_READ`, 
 
 Graceful TLS shutdown requires reciprocal `close_notify`. Local emission alone is not treated as complete shutdown. After TLS is established, EOF/reset without the peer's `close_notify` is classified as truncation, including the case where authenticated application data was delivered first.
 
+The M9 cross-provider closure also corrected two Schannel shutdown defects in the 0.6.0 development tree: completion after a reciprocal `close_notify` had already been observed, and processing already-buffered TLS before requesting another socket read.
+
 ## Providers and factual asymmetry
 
 The three providers intentionally expose only capabilities that are factual for each role.
 
-| Provider | CLIENT | SERVER | TLS | Important SERVER notes |
+| Provider | CLIENT | SERVER | TLS | Important notes |
 |---|---:|---:|---|---|
-| RetroZilla NSS/NSPR | yes | yes | 1.2, 1.3 | CUSTOM trust; SERVER SYSTEM_TRUST and complete PST SERVER ALPN are not advertised; real NT4 SP6 x86 package validation passed |
-| Windows Schannel | yes | yes | CLIENT 1.2; SERVER 1.2 on validated Win10 19045 | CUSTOM/SYSTEM trust according to role masks; SERVER TLS 1.3 and complete PST SERVER ALPN are not advertised on the validated environment; chain delivery may temporarily use `CurrentUser\CA` with controlled cleanup |
-| OpenSSL 3.5.8 | yes | yes | 1.2, 1.3 | CUSTOM and Windows SYSTEM trust where advertised; complete PST SERVER ALPN is supported |
+| RetroZilla NSS/NSPR | yes | yes | 1.2, 1.3 | real NT4 SP6 x86 validation; CUSTOM SERVER trust; complete SERVER SYSTEM_TRUST/ALPN absent; independent CLIENT SNI control remains partial |
+| Windows Schannel | yes | yes | 1.2 on validated Win10 environment | CUSTOM/SYSTEM trust according to role masks; complete SERVER TLS 1.3/ALPN not advertised in the validated environment |
+| OpenSSL 3.5.8 | yes | yes | 1.2, 1.3 | CUSTOM and Windows SYSTEM trust where advertised; complete SERVER ALPN and independent CLIENT SNI control validated |
+
+M9 executed all **9/9 TLS 1.2 CLIENT×SERVER provider pairs** and all **4/4 TLS 1.3 pairs eligible under the capability model**. The five TLS 1.3 combinations involving Schannel were rejected as ineligible before binding rather than attempted and downgraded.
 
 Do not assume that a capability available in one role or provider is automatically available in another.
 
@@ -73,31 +96,36 @@ Do not assume that a capability available in one role or provider is automatical
 | 🇬🇧 English | [Full project introduction](docs/en/README.md) | [Build, integration, and examples](docs/en/getting-started.md) |
 | 🇧🇷 Português (Brasil) | [Apresentação completa do projeto](docs/pt-BR/README.md) | [Build, integração e exemplos](docs/pt-BR/getting-started.md) |
 
-The public examples include [basic CLIENT](examples/basic_client.c) and [basic SERVER](examples/basic_server.c). The API contract is documented in [API 2.0](docs/api-2.0.md), the provider-author contract in [SPI 3.0](docs/provider-spi-3.0.md), and migration from the previous public generation in [API 1.3/SPI 2.4 to API 2.0/SPI 3.0](docs/api-1.3-to-2.0-migration.md).
+The public examples include [basic CLIENT](examples/basic_client.c) and [basic SERVER](examples/basic_server.c). The API 2.0 CLIENT/SERVER contract remains documented in [API 2.0](docs/api-2.0.md); the additive API 2.1 wait-set/SNI development baseline is recorded in [Public API and ABI](docs/public-api-abi.md) and [Readiness / Progress](docs/readiness-progress.md). Provider authors use [SPI 3.0](docs/provider-spi-3.0.md).
 
 ## Current highlights
 
-- CLIENT and SERVER roles through public API 2.0.0
-- Provider SPI 3.0 with role-scoped capabilities
-- TLS 1.2 validated with all three current providers
+- Published **0.5.0 / API 2.0.0 / SPI 3.0** baseline
+- Development **0.6.0 / API 2.1.0 / SPI 3.0** candidate after M9
+- CLIENT and SERVER roles with per-connection provider selection
+- TLS 1.2 validated with all three providers
 - TLS 1.3 validated with RetroZilla NSS and OpenSSL
 - Windows NT 4.0 SP6 x86 CLIENT/SERVER validation with RetroZilla NSS
-- Windows 10 build 19045 x64 CLIENT/SERVER validation with Schannel and OpenSSL
 - Real cross-provider CLIENT/SERVER interoperability
-- Per-connection EXACT / ORDERED / AUTOMATIC provider selection
+- Portable wait-set with stable consumer tokens
+- Consumer-owned external/native source integration
+- Finite blocking wait and cross-thread wake without mandatory polling
+- Partial-I/O and backpressure hardening
+- SNI separated from Expected Peer Name where the provider can support it
+- Generic STARTTLS-style and CONNECT-style same-transport TLS upgrade proofs
 - Provider pinning with no post-binding fallback
 - Reciprocal TLS shutdown and explicit truncation detection
-- Extracted-package and clean-machine validation for 0.5.0
+- 250-cycle mixed M9 scheduler/security/lifecycle stress with no crashes or hangs
 
-The current release candidate is **0.5.0**, with public API **2.0.0** and provider SPI **3.0**. It is distributed as target-specific static libraries and SDKs. Platforms outside the documented validation matrix remain unvalidated.
+The **published release remains 0.5.0** until M10 completes physical NT4, clean-machine, packaging, reproduction, documentation, and release validation for 0.6.0. Platforms outside the documented validation matrix remain unvalidated.
 
 ## Distribution
 
-The 0.5.0 distribution consists of a source package and separate static SDKs for the canonical targets based on RetroZilla NSS, Schannel, OpenSSL 3.5.8, and the optional Combined Schannel/OpenSSL target.
+The published 0.5.0 distribution consists of a source package and separate static SDKs for the canonical targets based on RetroZilla NSS, Schannel, OpenSSL 3.5.8, and the optional Combined Schannel/OpenSSL target.
 
 The Combined SDK is an official optional package for provider selection, not a fourth TLS implementation and not a default recommendation.
 
-See the practical guides above, the canonical [Target Matrix](docs/target-matrix.md), and [release packaging](docs/release-packaging.md) for target selection and integration details.
+The 0.6.0 development branch has not yet published replacement SDKs. See the practical guides above, the canonical [Target Matrix](docs/target-matrix.md), and [release packaging](docs/release-packaging.md) for target selection and integration details.
 
 ## Development transparency
 
@@ -112,8 +140,6 @@ Contributions are welcome in documentation, real-hardware testing, older Windows
 **TLS is the only secure-transport protocol implemented by PST today.** If there is a real use case, an appropriate architecture, and community interest, contributors may also explore other secure-transport families in the future.
 
 A particularly valuable area of research is maintaining or developing reproducible NSS/NSPR-based paths capable of bringing modern TLS to older operating systems.
-
-See the documentation above for the project's motivation, architecture, provider model, trust concepts, retrocomputing perspective, practical integration, and community goals.
 
 ## Support the project
 
