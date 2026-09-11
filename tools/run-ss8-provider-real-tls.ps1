@@ -5,13 +5,11 @@ $bundle=[IO.Path]::GetFullPath($BundleDirectory)
 $source=Join-Path $bundle "work\source"
 $packages=Join-Path $bundle "work\packages"
 $output=Join-Path $bundle "provider-real-tls"
-$pki=Join-Path $output "pki"
+$pki=Join-Path $bundle "fixtures\interoperability-pki"
 $logs=Join-Path $output "logs"
-foreach($required in @($source,$packages)){if(-not(Test-Path -LiteralPath $required)){throw("missing package-only input: "+$required)}}
+foreach($required in @($source,$packages,$pki)){if(-not(Test-Path -LiteralPath $required)){throw("missing package-only input: "+$required)}}
 if(Test-Path -LiteralPath $output){Remove-Item -LiteralPath $output -Recurse -Force}
-New-Item -ItemType Directory -Path $output,$pki,$logs|Out-Null
-Push-Location $bundle
-try{& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $source "tests\generate_interop_pki.ps1") -OutputDirectory "provider-real-tls\pki";if($LASTEXITCODE-ne 0){throw "PKI generation failed"}}finally{Pop-Location}
+New-Item -ItemType Directory -Path $output,$logs|Out-Null
 
 function Compile-Harness([string]$Target,[string]$SourceName,[string]$OutputName,[switch]$PrivateHeaders){
  $sdk=Join-Path $packages $Target;$include=Join-Path $sdk "include";$library=Join-Path $sdk ("lib\"+$Target);$runtime=Join-Path $sdk ("runtime\"+$Target);$bin=Join-Path $output $Target

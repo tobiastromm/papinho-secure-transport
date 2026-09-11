@@ -7,12 +7,10 @@ $packages=Join-Path $bundle "work\packages"
 $sdk=Join-Path $packages "win32-x64-msvc-19.51-schannel-openssl3"
 $target="win32-x64-msvc-19.51-schannel-openssl3"
 $include=Join-Path $sdk "include";$library=Join-Path $sdk ("lib\"+$target);$runtime=Join-Path $sdk ("runtime\"+$target)
-$output=Join-Path $bundle "combined-real-tls";$pki=Join-Path $output "pki";$bin=Join-Path $output "bin";$logs=Join-Path $output "logs"
-foreach($required in @($source,$include,$library,$runtime)){if(-not(Test-Path -LiteralPath $required)){throw("missing package-only input: "+$required)}}
+$output=Join-Path $bundle "combined-real-tls";$pki=Join-Path $bundle "fixtures\interoperability-pki";$bin=Join-Path $output "bin";$logs=Join-Path $output "logs"
+foreach($required in @($source,$include,$library,$runtime,$pki)){if(-not(Test-Path -LiteralPath $required)){throw("missing package-only input: "+$required)}}
 if(Test-Path -LiteralPath $output){Remove-Item -LiteralPath $output -Recurse -Force}
-New-Item -ItemType Directory -Path $pki,$bin,$logs|Out-Null
-Push-Location $bundle
-try{& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $source "tests\generate_interop_pki.ps1") -OutputDirectory "combined-real-tls\pki";if($LASTEXITCODE-ne 0){throw "PKI generation failed"}}finally{Pop-Location}
+New-Item -ItemType Directory -Path $bin,$logs|Out-Null
 Get-ChildItem -LiteralPath $runtime -Filter "*.dll" -File|Copy-Item -Destination $bin
 $schannelClient=Join-Path $bin "combined-client-schannel.exe";$opensslClient=Join-Path $bin "combined-client-openssl.exe";$combinedServer=Join-Path $bin "combined-server.exe"
 $schannelSource=Join-Path $output "combined-client-schannel.c";$opensslSource=Join-Path $output "combined-client-openssl.c"

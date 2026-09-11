@@ -11,15 +11,22 @@ foreach($file in Get-ChildItem -LiteralPath $packages -File){Copy-Item -LiteralP
 Copy-Item -LiteralPath (Join-Path $repo "tools\run-ss8-clean-machine-validation.ps1") -Destination $destination
 Copy-Item -LiteralPath (Join-Path $repo "tools\run-ss8-provider-real-tls.ps1") -Destination $destination
 Copy-Item -LiteralPath (Join-Path $repo "tools\run-ss8-combined-real-tls.ps1") -Destination $destination
+$fixtureSource=Join-Path $repo "build\fixtures\interoperability-pki"
+if(-not(Test-Path -LiteralPath (Join-Path $fixtureSource "server-chain.pem") -PathType Leaf)){throw "missing pre-generated interoperability fixtures"}
+$fixtureDestination=Join-Path $destination "fixtures\interoperability-pki"
+New-Item -ItemType Directory -Path $fixtureDestination -Force|Out-Null
+Get-ChildItem -LiteralPath $fixtureSource -File|Copy-Item -Destination $fixtureDestination
 $readme=@'
 PapinhoSecureTransport M10 clean-machine validation bundle
 
 This directory must be copied to a separate Windows 10/11 x64 machine. It is
 not sufficient to run it on the development host.
 
-Prerequisites: PowerShell 5.1 and a supported modern MSVC x64/Windows SDK build
-environment. VC6 is optional and is detected explicitly; do not compile the x86
-VC6/NSS SDK with modern MSVC. Do not install or add global OpenSSL/NSS paths.
+Prerequisites: PowerShell 5.1, Python 3 and a supported modern MSVC x64/Windows
+SDK build environment. VC6 is optional and is detected explicitly; do not
+compile the x86 VC6/NSS SDK with modern MSVC. Do not install or add global
+OpenSSL/NSS paths. Test PKI is transferred in the hash-covered bundle; no
+global OpenSSL command or runtime is used.
 
 From an ordinary PowerShell prompt in this directory:
 
@@ -41,7 +48,7 @@ structural plus CLIENT/SERVER compile/link/bootstrap gates. Real TLS/trust
 gates remain explicit and must not be inferred from that bootstrap.
 '@
 [IO.File]::WriteAllText((Join-Path $destination "README.txt"),$readme,(New-Object Text.UTF8Encoding($false)))
-$lines=Get-ChildItem -LiteralPath $destination -File|Where-Object Name -ne "TRANSFER-SHA256SUMS.txt"|Sort-Object Name|ForEach-Object{"{0}  {1}"-f(Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant(),$_.Name}
+$lines=Get-ChildItem -LiteralPath $destination -File -Recurse|Where-Object Name -ne "TRANSFER-SHA256SUMS.txt"|Sort-Object FullName|ForEach-Object{"{0}  {1}"-f(Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant(),$_.FullName.Substring($destination.Length+1).Replace('\','/')}
 [IO.File]::WriteAllText((Join-Path $destination "TRANSFER-SHA256SUMS.txt"),(($lines-join"`n")+"`n"),(New-Object Text.UTF8Encoding($false)))
 Write-Output ("M10_CLEAN_MACHINE_BUNDLE="+$destination)
 Write-Output ("TRANSFER_FILE_COUNT="+($lines.Count+1))
