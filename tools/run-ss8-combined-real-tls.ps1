@@ -20,7 +20,7 @@ $schannelSource=Join-Path $output "combined-client-schannel.c";$opensslSource=Jo
 [IO.File]::WriteAllText($opensslSource,([IO.File]::ReadAllText((Join-Path $source "tests\test_openssl_identity_integration.c")).Replace("info.provider_count!=1","info.provider_count<2")),(New-Object Text.UTF8Encoding($false)))
 $link='papinho_secure_transport.lib libssl.lib libcrypto.lib ws2_32.lib secur32.lib crypt32.lib ncrypt.lib bcrypt.lib'
 function Compile-Harness([string]$HarnessSource,[string]$Executable,[switch]$PrivateHeaders){
- $response=$Executable+".rsp";$arguments=@('/nologo','/MD','/W4','/D_CRT_SECURE_NO_WARNINGS',('/I"'+$include+'"'))
+ $response=$Executable+".rsp";$arguments=@('/nologo','/MD','/W4','/D_CRT_SECURE_NO_WARNINGS',('/I"'+$include+'"'),('/I"'+(Join-Path $source 'tests')+'"'))
  if($PrivateHeaders){$arguments+=('/I"'+(Join-Path $source 'src')+'"')}
  $arguments+=@('/Fe"'+$Executable+'"','/Tc"'+$HarnessSource+'"','/link','/LIBPATH:"'+$library+'"')+$link.Split(' ')
  [IO.File]::WriteAllLines($response,$arguments,(New-Object Text.ASCIIEncoding))
