@@ -142,9 +142,9 @@ M8 locked and M9 reconfirmed:
 
 | Provider | Aggregate | CLIENT | SERVER |
 |---|---:|---:|---:|
-| OpenSSL | `0x00027fff` | `0x00027eb7` | `0x0000777b` |
-| Schannel | `0x00027efd` | `0x00027eb5` | `0x00007679` |
-| RetroZilla NSS | `0x00007aff` | `0x00007ab7` | `0x0000727b` |
+| OpenSSL | `0x00067fff` | `0x00067eb7` | `0x0004777b` |
+| Schannel | `0x00067efd` | `0x00067eb5` | `0x00047679` |
+| RetroZilla NSS | `0x00047aff` | `0x00047ab7` | `0x0004727b` |
 
 Three-provider same-process composition remains `NOT_APPLICABLE_CURRENT_TARGET_MATRIX`: the RetroZilla NSS target is x86/VC6 while the current Schannel/OpenSSL Combined target is x64/MSVC. Cross-process network interoperability is the factual evidence across that architecture boundary.
 

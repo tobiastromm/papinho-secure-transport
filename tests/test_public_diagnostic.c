@@ -201,7 +201,7 @@ int main(void)
 {
     int result; volatile pst_u32 constant;
     constant=PST_API_VERSION;CHECK(constant==0x00020100UL,50);
-    constant=PST_LIBRARY_VERSION;CHECK(constant==0x00000600UL,51);
+    constant=PST_LIBRARY_VERSION;CHECK(constant==0x00000601UL,51);
     constant=PST_DIAGNOSTIC_BACKEND_ID_CAPACITY;CHECK(constant==32UL,52);
     constant=PST_DIAGNOSTIC_INFO_MIN_SIZE;CHECK(constant==64UL,55);
     constant=PST_DIAGNOSTIC_OPERATION_NONE;CHECK(constant==0UL,53);

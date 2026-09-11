@@ -2,7 +2,7 @@
 
 # Public API and ABI baseline
 
-This document keeps the historical ABI work visible while recording the current release contract. The published 0.5.0 baseline is API 2.0.0 / SPI 3.0 / library 0.5.0. The current 0.6.0 release candidate is API **2.1.0**, SPI **3.0**, library **0.6.0**.
+This document keeps the historical ABI work visible while recording the current release contract. The published 0.6.0 baseline is API 2.1.0 / SPI 3.0 / library 0.6.0. The current bugfix track is API **2.1.0**, SPI **3.0**, library **0.6.1**.
 
 API 2.1 is an additive evolution of API 2.0. It preserves the API 2.0 prefixes and adds the scheduler/readiness surface frozen by ADR-0005. M0–M9 found no need for an SPI change.
 
@@ -55,6 +55,8 @@ Read and write remain bounded incremental operations. A successful read may retu
 
 Shutdown does not imply send-all. The caller completes its retained unsent application remainder before beginning shutdown. Clean close requires reciprocal TLS shutdown where the provider exposes it; raw EOF without authenticated reciprocal close remains `TRUNCATED`, and data delivered before truncation remains valid.
 
+`PST_TLS_POLICY.require_graceful_shutdown` uses the closed `PST_FEATURE_*` vocabulary. `DISABLED` and `OPTIONAL` do not make provider support mandatory; `REQUIRED` adds `PST_CAP_GRACEFUL_SHUTDOWN` to pre-binding eligibility. The field never initiates shutdown, creates a deadline, weakens truncation, or turns connection release into an implicit TLS shutdown. All current CLIENT and SERVER providers advertise the capability from proven reciprocal-shutdown evidence.
+
 M9 corrected two Schannel shutdown implementation defects without changing this public contract: already-observed reciprocal `close_notify` now completes correctly after draining, and already-buffered TLS is processed before requesting another socket read.
 
 ## TLS after prior plaintext use
@@ -76,13 +78,13 @@ Opaque public types include runtime/configuration/provider-independent TLS objec
 
 ## Capability model
 
-The current known capability mask extends through `PST_CAP_SNI_CONTROL` and remains 32-bit. M8 audited exact role-scoped masks; M9 reconfirmed them:
+The current known capability mask extends through `PST_CAP_GRACEFUL_SHUTDOWN` and remains 32-bit. Exact role-scoped masks are:
 
 | Provider | Aggregate | CLIENT | SERVER |
 |---|---:|---:|---:|
-| OpenSSL | `0x00027fff` | `0x00027eb7` | `0x0000777b` |
-| Schannel | `0x00027efd` | `0x00027eb5` | `0x00007679` |
-| RetroZilla NSS | `0x00007aff` | `0x00007ab7` | `0x0000727b` |
+| OpenSSL | `0x00067fff` | `0x00067eb7` | `0x0004777b` |
+| Schannel | `0x00067efd` | `0x00067eb5` | `0x00047679` |
+| RetroZilla NSS | `0x00047aff` | `0x00047ab7` | `0x0004727b` |
 
 Capabilities are eligibility facts, not aspirations. Missing requirements reject a provider before binding. A failure after binding is terminal for that connection; another provider is not tried.
 
@@ -136,6 +138,7 @@ The earlier published baselines remain historical facts rather than being rewrit
 
 - v0.4.0: API 1.3 / library 0.4.0, with the earlier SPI 2.4 release baseline;
 - v0.5.0: API 2.0.0 / SPI 3.0 / library 0.5.0, introducing the CLIENT/SERVER contract and published provider SDKs;
-- current release candidate: API 2.1.0 / SPI 3.0 / library 0.6.0.
+- published v0.6.0: API 2.1.0 / SPI 3.0 / library 0.6.0;
+- current bugfix track: API 2.1.0 / SPI 3.0 / library 0.6.1.
 
 Detailed historical release evidence remains under `docs/codex/release-evidence/` and the API 2.0 migration documents. M10 will freeze the final 0.6.0 package/ABI evidence rather than retroactively changing the published 0.4.0 or 0.5.0 contracts.

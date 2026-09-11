@@ -4,7 +4,7 @@
 
 This target-separated SDK contains the public PST headers, one static provider build, its declared link/runtime dependencies, public examples, and release documentation.
 
-This is the PapinhoSecureTransport 0.6.0 SDK with public API 2.1 and provider SPI 3.0. CLIENT and SERVER remain selected per connection; API 2.1 adds the portable wait-set and scheduler surface without creating role-specific SDKs. PapinhoSecureTransport is licensed under MPL-2.0; see LICENSE and THIRD_PARTY_NOTICES.md. The exact corresponding source is papinho-secure-transport-0.6.0-src.zip. The NSS source package also contains the exact modified runtime snapshot and fail-closed patch.
+This is the PapinhoSecureTransport 0.6.1 SDK with public API 2.1 and provider SPI 3.0. CLIENT and SERVER remain selected per connection; API 2.1 adds the portable wait-set and scheduler surface without creating role-specific SDKs. PapinhoSecureTransport is licensed under MPL-2.0; see LICENSE and THIRD_PARTY_NOTICES.md. The exact corresponding source is papinho-secure-transport-0.6.1-src.zip. The NSS source package also contains the exact modified runtime snapshot and fail-closed patch.
 
 ## Use
 

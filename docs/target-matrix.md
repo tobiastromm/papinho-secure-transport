@@ -4,7 +4,11 @@ This is the canonical PapinhoSecureTransport target matrix. The ecosystem-wide n
 
 Target identity, build inputs, operating-system support policy, and observed validation are separate facts. A toolchain name is not an operating-system support claim.
 
-## 0.6.0 release candidate after M9
+## 0.6.1 graceful-shutdown contract bugfix candidate
+
+The 0.6.1 patch retains API 2.1.0, SPI 3.0 and all target identities. It adds the public `PST_CAP_GRACEFUL_SHUTDOWN` vocabulary bit and corrects `require_graceful_shutdown` tri-state validation and pre-binding eligibility. Provider masks below reflect this additive capability; the published 0.6.0 binaries and packages are not modified.
+
+## Historical 0.6.0 release candidate after M9
 
 The 0.6.0 release track keeps the same four build-target identities used by 0.5.0. The new work changes the public secure-transport/scheduler contract, not the target naming model.
 
@@ -21,9 +25,9 @@ M8 locked the current role-scoped capability masks and M9 reconfirmed them witho
 
 | Provider | Aggregate | CLIENT | SERVER |
 |---|---:|---:|---:|
-| OpenSSL | `0x00027fff` | `0x00027eb7` | `0x0000777b` |
-| Schannel | `0x00027efd` | `0x00027eb5` | `0x00007679` |
-| RetroZilla NSS | `0x00007aff` | `0x00007ab7` | `0x0000727b` |
+| OpenSSL | `0x00067fff` | `0x00067eb7` | `0x0004777b` |
+| Schannel | `0x00067efd` | `0x00067eb5` | `0x00047679` |
+| RetroZilla NSS | `0x00047aff` | `0x00047ab7` | `0x0004727b` |
 
 Important asymmetries remain intentional and factual: OpenSSL and Schannel provide full independent CLIENT SNI control; RetroZilla NSS remains partial because its published snapshot couples the client hostname/SNI behavior through `SSL_SetURL`. RetroZilla NSS is not patched to manufacture parity. Complete SERVER ALPN and SERVER SYSTEM_TRUST remain absent from the NSS role mask, while Schannel TLS 1.3 remains unadvertised for the validated target/environment. Unsupported requirements are filtered before provider binding; M9 observed zero post-binding provider switches.
 
@@ -215,9 +219,9 @@ Cross-process network interoperability between x86 NSS and both x64 providers is
 
 | Provider | Aggregate | CLIENT | SERVER |
 |---|---:|---:|---:|
-| OpenSSL | `0x00027fff` | `0x00027eb7` | `0x0000777b` |
-| Schannel | `0x00027efd` | `0x00027eb5` | `0x00007679` |
-| RetroZilla NSS | `0x00007aff` | `0x00007ab7` | `0x0000727b` |
+| OpenSSL | `0x00067fff` | `0x00067eb7` | `0x0004777b` |
+| Schannel | `0x00067efd` | `0x00067eb5` | `0x00047679` |
+| RetroZilla NSS | `0x00047aff` | `0x00047ab7` | `0x0004727b` |
 
 ---
 

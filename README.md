@@ -8,7 +8,7 @@ Instead of making an application depend directly on the APIs, types, lifecycle, 
 
 TLS is the secure-transport protocol implemented by PST today. Current providers include **RetroZilla NSS**, **Windows Schannel**, and **OpenSSL**.
 
-The current 0.6.0 release candidate uses public API **2.1.0** and provider SPI **3.0**. It preserves the CLIENT/SERVER contract while adding a portable wait-set and scheduler foundation for applications that manage many secure connections.
+The current 0.6.1 bugfix candidate uses public API **2.1.0** and provider SPI **3.0**. It preserves the CLIENT/SERVER and scheduler contracts while correcting the tri-state graceful-shutdown capability requirement.
 
 PST is not limited to Internet software. It can sit underneath browsers, e-mail clients, business client/server applications, LAN services, messaging systems, and custom protocols.
 
@@ -100,7 +100,7 @@ The public examples include [basic CLIENT](examples/basic_client.c) and [basic S
 
 ## Current highlights
 
-- Current **0.6.0 / API 2.1.0 / SPI 3.0** release candidate
+- Current **0.6.1 / API 2.1.0 / SPI 3.0** bugfix candidate
 - Published **0.5.0 / API 2.0.0 / SPI 3.0** historical baseline
 - CLIENT and SERVER roles with per-connection provider selection
 - TLS 1.2 validated with all three providers

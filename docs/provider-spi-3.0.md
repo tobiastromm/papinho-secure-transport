@@ -8,7 +8,7 @@ The core registry and all three providers use SPI 3.0 for CLIENT and their factu
 
 ## Descriptor and capabilities
 
-Descriptors retain stable ID, informational name, metadata, an aggregate static capability mask, CLIENT and SERVER capability masks, and the vtable. The aggregate mask is exactly the union of the two role masks and exists for discovery; it does not assert every role/capability cross-product. Selection uses only the mask for the frozen connection role. Capabilities use the API 2.0 numeric values. Runtime-effective query may remove static claims but never invent unsupported behavior, and the effective result is intersected with both role masks. Registration order is the deterministic AUTOMATIC order.
+Descriptors retain stable ID, informational name, metadata, an aggregate static capability mask, CLIENT and SERVER capability masks, and the vtable. The aggregate mask is exactly the union of the two role masks and exists for discovery; it does not assert every role/capability cross-product. Selection uses only the mask for the frozen connection role. Capabilities use the public numeric values, including additive API 2.1 vocabulary bits `SNI_CONTROL` and `GRACEFUL_SHUTDOWN`; no SPI layout change is required. Runtime-effective query may remove static claims but never invent unsupported behavior, and the effective result is intersected with both role masks. Registration order is the deterministic AUTOMATIC order.
 
 ## Runtime and connection
 

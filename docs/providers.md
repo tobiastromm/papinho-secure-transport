@@ -17,16 +17,17 @@ A provider is the engine adapter that implements PST's common secure-transport c
 | full independent SNI control CLIENT / SERVER | no / no | yes / no | yes / no |
 | LOCAL_IDENTITY / peer certificate auth / PEER_INFO | yes | yes | yes |
 | NONBLOCKING / BACKEND_WAIT | yes | yes | yes |
+| reciprocal graceful shutdown | yes | yes | yes |
 
 Exact API 2.1/SPI 3.0 role masks are:
 
 | Provider | Aggregate | CLIENT | SERVER |
 |---|---:|---:|---:|
-| RetroZilla NSS | `0x00007aff` | `0x00007ab7` | `0x0000727b` |
-| Schannel | `0x00027efd` | `0x00027eb5` | `0x00007679` |
-| OpenSSL 3.5.8 | `0x00027fff` | `0x00027eb7` | `0x0000777b` |
+| RetroZilla NSS | `0x00047aff` | `0x00047ab7` | `0x0004727b` |
+| Schannel | `0x00067efd` | `0x00067eb5` | `0x00047679` |
+| OpenSSL 3.5.8 | `0x00067fff` | `0x00067eb7` | `0x0004777b` |
 
-The aggregate is exactly the union of the two role masks; it is discovery metadata, not permission to combine bits from different roles. `PEER_CERT_AUTH` covers required authentication, `PEER_CERT_OPTIONAL` is additionally required for OPTIONAL, and DISABLED is the baseline policy and needs no capability bit. mTLS is a configuration using the proven local-identity and peer-authentication capabilities, not a separate public bit.
+The aggregate is exactly the union of the two role masks; it is discovery metadata, not permission to combine bits from different roles. `PEER_CERT_AUTH` covers required authentication, `PEER_CERT_OPTIONAL` is additionally required for OPTIONAL, and DISABLED is the baseline policy and needs no capability bit. mTLS is a configuration using the proven local-identity and peer-authentication capabilities, not a separate public bit. `PST_CAP_GRACEFUL_SHUTDOWN` records proven reciprocal shutdown: `PST_FEATURE_REQUIRED` makes it mandatory before binding, whereas OPTIONAL and DISABLED do not. It never initiates shutdown or creates a PST-owned deadline.
 
 Wait-set scheduling, mixed borrowed external sources, wake, bounded partial I/O, TLS attach after a clean plaintext boundary, reciprocal shutdown and strict truncation are proven provider behaviors rather than additional public capability bits. All providers preserve provider-authoritative TLS readiness; RetroZilla NSS specifically retains `PR_Poll` authority after native wake-up. OpenSSL has full per-runtime provider isolation, Schannel has partial isolation because Windows certificate-store adaptation is process-external state with owned cleanup, and the RetroZilla NSS snapshot retains its documented process-global singleton limitation.
 

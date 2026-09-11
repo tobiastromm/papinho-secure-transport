@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
 param(
-    [ValidateSet("0.5.0", "0.6.0")][string]$Version = "0.6.0",
+    [ValidateSet("0.5.0", "0.6.0", "0.6.1")][string]$Version = "0.6.1",
     [ValidateSet("all", "win32-x86-vc6-retrozilla-nss", "win32-x64-msvc-19.51-schannel", "win32-x64-msvc-19.51-openssl3", "win32-x64-msvc-19.51-schannel-openssl3")]
     [string]$Target = "all",
     [switch]$Clean
@@ -9,8 +9,8 @@ param(
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 $version = $Version
-$libraryVersion = if ($Version -eq "0.6.0") { "0.6.0" } else { "0.5.0" }
-$apiVersion = if ($Version -eq "0.6.0") { "2.1.0" } else { "2.0.0" }
+$libraryVersion = if ($Version -eq "0.5.0") { "0.5.0" } else { $Version }
+$apiVersion = if ($Version -eq "0.5.0") { "2.0.0" } else { "2.1.0" }
 $root = Join-Path $repo "dist\staging\$version"
 . (Join-Path $PSScriptRoot "package-staging-policy.ps1")
 $targets = @("win32-x86-vc6-retrozilla-nss", "win32-x64-msvc-19.51-schannel", "win32-x64-msvc-19.51-openssl3", "win32-x64-msvc-19.51-schannel-openssl3")
@@ -44,7 +44,7 @@ foreach ($id in $targets) {
     $thirdParty = "none"
     if ($id -eq "win32-x86-vc6-retrozilla-nss") {
         $build = Join-Path $repo "build\win32-x86-vc6-retrozilla-nss"; $architecture = "x86"; $toolchain = "Visual C++ 6 SP5 plus Processor Pack; cl.exe 12.00.8804; link.exe 6.00.8447"; $crt = "compiler-default-static"; $providers = "retrozilla-nss"
-        $capabilities = "aggregate=0x00007aff;client=0x00007ab7;server=0x0000727b;server_absent=SYSTEM_TRUST,ALPN_SERVER,PEER_NAME_VERIFY"
+        $capabilities = "aggregate=0x00047aff;client=0x00047ab7;server=0x0004727b;server_absent=SYSTEM_TRUST,ALPN_SERVER,PEER_NAME_VERIFY"
         $linkLibraries = "papinho_secure_transport.lib,wsock32.lib"
         $runtime = Join-Path $repo "third_party\retrozilla-nss\prebuilt\win32-x86-vc6\runtime"
         $runtimeList = @("freebl3.chk","freebl3.dll","nspr4.dll","nss3.dll","nssutil3.dll","plc4.dll","plds4.dll","softokn3.chk","softokn3.dll","ssl3.dll")
@@ -53,11 +53,11 @@ foreach ($id in $targets) {
         $runtimeFiles = $runtimeList -join ","; $thirdParty = "RetroZilla NSS 3.42 Beta;NSPR 4.7.7"
     } elseif ($id -eq "win32-x64-msvc-19.51-schannel") {
         $build = Join-Path $repo "build\win32-x64-msvc-19.51-schannel"; $architecture = "x64"; $toolchain = "MSVC 19.51.36256.0; toolset 14.51.36231; Windows SDK 10.0.26100.0"; $crt = "dynamic-/MD"; $providers = "schannel"
-        $capabilities = "aggregate=0x00027efd;client=0x00027eb5;server=0x00007679;server_absent=TLS1.3,ALPN_SERVER,PEER_NAME_VERIFY"
+        $capabilities = "aggregate=0x00067efd;client=0x00067eb5;server=0x00047679;server_absent=TLS1.3,ALPN_SERVER,PEER_NAME_VERIFY"
         $linkLibraries = "papinho_secure_transport.lib,ws2_32.lib,secur32.lib,crypt32.lib,ncrypt.lib,bcrypt.lib"
     } elseif ($id -eq "win32-x64-msvc-19.51-openssl3") {
         $build = Join-Path $repo "build\win32-x64-msvc-19.51-openssl3"; $architecture = "x64"; $toolchain = "MSVC 19.51.36256.0; toolset 14.51.36231; Windows SDK 10.0.26100.0"; $crt = "dynamic-/MD"; $providers = "openssl"
-        $capabilities = "aggregate=0x00027fff;client=0x00027eb7;server=0x0000777b;server_absent=PEER_NAME_VERIFY"
+        $capabilities = "aggregate=0x00067fff;client=0x00067eb7;server=0x0004777b;server_absent=PEER_NAME_VERIFY"
         $linkLibraries = "papinho_secure_transport.lib,libssl.lib,libcrypto.lib,ws2_32.lib,crypt32.lib"
         foreach ($file in @("libssl.lib","libcrypto.lib")) { Copy-Required (Join-Path $repo "third_party\openssl\prebuilt\win32-x64-msvc-19.51-openssl3\3.5.8\lib\$file") (Join-Path $stage "lib\$id\$file") }
         foreach ($file in @("libssl-3-x64.dll","libcrypto-3-x64.dll")) { Copy-Required (Join-Path $repo "third_party\openssl\prebuilt\win32-x64-msvc-19.51-openssl3\3.5.8\runtime\$file") (Join-Path $stage "runtime\$id\$file") }

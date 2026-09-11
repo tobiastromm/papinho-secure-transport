@@ -9,7 +9,7 @@ int main(void)
     PST_RUNTIME_INFO info;
     PST_CONNECTION_CONFIG config;
     pst_runtime *runtime;
-    if (pst_api_version() != 0x00020100UL || pst_library_version() != 0x00000600UL) return 10;
+    if (pst_api_version() != 0x00020100UL || pst_library_version() != 0x00000601UL) return 10;
     if (pst_win32_register_builtin_providers() != PST_RESULT_OK) return 11;
     memset(&options, 0, sizeof(options)); options.struct_size = sizeof(options); options.api_version = PST_API_VERSION;
     if (pst_runtime_create(&options, &runtime) != PST_RESULT_OK) return 12;
@@ -27,6 +27,6 @@ int main(void)
     config.tls.struct_size=sizeof(config.tls);config.tls.api_version=PST_API_VERSION;config.tls.minimum_version=PST_TLS_VERSION_1_2;config.tls.maximum_version=PST_TLS_VERSION_1_2;
     config.alpn.struct_size=sizeof(config.alpn);config.alpn.api_version=PST_API_VERSION;config.alpn.mode=PST_FEATURE_DISABLED;
     pst_runtime_release(runtime);
-    printf("PACKAGE_CONSUMER API=2.1.0 LIBRARY=0.6.0 ROLE=%s PASS\n",config.role==PST_CONNECTION_ROLE_SERVER?"SERVER":"CLIENT");
+    printf("PACKAGE_CONSUMER API=2.1.0 LIBRARY=0.6.1 ROLE=%s PASS\n",config.role==PST_CONNECTION_ROLE_SERVER?"SERVER":"CLIENT");
     return 0;
 }

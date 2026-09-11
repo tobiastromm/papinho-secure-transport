@@ -2,7 +2,11 @@
 
 # Release packaging decision
 
-## M10 0.6.0 release candidate
+## 0.6.1 graceful-shutdown contract bugfix candidate
+
+The current package line is Library/Package 0.6.1 with public API 2.1.0 and provider SPI 3.0. It corrects the closed tri-state validation of `require_graceful_shutdown` and adds the additive public `PST_CAP_GRACEFUL_SHUTDOWN` vocabulary bit without changing public structure or SPI layout. `tools/build-release-packages.ps1 -Version 0.6.1` creates the five canonical packages under `dist/packages/0.6.1`.
+
+## Historical M10 0.6.0 release candidate
 
 The current package line is Library/Package 0.6.0 with public API 2.1.0 and provider SPI 3.0. It retains the four canonical target IDs and static-library distribution model while adding the public wait-set, external-source, wake and tri-state SNI surface. `tools/build-release-packages.ps1 -Version 0.6.0` creates exactly one source archive and four SDK archives under `dist/packages/0.6.0`; `tools/validate-release-packages.ps1 -Version 0.6.0 -CompileConsumers` validates their boundaries, CLIENT/SERVER consumers and the public API 2.1 package-only scheduler consumer.
 

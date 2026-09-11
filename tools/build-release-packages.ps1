@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 param(
-    [ValidateSet("0.5.0", "0.6.0")]
-    [string]$Version = "0.6.0",
+    [ValidateSet("0.5.0", "0.6.0", "0.6.1")]
+    [string]$Version = "0.6.1",
     [string]$OutputDirectory
 )
 

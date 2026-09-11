@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: MPL-2.0
-param([ValidateSet("0.5.0", "0.6.0")][string]$Version="0.6.0",[string]$PackageDirectory,[string]$ValidationDirectory,[string]$ExpectedChecksumsFile,[switch]$CompileConsumers)
+param([ValidateSet("0.5.0", "0.6.0", "0.6.1")][string]$Version="0.6.1",[string]$PackageDirectory,[string]$ValidationDirectory,[string]$ExpectedChecksumsFile,[switch]$CompileConsumers)
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
-$libraryVersion = if ($Version -eq "0.6.0") { "0.6.0" } else { "0.5.0" }
-$apiVersion = if ($Version -eq "0.6.0") { "2.1.0" } else { "2.0.0" }
+$libraryVersion = if ($Version -eq "0.5.0") { "0.5.0" } else { $Version }
+$apiVersion = if ($Version -eq "0.5.0") { "2.0.0" } else { "2.1.0" }
 if (-not $PackageDirectory) { $PackageDirectory = Join-Path $repo ("dist\packages\"+$Version) }
 if (-not $ValidationDirectory) { $ValidationDirectory = Join-Path $repo ("dist\validation\"+$Version) }
 $PackageDirectory = [IO.Path]::GetFullPath($PackageDirectory)
@@ -125,7 +125,7 @@ if($CompileConsumers){
    Report "RUNTIME" "PASS";Report "RESULT" "PASS";$consumerCount++
   }
   if($package.Id -like '*vc6*'){Report "NSS_CONSUMER_COMPILE_LINK" "PASS"}
-  if($Version -eq "0.6.0") {
+  if($Version -ne "0.5.0") {
    $api21Source=Join-Path $work "release_package_api21_consumer.c";Copy-Item -LiteralPath $api21Template -Destination $api21Source
    $api21Object=Join-Path $work "release_package_api21_consumer.obj";$api21Exe=Join-Path $work "release_package_api21_consumer.exe"
    $api21Command='call "'+$envBat+'" >nul && cl /nologo /W4 '+$runtimeFlag+' /I"'+$include+'" /Fo"'+$api21Object+'" /Fe"'+$api21Exe+'" /Tc"'+$api21Source+'" /link /LIBPATH:"'+$lib+'" '+$link
@@ -150,7 +150,7 @@ if($CompileConsumers){
  $selectionProcess=Start-Process -FilePath $selectionExe -WorkingDirectory $combinedWork -Wait -PassThru
  if($selectionProcess.ExitCode -ne 0){Report "COMBINED_SELECTION" "FAIL";throw "Combined public selection runtime failed"}
  Report "COMBINED_SELECTION" "PASS"
- if($Version -eq "0.6.0"){Report "API21_PACKAGE_ONLY_CONSUMER" "PASS";Report "NO_PRIVATE_HEADER_DEPENDENCY" "PASS"}
+ if($Version -ne "0.5.0"){Report "API21_PACKAGE_ONLY_CONSUMER" "PASS";Report "NO_PRIVATE_HEADER_DEPENDENCY" "PASS"}
 }
 Report "CLEAN_MACHINE_RUNTIME" "NOT_PERFORMED"
 Report "NT4_PACKAGE_RUNTIME_VALIDATION" "NOT_PERFORMED"

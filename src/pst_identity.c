@@ -166,7 +166,7 @@ PST_RESULT pst_connection_config_snapshot_create(const PST_CONNECTION_CONFIG *c,
         if(mode==PST_SNI_MODE_EXPLICIT){s->server_name=string_copy(c->server_name_indication,c->server_name_indication_size);if(!s->server_name){r=PST_RESULT_OUT_OF_MEMORY;goto fail;}if(memchr(s->server_name,'\0',c->server_name_indication_size)){r=PST_RESULT_INVALID_ARGUMENT;goto fail;}s->public_config.server_name_indication=s->server_name;}
     }else{s->public_config.server_name_indication_mode=PST_SNI_MODE_COMPAT;s->public_config.server_name_indication=NULL;s->public_config.server_name_indication_size=0;}
     credentials_retain(c->local_identity.credentials);trust_retain(c->peer_authentication.trust);s->public_config.local_identity.credentials=c->local_identity.credentials;s->public_config.peer_authentication.trust=c->peer_authentication.trust;
-    if((c->tls.minimum_version!=PST_TLS_VERSION_1_2&&c->tls.minimum_version!=PST_TLS_VERSION_1_3)||c->tls.maximum_version<c->tls.minimum_version||c->tls.maximum_version>PST_TLS_VERSION_1_3||!feature_ok(c->tls.resumption)||!feature_ok(c->tls.early_data)||c->tls.require_graceful_shutdown>1UL){r=PST_RESULT_INVALID_ARGUMENT;goto fail;}
+    if((c->tls.minimum_version!=PST_TLS_VERSION_1_2&&c->tls.minimum_version!=PST_TLS_VERSION_1_3)||c->tls.maximum_version<c->tls.minimum_version||c->tls.maximum_version>PST_TLS_VERSION_1_3||!feature_ok(c->tls.resumption)||!feature_ok(c->tls.early_data)||!feature_ok(c->tls.require_graceful_shutdown)){r=PST_RESULT_INVALID_ARGUMENT;goto fail;}
     if(c->tls.early_data!=PST_FEATURE_DISABLED&&c->tls.resumption==PST_FEATURE_DISABLED){r=PST_RESULT_POLICY_VIOLATION;goto fail;}
     r=copy_alpn(s,&c->alpn);if(r!=PST_RESULT_OK)goto fail;
     required=c->provider_selection.required_capabilities|PST_CAP_NONBLOCKING|PST_CAP_BACKEND_WAIT;
@@ -180,6 +180,7 @@ PST_RESULT pst_connection_config_snapshot_create(const PST_CONNECTION_CONFIG *c,
     if(c->alpn.protocol_count)required|=c->role==PST_CONNECTION_ROLE_CLIENT?PST_CAP_ALPN_CLIENT:PST_CAP_ALPN_SERVER;
     if(c->tls.resumption==PST_FEATURE_REQUIRED)required|=PST_CAP_RESUMPTION;
     if(c->tls.early_data==PST_FEATURE_REQUIRED)required|=PST_CAP_EARLY_DATA;
+    if(c->tls.require_graceful_shutdown==PST_FEATURE_REQUIRED)required|=PST_CAP_GRACEFUL_SHUTDOWN;
     tls_caps=PST_CAP_TLS_1_2;if(c->tls.minimum_version==PST_TLS_VERSION_1_3)tls_caps=PST_CAP_TLS_1_3;else if(c->tls.maximum_version==PST_TLS_VERSION_1_3)tls_caps|=PST_CAP_TLS_1_3;
     s->required_capabilities=required;s->tls_capabilities=tls_caps;*out=s;return PST_RESULT_OK;
 fail:pst_connection_config_snapshot_release(s);return r;

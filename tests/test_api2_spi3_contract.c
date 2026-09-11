@@ -7,11 +7,11 @@
 #define ASSERT_C(name,expr) typedef char assert_##name[(expr)?1:-1]
 #define CHECK(expr,n) if(!(expr))return fail(n)
 ASSERT_C(api_version,PST_API_VERSION==0x00020100UL);
-ASSERT_C(library_version,PST_LIBRARY_VERSION==0x00000600UL);
+ASSERT_C(library_version,PST_LIBRARY_VERSION==0x00000601UL);
 ASSERT_C(spi_version,PST_BACKEND_SPI_VERSION==0x00030000UL);
 ASSERT_C(role_client,PST_CONNECTION_ROLE_CLIENT==1UL);
 ASSERT_C(role_server,PST_CONNECTION_ROLE_SERVER==2UL);
-ASSERT_C(cap_last,PST_CAP_SNI_CONTROL==0x00020000UL);
+ASSERT_C(cap_graceful_shutdown,PST_CAP_GRACEFUL_SHUTDOWN==0x00040000UL);
 ASSERT_C(config_role_first,offsetof(PST_CONNECTION_CONFIG,role)==8);
 ASSERT_C(spi_options_role,offsetof(PST_BACKEND_CONNECTION_OPTIONS,role)==8);
 ASSERT_C(spi_options_config,offsetof(PST_BACKEND_CONNECTION_OPTIONS,configuration)>offsetof(PST_BACKEND_CONNECTION_OPTIONS,required_capabilities));
