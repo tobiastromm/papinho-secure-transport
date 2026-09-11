@@ -1,14 +1,15 @@
 # SPDX-License-Identifier: MPL-2.0
-param([string]$Destination,[ValidateSet("0.5.0","0.6.0")][string]$Version="0.6.0")
+param([ValidateSet("0.5.0","0.6.0")][string]$Version="0.6.0",[string]$Destination="build\m10-clean-machine-validation")
 $ErrorActionPreference="Stop"
 $repo=Split-Path -Parent $PSScriptRoot
-if(-not$Destination){$Destination=Join-Path $repo ("build\m10-clean-machine-validation-"+$Version)}
+if(-not[IO.Path]::IsPathRooted($Destination)){$Destination=Join-Path $repo $Destination}
 $destination=[IO.Path]::GetFullPath($Destination)
 if(Test-Path -LiteralPath $destination){Remove-Item -LiteralPath $destination -Recurse -Force}
 New-Item -ItemType Directory -Path $destination|Out-Null
 $packages=Join-Path $repo ("dist\packages\"+$Version)
 foreach($file in Get-ChildItem -LiteralPath $packages -File){Copy-Item -LiteralPath $file.FullName -Destination $destination}
 Copy-Item -LiteralPath (Join-Path $repo "tools\run-ss8-clean-machine-validation.ps1") -Destination $destination
+Copy-Item -LiteralPath (Join-Path $repo "tools\run-ss8-provider-real-tls.ps1") -Destination $destination
 Copy-Item -LiteralPath (Join-Path $repo "tools\run-ss8-combined-real-tls.ps1") -Destination $destination
 $readme=@'
 PapinhoSecureTransport M10 clean-machine validation bundle
@@ -24,7 +25,12 @@ From an ordinary PowerShell prompt in this directory:
 
   powershell -NoProfile -ExecutionPolicy Bypass -File .\run-ss8-clean-machine-validation.ps1 -BundleDirectory . -Version 0.6.0 | Tee-Object clean-machine.log
 
-After that command passes, run the package-only Combined real TLS matrix:
+After that command passes, run the individual Schannel/OpenSSL package-only
+real TLS matrix:
+
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\run-ss8-provider-real-tls.ps1 -BundleDirectory . | Tee-Object provider-real-tls.log
+
+Then run the package-only Combined real TLS matrix:
 
   powershell -NoProfile -ExecutionPolicy Bypass -File .\run-ss8-combined-real-tls.ps1 -BundleDirectory . | Tee-Object combined-real-tls.log
 
