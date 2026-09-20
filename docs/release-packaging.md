@@ -26,7 +26,8 @@ The first release should ship a source archive and four separate, release-only b
 
 | Target ID | Provider | Architecture/toolchain | CRT | Package status |
 |---|---|---|---|---|
-| `win32-x86-vc6-retrozilla-nss` | RetroZilla NSS | x86, VC6, NT4 compatibility floor | compiler-default static CRT | historical/current candidate |
+| `win32-x86-vc6-retrozilla-nss` | RetroZilla NSS | x86, VC6, NT4 compatibility floor | `/ML` | historical unsuffixed package identity only |
+| `win32-x86-vc6-retrozilla-nss-ml` | RetroZilla NSS | x86, VC6 | `/ML` | canonical ID for any new `/ML` artifact; no new package implied |
 | `win32-x86-vc6-retrozilla-nss-md` | RetroZilla NSS | x86, VC6 | `/MD` | required new candidate; not yet built/validated |
 | `win32-x64-msvc-19.51-schannel` | Schannel | x64, documented MSVC/Windows SDK | `/MD` | candidate |
 | `win32-x64-msvc-19.51-openssl3` | OpenSSL | x64, documented MSVC, OpenSSL 3.5.8 | `/MD` | candidate |
@@ -61,7 +62,14 @@ Staging is not a public release. It includes PST LICENSE and records license_id=
 
 The eventual archive name should be `papinho-secure-transport-<package-version>-<target-id>.zip`.
 
-Per PST/ADR-0005, CRT/runtime model is part of `<target-id>` when it distinguishes binary-incompatible selectable variants. For the Browser-required VC6 dynamic-CRT line, the intended form is:
+Per PST/ADR-0005, CRT/runtime model is part of `<target-id>` when it distinguishes binary-incompatible selectable variants. The canonical VC6/NSS forms are:
+
+\`\`\`text
+papinho-secure-transport-<package-version>-win32-x86-vc6-retrozilla-nss-ml.zip
+papinho-secure-transport-<package-version>-win32-x86-vc6-retrozilla-nss-md.zip
+\`\`\`
+
+The unsuffixed historical package remains frozen and is not renamed. For the Browser-required VC6 dynamic-CRT line, the intended form is:
 
 ```text
 papinho-secure-transport-<package-version>-win32-x86-vc6-retrozilla-nss-md.zip
