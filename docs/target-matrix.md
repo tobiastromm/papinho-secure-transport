@@ -1,6 +1,6 @@
 # Target Matrix
 
-This is the canonical PapinhoSecureTransport target matrix. The ecosystem-wide naming authority is PapinhoEngineering ADR-0002 revision 2; this document applies that decision to PST.
+This is the canonical PapinhoSecureTransport target matrix. The ecosystem-wide naming authority is PapinhoEngineering ADR-0002 revision 3; this document applies that decision to PST.
 
 Target identity, build inputs, operating-system support policy, and observed validation are separate facts. A toolchain name is not an operating-system support claim.
 
@@ -34,12 +34,16 @@ Important asymmetries remain intentional and factual: OpenSSL and Schannel provi
 M9 also found and corrected two real Schannel shutdown defects in the 0.6.0 release tree: reciprocal `close_notify` completion after the peer alert had already been observed, and processing of already-buffered TLS before requesting another socket read. The fixes changed production code but did not change API, SPI or target identity.
 
 ---
+CRT/runtime model is also an ABI-relevant fact. Per PapinhoEngineering/ADR-0002 revision 3 and PST/ADR-0005, when CRT variants are binary-incompatible and must coexist or be selected by consumers, CRT becomes a discriminating target/variant dimension rather than metadata alone.
+
+The historical/current unsuffixed VC6 target records the already validated static-CRT line. A future Browser-compatible VC6 `/MD` release variant must use a distinct ID such as `win32-x86-vc6-retrozilla-nss-md`; it must not silently replace or reinterpret the unsuffixed package.
 
 ## 0.5.0 candidate targets at a glance
 
 | Target ID | Architecture | Provider(s) | TLS | Tested on |
 |---|---:|---|---|---|
 | `win32-x86-vc6-retrozilla-nss` | x86 | RetroZilla NSS/NSPR | 1.2 / 1.3 | Windows NT 4.0 SP6 x86 |
+| `win32-x86-vc6-retrozilla-nss-md` | x86 | RetroZilla NSS/NSPR | candidate; requires independent validation | not yet validated |
 | `win32-x64-msvc-19.51-schannel` | x64 | Schannel | 1.2 validated | Windows 10 build 19045 x64 |
 | `win32-x64-msvc-19.51-openssl3` | x64 | OpenSSL 3.5.8 LTS | 1.2 / 1.3 | Windows 10 build 19045 x64 |
 | `win32-x64-msvc-19.51-schannel-openssl3` | x64 | Schannel + OpenSSL 3.5.8 LTS | capability-dependent | Windows 10 build 19045 x64 |
@@ -78,6 +82,28 @@ The compact table is only a navigation summary. The factual details for each tar
 The target name identifies durable build facts: Win32 ABI, x86 architecture, VC6 toolchain, and the RetroZilla NSS provider family.
 
 Windows NT 4.0 appears under **Tested on** because that is observed validation evidence. The same artifact is not automatically restricted to NT4 merely because it was tested there, and an unlisted Windows version is not automatically supported.
+
+---
+
+## `win32-x86-vc6-retrozilla-nss-md` — required new variant
+
+This is the planned ABI-distinct VC6 variant required by PapinhoBrowser.
+
+| Field | Value |
+|---|---|
+| Platform / ABI | Win32 |
+| Architecture | x86 |
+| Toolchain | Visual C++ 6 family |
+| Provider | RetroZilla NSS / NSPR |
+| PST CRT / runtime model | `/MD` |
+| Relationship | ABI-distinct variant of the VC6/NSS line |
+| Consumer driver | PapinhoBrowser VC6 `/MD` integration |
+| Validation status | **Not yet validated/released** |
+| Package status | Candidate to be produced by governed PST release work |
+| Tested on | None yet for this variant |
+| Notes | Must receive independent build, PST tests, TLS 1.3/mTLS validation, packaging and SHA-256 before consumer pinning |
+
+This row records a required target variant, not evidence that the binary already exists.
 
 ---
 
@@ -248,3 +274,5 @@ windows-x64-msvc-schannel-openssl-3.5.8
 `win32` denotes the Win32 API/ABI family and does not imply x86. Architecture is a separate field.
 
 Full compiler servicing builds, SDK versions, exact dependency patch releases, support claims, and test environments remain matrix/provenance data unless they define an incompatible artifact.
+
+CRT follows the same rule: it may remain matrix metadata when it does not discriminate artifacts; when it creates an incompatible selectable variant, it is represented in the target/variant identity.
