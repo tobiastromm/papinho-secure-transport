@@ -4,7 +4,7 @@ title: Variantes CRT/ABI e identidade de artefatos binários
 status: accepted
 decision-date: 2026-09-20
 last-revised: 2026-09-20
-revision: 1
+revision: 2
 scope-level: project
 scope-target: PapinhoSecureTransport
 decision-makers:
@@ -37,14 +37,21 @@ PapinhoEngineering/ADR-0002 revision 3 estabelece transversalmente que CRT/runti
 
 PST deve tratar o CRT/runtime model como parte explícita da identidade de variantes VC6 quando mais de uma variante incompatível for suportada/distribuída ou quando consumers precisarem selecionar entre elas.
 
-```text
-base técnica
-win32-x86-vc6-retrozilla-nss
+\`\`\`text
+mesmo source / commit / API / SPI
         │
-        ├── CRT /ML → variante distinta
-        ├── CRT /MD → variante distinta
-        └── CRT /MT → variante distinta, se algum dia suportada
-```
+        ├── CRT /ML
+        │      ↓
+        │   win32-x86-vc6-retrozilla-nss-ml
+        │
+        ├── CRT /MD
+        │      ↓
+        │   win32-x86-vc6-retrozilla-nss-md
+        │
+        └── CRT /MT, se algum dia suportada
+               ↓
+            win32-x86-vc6-retrozilla-nss-mt
+\`\`\`
 
 Para o consumer PapinhoBrowser, a variante requerida é VC6 + RetroZilla NSS + `/MD`.
 
@@ -52,17 +59,29 @@ Para o consumer PapinhoBrowser, a variante requerida é VC6 + RetroZilla NSS + `
 
 Quando a dimensão CRT discriminar o artefato, o Target/Variant ID e package name devem tornar a diferença factual e mecanicamente selecionável.
 
-Exemplo aprovado de forma:
+Forma canônica aprovada quando as variantes coexistem/são suportadas:
 
-```text
+\`\`\`text
+win32-x86-vc6-retrozilla-nss-ml
 win32-x86-vc6-retrozilla-nss-md
 
+papinho-secure-transport-<version>-win32-x86-vc6-retrozilla-nss-ml.zip
 papinho-secure-transport-<version>-win32-x86-vc6-retrozilla-nss-md.zip
-```
+\`\`\`
 
 O token `md` identifica a variante CRT dinâmica do VC6. Isso não transforma `-md` em sufixo obrigatório para targets onde CRT não seja uma dimensão discriminante.
 
-A variante histórica/publicada sem esse sufixo não deve ser retroativamente renomeada ou reinterpretada.
+O identificador histórico sem sufixo é preservado como evidência congelada, mas **não é a identidade canônica da variante /ML daqui para frente**.
+
+\`\`\`text
+historical ID
+win32-x86-vc6-retrozilla-nss
+        ↓ crosswalk factual
+canonical CRT-qualified variant
+win32-x86-vc6-retrozilla-nss-ml
+\`\`\`
+
+Releases/packages/evidências já congelados mantêm seus nomes originais. Novos artefatos /ML, caso continuem suportados/distribuídos, usam `-ml`.
 
 ### Imutabilidade e proveniência
 
@@ -117,6 +136,7 @@ Uma futura DLL continua exigindo auditoria específica de ABI/loader/CRT; esta A
 - consumer-linking deve dizer qual CRT cada package requer;
 - build/release tooling deve produzir e validar cada variante suportada separadamente;
 - historical packages permanecem imutáveis;
+- a variante /ML canônica usa `-ml` em novos artefatos; o ID sem sufixo fica apenas como identificador histórico;
 - o Browser pode continuar `/MD` e selecionar package PST `/MD`.
 
 ## Não objetivos
@@ -153,3 +173,10 @@ Para cada variante CRT distribuída:
 ## Princípio
 
 **Toolchain igual não garante compatibilidade binária completa. Quando CRT muda a compatibilidade do artefato, PST torna essa diferença explícita, testável e selecionável.**
+
+## Histórico de revisões
+
+| Revisão | Data | Descrição |
+|---:|---|---|
+| 1 | 2026-09-20 | Registra CRT como dimensão ABI discriminante e a necessidade da variante VC6 /MD. |
+| 2 | 2026-09-20 | Torna a nomenclatura CRT simétrica: novos artefatos /ML usam `-ml`, /MD usa `-md`; o ID VC6/NSS sem sufixo é preservado somente como identificador histórico via crosswalk. |
