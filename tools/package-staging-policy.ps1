@@ -50,3 +50,25 @@ function Write-PstUtf8Lf($Path, $Text) {
     $canonical = $Text.Replace("`r`n", "`n").Replace("`r", "`n")
     [IO.File]::WriteAllText($Path, $canonical, (New-Object Text.UTF8Encoding($false)))
 }
+
+function Assert-PstVc6CrtLibrary($LibraryPath, $ExpectedCrt) {
+    if ($ExpectedCrt -ne "ml" -and $ExpectedCrt -ne "md") { throw "Unknown VC6 CRT: $ExpectedCrt" }
+    if (-not (Test-Path -LiteralPath $LibraryPath -PathType Leaf)) { throw "Missing VC6 library: $LibraryPath" }
+    $binary = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes($LibraryPath))
+    $libc = [regex]::Matches($binary, '(?i)-defaultlib:LIBC\b').Count
+    $msvcrt = [regex]::Matches($binary, '(?i)-defaultlib:MSVCRT\b').Count
+    if ($ExpectedCrt -eq "ml" -and ($libc -eq 0 -or $msvcrt -ne 0)) { throw "CRT metadata/binary mismatch: expected ML/LIBC; LIBC=$libc MSVCRT=$msvcrt" }
+    if ($ExpectedCrt -eq "md" -and ($msvcrt -eq 0 -or $libc -ne 0)) { throw "CRT metadata/binary mismatch: expected MD/MSVCRT; LIBC=$libc MSVCRT=$msvcrt" }
+}
+
+function Assert-PstVc6PackageBinary($PackageRoot) {
+    $manifestPath = Join-Path $PackageRoot "manifest.ini"
+    if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) { throw "Missing VC6 package manifest" }
+    $manifest = [IO.File]::ReadAllText($manifestPath)
+    $idMatch = [regex]::Match($manifest, '(?m)^target_id=(win32-x86-vc6-retrozilla-nss-(ml|md))\r?$')
+    if (-not $idMatch.Success) { throw "Invalid CRT-qualified VC6 target ID" }
+    $expected = $idMatch.Groups[2].Value
+    $crtMatch = [regex]::Match($manifest, '(?m)^crt=([^\r\n]+)\r?$')
+    if (-not $crtMatch.Success -or $crtMatch.Groups[1].Value -ne $expected) { throw "CRT metadata/target mismatch: expected $expected" }
+    Assert-PstVc6CrtLibrary (Join-Path $PackageRoot "lib\$($idMatch.Groups[1].Value)\papinho_secure_transport.lib") $expected
+}

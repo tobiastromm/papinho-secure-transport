@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
 param(
-    [ValidateSet("0.5.0", "0.6.0", "0.6.1")]
+    [ValidateSet("0.5.0", "0.6.0", "0.6.1", "0.6.2")]
     [string]$Version = "0.6.1",
     [string]$OutputDirectory
 )
@@ -20,19 +20,10 @@ if (-not $output.StartsWith($distFull, [StringComparison]::OrdinalIgnoreCase)) {
     throw "OutputDirectory must be below the repository dist directory: $output"
 }
 
-$targets = @(
-    "win32-x86-vc6-retrozilla-nss",
-    "win32-x64-msvc-19.51-schannel",
-    "win32-x64-msvc-19.51-openssl3",
-    "win32-x64-msvc-19.51-schannel-openssl3"
-)
-$packages = @(
-    @{ Name = "papinho-secure-transport-$Version-src.zip"; Stage = (Join-Path $stageRoot "source") },
-    @{ Name = "papinho-secure-transport-$Version-$($targets[0]).zip"; Stage = (Join-Path $stageRoot $targets[0]) },
-    @{ Name = "papinho-secure-transport-$Version-$($targets[1]).zip"; Stage = (Join-Path $stageRoot $targets[1]) },
-    @{ Name = "papinho-secure-transport-$Version-$($targets[2]).zip"; Stage = (Join-Path $stageRoot $targets[2]) },
-    @{ Name = "papinho-secure-transport-$Version-$($targets[3]).zip"; Stage = (Join-Path $stageRoot $targets[3]) }
-)
+$vc6Targets = if ($Version -eq "0.6.2") { @("win32-x86-vc6-retrozilla-nss-ml", "win32-x86-vc6-retrozilla-nss-md") } else { @("win32-x86-vc6-retrozilla-nss") }
+$targets = @($vc6Targets) + @("win32-x64-msvc-19.51-schannel", "win32-x64-msvc-19.51-openssl3", "win32-x64-msvc-19.51-schannel-openssl3")
+$packages = @(@{ Name = "papinho-secure-transport-$Version-src.zip"; Stage = (Join-Path $stageRoot "source") })
+foreach ($id in $targets) { $packages += @{ Name = "papinho-secure-transport-$Version-$id.zip"; Stage = (Join-Path $stageRoot $id) } }
 
 function Require-File($Root, $RelativePath) {
     $path = Join-Path $Root $RelativePath
@@ -77,11 +68,11 @@ if (Test-Path -LiteralPath $output) { Remove-Item -LiteralPath $output -Recurse 
 New-Item -ItemType Directory -Path $output -Force | Out-Null
 foreach ($package in $packages) { $destination = Join-Path $output $package.Name; New-DeterministicZip $package.Stage $destination; Write-Output "PACKAGE=$($package.Name)" }
 $produced = Get-ChildItem -LiteralPath $output -Filter "*.zip" -File | Sort-Object Name
-if ($produced.Count -ne 5) { throw "Expected exactly five ZIP packages; found $($produced.Count)" }
+if ($produced.Count -ne $packages.Count) { throw "Expected exactly $($packages.Count) ZIP packages; found $($produced.Count)" }
 $expectedNames = $packages.Name | Sort-Object
 if (Compare-Object $expectedNames $produced.Name) { throw "Unexpected package name in output" }
 $sumLines = $produced | ForEach-Object { "{0}  {1}" -f (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant(), $_.Name }
 [IO.File]::WriteAllText((Join-Path $output "SHA256SUMS-packages.txt"), (($sumLines -join "`n") + "`n"), (New-Object Text.UTF8Encoding($false)))
-Write-Output "PACKAGE_COUNT=5"
+Write-Output "PACKAGE_COUNT=$($packages.Count)"
 Write-Output "CHECKSUM=SHA256SUMS-packages.txt"
 Write-Output "RESULT=PASS"

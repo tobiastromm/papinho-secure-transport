@@ -4,6 +4,16 @@ This is the canonical PapinhoSecureTransport target matrix. The ecosystem-wide n
 
 Target identity, build inputs, operating-system support policy, and observed validation are separate facts. A toolchain name is not an operating-system support claim.
 
+## VC6 CRT variant M2 local candidate
+
+From one source commit, the VC6/NSS `-ml` and `-md` targets use explicit
+`/ML` and `/MD` builds and isolated local SDK candidate packages. Package
+metadata identifies the CRT and is checked against library COFF directives;
+package-only VC6 consumers are local validation, not PapinhoBrowser or real
+NT4 certification. The historical unsuffixed 0.6.1 package remains immutable.
+The candidate package version is 0.6.2; library 0.6.1, API 2.1.0 and SPI 3.0
+are unchanged. No 0.6.2 release has been published.
+
 ## 0.6.1 graceful-shutdown contract bugfix candidate
 
 The 0.6.1 patch retains API 2.1.0, SPI 3.0 and all target identities. It adds the public `PST_CAP_GRACEFUL_SHUTDOWN` vocabulary bit and corrects `require_graceful_shutdown` tri-state validation and pre-binding eligibility. Provider masks below reflect this additive capability; the published 0.6.0 binaries and packages are not modified.

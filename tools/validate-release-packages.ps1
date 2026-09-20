@@ -1,21 +1,19 @@
 # SPDX-License-Identifier: MPL-2.0
-param([ValidateSet("0.5.0", "0.6.0", "0.6.1")][string]$Version="0.6.1",[string]$PackageDirectory,[string]$ValidationDirectory,[string]$ExpectedChecksumsFile,[switch]$CompileConsumers)
+param([ValidateSet("0.5.0", "0.6.0", "0.6.1", "0.6.2")][string]$Version="0.6.1",[string]$PackageDirectory,[string]$ValidationDirectory,[string]$ExpectedChecksumsFile,[switch]$CompileConsumers)
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
-$libraryVersion = if ($Version -eq "0.5.0") { "0.5.0" } else { $Version }
+$libraryVersion = if ($Version -eq "0.5.0") { "0.5.0" } elseif ($Version -eq "0.6.2") { "0.6.1" } else { $Version }
 $apiVersion = if ($Version -eq "0.5.0") { "2.0.0" } else { "2.1.0" }
 if (-not $PackageDirectory) { $PackageDirectory = Join-Path $repo ("dist\packages\"+$Version) }
 if (-not $ValidationDirectory) { $ValidationDirectory = Join-Path $repo ("dist\validation\"+$Version) }
 $PackageDirectory = [IO.Path]::GetFullPath($PackageDirectory)
 $ValidationDirectory = [IO.Path]::GetFullPath($ValidationDirectory)
 if (-not $ExpectedChecksumsFile) { $ExpectedChecksumsFile = Join-Path $PackageDirectory "SHA256SUMS-packages.txt" }
-$packages = @(
- @{Name=("papinho-secure-transport-"+$Version+"-src.zip");Hash="";Id="source"},
- @{Name=("papinho-secure-transport-"+$Version+"-win32-x86-vc6-retrozilla-nss.zip");Hash="";Id="win32-x86-vc6-retrozilla-nss"},
- @{Name=("papinho-secure-transport-"+$Version+"-win32-x64-msvc-19.51-schannel.zip");Hash="";Id="win32-x64-msvc-19.51-schannel"},
- @{Name=("papinho-secure-transport-"+$Version+"-win32-x64-msvc-19.51-openssl3.zip");Hash="";Id="win32-x64-msvc-19.51-openssl3"},
- @{Name=("papinho-secure-transport-"+$Version+"-win32-x64-msvc-19.51-schannel-openssl3.zip");Hash="";Id="win32-x64-msvc-19.51-schannel-openssl3"}
-)
+$vc6Ids=if($Version -eq "0.6.2"){@("win32-x86-vc6-retrozilla-nss-ml","win32-x86-vc6-retrozilla-nss-md")}else{@("win32-x86-vc6-retrozilla-nss")}
+$ids=@($vc6Ids)+@("win32-x64-msvc-19.51-schannel","win32-x64-msvc-19.51-openssl3","win32-x64-msvc-19.51-schannel-openssl3")
+$packages=@(@{Name=("papinho-secure-transport-"+$Version+"-src.zip");Hash="";Id="source"})
+foreach($id in $ids){$packages+=@{Name=("papinho-secure-transport-"+$Version+"-"+$id+".zip");Hash="";Id=$id}}
+. (Join-Path $PSScriptRoot "package-staging-policy.ps1")
 if ($ExpectedChecksumsFile) {
  $checksumPath=[IO.Path]::GetFullPath($ExpectedChecksumsFile);$expected=@{}
  foreach($line in [IO.File]::ReadAllLines($checksumPath)){
@@ -23,7 +21,7 @@ if ($ExpectedChecksumsFile) {
   if($expected.ContainsKey($matches[2])){throw "duplicate external checksum entry"}
   $expected[$matches[2]]=$matches[1]
  }
- if($expected.Count -ne 5){throw "expected exactly five external checksums"}
+ if($expected.Count -ne $packages.Count){throw "unexpected external checksum count"}
  foreach($package in $packages){if(-not $expected.ContainsKey($package.Name)){throw ("missing external checksum: "+$package.Name)};$package.Hash=$expected[$package.Name]}
 }
 function Report($Name,$Value) { Write-Output ($Name+"="+$Value) }
@@ -53,6 +51,7 @@ if(Test-Path -LiteralPath $ValidationDirectory){Remove-Item -LiteralPath $Valida
 New-Item -ItemType Directory -Path $ValidationDirectory -Force|Out-Null
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $sourceExtract=$null
+$sourceCommit=$null
 foreach($package in $packages){
  $zipPath=Join-Path $PackageDirectory $package.Name;Report "PACKAGE" $package.Name;Require-File $zipPath "missing package"
  $actualHash=(Get-FileHash -Algorithm SHA256 -LiteralPath $zipPath).Hash.ToLowerInvariant()
@@ -67,6 +66,13 @@ foreach($package in $packages){
   Require-File $snapshot "missing NSS corresponding source";Require-File (Join-Path $extract "third_party\retrozilla-nss\patches\0001-win32-secure-rng-fail-closed-nt4.patch") "missing NSS patch"
   if((Get-FileHash -Algorithm SHA256 -LiteralPath $snapshot).Hash.ToLowerInvariant() -ne "5371ce6fb2fd0df909faaed4cf92dc9c112844e1d1bedd7a8dc7f598b900d388"){throw "NSS source hash mismatch"}
   Require-File (Join-Path $extract "docs\target-matrix.md") "missing canonical target matrix"
+  if($Version -eq "0.6.2"){
+   $sourceStatus=[IO.File]::ReadAllText((Join-Path $extract "SOURCE-PACKAGE-STATUS.txt"))
+   $sourceCommitMatch=[regex]::Match($sourceStatus,'(?m)^source_commit=([0-9a-f]{40})\r?$')
+   if(-not $sourceCommitMatch.Success){throw "source commit missing from source package"}
+   $sourceCommit=$sourceCommitMatch.Groups[1].Value
+   foreach($requiredSource in @("Makefile.vc6","tools\test-vc6-crt-consumer.bat","tests\test_vc6_crt_public_consumer.c","tools\stage-release-sdk.ps1")){Require-File (Join-Path $extract $requiredSource) "missing dual-CRT corresponding source"}
+  }
   Require-File (Join-Path $extract "third_party\openssl\prebuilt\win32-x64-msvc-19.51-openssl3\3.5.8\MANIFEST.sha256") "missing OpenSSL prebuilt provenance"
   Report "SOURCE" "PASS"
  }else{
@@ -77,11 +83,21 @@ foreach($package in $packages){
   foreach($requiredVersion in @("package_version=$Version","library_version=$libraryVersion","api_version=$apiVersion","spi_version=3.0")){if($versionText -notmatch ('(?m)^'+[regex]::Escape($requiredVersion)+'$')){throw ("VERSION mismatch: "+$requiredVersion)}}
   if($manifest -notmatch ('(?m)^target_id=' + [regex]::Escape($package.Id) + '$')){throw "manifest target_id mismatch"}
   if((Get-Content -Raw (Join-Path $extract "consumer-link.ini")) -notmatch ('(?m)^target_id=' + [regex]::Escape($package.Id) + '$')){throw "consumer-link target_id mismatch"}
+  if($Version -eq "0.6.2"){
+   if($manifest -notmatch ('(?m)^source_commit='+[regex]::Escape($sourceCommit)+'$')){throw "SDK/source commit mismatch"}
+   if($package.Id -in $vc6Ids){
+    $expectedCrt=if($package.Id.EndsWith('-ml')){'ml'}else{'md'}
+    $consumerLink=[IO.File]::ReadAllText((Join-Path $extract "consumer-link.ini"))
+    if($consumerLink -notmatch ('(?m)^crt='+$expectedCrt+'$') -or $consumerLink -notmatch ('(?m)^crt_compiler_flag=/'+$expectedCrt.ToUpperInvariant()+'$')){throw "consumer CRT requirement mismatch"}
+    Assert-PstVc6PackageBinary $extract
+    Report "VC6_BINARY_CRT" ($expectedCrt.ToUpperInvariant()+":PASS")
+   }
+  }
   Require-File (Join-Path $extract "docs\target-matrix.md") "missing canonical target matrix"
   if($package.Id -eq "win32-x64-msvc-19.51-schannel-openssl3" -and $manifest -notmatch '(?m)^provider_ids=schannel,openssl$'){throw "combined provider order mismatch"}
   Report "LICENSE" "PASS";Report "SOURCE" "PASS"
  };Report "ARCHIVE" "PASS"
- if($package.Id -eq "win32-x86-vc6-retrozilla-nss"){
+ if($package.Id -like "win32-x86-vc6-retrozilla-nss*"){
   Report "NSS_PACKAGE_HASH" "PASS"
   Report "NSS_PACKAGE_LAYOUT" "PASS"
   Report "NSS_PACKAGE_EXTRACT" "PASS"
@@ -108,7 +124,7 @@ if($CompileConsumers){
   $consumer=Join-Path $work "release_package_consumer.c";Copy-Item -LiteralPath $consumerTemplate -Destination $consumer
   $include=Join-Path $sdk "include";$lib=Join-Path $sdk ("lib\"+$package.Id)
   $link=((Get-Content (Join-Path $sdk "consumer-link.ini")|Where-Object{$_ -like 'link_libraries=*'}).Substring(15)).Replace(',',' ')
-  $runtimeFlag=if($package.Id -like '*vc6*'){''}else{'/MD'}
+  $runtimeFlag=if($package.Id.EndsWith('-ml')){'/ML'}elseif($package.Id.EndsWith('-md')){'/MD'}elseif($package.Id -like '*vc6*'){''}else{'/MD'}
   $envBat=if($package.Id -like '*vc6*'){Join-Path $sourceExtract 'tools\vc6-env.bat'}else{Join-Path $sourceExtract 'tools\msvc-env.bat'}
   $runtime=Join-Path $sdk ("runtime\"+$package.Id);if(Test-Path -LiteralPath $runtime){Get-ChildItem -LiteralPath $runtime -File|Copy-Item -Destination $work -Force}
   foreach($role in @("client","server")) {
@@ -136,7 +152,7 @@ if($CompileConsumers){
    Report "API21_PACKAGE_CONSUMER" ($package.Id+":PASS")
   }
  }
- $expectedConsumerCount=if($vc6Available){8}else{6}
+ $expectedConsumerCount=if($vc6Available){$ids.Count*2}else{($ids.Count-$vc6Ids.Count)*2}
  if($consumerCount -ne $expectedConsumerCount){throw ("consumer count mismatch: "+$consumerCount)}
  Report "CONSUMER_COUNT" $consumerCount
  $combinedId="win32-x64-msvc-19.51-schannel-openssl3";$combinedSdk=Join-Path $ValidationDirectory $combinedId;$combinedWork=Join-Path $ValidationDirectory "consumer-combined-selection"

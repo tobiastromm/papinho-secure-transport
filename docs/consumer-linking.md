@@ -7,8 +7,8 @@ Consumers include only `papinho_secure_transport.h` and, for Win32 transport/boo
 | Target ID | PST/static link inputs | Additional link inputs | Package runtime | OS/toolchain runtime |
 |---|---|---|---|---|
 | `win32-x86-vc6-retrozilla-nss` | `papinho_secure_transport.lib` | `wsock32.lib` | `nss3.dll`, `ssl3.dll`, `nssutil3.dll`, `nspr4.dll`, `plc4.dll`, `plds4.dll`, `softokn3.dll/.chk`, `freebl3.dll/.chk` | Historical unsuffixed identity; factual PST CRT `/ML`; frozen packages/evidence retain this name |
-| `win32-x86-vc6-retrozilla-nss-ml` | `papinho_secure_transport.lib` | `wsock32.lib` | same RetroZilla NSS/NSPR runtime set, when built/validated | Canonical identity for any new VC6 `/ML` artifact; no new package implied |
-| `win32-x86-vc6-retrozilla-nss-md` | `papinho_secure_transport.lib` | `wsock32.lib` | same RetroZilla NSS/NSPR runtime set, subject to package validation | PST compiled with VC6 `/MD`; intended for `/MD` consumers such as PapinhoBrowser; **not yet released/validated** |
+| `win32-x86-vc6-retrozilla-nss-ml` | `papinho_secure_transport.lib` | `wsock32.lib` | same RetroZilla NSS/NSPR runtime set | Explicit `/ML` M2 SDK candidate; package-only consumer locally validated; unpublished |
+| `win32-x86-vc6-retrozilla-nss-md` | `papinho_secure_transport.lib` | `wsock32.lib` | same RetroZilla NSS/NSPR runtime set | Explicit `/MD` M2 SDK candidate; package-only consumer locally validated; no Browser integration or external TLS certification yet |
 | `win32-x64-msvc-19.51-schannel` | `papinho_secure_transport.lib` | `ws2_32.lib secur32.lib crypt32.lib ncrypt.lib bcrypt.lib` | none | Windows system DLLs plus MSVC `/MD` runtime/UCRT |
 | `win32-x64-msvc-19.51-openssl3` | `papinho_secure_transport.lib libssl.lib libcrypto.lib` | `ws2_32.lib crypt32.lib` | `libssl-3-x64.dll`, `libcrypto-3-x64.dll` | Windows system DLLs plus MSVC `/MD` runtime/UCRT |
 | `win32-x64-msvc-19.51-schannel-openssl3` | `papinho_secure_transport.lib libssl.lib libcrypto.lib` | `ws2_32.lib secur32.lib crypt32.lib ncrypt.lib bcrypt.lib` | `libssl-3-x64.dll`, `libcrypto-3-x64.dll` | Windows system DLLs plus MSVC `/MD` runtime/UCRT |
@@ -22,5 +22,10 @@ Canonical tool inspection confirmed COFF static archives, not DLL import librari
 PST handles are released through PST functions; consumers do not free PST allocations with their CRT. This ownership boundary does not make incompatible static-library CRT variants interchangeable: consumers must select a package whose documented CRT/runtime model is compatible with their build. A future DLL still requires a new CRT-boundary audit.
 
 Do not change a multithreaded consumer to VC6 `/ML` merely to accommodate the historical static-CRT package. Produce/select the compatible PST variant instead.
+
+For M2 candidate packages, read `crt=ml|md` and `crt_compiler_flag=/ML|/MD`
+from `consumer-link.ini` before compiling. The same CRT appears in
+`manifest.ini`; the package validator also checks the library's COFF
+default-library directives. Neither variant is a substitute for the other.
 
 API 2.0 consumers set `PST_CONNECTION_CONFIG.role` explicitly. Applications own listening sockets; PST accepts ownership only of an already accepted/connected transport after `pst_connection_attach` reports `ownership_accepted`. SERVER selection is role- and capability-scoped, so consumers must not infer SERVER support from an aggregate provider mask.

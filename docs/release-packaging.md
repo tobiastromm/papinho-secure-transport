@@ -2,6 +2,18 @@
 
 # Release packaging decision
 
+## VC6 CRT variant M2 candidate (not published)
+
+The local `0.6.2` package candidate has one source ZIP, separate VC6/NSS
+`-ml` and `-md` SDK ZIPs, and the three unchanged x64 target identities.
+Both VC6 SDKs are staged from the same source commit and from explicitly
+selected `/ML` or `/MD` builds; their manifests and consumer-link metadata
+record the CRT. The package validator checks the actual static-library CRT
+directives and rejects a metadata/binary mismatch. The candidate currently
+contains library `0.6.1`, API `2.1.0`, and SPI `3.0`; `0.6.2` is a candidate
+package version, not a frozen or published release. External TLS, NT4 and
+PapinhoBrowser integration certification remain pending.
+
 ## 0.6.1 graceful-shutdown contract bugfix candidate
 
 The current package line is Library/Package 0.6.1 with public API 2.1.0 and provider SPI 3.0. It corrects the closed tri-state validation of `require_graceful_shutdown` and adds the additive public `PST_CAP_GRACEFUL_SHUTDOWN` vocabulary bit without changing public structure or SPI layout. `tools/build-release-packages.ps1 -Version 0.6.1` creates the five canonical packages under `dist/packages/0.6.1`.
@@ -27,8 +39,8 @@ The first release should ship a source archive and four separate, release-only b
 | Target ID | Provider | Architecture/toolchain | CRT | Package status |
 |---|---|---|---|---|
 | `win32-x86-vc6-retrozilla-nss` | RetroZilla NSS | x86, VC6, NT4 compatibility floor | `/ML` | historical unsuffixed package identity only |
-| `win32-x86-vc6-retrozilla-nss-ml` | RetroZilla NSS | x86, VC6 | `/ML` | canonical ID for any new `/ML` artifact; no new package implied |
-| `win32-x86-vc6-retrozilla-nss-md` | RetroZilla NSS | x86, VC6 | `/MD` | required new candidate; not yet built/validated |
+| `win32-x86-vc6-retrozilla-nss-ml` | RetroZilla NSS | x86, VC6 | `/ML` | M2 candidate, locally packaged/validated; unpublished |
+| `win32-x86-vc6-retrozilla-nss-md` | RetroZilla NSS | x86, VC6 | `/MD` | M2 candidate, locally packaged/validated; unpublished |
 | `win32-x64-msvc-19.51-schannel` | Schannel | x64, documented MSVC/Windows SDK | `/MD` | candidate |
 | `win32-x64-msvc-19.51-openssl3` | OpenSSL | x64, documented MSVC, OpenSSL 3.5.8 | `/MD` | candidate |
 | `win32-x64-msvc-19.51-schannel-openssl3` | Schannel then OpenSSL | x64 combined target | `/MD` | official optional candidate |

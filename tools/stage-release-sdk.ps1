@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 param(
-    [ValidateSet("0.5.0", "0.6.0", "0.6.1")][string]$Version = "0.6.1",
-    [ValidateSet("all", "win32-x86-vc6-retrozilla-nss", "win32-x64-msvc-19.51-schannel", "win32-x64-msvc-19.51-openssl3", "win32-x64-msvc-19.51-schannel-openssl3")]
+    [ValidateSet("0.5.0", "0.6.0", "0.6.1", "0.6.2")][string]$Version = "0.6.1",
+    [ValidateSet("all", "win32-x86-vc6-retrozilla-nss", "win32-x86-vc6-retrozilla-nss-ml", "win32-x86-vc6-retrozilla-nss-md", "win32-x64-msvc-19.51-schannel", "win32-x64-msvc-19.51-openssl3", "win32-x64-msvc-19.51-schannel-openssl3")]
     [string]$Target = "all",
     [switch]$Clean
 )
@@ -9,12 +9,16 @@ param(
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 $version = $Version
-$libraryVersion = if ($Version -eq "0.5.0") { "0.5.0" } else { $Version }
+$libraryVersion = if ($Version -eq "0.5.0") { "0.5.0" } elseif ($Version -eq "0.6.2") { "0.6.1" } else { $Version }
 $apiVersion = if ($Version -eq "0.5.0") { "2.0.0" } else { "2.1.0" }
 $root = Join-Path $repo "dist\staging\$version"
 . (Join-Path $PSScriptRoot "package-staging-policy.ps1")
-$targets = @("win32-x86-vc6-retrozilla-nss", "win32-x64-msvc-19.51-schannel", "win32-x64-msvc-19.51-openssl3", "win32-x64-msvc-19.51-schannel-openssl3")
+$vc6Targets = if ($Version -eq "0.6.2") { @("win32-x86-vc6-retrozilla-nss-ml", "win32-x86-vc6-retrozilla-nss-md") } else { @("win32-x86-vc6-retrozilla-nss") }
+$targets = @($vc6Targets) + @("win32-x64-msvc-19.51-schannel", "win32-x64-msvc-19.51-openssl3", "win32-x64-msvc-19.51-schannel-openssl3")
 if ($Target -ne "all") { $targets = @($Target) }
+if ($Target -ne "all" -and $Target -notin $vc6Targets -and $Target -like "win32-x86-vc6-retrozilla-nss*") { throw "VC6 target $Target is not valid for package version $Version" }
+$sourceCommit = (& git -C $repo rev-parse HEAD).Trim()
+if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch '^[0-9a-f]{40}$') { throw "Unable to identify source commit" }
 
 function Copy-Required($Source, $Destination) {
     if (-not (Test-Path -LiteralPath $Source -PathType Leaf)) { throw "Required staging input is missing: $Source" }
@@ -33,6 +37,7 @@ foreach ($id in $targets) {
     Copy-Required (Join-Path $repo "packaging\SDK-README.md") (Join-Path $stage "README.md")
     $sdkReadmePath = Join-Path $stage "README.md"
     $sdkReadme = [IO.File]::ReadAllText($sdkReadmePath).Replace("../docs/", "docs/").Replace("../examples/", "examples/")
+    if ($Version -eq "0.6.2") { $sdkReadme = $sdkReadme.Replace("0.6.1 SDK", "0.6.2 candidate SDK (library 0.6.1)").Replace("papinho-secure-transport-0.6.1-src.zip", "papinho-secure-transport-0.6.2-src.zip") }
     [IO.File]::WriteAllText($sdkReadmePath, $sdkReadme, (New-Object Text.UTF8Encoding($false)))
     Copy-Required (Join-Path $repo "THIRD_PARTY_NOTICES.md") (Join-Path $stage "THIRD_PARTY_NOTICES.md")
     Copy-Required (Join-Path $repo "LICENSE") (Join-Path $stage "LICENSE")
@@ -42,8 +47,10 @@ foreach ($id in $targets) {
 
     $runtimeFiles = "none-package-supplied"
     $thirdParty = "none"
-    if ($id -eq "win32-x86-vc6-retrozilla-nss") {
-        $build = Join-Path $repo "build\win32-x86-vc6-retrozilla-nss"; $architecture = "x86"; $toolchain = "Visual C++ 6 SP5 plus Processor Pack; cl.exe 12.00.8804; link.exe 6.00.8447"; $crt = "compiler-default-static"; $providers = "retrozilla-nss"
+    if ($id -like "win32-x86-vc6-retrozilla-nss*") {
+        $build = Join-Path $repo "build\$id"; $architecture = "x86"; $toolchain = "Visual C++ 6 SP5 plus Processor Pack; cl.exe 12.00.8804; link.exe 6.00.8447"; $crt = "compiler-default-static"; $providers = "retrozilla-nss"
+        if ($id -eq "win32-x86-vc6-retrozilla-nss-ml") { $crt = "ml" }
+        if ($id -eq "win32-x86-vc6-retrozilla-nss-md") { $crt = "md" }
         $capabilities = "aggregate=0x00047aff;client=0x00047ab7;server=0x0004727b;server_absent=SYSTEM_TRUST,ALPN_SERVER,PEER_NAME_VERIFY"
         $linkLibraries = "papinho_secure_transport.lib,wsock32.lib"
         $runtime = Join-Path $repo "third_party\retrozilla-nss\prebuilt\win32-x86-vc6\runtime"
@@ -72,10 +79,17 @@ foreach ($id in $targets) {
         Copy-Required (Join-Path $repo "third_party\openssl\LICENSE.txt") (Join-Path $stage "licenses\openssl\LICENSE-APACHE-2.0.txt")
         $runtimeFiles = "libssl-3-x64.dll,libcrypto-3-x64.dll"; $thirdParty = "OpenSSL 3.5.8 LTS"
     }
+    if ($Version -eq "0.6.2" -and $id -like "win32-x86-vc6-retrozilla-nss*") {
+        if ($crt -notin @("ml", "md")) { throw "Unsuffixed VC6 package forbidden in 0.6.2 candidate" }
+        Assert-PstVc6CrtLibrary (Join-Path $build "papinho_secure_transport.lib") $crt
+    }
     Copy-Required (Join-Path $build "papinho_secure_transport.lib") (Join-Path $stage "lib\$id\papinho_secure_transport.lib")
     Write-Utf8NoBom (Join-Path $stage "VERSION") "package_version=$version`nlibrary_version=$libraryVersion`napi_version=$apiVersion`nspi_version=3.0`n"
-    Write-Utf8NoBom (Join-Path $stage "consumer-link.ini") "target_id=$id`nlink_libraries=$linkLibraries`nruntime_files=$runtimeFiles`n"
-    Write-Utf8NoBom (Join-Path $stage "manifest.ini") "format_version=2`npackage_name=PapinhoSecureTransport`npackage_version=$version`nlibrary_version=$libraryVersion`napi_version=$apiVersion`nspi_version=3.0`ntarget_id=$id`narchitecture=$architecture`ntoolchain=$toolchain`ncrt=$crt`nlinkage=static`nprovider_ids=$providers`ncapabilities=$capabilities`nruntime_files=$runtimeFiles`nthird_party_components=$thirdParty`nlicense_id=MPL-2.0`nsource_package=papinho-secure-transport-$version-src.zip`nlicense_file=LICENSE`nprovenance_reference=docs/release-packaging.md`nthird_party_notice=THIRD_PARTY_NOTICES.md`n"
+    $consumerCrt = if ($Version -eq "0.6.2" -and $crt -in @("ml", "md")) { "crt=$crt`ncrt_compiler_flag=/$($crt.ToUpperInvariant())`n" } else { "" }
+    Write-Utf8NoBom (Join-Path $stage "consumer-link.ini") "target_id=$id`n${consumerCrt}link_libraries=$linkLibraries`nruntime_files=$runtimeFiles`n"
+    $commitField = if ($Version -eq "0.6.2") { "source_commit=$sourceCommit`n" } else { "" }
+    Write-Utf8NoBom (Join-Path $stage "manifest.ini") "format_version=2`npackage_name=PapinhoSecureTransport`npackage_version=$version`nlibrary_version=$libraryVersion`napi_version=$apiVersion`nspi_version=3.0`ntarget_id=$id`narchitecture=$architecture`ntoolchain=$toolchain`ncrt=$crt`n${commitField}linkage=static`nprovider_ids=$providers`ncapabilities=$capabilities`nruntime_files=$runtimeFiles`nthird_party_components=$thirdParty`nlicense_id=MPL-2.0`nsource_package=papinho-secure-transport-$version-src.zip`nlicense_file=LICENSE`nprovenance_reference=docs/release-packaging.md`nthird_party_notice=THIRD_PARTY_NOTICES.md`n"
+    if ($Version -eq "0.6.2" -and $crt -in @("ml", "md")) { Assert-PstVc6PackageBinary $stage }
     $hashLines = Get-ChildItem $stage -File -Recurse | Where-Object { $_.Name -ne "SHA256SUMS.txt" } | Sort-Object FullName | ForEach-Object { $relative = $_.FullName.Substring($stage.Length + 1).Replace("\", "/"); "{0}  {1}" -f (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant(), $relative }
     Write-Utf8NoBom (Join-Path $stage "SHA256SUMS.txt") (($hashLines -join "`n") + "`n")
     Write-Host "STAGED $id"
