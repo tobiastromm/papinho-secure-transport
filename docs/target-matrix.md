@@ -36,13 +36,22 @@ M9 also found and corrected two real Schannel shutdown defects in the 0.6.0 rele
 ---
 CRT/runtime model is also an ABI-relevant fact. Per PapinhoEngineering/ADR-0002 revision 3 and PST/ADR-0005, when CRT variants are binary-incompatible and must coexist or be selected by consumers, CRT becomes a discriminating target/variant dimension rather than metadata alone.
 
-The historical/current unsuffixed VC6 target records the already validated static-CRT line. A future Browser-compatible VC6 `/MD` release variant must use a distinct ID such as `win32-x86-vc6-retrozilla-nss-md`; it must not silently replace or reinterpret the unsuffixed package.
+The unsuffixed VC6/NSS ID is historical. Its factual CRT is /ML, but new canonical CRT-qualified identities are symmetric:
+
+\`\`\`text
+historical: win32-x86-vc6-retrozilla-nss
+canonical /ML: win32-x86-vc6-retrozilla-nss-ml
+canonical /MD: win32-x86-vc6-retrozilla-nss-md
+\`\`\`
+
+Historical packages/evidence keep the unsuffixed name. If /ML is built/distributed again, the new artifact uses `-ml`.
 
 ## 0.5.0 candidate targets at a glance
 
 | Target ID | Architecture | Provider(s) | TLS | Tested on |
 |---|---:|---|---|---|
-| `win32-x86-vc6-retrozilla-nss` | x86 | RetroZilla NSS/NSPR | 1.2 / 1.3 | Windows NT 4.0 SP6 x86 |
+| `win32-x86-vc6-retrozilla-nss` | x86 | RetroZilla NSS/NSPR | historical `/ML` identity; 1.2 / 1.3 | Windows NT 4.0 SP6 x86 |
+| `win32-x86-vc6-retrozilla-nss-ml` | x86 | RetroZilla NSS/NSPR | canonical `/ML` variant; no new package claimed | historical evidence maps from unsuffixed ID |
 | `win32-x86-vc6-retrozilla-nss-md` | x86 | RetroZilla NSS/NSPR | candidate; requires independent validation | not yet validated |
 | `win32-x64-msvc-19.51-schannel` | x64 | Schannel | 1.2 validated | Windows 10 build 19045 x64 |
 | `win32-x64-msvc-19.51-openssl3` | x64 | OpenSSL 3.5.8 LTS | 1.2 / 1.3 | Windows 10 build 19045 x64 |
@@ -52,7 +61,7 @@ The compact table is only a navigation summary. The factual details for each tar
 
 ---
 
-## `win32-x86-vc6-retrozilla-nss`
+## `win32-x86-vc6-retrozilla-nss` — historical unsuffixed ID
 
 | Field | Value |
 |---|---|
@@ -76,6 +85,16 @@ The compact table is only a navigation summary. The factual details for each tar
 | SERVER SYSTEM_TRUST | Not advertised |
 | SERVER ALPN | Complete PST semantics not advertised |
 | Notes | `nt4` is validation evidence, not target identity |
+
+### Canonical CRT-qualified identity
+
+The factual CRT for this historical target is `/ML`. Its canonical variant identity for any new artifact is:
+
+\`\`\`text
+win32-x86-vc6-retrozilla-nss-ml
+\`\`\`
+
+No historical package, hash, release evidence or path is renamed. This is a crosswalk, not history rewriting.
 
 ### Why NT4 is not in the target name
 
@@ -258,6 +277,7 @@ The following identifiers name already completed pre-ADR validation artifacts. H
 ```text
 windows-nt4-x86-vc6-retrozilla-nss
 -> win32-x86-vc6-retrozilla-nss
+-> win32-x86-vc6-retrozilla-nss-ml   (canonical CRT-qualified identity for new /ML artifacts)
 
 windows-x64-msvc-schannel
 -> win32-x64-msvc-19.51-schannel
