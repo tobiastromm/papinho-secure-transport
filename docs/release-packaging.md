@@ -26,7 +26,8 @@ The first release should ship a source archive and four separate, release-only b
 
 | Target ID | Provider | Architecture/toolchain | CRT | Package status |
 |---|---|---|---|---|
-| `win32-x86-vc6-retrozilla-nss` | RetroZilla NSS | x86, VC6, NT4 compatibility floor | compiler-default static CRT | candidate |
+| `win32-x86-vc6-retrozilla-nss` | RetroZilla NSS | x86, VC6, NT4 compatibility floor | compiler-default static CRT | historical/current candidate |
+| `win32-x86-vc6-retrozilla-nss-md` | RetroZilla NSS | x86, VC6 | `/MD` | required new candidate; not yet built/validated |
 | `win32-x64-msvc-19.51-schannel` | Schannel | x64, documented MSVC/Windows SDK | `/MD` | candidate |
 | `win32-x64-msvc-19.51-openssl3` | OpenSSL | x64, documented MSVC, OpenSSL 3.5.8 | `/MD` | candidate |
 | `win32-x64-msvc-19.51-schannel-openssl3` | Schannel then OpenSSL | x64 combined target | `/MD` | official optional candidate |
@@ -58,7 +59,15 @@ Staging is not a public release. It includes PST LICENSE and records license_id=
 
 `tools/stage-release-source.ps1` separately creates an allowlisted source-package dry-run, excluding `docs/codex/`, build/staging outputs and repository metadata while preserving tests, tooling and corresponding third-party source. See `repository-and-source-package-hygiene.md`.
 
-The eventual archive name should be `papinho-secure-transport-<package-version>-<target-id>.zip`. ZIP creation and signing are deferred. SHA-256 detects accidental change; it does not establish publisher authenticity. Code signing remains future/review-required.
+The eventual archive name should be `papinho-secure-transport-<package-version>-<target-id>.zip`.
+
+Per PST/ADR-0005, CRT/runtime model is part of `<target-id>` when it distinguishes binary-incompatible selectable variants. For the Browser-required VC6 dynamic-CRT line, the intended form is:
+
+```text
+papinho-secure-transport-<package-version>-win32-x86-vc6-retrozilla-nss-md.zip
+```
+
+This is a new governed artifact. Do not replace the static-CRT contents of an existing/frozen unsuffixed package in place. The exact next package version is determined by the release/versioning work; this document does not declare an unbuilt package released. ZIP creation and signing are deferred. SHA-256 detects accidental change; it does not establish publisher authenticity. Code signing remains future/review-required.
 
 ## Version decision
 
