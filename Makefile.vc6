@@ -1,7 +1,17 @@
 # SPDX-License-Identifier: MPL-2.0
 CC=cl
 LIBTOOL=lib
-CFLAGS=/nologo /W4 /O2 /TC /Iinclude /Isrc
+!IFNDEF CRT
+CRT=ml
+!ENDIF
+!IF "$(CRT)" == "ml"
+CRT_FLAG=/ML
+!ELSEIF "$(CRT)" == "md"
+CRT_FLAG=/MD
+!ELSE
+!ERROR Unsupported VC6 CRT selector. Use CRT=ml or CRT=md.
+!ENDIF
+CFLAGS=/nologo /W4 /O2 /TC $(CRT_FLAG) /Iinclude /Isrc
 !IFNDEF LDFLAGS
 LDFLAGS=
 !ENDIF
@@ -9,7 +19,9 @@ LDFLAGS=
 NSS_DIST=
 !ENDIF
 NSS_CFLAGS=$(CFLAGS) /I$(NSS_DIST)\include\nspr /I$(NSS_DIST)\public\nss
-BUILD=build\win32-x86-vc6-retrozilla-nss
+!IFNDEF BUILD
+BUILD=build\win32-x86-vc6-retrozilla-nss-$(CRT)
+!ENDIF
 INTEROP_FIXTURES=build\fixtures\interoperability-pki
 NSS_RUNTIME=third_party\retrozilla-nss\prebuilt\win32-x86-vc6\runtime
 LIB=$(BUILD)\papinho_secure_transport.lib

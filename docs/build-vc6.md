@@ -13,7 +13,18 @@ tools\build-vc6.bat clean
 tools\build-vc6.bat test test-nss-unit
 ```
 
-The first command removes `build\win32-x86-vc6-retrozilla-nss`. The second performs the `/W4` portable build, runs the regular suite, builds the RetroZilla NSS backend, and runs `test_backend_nss`.
+These historical no-selector commands now explicitly resolve to `CRT=ml` and use `build\win32-x86-vc6-retrozilla-nss-ml`. Canonical M1 commands specify the selector:
+
+```bat
+tools\build-vc6.bat CRT=ml clean
+tools\build-vc6.bat CRT=ml test test-nss-unit
+tools\build-vc6.bat CRT=md clean
+tools\build-vc6.bat CRT=md test test-nss-unit
+tools\test-vc6-crt-consumer.bat ml
+tools\test-vc6-crt-consumer.bat md
+```
+
+The Makefile rejects selector values other than `ml` and `md`. The two variants compile the same sources with explicit `/ML` or `/MD` and keep separate object and library directories. The local consumer runner stages only public headers, the selected library, and the retained NSS runtime under `build`; it is not a release package or external certification.
 
 ## Prerequisites and configuration
 
@@ -83,15 +94,15 @@ Regular `test` runs `test_foundation`, `test_identity`, `test_backend_spi`, `tes
 After building, individual tests can be rerun directly:
 
 ```bat
-build\win32-x86-vc6-retrozilla-nss\test_foundation.exe
-build\win32-x86-vc6-retrozilla-nss\test_identity.exe
-build\win32-x86-vc6-retrozilla-nss\test_backend_spi.exe
-build\win32-x86-vc6-retrozilla-nss\test_diagnostic.exe
-build\win32-x86-vc6-retrozilla-nss\test_diagnostic_transport.exe
-build\win32-x86-vc6-retrozilla-nss\test_diagnostic_creation.exe
-build\win32-x86-vc6-retrozilla-nss\test_public_diagnostic.exe
-build\win32-x86-vc6-retrozilla-nss\test_public_header.exe
-build\win32-x86-vc6-retrozilla-nss\test_backend_nss.exe
+build\win32-x86-vc6-retrozilla-nss-ml\test_foundation.exe
+build\win32-x86-vc6-retrozilla-nss-ml\test_identity.exe
+build\win32-x86-vc6-retrozilla-nss-ml\test_backend_spi.exe
+build\win32-x86-vc6-retrozilla-nss-ml\test_diagnostic.exe
+build\win32-x86-vc6-retrozilla-nss-ml\test_diagnostic_transport.exe
+build\win32-x86-vc6-retrozilla-nss-ml\test_diagnostic_creation.exe
+build\win32-x86-vc6-retrozilla-nss-ml\test_public_diagnostic.exe
+build\win32-x86-vc6-retrozilla-nss-ml\test_public_header.exe
+build\win32-x86-vc6-retrozilla-nss-ml\test_backend_nss.exe
 ```
 
 TLS integration requires `runtime-integration`, the fixture server in `tests\nt4_tls_server.py`, client fixtures under `build\nt4-validation\client`, and the canonical runtime-only process `PATH`. For TLS 1.2, start the fixture in one shell:
@@ -105,17 +116,17 @@ Then run the client from another bootstrapped shell:
 ```bat
 call tools\vc6-env.bat
 set PATH=%PST_NSS_RUNTIME%;%SystemRoot%\System32;%SystemRoot%
-build\win32-x86-vc6-retrozilla-nss\test_tls_runtime_integration.exe 127.0.0.1 8443 localhost build\nt4-validation\client\ca.der build\nt4-validation\client\client.der build\nt4-validation\client\client.pk8 12 12 fixture/1
+build\win32-x86-vc6-retrozilla-nss-ml\test_tls_runtime_integration.exe 127.0.0.1 8443 localhost build\nt4-validation\client\ca.der build\nt4-validation\client\client.der build\nt4-validation\client\client.pk8 12 12 fixture/1
 ```
 
 Use another free port and replace all three `12` values with `13` for TLS 1.3. The required gate is `WRITE=25 READ=25 CONTENT_MATCH=1`; the server must report authenticated `fixture/1` and `RECV=25 SEND=25 CONTENT_MATCH=True`.
 
 ## Bounded stress integration
 
-Phase 7.H keeps the expensive soak runner outside the regular quick suite. Build it with tools\build-vc6.bat stress-integration. The resulting build\win32-x86-vc6-retrozilla-nss\test_stress_stability.exe exposes bounded modes documented in stress-stability.md. Soak artifacts belong under build\phase7h and the normal NSS runtime-only PATH rule remains mandatory.
+Phase 7.H keeps the expensive soak runner outside the regular quick suite. Build it with tools\build-vc6.bat stress-integration. The resulting build\win32-x86-vc6-retrozilla-nss-ml\test_stress_stability.exe exposes bounded modes documented in stress-stability.md. Soak artifacts belong under build\phase7h and the normal NSS runtime-only PATH rule remains mandatory.
 ## Outputs and target identity
 
-The current Makefile writes the Win32 x86 VC6 legacy-compatible target under `build\win32-x86-vc6-retrozilla-nss`. This housekeeping task does not restructure existing outputs. Future architectures, toolchains, configurations, or modern NSS backends must use distinct output directories and must not mix artifacts into `build\win32-x86-vc6-retrozilla-nss`.
+The VC6/NSS outputs are `build\win32-x86-vc6-retrozilla-nss-ml` and `build\win32-x86-vc6-retrozilla-nss-md`. The unsuffixed historical identifier and frozen v0.6.1 ZIP are unchanged. Other targets are not renamed by M1.
 
 ## Known failures
 
