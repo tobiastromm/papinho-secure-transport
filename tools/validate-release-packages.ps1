@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-param([ValidateSet("0.5.0", "0.6.0", "0.6.1", "0.6.2")][string]$Version="0.6.2",[string]$PackageDirectory,[string]$ValidationDirectory,[string]$ExpectedChecksumsFile,[switch]$CompileConsumers)
+param([ValidateSet("0.5.0", "0.6.0", "0.6.1", "0.6.2", "0.6.3")][string]$Version="0.6.3",[string]$PackageDirectory,[string]$ValidationDirectory,[string]$ExpectedChecksumsFile,[switch]$CompileConsumers)
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 $libraryVersion = if ($Version -eq "0.5.0") { "0.5.0" } else { $Version }
@@ -9,7 +9,7 @@ if (-not $ValidationDirectory) { $ValidationDirectory = Join-Path $repo ("dist\v
 $PackageDirectory = [IO.Path]::GetFullPath($PackageDirectory)
 $ValidationDirectory = [IO.Path]::GetFullPath($ValidationDirectory)
 if (-not $ExpectedChecksumsFile) { $ExpectedChecksumsFile = Join-Path $PackageDirectory "SHA256SUMS-packages.txt" }
-$vc6Ids=if($Version -eq "0.6.2"){@("win32-x86-vc6-retrozilla-nss-ml","win32-x86-vc6-retrozilla-nss-md")}else{@("win32-x86-vc6-retrozilla-nss")}
+$vc6Ids=if($Version -in @("0.6.2","0.6.3")){@("win32-x86-vc6-retrozilla-nss-ml","win32-x86-vc6-retrozilla-nss-md")}else{@("win32-x86-vc6-retrozilla-nss")}
 $ids=@($vc6Ids)+@("win32-x64-msvc-19.51-schannel","win32-x64-msvc-19.51-openssl3","win32-x64-msvc-19.51-schannel-openssl3")
 $packages=@(@{Name=("papinho-secure-transport-"+$Version+"-src.zip");Hash="";Id="source"})
 foreach($id in $ids){$packages+=@{Name=("papinho-secure-transport-"+$Version+"-"+$id+".zip");Hash="";Id=$id}}
@@ -66,7 +66,7 @@ foreach($package in $packages){
   Require-File $snapshot "missing NSS corresponding source";Require-File (Join-Path $extract "third_party\retrozilla-nss\patches\0001-win32-secure-rng-fail-closed-nt4.patch") "missing NSS patch"
   if((Get-FileHash -Algorithm SHA256 -LiteralPath $snapshot).Hash.ToLowerInvariant() -ne "5371ce6fb2fd0df909faaed4cf92dc9c112844e1d1bedd7a8dc7f598b900d388"){throw "NSS source hash mismatch"}
   Require-File (Join-Path $extract "docs\target-matrix.md") "missing canonical target matrix"
-  if($Version -eq "0.6.2"){
+  if($Version -in @("0.6.2","0.6.3")){
    $sourceStatus=[IO.File]::ReadAllText((Join-Path $extract "SOURCE-PACKAGE-STATUS.txt"))
    $sourceCommitMatch=[regex]::Match($sourceStatus,'(?m)^source_commit=([0-9a-f]{40})\r?$')
    if(-not $sourceCommitMatch.Success){throw "source commit missing from source package"}
@@ -83,7 +83,7 @@ foreach($package in $packages){
   foreach($requiredVersion in @("package_version=$Version","library_version=$libraryVersion","api_version=$apiVersion","spi_version=3.0")){if($versionText -notmatch ('(?m)^'+[regex]::Escape($requiredVersion)+'$')){throw ("VERSION mismatch: "+$requiredVersion)}}
   if($manifest -notmatch ('(?m)^target_id=' + [regex]::Escape($package.Id) + '$')){throw "manifest target_id mismatch"}
   if((Get-Content -Raw (Join-Path $extract "consumer-link.ini")) -notmatch ('(?m)^target_id=' + [regex]::Escape($package.Id) + '$')){throw "consumer-link target_id mismatch"}
-  if($Version -eq "0.6.2"){
+  if($Version -in @("0.6.2","0.6.3")){
    if($manifest -notmatch ('(?m)^source_commit='+[regex]::Escape($sourceCommit)+'$')){throw "SDK/source commit mismatch"}
    if($package.Id -in $vc6Ids){
     $expectedCrt=if($package.Id.EndsWith('-ml')){'ml'}else{'md'}

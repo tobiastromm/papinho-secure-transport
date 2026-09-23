@@ -7,7 +7,7 @@
 #define ASSERT_C(name,expr) typedef char assert_##name[(expr)?1:-1]
 #define CHECK(expr,n) if(!(expr))return fail(n)
 ASSERT_C(api_version,PST_API_VERSION==0x00020100UL);
-ASSERT_C(library_version,PST_LIBRARY_VERSION==0x00000602UL);
+ASSERT_C(library_version,PST_LIBRARY_VERSION==0x00000603UL);
 ASSERT_C(spi_version,PST_BACKEND_SPI_VERSION==0x00030000UL);
 ASSERT_C(role_client,PST_CONNECTION_ROLE_CLIENT==1UL);
 ASSERT_C(role_server,PST_CONNECTION_ROLE_SERVER==2UL);

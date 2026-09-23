@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
 param(
-    [ValidateSet("0.5.0", "0.6.0", "0.6.1", "0.6.2")][string]$Version = "0.6.2",
+    [ValidateSet("0.5.0", "0.6.0", "0.6.1", "0.6.2", "0.6.3")][string]$Version = "0.6.3",
     [ValidateSet("all", "win32-x86-vc6-retrozilla-nss", "win32-x86-vc6-retrozilla-nss-ml", "win32-x86-vc6-retrozilla-nss-md", "win32-x64-msvc-19.51-schannel", "win32-x64-msvc-19.51-openssl3", "win32-x64-msvc-19.51-schannel-openssl3")]
     [string]$Target = "all",
     [switch]$Clean
@@ -13,7 +13,7 @@ $libraryVersion = if ($Version -eq "0.5.0") { "0.5.0" } else { $Version }
 $apiVersion = if ($Version -eq "0.5.0") { "2.0.0" } else { "2.1.0" }
 $root = Join-Path $repo "dist\staging\$version"
 . (Join-Path $PSScriptRoot "package-staging-policy.ps1")
-$vc6Targets = if ($Version -eq "0.6.2") { @("win32-x86-vc6-retrozilla-nss-ml", "win32-x86-vc6-retrozilla-nss-md") } else { @("win32-x86-vc6-retrozilla-nss") }
+$vc6Targets = if ($Version -in @("0.6.2", "0.6.3")) { @("win32-x86-vc6-retrozilla-nss-ml", "win32-x86-vc6-retrozilla-nss-md") } else { @("win32-x86-vc6-retrozilla-nss") }
 $targets = @($vc6Targets) + @("win32-x64-msvc-19.51-schannel", "win32-x64-msvc-19.51-openssl3", "win32-x64-msvc-19.51-schannel-openssl3")
 if ($Target -ne "all") { $targets = @($Target) }
 if ($Target -ne "all" -and $Target -notin $vc6Targets -and $Target -like "win32-x86-vc6-retrozilla-nss*") { throw "VC6 target $Target is not valid for package version $Version" }
@@ -41,7 +41,7 @@ foreach ($id in $targets) {
     Copy-Required (Join-Path $repo "THIRD_PARTY_NOTICES.md") (Join-Path $stage "THIRD_PARTY_NOTICES.md")
     Copy-Required (Join-Path $repo "LICENSE") (Join-Path $stage "LICENSE")
     foreach ($file in @("papinho_secure_transport.h", "papinho_secure_transport_win32.h")) { Copy-Required (Join-Path $repo "include\$file") (Join-Path $stage "include\$file") }
-    foreach ($file in @("target-matrix.md", "release-packaging.md", "release-licensing.md", "release-notes-0.6.2.md", "consumer-linking.md", "security-and-limitations.md", "security-lifecycle-negative-matrix.md", "api-2.0.md", "provider-spi-3.0.md", "api-1.3-to-2.0-migration.md", "providers.md", "client-server-lifecycle.md", "en\README.md", "en\getting-started.md", "pt-BR\README.md", "pt-BR\getting-started.md")) { Copy-Required (Join-Path $repo "docs\$file") (Join-Path $stage "docs\$file") }
+    foreach ($file in @("target-matrix.md", "release-packaging.md", "release-licensing.md", "release-notes-$Version.md", "consumer-linking.md", "security-and-limitations.md", "security-lifecycle-negative-matrix.md", "api-2.0.md", "provider-spi-3.0.md", "api-1.3-to-2.0-migration.md", "providers.md", "client-server-lifecycle.md", "en\README.md", "en\getting-started.md", "pt-BR\README.md", "pt-BR\getting-started.md")) { Copy-Required (Join-Path $repo "docs\$file") (Join-Path $stage "docs\$file") }
     Get-ChildItem (Join-Path $repo "examples") -File | ForEach-Object { Copy-Required $_.FullName (Join-Path $stage "examples\$($_.Name)") }
 
     $runtimeFiles = "none-package-supplied"
@@ -78,17 +78,17 @@ foreach ($id in $targets) {
         Copy-Required (Join-Path $repo "third_party\openssl\LICENSE.txt") (Join-Path $stage "licenses\openssl\LICENSE-APACHE-2.0.txt")
         $runtimeFiles = "libssl-3-x64.dll,libcrypto-3-x64.dll"; $thirdParty = "OpenSSL 3.5.8 LTS"
     }
-    if ($Version -eq "0.6.2" -and $id -like "win32-x86-vc6-retrozilla-nss*") {
-        if ($crt -notin @("ml", "md")) { throw "Unsuffixed VC6 package forbidden in 0.6.2 candidate" }
+    if ($Version -in @("0.6.2", "0.6.3") -and $id -like "win32-x86-vc6-retrozilla-nss*") {
+        if ($crt -notin @("ml", "md")) { throw "Unsuffixed VC6 package forbidden in $Version candidate" }
         Assert-PstVc6CrtLibrary (Join-Path $build "papinho_secure_transport.lib") $crt
     }
     Copy-Required (Join-Path $build "papinho_secure_transport.lib") (Join-Path $stage "lib\$id\papinho_secure_transport.lib")
     Write-Utf8NoBom (Join-Path $stage "VERSION") "package_version=$version`nlibrary_version=$libraryVersion`napi_version=$apiVersion`nspi_version=3.0`n"
-    $consumerCrt = if ($Version -eq "0.6.2" -and $crt -in @("ml", "md")) { "crt=$crt`ncrt_compiler_flag=/$($crt.ToUpperInvariant())`n" } else { "" }
+    $consumerCrt = if ($Version -in @("0.6.2", "0.6.3") -and $crt -in @("ml", "md")) { "crt=$crt`ncrt_compiler_flag=/$($crt.ToUpperInvariant())`n" } else { "" }
     Write-Utf8NoBom (Join-Path $stage "consumer-link.ini") "target_id=$id`n${consumerCrt}link_libraries=$linkLibraries`nruntime_files=$runtimeFiles`n"
-    $commitField = if ($Version -eq "0.6.2") { "source_commit=$sourceCommit`n" } else { "" }
+    $commitField = if ($Version -in @("0.6.2", "0.6.3")) { "source_commit=$sourceCommit`n" } else { "" }
     Write-Utf8NoBom (Join-Path $stage "manifest.ini") "format_version=2`npackage_name=PapinhoSecureTransport`npackage_version=$version`nlibrary_version=$libraryVersion`napi_version=$apiVersion`nspi_version=3.0`ntarget_id=$id`narchitecture=$architecture`ntoolchain=$toolchain`ncrt=$crt`n${commitField}linkage=static`nprovider_ids=$providers`ncapabilities=$capabilities`nruntime_files=$runtimeFiles`nthird_party_components=$thirdParty`nlicense_id=MPL-2.0`nsource_package=papinho-secure-transport-$version-src.zip`nlicense_file=LICENSE`nprovenance_reference=docs/release-packaging.md`nthird_party_notice=THIRD_PARTY_NOTICES.md`n"
-    if ($Version -eq "0.6.2" -and $crt -in @("ml", "md")) { Assert-PstVc6PackageBinary $stage }
+    if ($Version -in @("0.6.2", "0.6.3") -and $crt -in @("ml", "md")) { Assert-PstVc6PackageBinary $stage }
     $hashLines = Get-ChildItem $stage -File -Recurse | Where-Object { $_.Name -ne "SHA256SUMS.txt" } | Sort-Object FullName | ForEach-Object { $relative = $_.FullName.Substring($stage.Length + 1).Replace("\", "/"); "{0}  {1}" -f (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant(), $relative }
     Write-Utf8NoBom (Join-Path $stage "SHA256SUMS.txt") (($hashLines -join "`n") + "`n")
     Write-Host "STAGED $id"

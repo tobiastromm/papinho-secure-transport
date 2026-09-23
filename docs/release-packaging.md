@@ -2,9 +2,17 @@
 
 # Release packaging decision
 
-## 0.6.2 final release candidate (not published)
+## 0.6.3 TLS-version normalization candidate
 
-The `0.6.2` release candidate has one source ZIP, separate VC6/NSS
+The `0.6.3` candidate retains the 0.6.2 package layout, API 2.1.0 and SPI 3.0.
+Its only production correction normalizes RetroZilla NSS peer TLS-version
+metadata to the public PST TLS 1.2/TLS 1.3 vocabulary. Native versions outside
+that vocabulary make the peer metadata unavailable without failing the
+connection. The published 0.6.2 release and assets remain immutable.
+
+## Historical 0.6.2 release
+
+The published `0.6.2` release has one source ZIP, separate VC6/NSS
 `-ml` and `-md` SDK ZIPs, and the three unchanged x64 target identities.
 Both VC6 SDKs are staged from the same source commit and from explicitly
 selected `/ML` or `/MD` builds; their manifests and consumer-link metadata
@@ -12,8 +20,7 @@ record the CRT. The package validator checks the actual static-library CRT
 directives and rejects a metadata/binary mismatch. Package and library version
 are `0.6.2`; API remains `2.1.0` and SPI remains `3.0`. Real NT4 and separate
 clean-machine TLS passed for both CRT variants. Real PapinhoBrowser `/MD`
-integration against the `/MD` SDK passed TLS 1.3. No 0.6.2 release has been
-published.
+integration against the `/MD` SDK passed TLS 1.3.
 
 ## Historical 0.6.1 graceful-shutdown contract bugfix
 
@@ -40,8 +47,8 @@ The first release should ship a source archive and four separate, release-only b
 | Target ID | Provider | Architecture/toolchain | CRT | Package status |
 |---|---|---|---|---|
 | `win32-x86-vc6-retrozilla-nss` | RetroZilla NSS | x86, VC6, NT4 compatibility floor | `/ML` | historical unsuffixed package identity only |
-| `win32-x86-vc6-retrozilla-nss-ml` | RetroZilla NSS | x86, VC6 | `/ML` | 0.6.2 final candidate; NT4 and clean-machine validated; unpublished |
-| `win32-x86-vc6-retrozilla-nss-md` | RetroZilla NSS | x86, VC6 | `/MD` | 0.6.2 final candidate; NT4, clean-machine and Browser validated; unpublished |
+| `win32-x86-vc6-retrozilla-nss-ml` | RetroZilla NSS | x86, VC6 | `/ML` | 0.6.3 candidate; targeted external recertification pending |
+| `win32-x86-vc6-retrozilla-nss-md` | RetroZilla NSS | x86, VC6 | `/MD` | 0.6.3 candidate; targeted external recertification pending |
 | `win32-x64-msvc-19.51-schannel` | Schannel | x64, documented MSVC/Windows SDK | `/MD` | candidate |
 | `win32-x64-msvc-19.51-openssl3` | OpenSSL | x64, documented MSVC, OpenSSL 3.5.8 | `/MD` | candidate |
 | `win32-x64-msvc-19.51-schannel-openssl3` | Schannel then OpenSSL | x64 combined target | `/MD` | official optional candidate |

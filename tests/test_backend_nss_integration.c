@@ -78,7 +78,7 @@ int main(int argc, char **argv)
     unsigned short port;
     int complete;
     int io_complete;
-    const char message[] = "pst-phase3-functional-proof";
+    const char message[] = "pst-phase5-public-runtime";
     char received[64];
     pst_size written;
     pst_size received_count;
@@ -157,7 +157,8 @@ int main(int argc, char **argv)
             memset(&summary,0,sizeof(summary));summary.struct_size=sizeof(summary);summary.api_version=PST_API_VERSION;
             result=pst_peer_info_get_summary(peer,&summary);
             if(result!=PST_RESULT_OK||summary.peer_authenticated!=PST_KNOWN_TRUE||summary.peer_name_validated!=PST_KNOWN_TRUE||summary.certificate_sha256_size!=32){complete=0;goto cleanup;}
-            printf("PEER_AUTH=%lu PEER_NAME=%lu CIPHER=0x%04lx LEAF_DER=%lu SHA256=32\n",(unsigned long)summary.peer_authenticated,(unsigned long)summary.peer_name_validated,(unsigned long)summary.cipher_suite,(unsigned long)summary.leaf_der_size);
+            if((protocol_version==0x0303UL&&summary.tls_version!=PST_TLS_VERSION_1_2)||(protocol_version==0x0304UL&&summary.tls_version!=PST_TLS_VERSION_1_3)||(protocol_version!=0x0303UL&&protocol_version!=0x0304UL)){complete=0;goto cleanup;}
+            printf("PEER_AUTH=%lu PEER_NAME=%lu TLS_NATIVE=0x%04lx TLS_PUBLIC=%lu CIPHER=0x%04lx LEAF_DER=%lu SHA256=32\n",(unsigned long)summary.peer_authenticated,(unsigned long)summary.peer_name_validated,(unsigned long)protocol_version,(unsigned long)summary.tls_version,(unsigned long)summary.cipher_suite,(unsigned long)summary.leaf_der_size);
         }
         for (i = 0; i < 200 && written < sizeof(message) - 1; ++i) {
             result = descriptor->vtable->write(connection_state, message + written,

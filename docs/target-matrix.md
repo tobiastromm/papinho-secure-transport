@@ -4,7 +4,7 @@ This is the canonical PapinhoSecureTransport target matrix. The ecosystem-wide n
 
 Target identity, build inputs, operating-system support policy, and observed validation are separate facts. A toolchain name is not an operating-system support claim.
 
-## 0.6.2 VC6 CRT-qualified targets
+## 0.6.3 VC6 CRT-qualified targets
 
 From one source commit, the VC6/NSS `-ml` and `-md` targets use explicit
 `/ML` and `/MD` builds and isolated SDK packages. Package metadata identifies
@@ -13,8 +13,9 @@ package-only consumers, real Windows NT 4.0 SP6 x86 CLIENT/SERVER TLS, and a
 separate clean-machine TLS run. The `/MD` package additionally passed real
 PapinhoBrowser `/MD` TLS 1.3 integration. No ML/MD functional or lifecycle
 divergence was observed. The historical unsuffixed 0.6.1 package remains
-immutable. The 0.6.2 release candidate uses library 0.6.2, API 2.1.0 and SPI
-3.0; no 0.6.2 release has been published.
+immutable. The published 0.6.2 release uses library 0.6.2, API 2.1.0 and SPI
+3.0. The 0.6.3 candidate retains API 2.1.0/SPI 3.0 and corrects only the NSS
+peer TLS-version metadata normalization; targeted external recertification is pending.
 
 ## Historical 0.6.1 graceful-shutdown contract bugfix
 
@@ -130,7 +131,7 @@ This is the ABI-distinct VC6 variant required and validated by PapinhoBrowser.
 | Relationship | ABI-distinct variant of the VC6/NSS line |
 | Consumer driver | PapinhoBrowser VC6 `/MD` integration |
 | Validation status | M1-M4 build, package, real TLS and lifecycle gates passed |
-| Package status | 0.6.2 final release candidate; not published |
+| Package status | 0.6.3 candidate; targeted external recertification pending |
 | Tested on | Windows NT 4.0 SP6 x86; separate clean Windows machine; real PapinhoBrowser `/MD` integration |
 | Notes | TLS 1.2/1.3, required mTLS, truncation, reciprocal shutdown and `PR_Poll` authority passed; Browser `/MD` TLS 1.3 passed |
 

@@ -10,6 +10,8 @@ typedef PST_NATIVE_TRANSPORT PST_NSS_NATIVE_TRANSPORT;
 const PST_BACKEND_DESCRIPTOR *pst_backend_nss_descriptor(void);
 PST_RESULT pst_backend_nss_register(void);
 PST_RESULT pst_backend_nss_normalize_error(pst_i32 native_error);
+PST_RESULT pst_backend_nss_normalize_protocol_version(pst_u32 native_version,
+    pst_u32 *public_version);
 int pst_backend_nss_is_would_block(pst_i32 native_error);
 PST_RESULT pst_backend_nss_classify_poll_flags(int read_ready, int write_ready,
     int error_ready, int hangup_ready, int invalid_ready,

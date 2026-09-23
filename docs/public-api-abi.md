@@ -2,7 +2,7 @@
 
 # Public API and ABI baseline
 
-This document keeps the historical ABI work visible while recording the current release contract. The published 0.6.0 and 0.6.1 baselines use API 2.1.0 / SPI 3.0. The 0.6.2 release candidate keeps API **2.1.0** and SPI **3.0** while setting library **0.6.2** and distinguishing the VC6 CRT artifacts.
+This document keeps the historical ABI work visible while recording the current release contract. The published 0.6.0, 0.6.1 and 0.6.2 baselines use API 2.1.0 / SPI 3.0. The 0.6.3 candidate keeps API **2.1.0** and SPI **3.0** while setting library **0.6.3** and preserving the distinct VC6 CRT artifacts.
 
 API 2.1 is an additive evolution of API 2.0. It preserves the API 2.0 prefixes and adds the scheduler/readiness surface frozen by ADR-0005. M0–M9 found no need for an SPI change.
 
@@ -140,6 +140,7 @@ The earlier published baselines remain historical facts rather than being rewrit
 - v0.5.0: API 2.0.0 / SPI 3.0 / library 0.5.0, introducing the CLIENT/SERVER contract and published provider SDKs;
 - published v0.6.0: API 2.1.0 / SPI 3.0 / library 0.6.0;
 - published v0.6.1: API 2.1.0 / SPI 3.0 / library 0.6.1;
-- 0.6.2 release candidate: API 2.1.0 / SPI 3.0 / library 0.6.2.
+- published v0.6.2: API 2.1.0 / SPI 3.0 / library 0.6.2;
+- 0.6.3 candidate: API 2.1.0 / SPI 3.0 / library 0.6.3, with no public API or SPI expansion.
 
 Detailed historical release evidence remains under `docs/codex/release-evidence/` and the API 2.0 migration documents. The frozen 0.6.0 package/ABI evidence does not retroactively change the published 0.4.0 or 0.5.0 contracts.

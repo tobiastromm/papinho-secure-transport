@@ -1040,6 +1040,21 @@ pst_u32 pst_backend_nss_connection_protocol_version(const void *state)
         return 0UL;
     return (pst_u32)info.protocolVersion;
 }
+PST_RESULT pst_backend_nss_normalize_protocol_version(pst_u32 native_version,
+    pst_u32 *public_version)
+{
+    if (public_version == NULL) return PST_RESULT_INVALID_ARGUMENT;
+    *public_version = 0UL;
+    if (native_version == (pst_u32)SSL_LIBRARY_VERSION_TLS_1_2) {
+        *public_version = PST_TLS_VERSION_1_2;
+        return PST_RESULT_OK;
+    }
+    if (native_version == (pst_u32)SSL_LIBRARY_VERSION_TLS_1_3) {
+        *public_version = PST_TLS_VERSION_1_3;
+        return PST_RESULT_OK;
+    }
+    return PST_RESULT_UNAVAILABLE;
+}
 static PST_RESULT pst_nss_peer_info_create(void *state, void **out)
 {
     pst_nss_connection_state *c = (pst_nss_connection_state *)state;
@@ -1057,7 +1072,9 @@ static PST_RESULT pst_nss_peer_info_create(void *state, void **out)
     summary.peer_name_validated = c->role == PST_CONNECTION_ROLE_SERVER ?
         PST_KNOWN_NOT_APPLICABLE : (c->require_peer ? PST_KNOWN_TRUE :
         PST_KNOWN_NOT_APPLICABLE);
-    summary.tls_version = (pst_u32)info.protocolVersion;
+    result = pst_backend_nss_normalize_protocol_version(
+        (pst_u32)info.protocolVersion, &summary.tls_version);
+    if (result != PST_RESULT_OK) return result;
     summary.cipher_suite = (pst_u32)info.cipherSuite;
     summary.alpn_available = c->alpn_size ? PST_KNOWN_TRUE : PST_KNOWN_FALSE;
     summary.session_resumed = info.resumed ? PST_KNOWN_TRUE : PST_KNOWN_FALSE;

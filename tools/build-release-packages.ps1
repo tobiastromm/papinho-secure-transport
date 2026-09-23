@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MPL-2.0
 param(
-    [ValidateSet("0.5.0", "0.6.0", "0.6.1", "0.6.2")]
-    [string]$Version = "0.6.2",
+    [ValidateSet("0.5.0", "0.6.0", "0.6.1", "0.6.2", "0.6.3")]
+    [string]$Version = "0.6.3",
     [string]$OutputDirectory
 )
 
@@ -20,7 +20,7 @@ if (-not $output.StartsWith($distFull, [StringComparison]::OrdinalIgnoreCase)) {
     throw "OutputDirectory must be below the repository dist directory: $output"
 }
 
-$vc6Targets = if ($Version -eq "0.6.2") { @("win32-x86-vc6-retrozilla-nss-ml", "win32-x86-vc6-retrozilla-nss-md") } else { @("win32-x86-vc6-retrozilla-nss") }
+$vc6Targets = if ($Version -in @("0.6.2", "0.6.3")) { @("win32-x86-vc6-retrozilla-nss-ml", "win32-x86-vc6-retrozilla-nss-md") } else { @("win32-x86-vc6-retrozilla-nss") }
 $targets = @($vc6Targets) + @("win32-x64-msvc-19.51-schannel", "win32-x64-msvc-19.51-openssl3", "win32-x64-msvc-19.51-schannel-openssl3")
 $packages = @(@{ Name = "papinho-secure-transport-$Version-src.zip"; Stage = (Join-Path $stageRoot "source") })
 foreach ($id in $targets) { $packages += @{ Name = "papinho-secure-transport-$Version-$id.zip"; Stage = (Join-Path $stageRoot $id) } }

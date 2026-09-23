@@ -7,8 +7,8 @@ Consumers include only `papinho_secure_transport.h` and, for Win32 transport/boo
 | Target ID | PST/static link inputs | Additional link inputs | Package runtime | OS/toolchain runtime |
 |---|---|---|---|---|
 | `win32-x86-vc6-retrozilla-nss` | `papinho_secure_transport.lib` | `wsock32.lib` | `nss3.dll`, `ssl3.dll`, `nssutil3.dll`, `nspr4.dll`, `plc4.dll`, `plds4.dll`, `softokn3.dll/.chk`, `freebl3.dll/.chk` | Historical unsuffixed identity; factual PST CRT `/ML`; frozen packages/evidence retain this name |
-| `win32-x86-vc6-retrozilla-nss-ml` | `papinho_secure_transport.lib` | `wsock32.lib` | same RetroZilla NSS/NSPR runtime set | Explicit `/ML` 0.6.2 SDK candidate; package-only, NT4 and clean-machine consumers validated |
-| `win32-x86-vc6-retrozilla-nss-md` | `papinho_secure_transport.lib` | `wsock32.lib` | same RetroZilla NSS/NSPR runtime set | Explicit `/MD` 0.6.2 SDK candidate; package-only, NT4, clean-machine and real PapinhoBrowser consumers validated |
+| `win32-x86-vc6-retrozilla-nss-ml` | `papinho_secure_transport.lib` | `wsock32.lib` | same RetroZilla NSS/NSPR runtime set | Explicit `/ML` 0.6.3 SDK candidate; targeted external recertification pending |
+| `win32-x86-vc6-retrozilla-nss-md` | `papinho_secure_transport.lib` | `wsock32.lib` | same RetroZilla NSS/NSPR runtime set | Explicit `/MD` 0.6.3 SDK candidate; targeted external recertification pending |
 | `win32-x64-msvc-19.51-schannel` | `papinho_secure_transport.lib` | `ws2_32.lib secur32.lib crypt32.lib ncrypt.lib bcrypt.lib` | none | Windows system DLLs plus MSVC `/MD` runtime/UCRT |
 | `win32-x64-msvc-19.51-openssl3` | `papinho_secure_transport.lib libssl.lib libcrypto.lib` | `ws2_32.lib crypt32.lib` | `libssl-3-x64.dll`, `libcrypto-3-x64.dll` | Windows system DLLs plus MSVC `/MD` runtime/UCRT |
 | `win32-x64-msvc-19.51-schannel-openssl3` | `papinho_secure_transport.lib libssl.lib libcrypto.lib` | `ws2_32.lib secur32.lib crypt32.lib ncrypt.lib bcrypt.lib` | `libssl-3-x64.dll`, `libcrypto-3-x64.dll` | Windows system DLLs plus MSVC `/MD` runtime/UCRT |
@@ -23,7 +23,7 @@ PST handles are released through PST functions; consumers do not free PST alloca
 
 Do not change a multithreaded consumer to VC6 `/ML` merely to accommodate the historical static-CRT package. Produce/select the compatible PST variant instead.
 
-For 0.6.2 VC6 packages, read `crt=ml|md` and `crt_compiler_flag=/ML|/MD`
+For 0.6.2 and later VC6 packages, read `crt=ml|md` and `crt_compiler_flag=/ML|/MD`
 from `consumer-link.ini` before compiling. The same CRT appears in
 `manifest.ini`; the package validator also checks the library's COFF
 default-library directives. Neither variant is a substitute for the other.
