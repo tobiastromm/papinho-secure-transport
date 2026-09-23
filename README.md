@@ -8,7 +8,7 @@ Instead of making an application depend directly on the APIs, types, lifecycle, 
 
 TLS is the secure-transport protocol implemented by PST today. Current providers include **RetroZilla NSS**, **Windows Schannel**, and **OpenSSL**.
 
-The current 0.6.1 bugfix candidate uses public API **2.1.0** and provider SPI **3.0**. It preserves the CLIENT/SERVER and scheduler contracts while correcting the tri-state graceful-shutdown capability requirement.
+The 0.6.2 release candidate uses public API **2.1.0** and provider SPI **3.0**. It preserves the CLIENT/SERVER and scheduler contracts while making the VC6 `/ML` and `/MD` CRT variants explicit, separately selectable artifacts.
 
 PST is not limited to Internet software. It can sit underneath browsers, e-mail clients, business client/server applications, LAN services, messaging systems, and custom protocols.
 
@@ -100,7 +100,7 @@ The public examples include [basic CLIENT](examples/basic_client.c) and [basic S
 
 ## Current highlights
 
-- Current **0.6.1 / API 2.1.0 / SPI 3.0** bugfix candidate
+- Current **0.6.2 / API 2.1.0 / SPI 3.0** release candidate
 - Published **0.5.0 / API 2.0.0 / SPI 3.0** historical baseline
 - CLIENT and SERVER roles with per-connection provider selection
 - TLS 1.2 validated with all three providers
@@ -117,11 +117,11 @@ The public examples include [basic CLIENT](examples/basic_client.c) and [basic S
 - Reciprocal TLS shutdown and explicit truncation detection
 - 250-cycle mixed M9 scheduler/security/lifecycle stress with no crashes or hangs
 
-The 0.6.0 release candidate is in final M10 physical NT4, clean-machine, packaging, reproduction, documentation, and publication validation. Platforms outside the documented validation matrix remain unvalidated.
+The 0.6.2 candidate passed real Windows NT 4.0 SP6 x86 and clean-machine validation for both VC6 `/ML` and `/MD`. A real PapinhoBrowser `/MD` integration consumed the `/MD` SDK and passed TLS 1.3. Platforms outside the documented validation matrix remain unvalidated.
 
 ## Distribution
 
-The 0.6.0 distribution consists of a source package and separate static SDKs for the canonical targets based on RetroZilla NSS, Schannel, OpenSSL 3.5.8, and the optional Combined Schannel/OpenSSL target.
+The 0.6.2 distribution consists of a source package and five static SDKs: explicit VC6/RetroZilla NSS `/ML` and `/MD` variants, Schannel, OpenSSL 3.5.8, and the optional Combined Schannel/OpenSSL target. The historical unsuffixed VC6/NSS 0.6.1 package remains the frozen `/ML` identity for that release and is not replaced.
 
 The Combined SDK is an official optional package for provider selection, not a fourth TLS implementation and not a default recommendation.
 

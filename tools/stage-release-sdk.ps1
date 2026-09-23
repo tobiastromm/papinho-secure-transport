@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MPL-2.0
 param(
-    [ValidateSet("0.5.0", "0.6.0", "0.6.1", "0.6.2")][string]$Version = "0.6.1",
+    [ValidateSet("0.5.0", "0.6.0", "0.6.1", "0.6.2")][string]$Version = "0.6.2",
     [ValidateSet("all", "win32-x86-vc6-retrozilla-nss", "win32-x86-vc6-retrozilla-nss-ml", "win32-x86-vc6-retrozilla-nss-md", "win32-x64-msvc-19.51-schannel", "win32-x64-msvc-19.51-openssl3", "win32-x64-msvc-19.51-schannel-openssl3")]
     [string]$Target = "all",
     [switch]$Clean
@@ -9,7 +9,7 @@ param(
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 $version = $Version
-$libraryVersion = if ($Version -eq "0.5.0") { "0.5.0" } elseif ($Version -eq "0.6.2") { "0.6.1" } else { $Version }
+$libraryVersion = if ($Version -eq "0.5.0") { "0.5.0" } else { $Version }
 $apiVersion = if ($Version -eq "0.5.0") { "2.0.0" } else { "2.1.0" }
 $root = Join-Path $repo "dist\staging\$version"
 . (Join-Path $PSScriptRoot "package-staging-policy.ps1")
@@ -37,12 +37,11 @@ foreach ($id in $targets) {
     Copy-Required (Join-Path $repo "packaging\SDK-README.md") (Join-Path $stage "README.md")
     $sdkReadmePath = Join-Path $stage "README.md"
     $sdkReadme = [IO.File]::ReadAllText($sdkReadmePath).Replace("../docs/", "docs/").Replace("../examples/", "examples/")
-    if ($Version -eq "0.6.2") { $sdkReadme = $sdkReadme.Replace("0.6.1 SDK", "0.6.2 candidate SDK (library 0.6.1)").Replace("papinho-secure-transport-0.6.1-src.zip", "papinho-secure-transport-0.6.2-src.zip") }
     [IO.File]::WriteAllText($sdkReadmePath, $sdkReadme, (New-Object Text.UTF8Encoding($false)))
     Copy-Required (Join-Path $repo "THIRD_PARTY_NOTICES.md") (Join-Path $stage "THIRD_PARTY_NOTICES.md")
     Copy-Required (Join-Path $repo "LICENSE") (Join-Path $stage "LICENSE")
     foreach ($file in @("papinho_secure_transport.h", "papinho_secure_transport_win32.h")) { Copy-Required (Join-Path $repo "include\$file") (Join-Path $stage "include\$file") }
-    foreach ($file in @("target-matrix.md", "release-packaging.md", "release-licensing.md", "consumer-linking.md", "security-and-limitations.md", "security-lifecycle-negative-matrix.md", "api-2.0.md", "provider-spi-3.0.md", "api-1.3-to-2.0-migration.md", "providers.md", "client-server-lifecycle.md", "en\README.md", "en\getting-started.md", "pt-BR\README.md", "pt-BR\getting-started.md")) { Copy-Required (Join-Path $repo "docs\$file") (Join-Path $stage "docs\$file") }
+    foreach ($file in @("target-matrix.md", "release-packaging.md", "release-licensing.md", "release-notes-0.6.2.md", "consumer-linking.md", "security-and-limitations.md", "security-lifecycle-negative-matrix.md", "api-2.0.md", "provider-spi-3.0.md", "api-1.3-to-2.0-migration.md", "providers.md", "client-server-lifecycle.md", "en\README.md", "en\getting-started.md", "pt-BR\README.md", "pt-BR\getting-started.md")) { Copy-Required (Join-Path $repo "docs\$file") (Join-Path $stage "docs\$file") }
     Get-ChildItem (Join-Path $repo "examples") -File | ForEach-Object { Copy-Required $_.FullName (Join-Path $stage "examples\$($_.Name)") }
 
     $runtimeFiles = "none-package-supplied"

@@ -42,11 +42,12 @@ O projeto possui targets diferentes porque plataformas, arquiteturas, compilador
 
 Você não precisa preparar todos os ambientes. **Escolha o target que pretende utilizar e instale apenas as ferramentas necessárias para ele.**
 
-Os quatro targets da trilha de release 0.6.0 são:
+Os cinco targets da trilha de release 0.6.2 são:
 
 | Target | Provider(s) | Arquitetura | Ambiente efetivamente validado |
 |---|---|---:|---|
-| `win32-x86-vc6-retrozilla-nss` | RetroZilla NSS/NSPR | x86 | Windows NT 4.0 SP6 x86 |
+| `win32-x86-vc6-retrozilla-nss-ml` | RetroZilla NSS/NSPR, `/ML` | x86 | Windows NT 4.0 SP6 x86 |
+| `win32-x86-vc6-retrozilla-nss-md` | RetroZilla NSS/NSPR, `/MD` | x86 | Windows NT 4.0 SP6 x86 e integração real com PapinhoBrowser |
 | `win32-x64-msvc-19.51-schannel` | Schannel | x64 | Windows 10 build 19045 x64 |
 | `win32-x64-msvc-19.51-openssl3` | OpenSSL 3.5.8 LTS | x64 | Windows 10 build 19045 x64 |
 | `win32-x64-msvc-19.51-schannel-openssl3` | Schannel + OpenSSL 3.5.8 | x64 | Windows 10 build 19045 x64 |
@@ -56,7 +57,7 @@ A identidade do target descreve fatos duráveis de build — plataforma/ABI, arq
 Por exemplo:
 
 ```text
-win32-x86-vc6-retrozilla-nss
+win32-x86-vc6-retrozilla-nss-md
 ```
 
 não significa “NT4-only”. Windows NT 4.0 aparece na documentação porque é um sistema no qual esse target foi efetivamente validado.
@@ -97,9 +98,9 @@ ela pode começar pelas suas necessidades:
 
 A partir dessas necessidades, você pode escolher um target que contenha um provider capaz de atendê-las.
 
-## `win32-x86-vc6-retrozilla-nss`
+## `win32-x86-vc6-retrozilla-nss-ml` e `win32-x86-vc6-retrozilla-nss-md`
 
-Esse é o target x86/VC6 com RetroZilla NSS/NSPR.
+Esses são os targets x86/VC6 com RetroZilla NSS/NSPR. Selecione `-ml` somente para um consumer `/ML` compatível e `-md` para um consumer `/MD` compatível. O nome sem sufixo `win32-x86-vc6-retrozilla-nss` é preservado somente pelos packages históricos até 0.6.1.
 
 Na configuração efetivamente validada no Windows NT 4.0 SP6 x86, foram comprovados:
 
@@ -551,7 +552,7 @@ O PST também não sai procurando bibliotecas aleatórias instaladas na máquina
 O target define quais providers estão disponíveis:
 
 ```text
-win32-x86-vc6-retrozilla-nss
+win32-x86-vc6-retrozilla-nss-ml / win32-x86-vc6-retrozilla-nss-md
     └── RetroZilla NSS
 
 win32-x64-msvc-19.51-schannel
@@ -1212,7 +1213,8 @@ Escolha o SDK cujo Target ID corresponde ao artefato que deseja integrar.
 Os packages oficiais são:
 
 ```text
-win32-x86-vc6-retrozilla-nss
+win32-x86-vc6-retrozilla-nss-ml
+win32-x86-vc6-retrozilla-nss-md
 win32-x64-msvc-19.51-schannel
 win32-x64-msvc-19.51-openssl3
 win32-x64-msvc-19.51-schannel-openssl3
@@ -1229,7 +1231,7 @@ Uma forma prática de pensar:
 ```text
 Precisa rodar na configuração NT4/x86 validada?
         │
-        └── win32-x86-vc6-retrozilla-nss
+        └── win32-x86-vc6-retrozilla-nss-ml ou win32-x86-vc6-retrozilla-nss-md
 
 Windows x64 + quer caminho TLS nativo do Windows validado?
         │

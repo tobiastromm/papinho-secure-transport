@@ -296,7 +296,7 @@ TLS can, among other things:
 
 PST currently works with **TLS 1.2 and TLS 1.3**, depending on the provider, role, and target capabilities.
 
-The current 0.6.0 release candidate uses **API 2.1.0 / SPI 3.0**. The published 0.5.0 / API 2.0.0 baseline remains historical.
+The 0.6.2 release candidate uses **API 2.1.0 / SPI 3.0**. Published 0.5.0, 0.6.0, and 0.6.1 baselines remain historical.
 
 ### Currently validated state
 
@@ -505,7 +505,7 @@ The application does not need private NSS, Schannel, or OpenSSL headers to perfo
 The providers that can be registered are still defined by the target that was built.
 
 ```text
-win32-x86-vc6-retrozilla-nss
+win32-x86-vc6-retrozilla-nss-ml / win32-x86-vc6-retrozilla-nss-md
     └── RetroZilla NSS
 
 win32-x64-msvc-19.51-schannel
@@ -611,7 +611,7 @@ After all, what we call modern today will also grow old.
 
 There is a particularly interesting area for contribution.
 
-The provider used by target `win32-x86-vc6-retrozilla-nss` builds on work from the **RetroZilla / Mozilla NSS / NSPR** lineage.
+The provider used by targets `win32-x86-vc6-retrozilla-nss-ml` and `win32-x86-vc6-retrozilla-nss-md` builds on work from the **RetroZilla / Mozilla NSS / NSPR** lineage.
 
 It would be valuable to see people interested in:
 
@@ -710,7 +710,7 @@ Depending on configuration, Accelerator may also create external connections on 
 
 # Current project state
 
-The current 0.6.0 release candidate uses **API 2.1.0 / SPI 3.0**. Through M9 it has proven wait-set, external sources, finite wait, wake, backpressure, tri-state SNI, and TLS-after-plaintext. M9 passed 9/9 TLS 1.2 pairs and 4/4 eligible TLS 1.3 pairs; M10 performs final physical/package and publication validation.
+The 0.6.2 release candidate uses **API 2.1.0 / SPI 3.0**. It preserves the M0-M10 scheduler and provider baseline while introducing explicit VC6/RetroZilla NSS `/ML` and `/MD` package identities. Both variants passed real NT4 and clean-machine TLS validation; real PapinhoBrowser `/MD` integration with the `/MD` SDK passed TLS 1.3.
 
 TLS 1.2 was validated with all three providers. TLS 1.3 was validated with RetroZilla NSS and OpenSSL. SERVER was validated with all three providers within their factual role-scoped capability masks.
 

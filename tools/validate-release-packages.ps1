@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: MPL-2.0
-param([ValidateSet("0.5.0", "0.6.0", "0.6.1", "0.6.2")][string]$Version="0.6.1",[string]$PackageDirectory,[string]$ValidationDirectory,[string]$ExpectedChecksumsFile,[switch]$CompileConsumers)
+param([ValidateSet("0.5.0", "0.6.0", "0.6.1", "0.6.2")][string]$Version="0.6.2",[string]$PackageDirectory,[string]$ValidationDirectory,[string]$ExpectedChecksumsFile,[switch]$CompileConsumers)
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
-$libraryVersion = if ($Version -eq "0.5.0") { "0.5.0" } elseif ($Version -eq "0.6.2") { "0.6.1" } else { $Version }
+$libraryVersion = if ($Version -eq "0.5.0") { "0.5.0" } else { $Version }
 $apiVersion = if ($Version -eq "0.5.0") { "2.0.0" } else { "2.1.0" }
 if (-not $PackageDirectory) { $PackageDirectory = Join-Path $repo ("dist\packages\"+$Version) }
 if (-not $ValidationDirectory) { $ValidationDirectory = Join-Path $repo ("dist\validation\"+$Version) }

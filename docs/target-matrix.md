@@ -4,17 +4,19 @@ This is the canonical PapinhoSecureTransport target matrix. The ecosystem-wide n
 
 Target identity, build inputs, operating-system support policy, and observed validation are separate facts. A toolchain name is not an operating-system support claim.
 
-## VC6 CRT variant M2 local candidate
+## 0.6.2 VC6 CRT-qualified targets
 
 From one source commit, the VC6/NSS `-ml` and `-md` targets use explicit
-`/ML` and `/MD` builds and isolated local SDK candidate packages. Package
-metadata identifies the CRT and is checked against library COFF directives;
-package-only VC6 consumers are local validation, not PapinhoBrowser or real
-NT4 certification. The historical unsuffixed 0.6.1 package remains immutable.
-The candidate package version is 0.6.2; library 0.6.1, API 2.1.0 and SPI 3.0
-are unchanged. No 0.6.2 release has been published.
+`/ML` and `/MD` builds and isolated SDK packages. Package metadata identifies
+the CRT and is checked against library COFF directives. Both variants passed
+package-only consumers, real Windows NT 4.0 SP6 x86 CLIENT/SERVER TLS, and a
+separate clean-machine TLS run. The `/MD` package additionally passed real
+PapinhoBrowser `/MD` TLS 1.3 integration. No ML/MD functional or lifecycle
+divergence was observed. The historical unsuffixed 0.6.1 package remains
+immutable. The 0.6.2 release candidate uses library 0.6.2, API 2.1.0 and SPI
+3.0; no 0.6.2 release has been published.
 
-## 0.6.1 graceful-shutdown contract bugfix candidate
+## Historical 0.6.1 graceful-shutdown contract bugfix
 
 The 0.6.1 patch retains API 2.1.0, SPI 3.0 and all target identities. It adds the public `PST_CAP_GRACEFUL_SHUTDOWN` vocabulary bit and corrects `require_graceful_shutdown` tri-state validation and pre-binding eligibility. Provider masks below reflect this additive capability; the published 0.6.0 binaries and packages are not modified.
 
@@ -56,13 +58,13 @@ canonical /MD: win32-x86-vc6-retrozilla-nss-md
 
 Historical packages/evidence keep the unsuffixed name. If /ML is built/distributed again, the new artifact uses `-ml`.
 
-## 0.5.0 candidate targets at a glance
+## Current and historical targets at a glance
 
 | Target ID | Architecture | Provider(s) | TLS | Tested on |
 |---|---:|---|---|---|
 | `win32-x86-vc6-retrozilla-nss` | x86 | RetroZilla NSS/NSPR | historical `/ML` identity; 1.2 / 1.3 | Windows NT 4.0 SP6 x86 |
-| `win32-x86-vc6-retrozilla-nss-ml` | x86 | RetroZilla NSS/NSPR | canonical `/ML` variant; no new package claimed | historical evidence maps from unsuffixed ID |
-| `win32-x86-vc6-retrozilla-nss-md` | x86 | RetroZilla NSS/NSPR | candidate; requires independent validation | not yet validated |
+| `win32-x86-vc6-retrozilla-nss-ml` | x86 | RetroZilla NSS/NSPR | canonical `/ML` variant; 1.2 / 1.3 | Windows NT 4.0 SP6 x86; separate clean Windows machine |
+| `win32-x86-vc6-retrozilla-nss-md` | x86 | RetroZilla NSS/NSPR | canonical `/MD` variant; 1.2 / 1.3 | Windows NT 4.0 SP6 x86; separate clean Windows machine; real PapinhoBrowser integration |
 | `win32-x64-msvc-19.51-schannel` | x64 | Schannel | 1.2 validated | Windows 10 build 19045 x64 |
 | `win32-x64-msvc-19.51-openssl3` | x64 | OpenSSL 3.5.8 LTS | 1.2 / 1.3 | Windows 10 build 19045 x64 |
 | `win32-x64-msvc-19.51-schannel-openssl3` | x64 | Schannel + OpenSSL 3.5.8 LTS | capability-dependent | Windows 10 build 19045 x64 |
@@ -114,9 +116,9 @@ Windows NT 4.0 appears under **Tested on** because that is observed validation e
 
 ---
 
-## `win32-x86-vc6-retrozilla-nss-md` — required new variant
+## `win32-x86-vc6-retrozilla-nss-md` — validated CRT-qualified variant
 
-This is the planned ABI-distinct VC6 variant required by PapinhoBrowser.
+This is the ABI-distinct VC6 variant required and validated by PapinhoBrowser.
 
 | Field | Value |
 |---|---|
@@ -127,12 +129,12 @@ This is the planned ABI-distinct VC6 variant required by PapinhoBrowser.
 | PST CRT / runtime model | `/MD` |
 | Relationship | ABI-distinct variant of the VC6/NSS line |
 | Consumer driver | PapinhoBrowser VC6 `/MD` integration |
-| Validation status | **Not yet validated/released** |
-| Package status | Candidate to be produced by governed PST release work |
-| Tested on | None yet for this variant |
-| Notes | Must receive independent build, PST tests, TLS 1.3/mTLS validation, packaging and SHA-256 before consumer pinning |
+| Validation status | M1-M4 build, package, real TLS and lifecycle gates passed |
+| Package status | 0.6.2 final release candidate; not published |
+| Tested on | Windows NT 4.0 SP6 x86; separate clean Windows machine; real PapinhoBrowser `/MD` integration |
+| Notes | TLS 1.2/1.3, required mTLS, truncation, reciprocal shutdown and `PR_Poll` authority passed; Browser `/MD` TLS 1.3 passed |
 
-This row records a required target variant, not evidence that the binary already exists.
+The `/ML` and `/MD` targets have equivalent PST/TLS semantics; their CRT and artifact identities remain deliberately distinct.
 
 ---
 
