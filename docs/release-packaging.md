@@ -2,9 +2,13 @@
 
 # Release packaging decision
 
-## 0.6.3 TLS-version normalization candidate
+## 0.6.4 idle-liveness patch candidate
 
-The `0.6.3` candidate retains the 0.6.2 package layout, API 2.1.0 and SPI 3.0.
+The `0.6.4` candidate retains API 2.1.0, SPI 3.0 and every canonical target identity. Its production change restores remote close/error observation for established idle wait-set members. Published 0.6.3 archives remain immutable; final 0.6.4 archives and hashes are not frozen until targeted `/ML`, `/MD` and PapinhoBrowser `/MD` external recertification succeeds.
+
+## 0.6.3 TLS-version normalization release
+
+The published `0.6.3` release retains the 0.6.2 package layout, API 2.1.0 and SPI 3.0.
 Its only production correction normalizes RetroZilla NSS peer TLS-version
 metadata to the public PST TLS 1.2/TLS 1.3 vocabulary. Native versions outside
 that vocabulary make the peer metadata unavailable without failing the
@@ -47,8 +51,8 @@ The first release should ship a source archive and four separate, release-only b
 | Target ID | Provider | Architecture/toolchain | CRT | Package status |
 |---|---|---|---|---|
 | `win32-x86-vc6-retrozilla-nss` | RetroZilla NSS | x86, VC6, NT4 compatibility floor | `/ML` | historical unsuffixed package identity only |
-| `win32-x86-vc6-retrozilla-nss-ml` | RetroZilla NSS | x86, VC6 | `/ML` | 0.6.3 candidate; targeted external recertification pending |
-| `win32-x86-vc6-retrozilla-nss-md` | RetroZilla NSS | x86, VC6 | `/MD` | 0.6.3 candidate; targeted external recertification pending |
+| `win32-x86-vc6-retrozilla-nss-ml` | RetroZilla NSS | x86, VC6 | `/ML` | 0.6.4 candidate; targeted idle-liveness recertification pending |
+| `win32-x86-vc6-retrozilla-nss-md` | RetroZilla NSS | x86, VC6 | `/MD` | 0.6.4 candidate; targeted idle-liveness recertification pending |
 | `win32-x64-msvc-19.51-schannel` | Schannel | x64, documented MSVC/Windows SDK | `/MD` | candidate |
 | `win32-x64-msvc-19.51-openssl3` | OpenSSL | x64, documented MSVC, OpenSSL 3.5.8 | `/MD` | candidate |
 | `win32-x64-msvc-19.51-schannel-openssl3` | Schannel then OpenSSL | x64 combined target | `/MD` | official optional candidate |

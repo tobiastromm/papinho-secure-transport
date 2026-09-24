@@ -3,6 +3,7 @@
 # Roadmap
 
 - Multiplexed readiness evolution on `feature/multiplexed-readiness`:
+  - Post-0.6.3 idle-liveness correction: implementation and host regression gates complete; established idle connections retain provider-confirmed READ observation so remote graceful close/reset wakes the wait-set without consumer polling, native-socket bypass or protocol keepalive. Targeted external `/ML`, `/MD` and PapinhoBrowser `/MD` recertification remains required before a 0.6.4 release.
   - M0 API 2.1 / library 0.6 contract freeze and R6 tri-state SNI: complete; zero-initialized compatibility, provider-scoped SNI control and pre-binding capability filtering pass without RetroZilla NSS/NSPR changes.
   - M1 portable wait-set core: complete; opaque membership, stable consumer tokens, duplicate rejection, remove-before-release, bounded stable enumeration, timeout-zero provider-authoritative polling and persistent terminal visibility pass for deterministic mixed-provider tests and real OpenSSL, Schannel and RetroZilla NSS TLS connections.
   - M2 external/native aggregation: complete for Win32 socket sources; single-wait-set object membership, mixed connection/source enumeration, listener readiness, borrowed ownership, VC6/NT4 compatibility audit and provider regressions pass.

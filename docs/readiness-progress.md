@@ -4,7 +4,7 @@
 
 The historical Phase 7.C work established the provider-neutral rule that **readiness is not progress**. API 2.0/SPI 3.0 made that rule role-neutral for CLIENT and SERVER. The current API 2.1/library 0.6 release track builds a multiplexed scheduler on top of that same contract rather than replacing it.
 
-Current release versions: API `2.1.0`, SPI `3.0`, library `0.6.0`.
+Current patch-candidate versions: API `2.1.0`, SPI `3.0`, library `0.6.4`.
 
 ## M1 — portable wait-set core
 
@@ -29,6 +29,10 @@ M3 completes finite `timeout_ms > 0` waits and cross-thread `pst_wait_set_wake()
 The Win32 adapter uses a private nonblocking loopback socket pair as the wake source. Its read side participates in the same bounded `select()` as external sockets and non-owning native hints for attached PST transports. Wake is thread-safe, coalescing, reusable, nonterminal and does not cancel connections or change membership.
 
 Before blocking and after native signalling, PST performs bounded timeout-zero provider confirmation in stable registration order. Raw socket readiness is only a hint. If a provider rejects a hinted interest bit, that bit can be suppressed for the remainder of the current application wait while the monotonic timeout continues. This prevents writable-socket spin without creating sequential `N * timeout` waits.
+
+An established connection retains passive READ interest even when no application operation is pending. This lets a transport close/error or inbound TLS record wake a blocking wait-set; the provider still confirms readiness, and the consumer then performs `pst_connection_read()` to obtain the normalized `CLOSED` or failure/truncation result. A healthy idle connection remains blocked, so this is event-driven liveness rather than periodic read polling or keepalive traffic.
+
+The TLS 1.3 healthy-idle regression observed one genuine post-handshake progress wake (`PROGRESS_WAKES=1`) and zero application bytes. Once that TLS traffic was processed, a 500 ms wait timed out normally with no further wake, confirming that the event was not a busy-loop.
 
 There is no hidden worker and no mandatory periodic polling loop. A positive timeout is only the scheduler's maximum wait; application handshake/read/write/shutdown deadlines remain consumer-owned monotonic policy.
 

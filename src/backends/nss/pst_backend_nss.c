@@ -973,9 +973,9 @@ static PST_RESULT pst_nss_read(void *state, void *buffer, pst_size capacity,
         c->interest = PST_BACKEND_INTEREST_NONE; return PST_RESULT_OK;
     }
     if (pst_backend_nss_is_would_block(c->last_error)) {
-        result->operation = PST_BACKEND_OPERATION_NEED_READ_WRITE;
-        c->interest = PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE;
-        pst_nss_trace("PR_Read_class", "NEED_READ_WRITE");
+        result->operation = PST_BACKEND_OPERATION_NEED_READ;
+        c->interest = PST_BACKEND_INTEREST_READ;
+        pst_nss_trace("PR_Read_class", "NEED_READ direction=PR_Poll_authoritative");
         return PST_RESULT_OK;
     }
     pst_nss_record(c, PST_DIAGNOSTIC_PHASE_READ);

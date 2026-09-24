@@ -195,6 +195,92 @@ static int terminal_rejects_operations(pst_connection *connection)
     return 1;
 }
 
+static int idle_wait_set_observes_peer(pst_connection *connection,
+    pst_u32 timeout_ms, int expect_ready)
+{
+    pst_wait_set *set;
+    PST_WAIT_EVENT event;
+    PST_WAIT_SET_RESULT summary;
+    PST_RESULT result;
+    int ok;
+    set = NULL;
+    memset(&event, 0, sizeof(event));
+    memset(&summary, 0, sizeof(summary));
+    result = pst_wait_set_create(&set);
+    if (result != PST_RESULT_OK) return 0;
+    result = pst_wait_set_add_connection(set, connection, 1UL);
+    if (result != PST_RESULT_OK) {
+        pst_wait_set_destroy(set);
+        return 0;
+    }
+    result = pst_wait_set_wait(set, timeout_ms, &event, 1UL, &summary);
+    if (expect_ready) {
+        ok = result == PST_RESULT_OK && summary.ready_count == 1UL &&
+            summary.event_count == 1UL && event.token == 1UL &&
+            ((event.ready_interest & PST_INTEREST_READ) != 0UL ||
+             (event.flags & PST_WAIT_READY_TERMINAL) != 0UL);
+    } else {
+        ok = result == PST_RESULT_WAIT_TIMEOUT &&
+            summary.ready_count == 0UL && summary.event_count == 0UL;
+    }
+    console_marker("IDLE_WAIT_SET RESULT=%ld READY=0x%08lx FLAGS=0x%08lx EXPECT_READY=%d PASS=%d",
+        (long)result, (unsigned long)event.ready_interest,
+        (unsigned long)event.flags, expect_ready, ok);
+    pst_wait_set_remove_connection(set, connection);
+    pst_wait_set_destroy(set);
+    return ok;
+}
+
+static int healthy_idle_stabilizes(pst_connection *connection)
+{
+    pst_wait_set *set;
+    PST_WAIT_EVENT event;
+    PST_WAIT_SET_RESULT summary;
+    PST_IO_RESULT io;
+    PST_RESULT result;
+    char byte;
+    int progress_wakes;
+    int ok;
+    set = NULL;
+    progress_wakes = 0;
+    ok = 1;
+    result = PST_RESULT_OK;
+    memset(&summary, 0, sizeof(summary));
+    if (pst_wait_set_create(&set) != PST_RESULT_OK) return 0;
+    if (pst_wait_set_add_connection(set, connection, 1UL) != PST_RESULT_OK) {
+        pst_wait_set_destroy(set);
+        return 0;
+    }
+    while (progress_wakes < 8) {
+        memset(&event, 0, sizeof(event));
+        memset(&summary, 0, sizeof(summary));
+        result = pst_wait_set_wait(set, 500UL, &event, 1UL, &summary);
+        if (result == PST_RESULT_WAIT_TIMEOUT) break;
+        if (result != PST_RESULT_OK || summary.ready_count != 1UL ||
+            event.token != 1UL) {
+            ok = 0;
+            break;
+        }
+        memset(&io, 0, sizeof(io));
+        result = pst_connection_read(connection, &byte, 1UL, &io);
+        if (result != PST_RESULT_OK || io.bytes_transferred != 0UL ||
+            io.operation == PST_OPERATION_CLOSED ||
+            io.operation == PST_OPERATION_FAILED) {
+            ok = 0;
+            break;
+        }
+        ++progress_wakes;
+    }
+    ok = ok && progress_wakes < 8 &&
+        result == PST_RESULT_WAIT_TIMEOUT &&
+        summary.ready_count == 0UL && summary.event_count == 0UL;
+    console_marker("HEALTHY_IDLE PROGRESS_WAKES=%d APP_BYTES=0 FINAL_RESULT=%ld PASS=%d",
+        progress_wakes, (long)result, ok);
+    pst_wait_set_remove_connection(set, connection);
+    pst_wait_set_destroy(set);
+    return ok;
+}
+
 int main(int argc, char **argv)
 {
     WSADATA winsock;
@@ -566,6 +652,8 @@ int main(int argc, char **argv)
         !strcmp(mode, "abrupt_close") ||
         !strcmp(mode, "read_clean") ||
         !strcmp(mode, "read_abrupt") ||
+        !strcmp(mode, "healthy_idle") ||
+        !strcmp(mode, "idle_reset") ||
         !strcmp(mode, "data_then_close") ||
         !strcmp(mode, "data_then_abrupt");
     mode_write = !strcmp(mode, "close_around_write");
@@ -575,6 +663,21 @@ int main(int argc, char **argv)
     memset(received, 0, sizeof(received));
 
     if (established && mode_read) {
+        if (!strcmp(mode, "healthy_idle")) {
+            if (!healthy_idle_stabilizes(connection)) {
+                final_result = PST_RESULT_WAIT_TIMEOUT;
+                goto after_operation;
+            }
+            if (!idle_wait_set_observes_peer(connection, 5000UL, 1)) {
+                final_result = PST_RESULT_WAIT_TIMEOUT;
+                goto after_operation;
+            }
+        }
+        if (strcmp(mode, "healthy_idle") &&
+            !idle_wait_set_observes_peer(connection, 5000UL, 1)) {
+            final_result = PST_RESULT_WAIT_TIMEOUT;
+            goto after_operation;
+        }
         loop_start = GetTickCount();
         timeline("LOOP=READ START STATE=ESTABLISHED TOTAL_READ=%lu",
             (unsigned long)total_read);
@@ -736,6 +839,7 @@ int main(int argc, char **argv)
             }
         }
     }
+after_operation:
     memset(&diagnostic, 0, sizeof(diagnostic));
     diagnostic.struct_size = sizeof(diagnostic);
     diagnostic.api_version = PST_API_VERSION;
@@ -764,12 +868,14 @@ int main(int argc, char **argv)
             diagnostic.valid &&
             diagnostic.normalized_result == PST_RESULT_TRUNCATED;
     } else if (!strcmp(mode, "clean_close") ||
+        !strcmp(mode, "healthy_idle") ||
         !strcmp(mode, "read_clean")) {
         ok = ok && final_result == PST_RESULT_CLOSED &&
             final_close == PST_CLOSE_CLEAN &&
             !diagnostic.valid;
     } else if (!strcmp(mode, "abrupt_close") ||
-        !strcmp(mode, "read_abrupt")) {
+        !strcmp(mode, "read_abrupt") ||
+        !strcmp(mode, "idle_reset")) {
         ok = ok && final_result == PST_RESULT_TRUNCATED &&
             final_close == PST_CLOSE_TRUNCATED &&
             diagnostic.valid &&

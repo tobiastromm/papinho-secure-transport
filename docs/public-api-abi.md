@@ -2,7 +2,7 @@
 
 # Public API and ABI baseline
 
-This document keeps the historical ABI work visible while recording the current release contract. The published 0.6.0, 0.6.1 and 0.6.2 baselines use API 2.1.0 / SPI 3.0. The 0.6.3 candidate keeps API **2.1.0** and SPI **3.0** while setting library **0.6.3** and preserving the distinct VC6 CRT artifacts.
+This document keeps the historical ABI work visible while recording the current release contract. The published 0.6.0 through 0.6.3 baselines use API 2.1.0 / SPI 3.0. The 0.6.4 patch candidate keeps API **2.1.0** and SPI **3.0** while restoring idle remote-close observation and preserving the distinct VC6 CRT artifacts.
 
 API 2.1 is an additive evolution of API 2.0. It preserves the API 2.0 prefixes and adds the scheduler/readiness surface frozen by ADR-0005. M0–M9 found no need for an SPI change.
 
@@ -48,6 +48,8 @@ PST_SNI_MODE_EXPLICIT = 2
 A wait-set references but does not own PST connections. A registered connection must be removed before release. An external source is borrowed: the consumer owns the native resource and PST never calls `accept`, `shutdown` or `closesocket` on it. The same external-source object may belong to only one wait-set at a time; identity is the wrapper object, not the underlying native socket.
 
 One wait may be active per wait-set. `pst_wait_set_wake()` is the cross-thread operation. Membership mutation remains owner-thread-only in API 2.1 and is rejected during an active wait. Operation deadlines remain consumer-owned monotonic policy; a finite wait timeout is only the scheduler's maximum sleep.
+
+Established connections retain passive READ interest while idle. A provider-confirmed read event wakes the wait-set; the consumer calls the normal read API to distinguish application data, reciprocal TLS close, truncation or transport failure. This restores the accepted API 2.1 readiness semantics without adding public fields, flags, native handles or provider-specific types.
 
 ## Read/write and shutdown contract
 
@@ -141,6 +143,7 @@ The earlier published baselines remain historical facts rather than being rewrit
 - published v0.6.0: API 2.1.0 / SPI 3.0 / library 0.6.0;
 - published v0.6.1: API 2.1.0 / SPI 3.0 / library 0.6.1;
 - published v0.6.2: API 2.1.0 / SPI 3.0 / library 0.6.2;
-- 0.6.3 candidate: API 2.1.0 / SPI 3.0 / library 0.6.3, with no public API or SPI expansion.
+- published v0.6.3: API 2.1.0 / SPI 3.0 / library 0.6.3, with normalized NSS TLS-version metadata;
+- 0.6.4 patch candidate: API 2.1.0 / SPI 3.0 / library 0.6.4, restoring idle close/error observation with no public API or SPI expansion.
 
 Detailed historical release evidence remains under `docs/codex/release-evidence/` and the API 2.0 migration documents. The frozen 0.6.0 package/ABI evidence does not retroactively change the published 0.4.0 or 0.5.0 contracts.

@@ -72,7 +72,11 @@ BORROWED and RETAINED attachment are rejected until a later transport adapter ca
 
 The conservative READ|WRITE interest is intentional: NSS can require traffic opposite to the apparent application operation. `wait` maps the current interest to a private `PRPollDesc` and calls `PR_Poll` on the SSL descriptor with a bounded millisecond timeout. Timeout, ready interest, hangup, and poll failure remain distinct. No NSPR descriptor escapes the backend.
 
-`read` and `write` call `PR_Read`/`PR_Write` once and report bytes independently from operation state and normalized error. Positive partial progress is preserved. Would-block produces NEED_READ_WRITE. A zero read is clean only when the private NSS alert callback has observed peer `close_notify`; otherwise it is truncated. Reset/EOF errors are also classified as truncated. Fatal results preserve the native code in private connection state.
+For an established idle connection, the core retains passive READ interest so the Win32 aggregate wait can notice a transport event. NSS remains authoritative: PST confirms that hint through `PR_Poll` on the SSL descriptor, then an ordinary TLS read classifies reciprocal `close_notify` as clean close and unauthenticated EOF/reset as truncation or transport failure. Consumers do not poll the native socket or issue periodic liveness reads.
+
+In the TLS 1.3 healthy-idle regression, `PROGRESS_WAKES=1` records real post-handshake TLS processing with zero application bytes. After that progress, the following 500 ms wait expired normally without another wake; it is not an idle busy-loop.
+
+`read` and `write` call `PR_Read`/`PR_Write` once and report bytes independently from operation state and normalized error. Positive partial progress is preserved. A `PR_Read` would-block publishes NEED_READ; the subsequent `PR_Poll`/`ssl_Poll` confirmation remains authoritative and promotes the effective interest to WRITE when NSS actually requires outbound progress. A zero read is clean only when the private NSS alert callback has observed peer `close_notify`; otherwise it is truncated. Reset/EOF errors are also classified as truncated. Fatal results preserve the native code in private connection state.
 
 Under API 2.0/SPI 3.0, `shutdown_step` is incremental. It first calls
 `PR_Shutdown(PR_SHUTDOWN_SEND)` to emit the local TLS `close_notify` without

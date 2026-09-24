@@ -3,6 +3,7 @@ import socket
 import ssl
 import struct
 import sys
+import time
 
 EXPECTED = b"pst-phase7b-data-before-close"
 CLIENT_WRITE = b"pst-phase7b-client-write"
@@ -11,7 +12,7 @@ OPERATION_TIMEOUT_SECONDS = 10
 MODES = {
     "pre_tls_close", "non_tls", "handshake_close", "handshake_reset",
     "clean_close", "abrupt_close", "read_clean", "read_abrupt",
-    "data_then_close", "data_then_abrupt", "close_around_write",
+    "data_then_close", "data_then_abrupt", "healthy_idle", "idle_reset", "close_around_write",
     "shutdown_abort"
 }
 
@@ -91,7 +92,12 @@ try:
         mode, tls.version(), bool(tls.getpeercert()), tls.selected_alpn_protocol()
     ), flush=True)
 
-    if mode in ("clean_close", "read_clean"):
+    if mode == "healthy_idle":
+        time.sleep(2.0)
+        plain = tls.unwrap()
+        plain.close()
+        print("IDLE_SECONDS=2 CLOSE TYPE=TLS_CLOSE_NOTIFY", flush=True)
+    elif mode in ("clean_close", "read_clean"):
         plain = tls.unwrap()
         plain.close()
         print("CLOSE TYPE=TLS_CLOSE_NOTIFY", flush=True)
@@ -107,6 +113,9 @@ try:
         fd = tls.detach()
         socket.socket(fileno=fd).close()
         print("CLOSE TYPE=TCP_FIN_NO_CLOSE_NOTIFY", flush=True)
+    elif mode == "idle_reset":
+        abort_tls(tls)
+        print("CLOSE TYPE=TCP_RST_NO_CLOSE_NOTIFY", flush=True)
     elif mode in ("abrupt_close", "read_abrupt"):
         fd = tls.detach()
         socket.socket(fileno=fd).close()
