@@ -150,6 +150,10 @@ $(BUILD)\test_tls_runtime_integration.obj: tests\test_tls_runtime_integration.c
 	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_tls_runtime_integration.exe: $(BUILD)\test_tls_runtime_integration.obj $(LIB)
 	$(CC) /nologo /Fe$@ $(BUILD)\test_tls_runtime_integration.obj $(LIB) wsock32.lib $(LDFLAGS)
+$(BUILD)\test_nss_multi_connection.obj: tests\test_nss_multi_connection.c
+	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_nss_multi_connection.exe: $(BUILD)\test_nss_multi_connection.obj $(LIB)
+	$(CC) /nologo /Fe$@ $(BUILD)\test_nss_multi_connection.obj $(LIB) wsock32.lib $(LDFLAGS)
 $(BUILD)\test_stress_stability.obj: tests\test_stress_stability.c
 	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
 	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
@@ -168,6 +172,7 @@ $(BUILD)\test_nt4_lifecycle_integration.exe: $(BUILD)\test_nt4_lifecycle_integra
 	$(CC) /nologo /Fe$@ $(BUILD)\test_nt4_lifecycle_integration.obj $(LIB) wsock32.lib $(LDFLAGS)
 lifecycle-integration: dirs $(LIB) $(BUILD)\test_nt4_lifecycle_integration.exe
 runtime-integration: dirs $(LIB) $(BUILD)\test_tls_runtime_integration.exe
+multi-connection-integration: dirs $(LIB) $(BUILD)\test_nss_multi_connection.exe
 failure-integration: dirs $(LIB) $(BUILD)\test_connection_failures.exe
 test: all
 	$(BUILD)\test_foundation.exe
