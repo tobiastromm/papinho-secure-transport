@@ -127,7 +127,7 @@ The focused ABI review requested by 7.A4 was completed in 7.A5. The limited snap
 
 ## 7.A5 implemented ABI
 
-`PST_DIAGNOSTIC_INFO` is a 56-byte C89 value on VC6: `struct_size` at offset 0, `api_version` at 4, `valid` at 8, `generation` at 12, normalized result at 16, coarse operation at 20, and a copied 32-byte backend ID at 24. `pst_diagnostic_info_init` initializes current size/version in caller storage, consistently with the Phase 1 initializer. Queries and extended constructors validate those fields. The implementation rejects a too-small record or incompatible API major before constructor side effects, accepts a larger same-major record, writes only the known 56-byte prefix, preserves the unknown tail, and guarantees backend-ID termination. The inline textual backend ID capacity is 32 bytes: at most 31 ID bytes plus the terminating NUL; longer validated internal IDs are deterministically truncated.
+`PST_DIAGNOSTIC_INFO` is a 64-byte C89 value on VC6: `struct_size` at offset 0, `api_version` at 4, `valid` at 8, `generation` at 12, normalized result at 16, coarse operation at 20, role at 24, reason at 28, and a copied 32-byte backend ID at 32. `pst_diagnostic_info_init` initializes current size/version in caller storage, consistently with the Phase 1 initializer. Queries and extended constructors validate those fields. The implementation rejects a too-small record or incompatible API major before constructor side effects, accepts a larger same-major record, writes only the known 64-byte prefix, preserves the unknown tail, and guarantees backend-ID termination. The inline textual backend ID capacity is 32 bytes: at most 31 ID bytes plus the terminating NUL; longer validated internal IDs are deterministically truncated.
 
 The public operations are `NONE`, `RUNTIME`, `CONFIGURATION`, `TRANSPORT`, `CONNECTION`, `HANDSHAKE`, `AUTHENTICATION`, `READ`, `WRITE`, `WAIT`, `SHUTDOWN`, and `PEER_INFO`. Their numeric values are explicitly frozen from 0 through 11.
 
@@ -199,3 +199,13 @@ PST_LOG_EVENT carries selected redacted value fields at emission time: normalize
 ## 7.A closure
 
 The final audit confirms the 56-byte diagnostic ABI, append-only validation, tail preservation, context-local generation, copy lifetime, constructor coverage, multi-object isolation, progress semantics, redaction, and local-versus-remote disclosure policy. No mandatory diagnostic gap remains. API is 1.2.0, library is 0.3.0, and SPI remains 2.3.
+# Transport termination provenance (API 2.2)
+
+API 2.2 adds the independent `PST_TRANSPORT_TERMINATION_INFO` snapshot.  It
+does not change `PST_DIAGNOSTIC_INFO` or the authoritative TLS result.  The
+first observed terminal transport event is immutable until connection release;
+`valid=0` means no event, while `valid=1` with `UNKNOWN` means an event whose
+portable kind could not be established.  Native domain/code evidence is
+optional, belongs to that same event, and is intended only for opt-in
+troubleshooting.  The fixed public minimum is 32 bytes and larger records of
+the same API major preserve their unknown tail.

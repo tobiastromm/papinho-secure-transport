@@ -6,8 +6,10 @@
 #include <string.h>
 #define ASSERT_C(name,expr) typedef char assert_##name[(expr)?1:-1]
 #define CHECK(expr,n) if(!(expr))return fail(n)
-ASSERT_C(api_version,PST_API_VERSION==0x00020100UL);
-ASSERT_C(library_version,PST_LIBRARY_VERSION==0x00000603UL);
+ASSERT_C(api_version,PST_API_VERSION==0x00020200UL);
+ASSERT_C(library_version,PST_LIBRARY_VERSION==0x00000605UL);
+ASSERT_C(termination_size,sizeof(PST_TRANSPORT_TERMINATION_INFO)==32UL);
+ASSERT_C(termination_min,PST_TRANSPORT_TERMINATION_INFO_MIN_SIZE==32UL);
 ASSERT_C(spi_version,PST_BACKEND_SPI_VERSION==0x00030000UL);
 ASSERT_C(role_client,PST_CONNECTION_ROLE_CLIENT==1UL);
 ASSERT_C(role_server,PST_CONNECTION_ROLE_SERVER==2UL);

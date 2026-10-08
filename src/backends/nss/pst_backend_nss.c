@@ -964,6 +964,9 @@ static PST_RESULT pst_nss_read(void *state, void *buffer, pst_size capacity,
             pst_nss_trace("PR_Read_class",
                           "CLOSED clean close_notify_received=1");
         } else {
+            pst_transport_termination_capture(&c->diagnostic,
+                PST_TRANSPORT_TERMINATION_TCP_FIN,
+                PST_DIAGNOSTIC_PHASE_READ,PST_NATIVE_ERROR_DOMAIN_NONE,0UL,0UL);
             pst_diagnostic_capture(&c->diagnostic, PST_RESULT_TRUNCATED,
                 PST_DIAGNOSTIC_PHASE_READ, "retrozilla-nss",
                 PST_DIAGNOSTIC_DOMAIN_BACKEND, 0, 0, 0);
@@ -978,6 +981,14 @@ static PST_RESULT pst_nss_read(void *state, void *buffer, pst_size capacity,
         pst_nss_trace("PR_Read_class", "NEED_READ direction=PR_Poll_authoritative");
         return PST_RESULT_OK;
     }
+    if(c->last_error==PR_CONNECT_RESET_ERROR)
+        pst_transport_termination_capture(&c->diagnostic,PST_TRANSPORT_TERMINATION_TCP_RST,PST_DIAGNOSTIC_PHASE_READ,PST_NATIVE_ERROR_DOMAIN_NSPR,(pst_u32)c->last_error,1UL);
+    else if(c->last_error==PR_END_OF_FILE_ERROR)
+        pst_transport_termination_capture(&c->diagnostic,PST_TRANSPORT_TERMINATION_TCP_FIN,PST_DIAGNOSTIC_PHASE_READ,PST_NATIVE_ERROR_DOMAIN_NSPR,(pst_u32)c->last_error,1UL);
+    else if(pst_backend_nss_normalize_error(c->last_error)==PST_RESULT_TRANSPORT_FAILURE)
+        pst_transport_termination_capture(&c->diagnostic,PST_TRANSPORT_TERMINATION_SOCKET_ERROR,PST_DIAGNOSTIC_PHASE_READ,PST_NATIVE_ERROR_DOMAIN_NSPR,(pst_u32)c->last_error,1UL);
+    else
+        pst_transport_termination_capture(&c->diagnostic,PST_TRANSPORT_TERMINATION_UNKNOWN,PST_DIAGNOSTIC_PHASE_READ,PST_NATIVE_ERROR_DOMAIN_NSPR,(pst_u32)c->last_error,1UL);
     pst_nss_record(c, PST_DIAGNOSTIC_PHASE_READ);
     result->operation = PST_BACKEND_OPERATION_FAILED;
     result->error = pst_backend_nss_normalize_error(c->last_error);
@@ -1163,6 +1174,10 @@ static PST_RESULT pst_nss_shutdown_step(void *state, pst_u32 *operation, PST_RES
             pst_nss_trace("PR_Shutdown_receive",
                           "END status=complete reciprocal_close_notify=1");
         } else {
+            pst_transport_termination_capture(&c->diagnostic,
+                PST_TRANSPORT_TERMINATION_TCP_FIN,
+                PST_DIAGNOSTIC_PHASE_SHUTDOWN,
+                PST_NATIVE_ERROR_DOMAIN_NONE,0UL,0UL);
             pst_diagnostic_capture(&c->diagnostic, PST_RESULT_TRUNCATED,
                 PST_DIAGNOSTIC_PHASE_SHUTDOWN, "retrozilla-nss",
                 PST_DIAGNOSTIC_DOMAIN_BACKEND, 0, 0, 0);
@@ -1184,6 +1199,26 @@ static PST_RESULT pst_nss_shutdown_step(void *state, pst_u32 *operation, PST_RES
                           "END status=would_block need=read");
             return PST_RESULT_OK;
         }
+        if(c->last_error==PR_CONNECT_RESET_ERROR)
+            pst_transport_termination_capture(&c->diagnostic,
+                PST_TRANSPORT_TERMINATION_TCP_RST,
+                PST_DIAGNOSTIC_PHASE_SHUTDOWN,PST_NATIVE_ERROR_DOMAIN_NSPR,
+                (pst_u32)c->last_error,1UL);
+        else if(c->last_error==PR_END_OF_FILE_ERROR)
+            pst_transport_termination_capture(&c->diagnostic,
+                PST_TRANSPORT_TERMINATION_TCP_FIN,
+                PST_DIAGNOSTIC_PHASE_SHUTDOWN,PST_NATIVE_ERROR_DOMAIN_NSPR,
+                (pst_u32)c->last_error,1UL);
+        else if(pst_backend_nss_normalize_error(c->last_error)==PST_RESULT_TRANSPORT_FAILURE)
+            pst_transport_termination_capture(&c->diagnostic,
+                PST_TRANSPORT_TERMINATION_SOCKET_ERROR,
+                PST_DIAGNOSTIC_PHASE_SHUTDOWN,PST_NATIVE_ERROR_DOMAIN_NSPR,
+                (pst_u32)c->last_error,1UL);
+        else
+            pst_transport_termination_capture(&c->diagnostic,
+                PST_TRANSPORT_TERMINATION_UNKNOWN,
+                PST_DIAGNOSTIC_PHASE_SHUTDOWN,PST_NATIVE_ERROR_DOMAIN_NSPR,
+                (pst_u32)c->last_error,1UL);
         pst_nss_record(c, PST_DIAGNOSTIC_PHASE_SHUTDOWN);
         *operation = PST_BACKEND_OPERATION_FAILED;
         *error = pst_backend_nss_normalize_error(c->last_error);

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MPL-2.0
-param([ValidateSet("0.5.0", "0.6.0", "0.6.1", "0.6.2", "0.6.3", "0.6.4")][string]$Version = "0.6.4",[switch]$Clean)
+param([ValidateSet("0.5.0", "0.6.0", "0.6.1", "0.6.2", "0.6.3", "0.6.4", "0.6.5")][string]$Version = "0.6.5",[switch]$Clean)
 
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
@@ -67,7 +67,7 @@ foreach ($excluded in @(".git", "build", "dist\staging", ".vs", ".vscode")) {
 
 $licenseStatus = "present"
 $sourceCommitField = ""
-if ($Version -in @("0.6.2", "0.6.3", "0.6.4")) {
+if ($Version -in @("0.6.2", "0.6.3", "0.6.4", "0.6.5")) {
     $sourceCommit = (& git -C $repo rev-parse HEAD).Trim()
     if ($LASTEXITCODE -ne 0 -or $sourceCommit -notmatch '^[0-9a-f]{40}$') { throw "Unable to identify source commit" }
     $sourceCommitField = "source_commit=$sourceCommit`n"

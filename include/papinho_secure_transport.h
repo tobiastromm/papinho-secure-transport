@@ -20,13 +20,13 @@
 extern "C" {
 #endif
 #define PST_API_VERSION_MAJOR 2UL
-#define PST_API_VERSION_MINOR 1UL
+#define PST_API_VERSION_MINOR 2UL
 #define PST_API_VERSION_PATCH 0UL
-#define PST_API_VERSION 0x00020100UL
+#define PST_API_VERSION 0x00020200UL
 #define PST_LIBRARY_VERSION_MAJOR 0UL
 #define PST_LIBRARY_VERSION_MINOR 6UL
-#define PST_LIBRARY_VERSION_PATCH 4UL
-#define PST_LIBRARY_VERSION 0x00000603UL
+#define PST_LIBRARY_VERSION_PATCH 5UL
+#define PST_LIBRARY_VERSION 0x00000605UL
 typedef unsigned char pst_u8;
 #if USHRT_MAX == 0xffffU
 typedef unsigned short pst_u16;
@@ -151,6 +151,16 @@ typedef pst_size pst_wait_token;
 #define PST_DIAGNOSTIC_REASON_ALPN_MISMATCH 5UL
 #define PST_DIAGNOSTIC_REASON_TLS_POLICY_MISMATCH 6UL
 typedef struct PST_DIAGNOSTIC_INFO { pst_u32 struct_size,api_version,valid,generation; PST_RESULT normalized_result; pst_u32 operation,role,reason; char backend_id[PST_DIAGNOSTIC_BACKEND_ID_CAPACITY]; } PST_DIAGNOSTIC_INFO;
+#define PST_TRANSPORT_TERMINATION_UNKNOWN 0UL
+#define PST_TRANSPORT_TERMINATION_TCP_FIN 1UL
+#define PST_TRANSPORT_TERMINATION_TCP_RST 2UL
+#define PST_TRANSPORT_TERMINATION_SOCKET_ERROR 3UL
+#define PST_NATIVE_ERROR_DOMAIN_NONE 0UL
+#define PST_NATIVE_ERROR_DOMAIN_WINSOCK 1UL
+#define PST_NATIVE_ERROR_DOMAIN_NSPR 2UL
+#define PST_NATIVE_ERROR_DOMAIN_OPENSSL 3UL
+#define PST_NATIVE_ERROR_DOMAIN_SCHANNEL 4UL
+typedef struct PST_TRANSPORT_TERMINATION_INFO { pst_u32 struct_size,api_version,valid,termination,operation,native_domain,native_code,native_code_valid; } PST_TRANSPORT_TERMINATION_INFO;
 typedef pst_u32 PST_LOG_LEVEL;
 #define PST_LOG_LEVEL_OFF 0UL
 #define PST_LOG_LEVEL_ERROR 1UL
@@ -200,6 +210,7 @@ typedef struct PST_WAIT_RESULT { pst_u32 ready_interest,timed_out; } PST_WAIT_RE
 typedef struct PST_WAIT_EVENT { pst_wait_token token; pst_u32 ready_interest,flags; PST_RESULT result; } PST_WAIT_EVENT;
 typedef struct PST_WAIT_SET_RESULT { pst_size ready_count,event_count; pst_u32 timed_out,woken; } PST_WAIT_SET_RESULT;
 #define PST_DIAGNOSTIC_INFO_MIN_SIZE ((pst_u32)sizeof(PST_DIAGNOSTIC_INFO))
+#define PST_TRANSPORT_TERMINATION_INFO_MIN_SIZE 32UL
 #define PST_LOG_CONFIG_MIN_SIZE ((pst_u32)sizeof(PST_LOG_CONFIG))
 #define PST_LOG_EVENT_MIN_SIZE ((pst_u32)sizeof(PST_LOG_EVENT))
 #define PST_VERSION_INFO_MIN_SIZE ((pst_u32)sizeof(PST_VERSION_INFO))
@@ -219,6 +230,7 @@ typedef struct PST_WAIT_SET_RESULT { pst_size ready_count,event_count; pst_u32 t
 PST_API pst_u32 PST_CALL pst_api_version(void); PST_API pst_u32 PST_CALL pst_library_version(void);
 PST_API PST_RESULT PST_CALL pst_version_info_init(PST_VERSION_INFO *); PST_API PST_RESULT PST_CALL pst_get_version(PST_VERSION_INFO *); PST_API const char *PST_CALL pst_result_string(PST_RESULT);
 PST_API PST_RESULT PST_CALL pst_diagnostic_info_init(PST_DIAGNOSTIC_INFO *); PST_API PST_RESULT PST_CALL pst_log_config_init(PST_LOG_CONFIG *);
+PST_API PST_RESULT PST_CALL pst_transport_termination_info_init(PST_TRANSPORT_TERMINATION_INFO *);
 PST_API PST_RESULT PST_CALL pst_credentials_create(const PST_CREDENTIAL_SOURCE *,pst_credentials **); PST_API void PST_CALL pst_credentials_release(pst_credentials *);
 PST_API PST_RESULT PST_CALL pst_trust_create(const PST_TRUST_SOURCE *,pst_trust **); PST_API void PST_CALL pst_trust_release(pst_trust *);
 PST_API PST_RESULT PST_CALL pst_runtime_create(const PST_RUNTIME_OPTIONS *,pst_runtime **); PST_API PST_RESULT PST_CALL pst_runtime_create_ex(const PST_RUNTIME_OPTIONS *,pst_runtime **,PST_DIAGNOSTIC_INFO *);
@@ -226,6 +238,7 @@ PST_API PST_RESULT PST_CALL pst_runtime_create_with_logging(const PST_RUNTIME_OP
 PST_API PST_RESULT PST_CALL pst_runtime_get_info(const pst_runtime *,PST_RUNTIME_INFO *); PST_API PST_RESULT PST_CALL pst_runtime_get_provider_info(const pst_runtime *,pst_size,PST_PROVIDER_INFO *); PST_API void PST_CALL pst_runtime_release(pst_runtime *);
 PST_API PST_RESULT PST_CALL pst_connection_create(pst_runtime *,const PST_CONNECTION_CONFIG *,pst_connection **); PST_API PST_RESULT PST_CALL pst_connection_create_ex(pst_runtime *,const PST_CONNECTION_CONFIG *,pst_connection **,PST_DIAGNOSTIC_INFO *);
 PST_API PST_RESULT PST_CALL pst_connection_get_provider_info(const pst_connection *,PST_PROVIDER_INFO *); PST_API PST_RESULT PST_CALL pst_connection_copy_diagnostic(const pst_connection *,PST_DIAGNOSTIC_INFO *);
+PST_API PST_RESULT PST_CALL pst_connection_copy_transport_termination(const pst_connection *,PST_TRANSPORT_TERMINATION_INFO *);
 PST_API PST_RESULT PST_CALL pst_connection_attach(pst_connection *,pst_transport *,pst_u32,pst_u32 *); PST_API PST_RESULT PST_CALL pst_connection_handshake(pst_connection *,pst_u32 *,PST_RESULT *);
 PST_API PST_RESULT PST_CALL pst_connection_get_interest(pst_connection *,pst_u32 *); PST_API PST_RESULT PST_CALL pst_connection_wait(pst_connection *,pst_u32,PST_WAIT_RESULT *);
 PST_API PST_RESULT PST_CALL pst_connection_read(pst_connection *,void *,pst_size,PST_IO_RESULT *); PST_API PST_RESULT PST_CALL pst_connection_write(pst_connection *,const void *,pst_size,PST_IO_RESULT *);

@@ -28,11 +28,14 @@
 #define PST_DIAGNOSTIC_PHASE_CONNECTION_CREATE 17UL
 #define PST_DIAGNOSTIC_FLAG_NATIVE 0x00000001UL
 #define PST_DIAGNOSTIC_FLAG_SECONDARY 0x00000002UL
-typedef struct pst_internal_diagnostic { PST_RESULT result; pst_u32 phase,role,reason; pst_u32 native_domain; pst_i32 native_code; pst_i32 secondary_native_code; pst_u32 flags; pst_u32 generation; pst_u32 valid; char backend_id[PST_DIAGNOSTIC_BACKEND_ID_CAPACITY]; } pst_internal_diagnostic;
+typedef struct pst_internal_transport_termination { pst_u32 valid,termination,operation,native_domain,native_code,native_code_valid; } pst_internal_transport_termination;
+typedef struct pst_internal_diagnostic { PST_RESULT result; pst_u32 phase,role,reason; pst_u32 native_domain; pst_i32 native_code; pst_i32 secondary_native_code; pst_u32 flags; pst_u32 generation; pst_u32 valid; char backend_id[PST_DIAGNOSTIC_BACKEND_ID_CAPACITY]; pst_internal_transport_termination transport_termination; } pst_internal_diagnostic;
 void pst_diagnostic_initialize(pst_internal_diagnostic *diagnostic);
 void pst_diagnostic_clear(pst_internal_diagnostic *diagnostic);
 void pst_diagnostic_copy(pst_internal_diagnostic *destination,const pst_internal_diagnostic *source);
 PST_RESULT pst_diagnostic_validate_public(const PST_DIAGNOSTIC_INFO *out);
 PST_RESULT pst_diagnostic_export_public(const pst_internal_diagnostic *source,PST_DIAGNOSTIC_INFO *out);
 void pst_diagnostic_capture(pst_internal_diagnostic *diagnostic,PST_RESULT result,pst_u32 phase,const char *backend_id,pst_u32 native_domain,pst_i32 native_code,pst_i32 secondary_native_code,pst_u32 flags);
+void pst_transport_termination_capture(pst_internal_diagnostic *diagnostic,pst_u32 termination,pst_u32 phase,pst_u32 native_domain,pst_u32 native_code,pst_u32 native_code_valid);
+PST_RESULT pst_transport_termination_export_public(const pst_internal_diagnostic *source,PST_TRANSPORT_TERMINATION_INFO *out);
 #endif
