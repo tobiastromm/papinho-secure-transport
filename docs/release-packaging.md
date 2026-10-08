@@ -2,7 +2,7 @@
 
 # Release packaging decision
 
-## 0.6.4 idle-liveness patch candidate
+## Historical 0.6.4 idle-liveness patch candidate
 
 The `0.6.4` candidate retains API 2.1.0, SPI 3.0 and every canonical target identity. Its production change restores remote close/error observation for established idle wait-set members. Published 0.6.3 archives remain immutable; final 0.6.4 archives and hashes are not frozen until targeted `/ML`, `/MD` and PapinhoBrowser `/MD` external recertification succeeds.
 
@@ -123,3 +123,7 @@ Validate a comparison output without changing the frozen default hashes:
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate-release-packages.ps1 -PackageDirectory dist/reproduction/0.4.0/run1 -ValidationDirectory dist/validation/0.4.0-reproduced -ExpectedChecksumsFile dist/reproduction/0.4.0/run1/SHA256SUMS-packages.txt -CompileConsumers
 
 Two clean runs produced byte-identical archives and identical extracted contents. The normalized archives differ from the earlier 0.4.0 candidates, whose creation metadata was not canonical, while relevant staged binary/runtime inputs remain unchanged. Because those earlier candidates already carry the complete Phase 9.F functional evidence, they remain the immutable 0.4.0 release candidates. The canonical builder is authoritative for future package creation; replacing the current ZIPs merely to normalize metadata would invalidate their frozen hashes without changing product behavior.
+
+## 0.6.5 API 2.2 documentation-refrozen candidate
+
+The candidate is API 2.2.0, SPI 3.0 and library 0.6.5 (0x00000605UL): source, VC6/NSS /ML, VC6/NSS /MD, Schannel, OpenSSL and Combined ZIPs plus checksum. No unsuffixed VC6 package exists. Published 0.6.4 remains immutable.

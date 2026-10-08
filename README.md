@@ -8,7 +8,7 @@ Instead of making an application depend directly on the APIs, types, lifecycle, 
 
 TLS is the secure-transport protocol implemented by PST today. Current providers include **RetroZilla NSS**, **Windows Schannel**, and **OpenSSL**.
 
-The 0.6.4 patch candidate uses public API **2.1.0** and provider SPI **3.0**. It preserves the CLIENT/SERVER and scheduler contracts and restores idle remote-close observation through the existing wait-set contract. The VC6 `/ML` and `/MD` CRT variants remain explicit, separately selectable artifacts.
+The 0.6.5 candidate uses additive public API **2.2.0**, unchanged provider SPI **3.0**, and library **0.6.5**. It preserves the CLIENT/SERVER, scheduler and idle remote-close contracts while adding immutable transport-termination provenance.
 
 PST is not limited to Internet software. It can sit underneath browsers, e-mail clients, business client/server applications, LAN services, messaging systems, and custom protocols.
 
@@ -100,7 +100,7 @@ The public examples include [basic CLIENT](examples/basic_client.c) and [basic S
 
 ## Current highlights
 
-- Current **0.6.4 / API 2.1.0 / SPI 3.0** patch candidate
+- Current **0.6.5 / API 2.2.0 / SPI 3.0** patch candidate
 - Published **0.5.0 / API 2.0.0 / SPI 3.0** historical baseline
 - CLIENT and SERVER roles with per-connection provider selection
 - TLS 1.2 validated with all three providers
@@ -117,11 +117,11 @@ The public examples include [basic CLIENT](examples/basic_client.c) and [basic S
 - Reciprocal TLS shutdown and explicit truncation detection
 - 250-cycle mixed M9 scheduler/security/lifecycle stress with no crashes or hangs
 
-The published 0.6.3 baseline passed targeted real Windows NT 4.0 SP6 x86 and clean-machine validation for both VC6 `/ML` and `/MD`, plus real PapinhoBrowser `/MD` integration. The 0.6.4 patch candidate preserves those artifact identities and requires targeted external recertification for idle remote-close observation. Platforms outside the documented validation matrix remain unvalidated.
+The published 0.6.4 baseline remains immutable. The 0.6.5 candidate preserves the explicit VC6 /ML and /MD identities and requires targeted external recertification for API 2.2 transport provenance. Platforms outside the documented validation matrix remain unvalidated.
 
 ## Distribution
 
-The 0.6.4 patch candidate distribution retains one source package and five static SDKs: explicit VC6/RetroZilla NSS `/ML` and `/MD` variants, Schannel, OpenSSL 3.5.8, and the optional Combined Schannel/OpenSSL target. Published 0.6.3 assets and the historical unsuffixed VC6/NSS 0.6.1 package remain immutable.
+The 0.6.5 candidate distribution contains one source package and five static SDKs: explicit VC6/RetroZilla NSS `/ML` and `/MD` variants, Schannel, OpenSSL 3.5.8, and the optional Combined Schannel/OpenSSL target. Published 0.6.3 assets and the historical unsuffixed VC6/NSS 0.6.1 package remain immutable.
 
 The Combined SDK is an official optional package for provider selection, not a fourth TLS implementation and not a default recommendation.
 

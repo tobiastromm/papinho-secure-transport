@@ -2,7 +2,7 @@
 
 # Public API and ABI baseline
 
-This document keeps the historical ABI work visible while recording the current release contract. The published 0.6.0 through 0.6.3 baselines use API 2.1.0 / SPI 3.0. The 0.6.4 patch candidate keeps API **2.1.0** and SPI **3.0** while restoring idle remote-close observation and preserving the distinct VC6 CRT artifacts.
+This document keeps the historical ABI work visible while recording the current release contract. The published 0.6.0 through 0.6.3 baselines use API 2.1.0 / SPI 3.0. The 0.6.5 candidate uses additive API **2.2.0** and unchanged SPI **3.0**, while preserving API 2.1 layouts and the distinct VC6 CRT artifacts.
 
 API 2.1 is an additive evolution of API 2.0. It preserves the API 2.0 prefixes and adds the scheduler/readiness surface frozen by ADR-0005. M0–M9 found no need for an SPI change.
 
@@ -147,3 +147,15 @@ The earlier published baselines remain historical facts rather than being rewrit
 - 0.6.4 patch candidate: API 2.1.0 / SPI 3.0 / library 0.6.4, restoring idle close/error observation with no public API or SPI expansion.
 
 Detailed historical release evidence remains under `docs/codex/release-evidence/` and the API 2.0 migration documents. The frozen 0.6.0 package/ABI evidence does not retroactively change the published 0.4.0 or 0.5.0 contracts.
+
+## Current API 2.2 transport-termination contract
+
+The current candidate is library 0.6.5 (0x00000605UL), additive public API 2.2.0 and unchanged provider SPI 3.0. API 2.1 layouts and symbols remain compatible; no SPI vtable hook or layout was added.
+
+API 2.2 adds pst_transport_termination_info_init(PST_TRANSPORT_TERMINATION_INFO *) and pst_connection_copy_transport_termination(const pst_connection *, PST_TRANSPORT_TERMINATION_INFO *). The structure has eight pst_u32 fields in order: struct_size, api_version, valid, termination, operation, native_domain, native_code, native_code_valid. Minimum and actual size are 32 bytes, alignment 4, offsets 0,4,8,12,16,20,24,28. A prefix below 32 or incompatible API major is rejected; a larger same-major record preserves its unknown tail.
+
+valid=0 means no event was observed. valid=1 with UNKNOWN means an event was observed but not classified portably. native_code_valid=0 means unavailable; otherwise native_domain names the provider namespace and native_code is an opaque 32-bit pattern. TLS result, portable FIN/RST/SOCKET_ERROR/UNKNOWN, and optional native evidence are independent. Native evidence is diagnostic, not causal proof or authority for trust, PST_RESULT_TRUNCATED, retry, fallback, framing, shutdown, ownership or selection.
+
+The first event is immutable while the connection exists. close_notify alone does not establish FIN; timeout, wake, local cancel and release fabricate no event. After peer close_notify, read may report CLOSED/CLEAN; later application read/write are invalid while get_interest and reciprocal shutdown remain available until shutdown_step reaches final CLOSED. That intermediate bookkeeping state is private. Fatal/truncated states remain terminal, with exactly-once release and no resurrection.
+
+NSS maps factual NSPR EOF/reset/socket errors, Schannel maps recv zero/WSAECONNRESET/socket errors, and OpenSSL maps unexpected EOF or reliable SSL_ERROR_SYSCALL socket evidence; ambiguity remains UNKNOWN. No provider switches after binding. VC6/NSS /ML and /MD remain distinct; Browser uses /MD and Accelerator the governed x64 OpenSSL target.

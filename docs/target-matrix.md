@@ -309,3 +309,7 @@ windows-x64-msvc-schannel-openssl-3.5.8
 Full compiler servicing builds, SDK versions, exact dependency patch releases, support claims, and test environments remain matrix/provenance data unless they define an incompatible artifact.
 
 CRT follows the same rule: it may remain matrix metadata when it does not discriminate artifacts; when it creates an incompatible selectable variant, it is represented in the target/variant identity.
+
+## Current 0.6.5 candidate
+
+Current versions are library 0.6.5, API 2.2.0 and SPI 3.0. VC6/NSS /ML and /MD remain distinct; Browser uses /MD and Accelerator the governed x64 OpenSSL target. Historical matrices above remain historical.
