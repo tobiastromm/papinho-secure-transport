@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: MPL-2.0 */
 #include "pst_backend_nss.h"
+#include "pst_nss_close_state.h"
 #if defined(_MSC_VER) && _MSC_VER == 1200
 # pragma warning(push)
 # pragma warning(disable:4115 4068)
@@ -168,6 +169,7 @@ typedef struct pst_nss_connection_state {
     pst_internal_diagnostic diagnostic;
     pst_nss_runtime_state *runtime;
     PRFileDesc *ssl_fd;
+    pst_nss_close_state close_state;
     pst_u32 interest;
     pst_u32 ownership;
     pst_u32 role;
@@ -616,19 +618,34 @@ static PST_RESULT pst_nss_connection_create(void *state,const PST_BACKEND_CONNEC
     *out_connection=NULL;
     connection = (pst_nss_connection_state *)calloc(1, sizeof(*connection));
     if (connection == NULL) return PST_RESULT_OUT_OF_MEMORY;
-    connection->runtime = runtime;connection->role=options->role;result=pst_nss_configure_connection(connection,options->configuration);
+    connection->runtime = runtime;connection->role=options->role;pst_nss_close_state_initialize(&connection->close_state);result=pst_nss_configure_connection(connection,options->configuration);
     if(result==PST_RESULT_OK&&options->role==PST_CONNECTION_ROLE_SERVER&&!runtime->backend->server_cache_configured){if(runtime->backend->ssl_config_server_cache(0,0,0,NULL)!=SECSuccess)result=PST_RESULT_BACKEND_FAILURE;else runtime->backend->server_cache_configured=1;}
     if(result!=PST_RESULT_OK){pst_nss_connection_destroy(connection);return result;}
     *out_connection = connection;
     return PST_RESULT_OK;
+}
+static PST_RESULT pst_nss_connection_try_close(void *state,PST_BACKEND_CLOSE_RESULT *out)
+{
+    pst_nss_connection_state *c=(pst_nss_connection_state*)state;
+    PRFileDesc *descriptor;
+    pst_i32 code;
+    if(c==NULL||out==NULL||out->struct_size<PST_BACKEND_CLOSE_RESULT_MIN_SIZE||out->spi_version!=PST_BACKEND_SPI_VERSION)return PST_RESULT_INVALID_ARGUMENT;
+    out->native_domain=PST_NATIVE_ERROR_DOMAIN_NONE;out->native_code=0;out->native_code_valid=0;
+    if(c->close_state.close_attempted){out->disposition=PST_BACKEND_CLOSE_DISPOSITION_CLOSE_UNRESOLVED_RETAINED;out->native_domain=PST_NATIVE_ERROR_DOMAIN_NSPR;out->native_code=c->close_state.native_error;out->native_code_valid=c->close_state.native_error_valid;return PST_RESULT_RESOURCE_FAILURE;}
+    if(!pst_nss_close_state_begin(&c->close_state))return PST_RESULT_RESOURCE_FAILURE;
+    if(c->ssl_fd==NULL){pst_nss_close_state_no_resource(&c->close_state);out->disposition=PST_BACKEND_CLOSE_DISPOSITION_NO_NATIVE_RESOURCE;return PST_RESULT_OK;}
+    descriptor=c->ssl_fd;c->ssl_fd=NULL;
+    if(c->runtime->backend->pr_close(descriptor)==PR_SUCCESS){pst_nss_close_state_confirmed(&c->close_state);out->disposition=PST_BACKEND_CLOSE_DISPOSITION_CLOSED_CONFIRMED;return PST_RESULT_OK;}
+    code=c->runtime->backend->pr_get_error!=NULL?(pst_i32)c->runtime->backend->pr_get_error():0;
+    pst_nss_close_state_unresolved(&c->close_state,PST_NSS_DESCRIPTOR_LAYER_UNKNOWN_AFTER_CLOSE_FAILURE,code,c->runtime->backend->pr_get_error!=NULL?1UL:0UL);
+    out->disposition=PST_BACKEND_CLOSE_DISPOSITION_CLOSE_UNRESOLVED_RETAINED;out->native_domain=PST_NATIVE_ERROR_DOMAIN_NSPR;out->native_code=code;out->native_code_valid=c->runtime->backend->pr_get_error!=NULL?1UL:0UL;
+    return PST_RESULT_RESOURCE_FAILURE;
 }
 static void pst_nss_connection_destroy(void *state)
 {
     pst_nss_connection_state *c = (pst_nss_connection_state *)state;
     pst_size i;
     if (c == NULL) return;
-    if (c->ssl_fd != NULL) c->runtime->backend->pr_close(c->ssl_fd);
-    c->ssl_fd = NULL;
     for(i=0;i<c->local_chain_count;i++)if(c->local_chain[i]!=NULL)c->runtime->backend->cert_destroy(c->local_chain[i]);
     free(c->local_chain);
     if (c->local_key != NULL) c->runtime->backend->key_destroy(c->local_key);
@@ -739,19 +756,24 @@ static PST_RESULT pst_nss_attach(void *state, void *transport, pst_u32 ownership
         return pst_backend_nss_normalize_error(c->last_error);
     }
     *ownership_accepted = 1UL;
+    c->ssl_fd = tcp_fd;
+    pst_nss_close_state_set_layer(&c->close_state,PST_NSS_DESCRIPTOR_LAYER_LOWER_NSPR);
+    c->ownership = ownership;
     pst_nss_trace("PR_ImportTCPSocket", "ok ownership_accepted=1");
     option.option = PR_SockOpt_Nonblocking;
     option.value.non_blocking = PR_TRUE;
     if (s->pr_set_socket_option(tcp_fd, &option) != PR_SUCCESS) {
-        pst_nss_capture_error(s, &c->last_error); s->pr_close(tcp_fd);
+        pst_nss_capture_error(s, &c->last_error);
         return pst_backend_nss_normalize_error(c->last_error);
     }
     pst_nss_trace("PR_SockOpt_Nonblocking", "ok");
     ssl_fd = s->ssl_import_fd(NULL, tcp_fd);
     if (ssl_fd == NULL) {
-        pst_nss_capture_error(s, &c->last_error); s->pr_close(tcp_fd);
+        pst_nss_capture_error(s, &c->last_error);
         return pst_backend_nss_normalize_error(c->last_error);
     }
+    c->ssl_fd = ssl_fd;
+    pst_nss_close_state_set_layer(&c->close_state,PST_NSS_DESCRIPTOR_LAYER_SSL_AGGREGATE);
     pst_nss_trace("SSL_ImportFD", "ok");
     if (s->ssl_alert_received_callback(ssl_fd, pst_nss_alert_received, c) !=
         SECSuccess) {
@@ -760,11 +782,10 @@ static PST_RESULT pst_nss_attach(void *state, void *transport, pst_u32 ownership
             PST_DIAGNOSTIC_PHASE_TRANSPORT_ATTACH, "retrozilla-nss",
             PST_DIAGNOSTIC_DOMAIN_NSS, c->last_error, 0,
             c->last_error == 0 ? 0UL : PST_DIAGNOSTIC_FLAG_NATIVE);
-        s->pr_close(ssl_fd);
         return pst_backend_nss_alert_registration_result(0);
     }
     pst_nss_trace("SSL_AlertReceivedCallback", "ok");
-    { SSLVersionRange range; range.min=(PRUint16)(c->minimum_version==PST_TLS_VERSION_1_3?SSL_LIBRARY_VERSION_TLS_1_3:SSL_LIBRARY_VERSION_TLS_1_2);range.max=(PRUint16)(c->maximum_version==PST_TLS_VERSION_1_3?SSL_LIBRARY_VERSION_TLS_1_3:SSL_LIBRARY_VERSION_TLS_1_2);if(s->ssl_version_set(ssl_fd,&range)!=SECSuccess||(c->alpn_size&&(c->role==PST_CONNECTION_ROLE_SERVER?s->ssl_set_alpn_callback(ssl_fd,pst_nss_server_alpn,c):s->ssl_set_alpn(ssl_fd,c->alpn,(unsigned int)c->alpn_size))!=SECSuccess)){pst_nss_capture_error(s,&c->last_error);s->pr_close(ssl_fd);return pst_backend_nss_normalize_error(c->last_error);}}
+    { SSLVersionRange range; range.min=(PRUint16)(c->minimum_version==PST_TLS_VERSION_1_3?SSL_LIBRARY_VERSION_TLS_1_3:SSL_LIBRARY_VERSION_TLS_1_2);range.max=(PRUint16)(c->maximum_version==PST_TLS_VERSION_1_3?SSL_LIBRARY_VERSION_TLS_1_3:SSL_LIBRARY_VERSION_TLS_1_2);if(s->ssl_version_set(ssl_fd,&range)!=SECSuccess||(c->alpn_size&&(c->role==PST_CONNECTION_ROLE_SERVER?s->ssl_set_alpn_callback(ssl_fd,pst_nss_server_alpn,c):s->ssl_set_alpn(ssl_fd,c->alpn,(unsigned int)c->alpn_size))!=SECSuccess)){pst_nss_capture_error(s,&c->last_error);return pst_backend_nss_normalize_error(c->last_error);}}
     if (s->ssl_option_set(ssl_fd, SSL_SECURITY, PR_TRUE) != SECSuccess ||
         s->ssl_option_set(ssl_fd, SSL_RECORD_SIZE_LIMIT, 16384) != SECSuccess ||
         s->ssl_option_set(ssl_fd, c->role==PST_CONNECTION_ROLE_SERVER?SSL_HANDSHAKE_AS_SERVER:SSL_HANDSHAKE_AS_CLIENT, PR_TRUE) != SECSuccess ||
@@ -772,22 +793,21 @@ static PST_RESULT pst_nss_attach(void *state, void *transport, pst_u32 ownership
         (c->alpn_size != 0 && s->ssl_option_set(ssl_fd, SSL_ENABLE_ALPN, PR_TRUE) != SECSuccess) ||
         (c->role==PST_CONNECTION_ROLE_CLIENT&&s->ssl_set_url(ssl_fd, c->expected_peer_name != NULL ? c->expected_peer_name : t->hostname) != SECSuccess) ||
         s->ssl_reset_handshake(ssl_fd, c->role==PST_CONNECTION_ROLE_SERVER?PR_TRUE:PR_FALSE) != SECSuccess) {
-        pst_nss_capture_error(s, &c->last_error); s->pr_close(ssl_fd);
+        pst_nss_capture_error(s, &c->last_error);
         return pst_backend_nss_normalize_error(c->last_error);
     }
     if ((s->has_database || c->require_peer) &&
         s->ssl_auth_hook(ssl_fd, (SSLAuthCertificate)s->ssl_auth_certificate,
                          s->cert_default_db()) != SECSuccess) {
-        pst_nss_capture_error(s, &c->last_error); s->pr_close(ssl_fd);
+        pst_nss_capture_error(s, &c->last_error);
         return pst_backend_nss_normalize_error(c->last_error);
     }
-    if(c->role==PST_CONNECTION_ROLE_SERVER){SSLExtraServerCertData extra;CERTCertificateList chain;SECItem *items=NULL;pst_size i;memset(&extra,0,sizeof(extra));memset(&chain,0,sizeof(chain));if(c->local_chain_count){items=(SECItem*)calloc(c->local_chain_count,sizeof(*items));if(!items){s->pr_close(ssl_fd);return PST_RESULT_OUT_OF_MEMORY;}for(i=0;i<c->local_chain_count;i++)items[i]=c->local_chain[i]->derCert;chain.certs=items;chain.len=(int)c->local_chain_count;extra.certChain=&chain;}if(s->ssl_config_server_cert(ssl_fd,c->local_certificate,c->local_key,&extra,sizeof(extra))!=SECSuccess){free(items);pst_nss_capture_error(s,&c->last_error);s->pr_close(ssl_fd);return pst_backend_nss_normalize_error(c->last_error);}free(items);if(s->ssl_option_set(ssl_fd,SSL_REQUEST_CERTIFICATE,c->peer_certificate_mode==PST_PEER_CERTIFICATE_DISABLED?PR_FALSE:PR_TRUE)!=SECSuccess||s->ssl_option_set(ssl_fd,SSL_REQUIRE_CERTIFICATE,c->peer_certificate_mode==PST_PEER_CERTIFICATE_REQUIRED?SSL_REQUIRE_ALWAYS:PR_FALSE)!=SECSuccess){pst_nss_capture_error(s,&c->last_error);s->pr_close(ssl_fd);return pst_backend_nss_normalize_error(c->last_error);}}
+    if(c->role==PST_CONNECTION_ROLE_SERVER){SSLExtraServerCertData extra;CERTCertificateList chain;SECItem *items=NULL;pst_size i;memset(&extra,0,sizeof(extra));memset(&chain,0,sizeof(chain));if(c->local_chain_count){items=(SECItem*)calloc(c->local_chain_count,sizeof(*items));if(!items)return PST_RESULT_OUT_OF_MEMORY;for(i=0;i<c->local_chain_count;i++)items[i]=c->local_chain[i]->derCert;chain.certs=items;chain.len=(int)c->local_chain_count;extra.certChain=&chain;}if(s->ssl_config_server_cert(ssl_fd,c->local_certificate,c->local_key,&extra,sizeof(extra))!=SECSuccess){free(items);pst_nss_capture_error(s,&c->last_error);return pst_backend_nss_normalize_error(c->last_error);}free(items);if(s->ssl_option_set(ssl_fd,SSL_REQUEST_CERTIFICATE,c->peer_certificate_mode==PST_PEER_CERTIFICATE_DISABLED?PR_FALSE:PR_TRUE)!=SECSuccess||s->ssl_option_set(ssl_fd,SSL_REQUIRE_CERTIFICATE,c->peer_certificate_mode==PST_PEER_CERTIFICATE_REQUIRED?SSL_REQUIRE_ALWAYS:PR_FALSE)!=SECSuccess){pst_nss_capture_error(s,&c->last_error);return pst_backend_nss_normalize_error(c->last_error);}}
     if (c->role==PST_CONNECTION_ROLE_CLIENT&&c->local_certificate != NULL &&
         s->ssl_client_auth_hook(ssl_fd,pst_nss_client_auth,c)!=SECSuccess) {
-        pst_nss_capture_error(s,&c->last_error);s->pr_close(ssl_fd);
+        pst_nss_capture_error(s,&c->last_error);
         return pst_backend_nss_normalize_error(c->last_error);
     }
-    c->ssl_fd = ssl_fd; c->ownership = ownership;
     c->interest = PST_BACKEND_INTEREST_READ | PST_BACKEND_INTEREST_WRITE;
     return PST_RESULT_OK;
 }
@@ -1248,7 +1268,7 @@ static const PST_BACKEND_VTABLE pst_nss_vtable = {
     sizeof(PST_BACKEND_VTABLE), PST_BACKEND_SPI_VERSION,
     pst_nss_initialize, pst_nss_shutdown, pst_nss_runtime_create,
     pst_nss_runtime_destroy, pst_nss_query, pst_nss_validate_requirements,
-    pst_nss_connection_create, pst_nss_connection_destroy, pst_nss_attach,
+    pst_nss_connection_create, pst_nss_connection_try_close, pst_nss_connection_destroy, pst_nss_attach,
     pst_nss_handshake, pst_nss_interest, pst_nss_wait, pst_nss_read,
     pst_nss_write, pst_nss_shutdown_step, pst_nss_peer_info_create,
     pst_nss_peer_info_destroy, pst_nss_get_alpn,

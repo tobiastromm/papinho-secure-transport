@@ -48,7 +48,7 @@ PST_RESULT pst_backend_validate(const PST_BACKEND_DESCRIPTOR *d)
     if (v->initialize == NULL || v->shutdown == NULL ||
         v->runtime_create == NULL || v->runtime_destroy == NULL ||
         v->query_capabilities == NULL || v->validate_requirements == NULL ||
-        v->connection_create == NULL || v->connection_destroy == NULL ||
+        v->connection_create == NULL || v->connection_try_close == NULL || v->connection_destroy == NULL ||
         v->attach_transport == NULL || v->handshake_step == NULL ||
         v->get_interest == NULL || v->read == NULL || v->write == NULL ||
         v->shutdown_step == NULL) return PST_RESULT_INVALID_ARGUMENT;

@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: MPL-2.0 */
+#include "test_release.h"
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include "papinho_secure_transport.h"
 #include "papinho_secure_transport_win32.h"
@@ -91,7 +92,7 @@ static int run_case(const char *name,pst_runtime *runtime,const char *address,co
   diagnostic.struct_size=sizeof(diagnostic);diagnostic.api_version=PST_API_VERSION;
   if(pst_connection_copy_diagnostic(connection,&diagnostic)!=PST_RESULT_OK||!diagnostic.valid||diagnostic.normalized_result!=expected||strcmp(diagnostic.backend_id,"openssl"))goto done;
   after=diagnostic;if(pst_connection_handshake(connection,&operation,&error)!=PST_RESULT_INVALID_STATE)goto done;
-  pst_connection_release(connection);connection=NULL;value->connections_destroyed++;
+  test_connection_release(connection);connection=NULL;value->connections_destroyed++;
   if(!after.valid||after.normalized_result!=expected||strcmp(after.backend_id,"openssl")||ERR_peek_error()!=0UL)goto done;
   printf("%s FINAL_STATE=FAILED RESULT=AUTH_FAILURE DIAG_VALID=1 NO_RESURRECTION=1 SNAPSHOT_AFTER_DESTROY=1 SNAPSHOT_IMMUTABLE=1 ERR_QUEUE_EMPTY=1\n",name);ok=1;goto done;}
  if(operation!=PST_OPERATION_COMPLETE||diagnostic.valid)goto done;stage="APPLICATION_IO";
@@ -105,14 +106,14 @@ static int run_case(const char *name,pst_runtime *runtime,const char *address,co
  stage="PEER_INFO";if(pst_connection_get_peer_info(connection,&peer)!=PST_RESULT_OK)goto done;
  stage="SHUTDOWN";for(steps=0;steps<20;steps++){if(pst_connection_shutdown(connection,&operation,&error)!=PST_RESULT_OK||(!system&&operation==PST_OPERATION_FAILED))goto done;
   if(operation==PST_OPERATION_COMPLETE||operation==PST_OPERATION_FAILED)break;if(!wait_one(connection))goto done;}if(steps==20)goto done;
- pst_connection_release(connection);connection=NULL;value->connections_destroyed++;memset(&summary,0,sizeof(summary));
+ test_connection_release(connection);connection=NULL;value->connections_destroyed++;memset(&summary,0,sizeof(summary));
  summary.struct_size=sizeof(summary);summary.api_version=PST_API_VERSION;
  if(pst_peer_info_get_summary(peer,&summary)!=PST_RESULT_OK||summary.local_role!=PST_CONNECTION_ROLE_CLIENT||strcmp(summary.provider_id,"openssl")||summary.tls_version!=(pst_u32)tls||summary.cipher_suite==0||summary.certificate_sha256_size!=32||summary.peer_authenticated!=PST_KNOWN_TRUE)goto done;
  if(kept){*kept=peer;peer=NULL;}
  if(exchanges)printf("%s HANDSHAKE=PASS TLS=0x%04x AUTH=PASS ALPN=%s WRITE=25 READ=25 CONTENT_MATCH=1 PEER_INFO=PASS DIAG_VALID=0 SHUTDOWN=COMPLETE\n",name,tls==13?0x0304:0x0303,alpn_required?"fixture/1":"UNAVAILABLE");
  else printf("%s HANDSHAKE=PASS TLS=0x%04x AUTH=PASS ALPN=%s APPLICATION_BYTES_SENT=0 APPLICATION_BYTES_READ=0 PEER_INFO=PASS DIAG_VALID=0 SHUTDOWN=BOUNDED\n",name,tls==13?0x0304:0x0303,alpn_required?"fixture/1":"UNAVAILABLE");ok=1;
 done:
- if(connection){pst_connection_release(connection);value->connections_destroyed++;}if(peer)pst_peer_info_release(peer);
+ if(connection){test_connection_release(connection);value->connections_destroyed++;}if(peer)pst_peer_info_release(peer);
  if(transport)pst_transport_release(transport);if(socket_value!=INVALID_SOCKET)closesocket(socket_value);
  if(credentials)pst_credentials_release(credentials);if(trust)pst_trust_release(trust);free(root);free(cert);
  if(key){memset(key,0,key_size);free(key);}if(!ok)printf("%s FAILURE_STAGE=%s\n",name,stage);printf("%s_END PASS=%d\n",name,ok);return ok;

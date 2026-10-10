@@ -140,6 +140,10 @@ $(BUILD)\test_backend_nss.obj: tests\test_backend_nss.c
 	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
 $(BUILD)\test_backend_nss.exe: $(BUILD)\test_backend_nss.obj $(LIB)
 	$(CC) /nologo /Fe$@ $(BUILD)\test_backend_nss.obj $(LIB) wsock32.lib $(LDFLAGS)
+$(BUILD)\test_nss_layered_close.obj: tests\test_nss_layered_close.c
+	$(CC) $(CFLAGS) /Fo$@ /c $**
+$(BUILD)\test_nss_layered_close.exe: $(BUILD)\test_nss_layered_close.obj
+	$(CC) /nologo /Fe$@ $(BUILD)\test_nss_layered_close.obj $(LDFLAGS)
 $(BUILD)\test_backend_nss_integration.obj: tests\test_backend_nss_integration.c
 	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
 	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**
@@ -194,8 +198,9 @@ test: all
 	$(BUILD)\test_logging.exe
 	$(BUILD)\test_lifecycle_ownership.exe
 	$(BUILD)\test_security_lifecycle_negative.exe
-test-nss-unit: dirs $(LIB) $(BUILD)\test_backend_nss.exe
+test-nss-unit: dirs $(LIB) $(BUILD)\test_backend_nss.exe $(BUILD)\test_nss_layered_close.exe
 	$(BUILD)\test_backend_nss.exe
+	$(BUILD)\test_nss_layered_close.exe
 $(BUILD)\test_nss_server_direct.obj: tests\test_nss_server_direct.c
 	@if "$(NSS_DIST)"=="" echo NSS_DIST is required & exit 2
 	$(CC) $(NSS_CFLAGS) /Fo$@ /c $**

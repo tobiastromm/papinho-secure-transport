@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: MPL-2.0 */
+#include "test_release.h"
 #include "papinho_secure_transport.h"
 #include "papinho_secure_transport_win32.h"
 #include <stdio.h>
@@ -105,7 +106,7 @@ static int expect_failure(pst_runtime *runtime, pst_credentials *credentials,
            (long)expected, (long)result, connection != NULL,
            (unsigned long)diagnostic.valid,
            (long)diagnostic.normalized_result, diagnostic.backend_id);
-    if (connection != NULL) pst_connection_release(connection);
+    if (connection != NULL) test_connection_release(connection);
     return result == expected && connection == NULL && diagnostic.valid &&
         diagnostic.normalized_result == expected &&
         (expected == PST_RESULT_POLICY_VIOLATION ?
@@ -159,7 +160,7 @@ static int expect_role_result(pst_runtime *runtime,
     printf("ROLE_SCOPE MODE=%lu RESULT=%ld CONNECTION=%d BACKEND=%s\n",
            (unsigned long)mode, (long)result, connection != NULL,
            diagnostic.backend_id);
-    if (connection != NULL) pst_connection_release(connection);
+    if (connection != NULL) test_connection_release(connection);
     return result == expected && ((connection != NULL) == expect_backend) &&
         (expect_backend || (diagnostic.valid &&
          diagnostic.normalized_result == expected &&

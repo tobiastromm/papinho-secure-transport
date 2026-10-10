@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: MPL-2.0 */
+#include "test_release.h"
 #include "papinho_secure_transport.h"
 #include "papinho_secure_transport_win32.h"
 #include "backends/nss/pst_backend_nss.h"
@@ -195,6 +196,59 @@ static int terminal_rejects_operations(pst_connection *connection)
     return 1;
 }
 
+static int peer_close_completes_reciprocal_shutdown(
+    pst_connection *connection, int *shutdown_calls, int *shutdown_waits)
+{
+    PST_IO_RESULT io;
+    PST_WAIT_RESULT wait_result;
+    PST_RESULT result;
+    PST_RESULT error;
+    pst_u32 interest;
+    pst_u32 operation;
+    char byte;
+    int step;
+
+    *shutdown_calls = 0;
+    *shutdown_waits = 0;
+    memset(&io, 0, sizeof(io));
+    if (pst_connection_read(connection, &byte, 1UL, &io) !=
+        PST_RESULT_INVALID_STATE) return 0;
+    memset(&io, 0, sizeof(io));
+    if (pst_connection_write(connection, &byte, 1UL, &io) !=
+        PST_RESULT_INVALID_STATE) return 0;
+
+    interest = PST_INTEREST_NONE;
+    result = pst_connection_get_interest(connection, &interest);
+    if (result != PST_RESULT_OK) return 0;
+    memset(&wait_result, 0, sizeof(wait_result));
+    result = pst_connection_wait(connection, 0UL, &wait_result);
+    if (result != PST_RESULT_OK) return 0;
+    timeline("PEER_CLOSE_PRE_SHUTDOWN READ_REJECTED=1 WRITE_REJECTED=1 GET_INTEREST_RESULT=%ld INTEREST=0x%08lx WAIT_RESULT=%ld WAIT_READY=0x%08lx WAIT_TIMED_OUT=%lu",
+        (long)PST_RESULT_OK, (unsigned long)interest, (long)result,
+        (unsigned long)wait_result.ready_interest,
+        (unsigned long)wait_result.timed_out);
+    console_marker("PEER_CLOSE_PRE_SHUTDOWN READ_REJECTED=1 WRITE_REJECTED=1 GET_INTEREST=PASS WAIT=PASS");
+
+    operation = PST_OPERATION_FAILED;
+    error = PST_RESULT_OK;
+    for (step = 0; step < MAX_STEPS; ++step) {
+        result = pst_connection_shutdown(connection, &operation, &error);
+        ++*shutdown_calls;
+        timeline("LOOP=PEER_SHUTDOWN STEP=%d AFTER_SHUTDOWN RESULT=%ld OPERATION=%lu ERROR=%ld",
+            step, (long)result, (unsigned long)operation, (long)error);
+        if (result != PST_RESULT_OK || operation == PST_OPERATION_FAILED)
+            return 0;
+        if (operation == PST_OPERATION_COMPLETE) break;
+        ++*shutdown_waits;
+        if (!wait_once(connection, &error, "PEER_SHUTDOWN", step))
+            return 0;
+    }
+    console_marker("PEER_CLOSE_RECIPROCAL_SHUTDOWN REQUESTED=1 CALLS=%d WAITS=%d COMPLETE=%d",
+        *shutdown_calls, *shutdown_waits,
+        operation == PST_OPERATION_COMPLETE);
+    return step < MAX_STEPS && operation == PST_OPERATION_COMPLETE;
+}
+
 static int idle_wait_set_observes_peer(pst_connection *connection,
     pst_u32 timeout_ms, int expect_ready)
 {
@@ -332,6 +386,9 @@ int main(int argc, char **argv)
     int control_ready;
     int abort_confirmed;
     int shutdown_calls;
+    int peer_shutdown_calls;
+    int peer_shutdown_waits;
+    int peer_shutdown_complete;
     const char *mode;
     const char *client_log_path;
     DWORD loop_start;
@@ -390,6 +447,9 @@ int main(int argc, char **argv)
     control_ready = 0;
     abort_confirmed = 0;
     shutdown_calls = 0;
+    peer_shutdown_calls = 0;
+    peer_shutdown_waits = 0;
+    peer_shutdown_complete = 0;
     control_elapsed = 0;
     accepted = 0;
     established = 0;
@@ -840,6 +900,18 @@ int main(int argc, char **argv)
         }
     }
 after_operation:
+    if (established && final_result == PST_RESULT_CLOSED &&
+        final_close == PST_CLOSE_CLEAN &&
+        (!strcmp(mode, "clean_close") ||
+         !strcmp(mode, "healthy_idle") ||
+         !strcmp(mode, "read_clean") ||
+         !strcmp(mode, "data_then_close"))) {
+        peer_shutdown_complete = peer_close_completes_reciprocal_shutdown(
+            connection, &peer_shutdown_calls, &peer_shutdown_waits);
+        timeline("PEER_CLOSE_RECIPROCAL_SHUTDOWN CALLS=%d WAITS=%d COMPLETE=%d",
+            peer_shutdown_calls, peer_shutdown_waits,
+            peer_shutdown_complete);
+    }
     memset(&diagnostic, 0, sizeof(diagnostic));
     diagnostic.struct_size = sizeof(diagnostic);
     diagnostic.api_version = PST_API_VERSION;
@@ -852,6 +924,9 @@ after_operation:
         memcmp(received, g_expected, total_read) == 0;
 
     ok = step < MAX_STEPS && terminal;
+    if (established && final_result == PST_RESULT_CLOSED &&
+        final_close == PST_CLOSE_CLEAN)
+        ok = ok && peer_shutdown_complete;
     if (!established) {
         ok = ok && final_result != PST_RESULT_OK &&
             diagnostic.valid &&
@@ -917,7 +992,7 @@ cleanup:
     console_marker("CLEANUP_BEGIN");
     if (connection != NULL) {
         timeline("CLEANUP BEFORE_CONNECTION_RELEASE");
-        pst_connection_release(connection);
+        test_connection_release(connection);
         timeline("CLEANUP AFTER_CONNECTION_RELEASE");
     }
     if (transport != NULL) {

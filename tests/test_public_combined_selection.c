@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: MPL-2.0 */
+#include "test_release.h"
 #include "papinho_secure_transport.h"
 #include "papinho_secure_transport_win32.h"
 #include <stdio.h>
@@ -17,7 +18,7 @@ static PST_RESULT select_provider(pst_runtime *runtime,pst_trust *trust,pst_u32 
 {
  PST_CONNECTION_CONFIG config;PST_PROVIDER_INFO info;pst_connection *connection=NULL;PST_RESULT result;
  config_init(&config,trust,mode,exact,ordered,count,tls);result=pst_connection_create(runtime,&config,&connection);if(result!=PST_RESULT_OK){printf("SELECTION_CREATE MODE=%lu TLS=0x%04lx RESULT=%s\n",(unsigned long)mode,(unsigned long)tls,pst_result_string(result));return result;}
- memset(&info,0,sizeof(info));info.struct_size=sizeof(info);info.api_version=PST_API_VERSION;result=pst_connection_get_provider_info(connection,&info);if(result==PST_RESULT_OK&&strcmp(info.provider_id,expected)!=0)result=PST_RESULT_BACKEND_FAILURE;pst_connection_release(connection);return result;
+ memset(&info,0,sizeof(info));info.struct_size=sizeof(info);info.api_version=PST_API_VERSION;result=pst_connection_get_provider_info(connection,&info);if(result==PST_RESULT_OK&&strcmp(info.provider_id,expected)!=0)result=PST_RESULT_BACKEND_FAILURE;test_connection_release(connection);return result;
 }
 int main(void)
 {

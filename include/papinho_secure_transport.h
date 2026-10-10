@@ -19,10 +19,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define PST_API_VERSION_MAJOR 2UL
-#define PST_API_VERSION_MINOR 2UL
+#define PST_API_VERSION_MAJOR 3UL
+#define PST_API_VERSION_MINOR 0UL
 #define PST_API_VERSION_PATCH 0UL
-#define PST_API_VERSION 0x00020200UL
+#define PST_API_VERSION 0x00030000UL
 #define PST_LIBRARY_VERSION_MAJOR 0UL
 #define PST_LIBRARY_VERSION_MINOR 6UL
 #define PST_LIBRARY_VERSION_PATCH 5UL
@@ -209,6 +209,12 @@ typedef struct PST_IO_RESULT { pst_size bytes_transferred; pst_u32 operation,clo
 typedef struct PST_WAIT_RESULT { pst_u32 ready_interest,timed_out; } PST_WAIT_RESULT;
 typedef struct PST_WAIT_EVENT { pst_wait_token token; pst_u32 ready_interest,flags; PST_RESULT result; } PST_WAIT_EVENT;
 typedef struct PST_WAIT_SET_RESULT { pst_size ready_count,event_count; pst_u32 timed_out,woken; } PST_WAIT_SET_RESULT;
+#define PST_RELEASE_DISPOSITION_NONE 0UL
+#define PST_RELEASE_DISPOSITION_PRECONDITION_RETAINED 1UL
+#define PST_RELEASE_DISPOSITION_DESTROYED 2UL
+#define PST_RELEASE_DISPOSITION_CLOSE_UNRESOLVED_RETAINED 3UL
+typedef struct PST_RELEASE_INFO { pst_u32 struct_size,api_version,disposition; PST_RESULT result; pst_u32 native_domain; pst_i32 native_code; pst_u32 native_code_valid; } PST_RELEASE_INFO;
+#define PST_RELEASE_INFO_V1_MIN_SIZE 28UL
 #define PST_DIAGNOSTIC_INFO_MIN_SIZE ((pst_u32)sizeof(PST_DIAGNOSTIC_INFO))
 #define PST_TRANSPORT_TERMINATION_INFO_MIN_SIZE 32UL
 #define PST_LOG_CONFIG_MIN_SIZE ((pst_u32)sizeof(PST_LOG_CONFIG))
@@ -243,8 +249,10 @@ PST_API PST_RESULT PST_CALL pst_connection_attach(pst_connection *,pst_transport
 PST_API PST_RESULT PST_CALL pst_connection_get_interest(pst_connection *,pst_u32 *); PST_API PST_RESULT PST_CALL pst_connection_wait(pst_connection *,pst_u32,PST_WAIT_RESULT *);
 PST_API PST_RESULT PST_CALL pst_connection_read(pst_connection *,void *,pst_size,PST_IO_RESULT *); PST_API PST_RESULT PST_CALL pst_connection_write(pst_connection *,const void *,pst_size,PST_IO_RESULT *);
 PST_API PST_RESULT PST_CALL pst_connection_get_peer_info(pst_connection *,pst_peer_info **); PST_API PST_RESULT PST_CALL pst_connection_get_negotiated_alpn(pst_connection *,pst_u8 *,pst_size,pst_size *);
-PST_API PST_RESULT PST_CALL pst_connection_shutdown(pst_connection *,pst_u32 *,PST_RESULT *); PST_API void PST_CALL pst_connection_release(pst_connection *);
-PST_API PST_RESULT PST_CALL pst_connection_try_release(pst_connection *);
+PST_API PST_RESULT PST_CALL pst_connection_shutdown(pst_connection *,pst_u32 *,PST_RESULT *);
+PST_API PST_RESULT PST_CALL pst_release_info_init(PST_RELEASE_INFO *,pst_u32);
+PST_API PST_RESULT PST_CALL pst_connection_get_release_info(const pst_connection *,PST_RELEASE_INFO *);
+PST_API PST_RESULT PST_CALL pst_connection_try_release(pst_connection *,PST_RELEASE_INFO *);
 PST_API PST_RESULT PST_CALL pst_peer_info_get_summary(const pst_peer_info *,PST_PEER_INFO_SUMMARY *); PST_API PST_RESULT PST_CALL pst_peer_info_copy_leaf_der(const pst_peer_info *,pst_u8 *,pst_size,pst_size *); PST_API void PST_CALL pst_peer_info_release(pst_peer_info *);
 PST_API void PST_CALL pst_transport_release(pst_transport *);
 PST_API PST_RESULT PST_CALL pst_wait_set_create(pst_wait_set **); PST_API PST_RESULT PST_CALL pst_wait_set_destroy(pst_wait_set *);

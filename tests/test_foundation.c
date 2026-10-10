@@ -12,13 +12,13 @@ int main(void)
     if (pst_get_version(NULL)!=PST_RESULT_INVALID_ARGUMENT) return 3;
     memset(&i,0,sizeof(i)); if (pst_version_info_init(&i)!=PST_RESULT_OK) return 4;
     if (pst_get_version(&i)!=PST_RESULT_OK) return 5;
-    if (i.api_major!=2UL || i.api_minor!=2UL || i.api_patch!=0UL ||
+    if (i.api_major!=3UL || i.api_minor!=0UL || i.api_patch!=0UL ||
         i.library_major!=0UL || i.library_minor!=6UL || i.library_patch!=5UL)
         return 12;
     if (pst_api_version()!=PST_API_VERSION || pst_library_version()!=PST_LIBRARY_VERSION) return 6;
     i.struct_size=PST_VERSION_INFO_MIN_SIZE-1UL;
     if (pst_get_version(&i)!=PST_RESULT_INVALID_ARGUMENT) return 7;
-    i.struct_size=PST_VERSION_INFO_MIN_SIZE; i.api_version=0x00030000UL;
+    i.struct_size=PST_VERSION_INFO_MIN_SIZE; i.api_version=0x00020000UL;
     if (pst_get_version(&i)!=PST_RESULT_INCOMPATIBLE_API) return 8;
     memset(&l,0,sizeof(l)); l.base.struct_size=(pst_u32)sizeof(l);
     l.base.api_version=PST_API_VERSION; l.extra=0xa5a5a5a5UL;

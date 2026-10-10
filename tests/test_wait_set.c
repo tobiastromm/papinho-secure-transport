@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: MPL-2.0 */
+#include "test_release.h"
 #include "papinho_secure_transport.h"
 #include "pst_backend.h"
 #include "pst_internal.h"
@@ -16,11 +17,12 @@ static PST_RESULT query(void*v,pst_u32*c){(void)v;*c=PST_CAP_ROLE_CLIENT|PST_CAP
 static PST_RESULT validate(void*v,pst_u32 c){pst_u32 have;(void)v;query(v,&have);return c&~have?PST_RESULT_UNSUPPORTED:PST_RESULT_OK;}
 static PST_RESULT conn_create(void*v,const PST_BACKEND_CONNECTION_OPTIONS*o,void**out){mock_state*s;(void)v;if(!o||!out)return PST_RESULT_INVALID_ARGUMENT;s=(mock_state*)calloc(1,sizeof(*s));if(!s)return PST_RESULT_OUT_OF_MEMORY;states[state_count++]=s;*out=s;return PST_RESULT_OK;}
 static void conn_destroy(void*v){destroy_count++;free(v);}static PST_RESULT attach(void*v,void*t,pst_u32 own,pst_u32*a){(void)v;(void)t;*a=own==PST_OWNERSHIP_TRANSFERRED;return *a?PST_RESULT_OK:PST_RESULT_UNSUPPORTED;}
+static PST_RESULT conn_try_close(void*v,PST_BACKEND_CLOSE_RESULT*r){if(!v||!r)return PST_RESULT_INVALID_ARGUMENT;r->disposition=PST_BACKEND_CLOSE_DISPOSITION_CLOSED_CONFIRMED;r->native_domain=PST_NATIVE_ERROR_DOMAIN_NONE;r->native_code=0;r->native_code_valid=0;return PST_RESULT_OK;}
 static PST_RESULT step(void*v,pst_u32*op,PST_RESULT*e){(void)v;*op=PST_OPERATION_COMPLETE;*e=PST_RESULT_OK;return PST_RESULT_OK;}static PST_RESULT interest(void*v,pst_u32*i){(void)v;*i=PST_INTEREST_READ;return PST_RESULT_OK;}
 static PST_RESULT wait_fn(void*v,pst_u32 i,pst_u32 timeout,PST_BACKEND_WAIT_RESULT*r){mock_state*s=(mock_state*)v;(void)i;if(timeout)return PST_RESULT_BACKEND_FAILURE;r->ready_interest=s->ready;r->timed_out=s->ready?0UL:1UL;return PST_RESULT_OK;}
 static PST_RESULT read_fn(void*v,void*b,pst_size n,PST_BACKEND_IO_RESULT*r){mock_state*s=(mock_state*)v;(void)b;(void)n;memset(r,0,sizeof(*r));if(s->fail_read){r->operation=PST_OPERATION_FAILED;r->close_kind=PST_CLOSE_TRUNCATED;r->error=PST_RESULT_TRUNCATED;}else r->operation=PST_OPERATION_NEED_READ;return PST_RESULT_OK;}
 static PST_RESULT write_fn(void*v,const void*b,pst_size n,PST_BACKEND_IO_RESULT*r){return read_fn(v,(void*)b,n,r);}
-static const PST_BACKEND_VTABLE vt={sizeof(vt),PST_BACKEND_SPI_VERSION,init,shut,rt_create,rt_destroy,query,validate,conn_create,conn_destroy,attach,step,interest,wait_fn,read_fn,write_fn,step,NULL,NULL,NULL,NULL};
+static const PST_BACKEND_VTABLE vt={sizeof(vt),PST_BACKEND_SPI_VERSION,init,shut,rt_create,rt_destroy,query,validate,conn_create,conn_try_close,conn_destroy,attach,step,interest,wait_fn,read_fn,write_fn,step,NULL,NULL,NULL,NULL};
 static const PST_BACKEND_DESCRIPTOR desc={sizeof(desc),PST_BACKEND_SPI_VERSION,"wait-mock","wait mock",PST_CAP_ROLE_CLIENT|PST_CAP_TLS_1_2|PST_CAP_NONBLOCKING|PST_CAP_BACKEND_WAIT,&vt,NULL,PST_CAP_ROLE_CLIENT|PST_CAP_TLS_1_2|PST_CAP_NONBLOCKING|PST_CAP_BACKEND_WAIT,0UL};
 static const PST_BACKEND_DESCRIPTOR desc2={sizeof(desc2),PST_BACKEND_SPI_VERSION,"wait-mock-2","wait mock 2",PST_CAP_ROLE_CLIENT|PST_CAP_TLS_1_2|PST_CAP_NONBLOCKING|PST_CAP_BACKEND_WAIT,&vt,NULL,PST_CAP_ROLE_CLIENT|PST_CAP_TLS_1_2|PST_CAP_NONBLOCKING|PST_CAP_BACKEND_WAIT,0UL};
 static PST_RESULT external_poll(pst_external_source*b,pst_u32 interests,pst_u32*ready){mock_external*x=(mock_external*)b;*ready=x->ready&interests;return PST_RESULT_OK;}static void external_destroy(pst_external_source*b){((mock_external*)b)->destroyed=1;}
@@ -37,7 +39,7 @@ int main(void)
  CHECK(pst_wait_set_add_connection(NULL,a,1)==PST_RESULT_INVALID_ARGUMENT&&pst_wait_set_add_connection(s,NULL,1)==PST_RESULT_INVALID_ARGUMENT,8);
  CHECK(pst_wait_set_add_connection(s,a,30)==PST_RESULT_OK,9);CHECK(pst_wait_set_add_connection(s,a,31)==PST_RESULT_ALREADY_REGISTERED,10);CHECK(pst_wait_set_add_connection(s2,a,32)==PST_RESULT_ALREADY_REGISTERED,11);CHECK(pst_wait_set_add_connection(s,b,30)==PST_RESULT_ALREADY_REGISTERED,12);
  CHECK(pst_wait_set_remove_connection(s,c)==PST_RESULT_NOT_REGISTERED&&pst_wait_set_remove_connection(NULL,c)==PST_RESULT_INVALID_ARGUMENT,13);CHECK(pst_wait_set_destroy(s)==PST_RESULT_INVALID_STATE,14);
- CHECK(pst_connection_try_release(a)==PST_RESULT_INVALID_STATE&&destroy_count==0&&transport_close_count==0,15);pst_connection_release(a);CHECK(destroy_count==0,16);
+ CHECK(test_connection_release(a)==PST_RESULT_INVALID_STATE&&destroy_count==0&&transport_close_count==0,15);test_connection_release(a);CHECK(destroy_count==0,16);
  CHECK(pst_wait_set_add_connection(s,b,10)==PST_RESULT_OK&&pst_wait_set_add_connection(s,c,20)==PST_RESULT_OK,17);
  states[0]->ready=states[1]->ready=states[2]->ready=PST_INTEREST_READ;memset(&wr,0,sizeof(wr));
  CHECK(pst_wait_set_wait(NULL,0,ev,3,&wr)==PST_RESULT_INVALID_ARGUMENT&&pst_wait_set_wait(s,0,ev,3,NULL)==PST_RESULT_INVALID_ARGUMENT&&pst_wait_set_wait(s,0,NULL,1,&wr)==PST_RESULT_INVALID_ARGUMENT,18);
@@ -49,17 +51,17 @@ int main(void)
  CHECK(pst_wait_set_wait(s,0,ev,3,&wr)==PST_RESULT_OK&&wr.ready_count==2&&ev[0].token==10&&(ev[0].flags&PST_WAIT_READY_TERMINAL)&&ev[0].result==PST_RESULT_TRUNCATED&&ev[1].token==20,26);
  CHECK(pst_wait_set_wait(s,0,ev,3,&wr)==PST_RESULT_OK&&ev[0].result==PST_RESULT_TRUNCATED,27);
  CHECK(pst_wait_set_remove_connection(s,a)==PST_RESULT_OK&&pst_wait_set_add_connection(s,a,40)==PST_RESULT_OK,28);CHECK(pst_wait_set_wait(s,0,ev,3,&wr)==PST_RESULT_OK&&ev[0].token==10&&ev[1].token==20,29);
- CHECK(pst_wait_set_remove_connection(s,a)==PST_RESULT_OK&&pst_connection_try_release(a)==PST_RESULT_OK,30);CHECK(pst_wait_set_remove_connection(s,b)==PST_RESULT_OK&&pst_wait_set_remove_connection(s,c)==PST_RESULT_OK,31);
+ CHECK(pst_wait_set_remove_connection(s,a)==PST_RESULT_OK&&test_connection_release(a)==PST_RESULT_OK,30);CHECK(pst_wait_set_remove_connection(s,b)==PST_RESULT_OK&&pst_wait_set_remove_connection(s,c)==PST_RESULT_OK,31);
  CHECK(pst_wait_set_destroy(s2)==PST_RESULT_OK&&pst_wait_set_create(&s2)==PST_RESULT_OK,32);pst_wait_set_test_fail_next_growth();CHECK(pst_wait_set_add_connection(s2,d,50)==PST_RESULT_OUT_OF_MEMORY,33);
- CHECK(pst_wait_set_add_connection(s2,d,50)==PST_RESULT_OK,34);CHECK(pst_wait_set_remove_connection(s2,d)==PST_RESULT_OK&&pst_connection_try_release(d)==PST_RESULT_OK,35);
- CHECK(pst_wait_set_add_connection(s2,e,60)==PST_RESULT_OK&&pst_wait_set_wait(s2,0,ev,3,&wr)==PST_RESULT_INVALID_STATE,36);CHECK(pst_wait_set_remove_connection(s2,e)==PST_RESULT_OK&&pst_connection_try_release(e)==PST_RESULT_OK,37);
- CHECK(pst_connection_try_release(b)==PST_RESULT_OK&&pst_connection_try_release(c)==PST_RESULT_OK,38);CHECK(pst_wait_set_destroy(s)==PST_RESULT_OK,39);
+ CHECK(pst_wait_set_add_connection(s2,d,50)==PST_RESULT_OK,34);CHECK(pst_wait_set_remove_connection(s2,d)==PST_RESULT_OK&&test_connection_release(d)==PST_RESULT_OK,35);
+ CHECK(pst_wait_set_add_connection(s2,e,60)==PST_RESULT_OK&&pst_wait_set_wait(s2,0,ev,3,&wr)==PST_RESULT_INVALID_STATE,36);CHECK(pst_wait_set_remove_connection(s2,e)==PST_RESULT_OK&&test_connection_release(e)==PST_RESULT_OK,37);
+ CHECK(test_connection_release(b)==PST_RESULT_OK&&test_connection_release(c)==PST_RESULT_OK,38);CHECK(pst_wait_set_destroy(s)==PST_RESULT_OK,39);
  memset(&external,0,sizeof(external));external.base.poll=external_poll;external.base.destroy=external_destroy;f=make(r,"wait-mock");CHECK(f!=NULL,40);
  CHECK(pst_wait_set_add_connection(s2,f,70)==PST_RESULT_OK&&pst_wait_set_add_external_source(s2,&external.base,PST_INTEREST_WRITE,71)==PST_RESULT_OK,41);
  states[5]->ready=PST_INTEREST_READ;external.ready=0;CHECK(pst_wait_set_wait(s2,0,ev,3,&wr)==PST_RESULT_OK&&wr.ready_count==1&&ev[0].token==70,42);
  states[5]->ready=0;external.ready=PST_INTEREST_WRITE;CHECK(pst_wait_set_wait(s2,0,ev,3,&wr)==PST_RESULT_OK&&wr.ready_count==1&&ev[0].token==71,43);
  states[5]->ready=PST_INTEREST_READ;CHECK(pst_wait_set_wait(s2,0,ev,3,&wr)==PST_RESULT_OK&&wr.ready_count==2&&ev[0].token==70&&ev[1].token==71&&(ev[1].flags&PST_WAIT_READY_EXTERNAL),44);
- CHECK(pst_wait_set_remove_connection(s2,f)==PST_RESULT_OK&&pst_wait_set_remove_external_source(s2,&external.base)==PST_RESULT_OK,45);CHECK(pst_connection_try_release(f)==PST_RESULT_OK&&pst_external_source_try_release(&external.base)==PST_RESULT_OK&&external.destroyed,46);CHECK(pst_wait_set_destroy(s2)==PST_RESULT_OK,47);
+ CHECK(pst_wait_set_remove_connection(s2,f)==PST_RESULT_OK&&pst_wait_set_remove_external_source(s2,&external.base)==PST_RESULT_OK,45);CHECK(test_connection_release(f)==PST_RESULT_OK&&pst_external_source_try_release(&external.base)==PST_RESULT_OK&&external.destroyed,46);CHECK(pst_wait_set_destroy(s2)==PST_RESULT_OK,47);
  pst_runtime_release(r);pst_backend_registry_reset();CHECK(destroy_count==6&&transport_close_count==0,48);
  printf("WAIT_SET_CREATE_DESTROY_EMPTY=PASS WAIT_SET_ADD_ONE=PASS WAIT_SET_REMOVE_ONE=PASS DUPLICATE_CONNECTION_REJECTED=PASS DUPLICATE_TOKEN_REJECTED=PASS REMOVE_ABSENT_REJECTED=PASS ONE_WAIT_SET_PER_CONNECTION=PASS REMOVE_THEN_READD=PASS REMOVE_THEN_RELEASE=PASS RELEASE_REGISTERED_CONNECTION_REJECTED=PASS REGISTERED_RELEASE_DOES_NOT_CLOSE_TRANSPORT=PASS DESTROY_WITH_MEMBERS_REJECTED=PASS\n");
  printf("MULTIPLE_MEMBERS=PASS MIXED_PROVIDER_MEMBERSHIP=PASS MIXED_CONNECTION_EXTERNAL_MEMBERSHIP=PASS PST_READY_EXTERNAL_IDLE=PASS EXTERNAL_READY_PST_IDLE=PASS PST_AND_EXTERNAL_READY=PASS ONE_READY_AMONG_MANY=PASS MULTIPLE_READY=PASS TERMINAL_PLUS_READY=PASS BOUNDED_ENUMERATION=PASS INSUFFICIENT_CAPACITY=PASS STABLE_REGISTRATION_ORDER=PASS READINESS_NOT_CONSUMED_BY_ENUMERATION=PASS TIMEOUT_ZERO_NONBLOCKING=PASS TIMEOUT_ZERO_NO_READY=PASS TIMEOUT_ZERO_READY=PASS\n");

@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: MPL-2.0 */
+#include "test_release.h"
 #include "papinho_secure_transport.h"
 #include "papinho_secure_transport_win32.h"
 #include <stdio.h>
@@ -43,7 +44,7 @@ int main(void)
         pst_runtime_release(runtime);
         return 3;
     }
-    pst_connection_release(connection);
+    test_connection_release(connection);
     pst_runtime_release(runtime);
     printf("VC6_CRT_PUBLIC_CLIENT_API=PASS\n");
     return 0;

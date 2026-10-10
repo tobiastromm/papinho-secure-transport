@@ -62,9 +62,9 @@ static int check_init(void)
     pst_diagnostic_initialize(&source);
     value.struct_size=PST_DIAGNOSTIC_INFO_MIN_SIZE-1UL;value.api_version=PST_API_VERSION;
     CHECK(pst_diagnostic_export_public(&source,&value)==PST_RESULT_INVALID_ARGUMENT,23);
-    value.struct_size=sizeof(value);value.api_version=0x00030000UL;
+    value.struct_size=sizeof(value);value.api_version=0x00020000UL;
     CHECK(pst_diagnostic_export_public(&source,&value)==PST_RESULT_INCOMPATIBLE_API,24);
-    value.struct_size=sizeof(value);value.api_version=0x00020001UL;
+    value.struct_size=sizeof(value);value.api_version=0x00030001UL;
     CHECK(pst_diagnostic_export_public(&source,&value)==PST_RESULT_OK,25);
     memset(&larger,0xa5,sizeof(larger));larger.base.struct_size=sizeof(larger);larger.base.api_version=PST_API_VERSION;
     CHECK(pst_diagnostic_export_public(&source,&larger.base)==PST_RESULT_OK,26);
@@ -200,7 +200,7 @@ static int check_redaction_abuse(void)
 int main(void)
 {
     int result; volatile pst_u32 constant;
-    constant=PST_API_VERSION;CHECK(constant==0x00020200UL,50);
+    constant=PST_API_VERSION;CHECK(constant==0x00030000UL,50);
     constant=PST_LIBRARY_VERSION;CHECK(constant==0x00000605UL,51);
     constant=PST_DIAGNOSTIC_BACKEND_ID_CAPACITY;CHECK(constant==32UL,52);
     constant=PST_DIAGNOSTIC_INFO_MIN_SIZE;CHECK(constant==64UL,55);

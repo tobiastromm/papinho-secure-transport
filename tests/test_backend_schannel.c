@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: MPL-2.0 */
+#include "test_release.h"
 #include "papinho_secure_transport.h"
 #include "backends/schannel/pst_backend_schannel.h"
 #include <stdio.h>
@@ -27,7 +28,7 @@ int main(void)
  memset(&runtime_info,0,sizeof(runtime_info));runtime_info.struct_size=sizeof(runtime_info);runtime_info.api_version=PST_API_VERSION;CHECK(pst_runtime_get_info(runtime,&runtime_info)==PST_RESULT_OK&&runtime_info.provider_count==1,7);
  memset(&trust_source,0,sizeof(trust_source));trust_source.struct_size=sizeof(trust_source);trust_source.api_version=PST_API_VERSION;trust_source.kind=PST_TRUST_SOURCE_SYSTEM;trust=NULL;CHECK(pst_trust_create(&trust_source,&trust)==PST_RESULT_OK,8);
  config_init(&config,"missing",trust);connection=NULL;CHECK(pst_connection_create(runtime,&config,&connection)==PST_RESULT_UNSUPPORTED&&!connection,9);
- config.provider_selection.exact_provider_id="schannel";result=pst_connection_create(runtime,&config,&connection);CHECK(result==PST_RESULT_OK&&connection,10);pst_connection_release(connection);connection=NULL;
+ config.provider_selection.exact_provider_id="schannel";result=pst_connection_create(runtime,&config,&connection);CHECK(result==PST_RESULT_OK&&connection,10);test_connection_release(connection);connection=NULL;
  memset(&provider_info,0,sizeof(provider_info));provider_info.struct_size=sizeof(provider_info);provider_info.api_version=PST_API_VERSION;CHECK(pst_runtime_get_provider_info(runtime,0,&provider_info)==PST_RESULT_OK&&provider_info.initialized&&!strcmp(provider_info.provider_id,"schannel")&&(provider_info.server_capabilities&PST_CAP_ROLE_SERVER)&&!(provider_info.server_capabilities&(PST_CAP_TLS_1_3|PST_CAP_ALPN_SERVER|PST_CAP_PEER_NAME_VERIFY)),11);
  pst_trust_release(trust);pst_runtime_release(runtime);pst_backend_registry_reset();
  printf("SCHANNEL_BACKEND=PASS SPI3=PASS ROLE_CLIENT=ADVERTISED ROLE_SERVER=ADVERTISED TLS12_SERVER=ADVERTISED TLS13_SERVER=UNAVAILABLE_NOT_ADVERTISED ALPN_SERVER=NOT_ADVERTISED GRACEFUL_SHUTDOWN=ADVERTISED CLIENT_MASK=0x00067eb5 SERVER_MASK=0x00047679 AGGREGATE_MASK=0x00067efd INIT_CYCLES=100 CLIENT_NO_LOCAL_IDENTITY=PASS\n");

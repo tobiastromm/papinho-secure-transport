@@ -6,6 +6,15 @@
 #include <stdio.h>
 #include <string.h>
 
+static PST_RESULT release_connection(pst_connection *connection)
+{
+    PST_RELEASE_INFO info;
+    PST_RESULT result;
+    result = pst_release_info_init(&info, (pst_u32)sizeof(info));
+    if (result != PST_RESULT_OK) return result;
+    return pst_connection_try_release(connection, &info);
+}
+
 /* The application owns its listener. Pass only an accepted socket here. */
 static PST_RESULT serve_accepted_socket(pst_runtime *runtime,
                                         pst_size accepted_socket,
@@ -55,7 +64,7 @@ static PST_RESULT serve_accepted_socket(pst_runtime *runtime,
     result = pst_win32_socket_transport_create(accepted_socket, &transport);
     if (result != PST_RESULT_OK) {
         closesocket((SOCKET)accepted_socket);
-        pst_connection_release(connection);
+        (void)release_connection(connection);
         return result;
     }
     if (result == PST_RESULT_OK)
@@ -114,7 +123,10 @@ static PST_RESULT serve_accepted_socket(pst_runtime *runtime,
                    (unsigned long)diagnostic.operation,
                    diagnostic.backend_id);
     }
-    pst_connection_release(connection);
+    {
+        PST_RESULT release_result = release_connection(connection);
+        if (result == PST_RESULT_OK) result = release_result;
+    }
     return result;
 }
 

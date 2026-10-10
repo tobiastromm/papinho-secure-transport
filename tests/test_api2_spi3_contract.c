@@ -6,11 +6,13 @@
 #include <string.h>
 #define ASSERT_C(name,expr) typedef char assert_##name[(expr)?1:-1]
 #define CHECK(expr,n) if(!(expr))return fail(n)
-ASSERT_C(api_version,PST_API_VERSION==0x00020200UL);
+ASSERT_C(api_version,PST_API_VERSION==0x00030000UL);
 ASSERT_C(library_version,PST_LIBRARY_VERSION==0x00000605UL);
 ASSERT_C(termination_size,sizeof(PST_TRANSPORT_TERMINATION_INFO)==32UL);
 ASSERT_C(termination_min,PST_TRANSPORT_TERMINATION_INFO_MIN_SIZE==32UL);
-ASSERT_C(spi_version,PST_BACKEND_SPI_VERSION==0x00030000UL);
+ASSERT_C(spi_version,PST_BACKEND_SPI_VERSION==0x00040000UL);
+ASSERT_C(release_info_size,sizeof(PST_RELEASE_INFO)==28UL);
+ASSERT_C(release_info_min,PST_RELEASE_INFO_V1_MIN_SIZE==28UL);
 ASSERT_C(role_client,PST_CONNECTION_ROLE_CLIENT==1UL);
 ASSERT_C(role_server,PST_CONNECTION_ROLE_SERVER==2UL);
 ASSERT_C(cap_graceful_shutdown,PST_CAP_GRACEFUL_SHUTDOWN==0x00040000UL);
@@ -24,7 +26,7 @@ ASSERT_C(connection_config_size,sizeof(PST_CONNECTION_CONFIG)==208);
 ASSERT_C(provider_selection_size,sizeof(PST_PROVIDER_SELECTION)==48);
 ASSERT_C(peer_info_size,sizeof(PST_PEER_INFO_SUMMARY)==128);
 ASSERT_C(spi_options_size,sizeof(PST_BACKEND_CONNECTION_OPTIONS)==24);
-ASSERT_C(spi_vtable_size,sizeof(PST_BACKEND_VTABLE)==160);
+ASSERT_C(spi_vtable_size,sizeof(PST_BACKEND_VTABLE)==168);
 ASSERT_C(spi_descriptor_size,sizeof(PST_BACKEND_DESCRIPTOR)==56);
 #else
 ASSERT_C(connection_config_v20_size,PST_CONNECTION_CONFIG_V2_0_SIZE==124);
@@ -32,7 +34,7 @@ ASSERT_C(connection_config_size,sizeof(PST_CONNECTION_CONFIG)==136);
 ASSERT_C(provider_selection_size,sizeof(PST_PROVIDER_SELECTION)==28);
 ASSERT_C(peer_info_size,sizeof(PST_PEER_INFO_SUMMARY)==120);
 ASSERT_C(spi_options_size,sizeof(PST_BACKEND_CONNECTION_OPTIONS)==20);
-ASSERT_C(spi_vtable_size,sizeof(PST_BACKEND_VTABLE)==84);
+ASSERT_C(spi_vtable_size,sizeof(PST_BACKEND_VTABLE)==88);
 ASSERT_C(spi_descriptor_size,sizeof(PST_BACKEND_DESCRIPTOR)==36);
 #endif
 typedef struct candidate { const char *id; pst_u32 caps; pst_u32 client_caps; pst_u32 server_caps; int handshake_fails; } candidate;
