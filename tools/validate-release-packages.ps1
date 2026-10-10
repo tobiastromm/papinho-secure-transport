@@ -3,7 +3,8 @@ param([ValidateSet("0.5.0", "0.6.0", "0.6.1", "0.6.2", "0.6.3", "0.6.4", "0.6.5"
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 $libraryVersion = if ($Version -eq "0.5.0") { "0.5.0" } else { $Version }
-$apiVersion = if ($Version -eq "0.5.0") { "2.0.0" } elseif ($Version -eq "0.6.5") { "2.2.0" } else { "2.1.0" }
+$apiVersion = if ($Version -eq "0.5.0") { "2.0.0" } elseif ($Version -eq "0.6.5") { "3.0.0" } else { "2.1.0" }
+$spiVersion = if ($Version -eq "0.6.5") { "4.0" } else { "3.0" }
 if (-not $PackageDirectory) { $PackageDirectory = Join-Path $repo ("dist\packages\"+$Version) }
 if (-not $ValidationDirectory) { $ValidationDirectory = Join-Path $repo ("dist\validation\"+$Version) }
 $PackageDirectory = [IO.Path]::GetFullPath($PackageDirectory)
@@ -80,7 +81,8 @@ foreach($package in $packages){
   if((Get-Content -Raw (Join-Path $extract "manifest.ini")) -notmatch ('source_package=papinho-secure-transport-'+[regex]::Escape($Version)+'-src.zip')){throw "missing exact source reference"}
   $manifest=Get-Content -Raw (Join-Path $extract "manifest.ini")
   $versionText=Get-Content -Raw (Join-Path $extract "VERSION")
-  foreach($requiredVersion in @("package_version=$Version","library_version=$libraryVersion","api_version=$apiVersion","spi_version=3.0")){if($versionText -notmatch ('(?m)^'+[regex]::Escape($requiredVersion)+'$')){throw ("VERSION mismatch: "+$requiredVersion)}}
+  foreach($requiredVersion in @("package_version=$Version","library_version=$libraryVersion","api_version=$apiVersion","spi_version=$spiVersion")){if($versionText -notmatch ('(?m)^'+[regex]::Escape($requiredVersion)+'$')){throw ("VERSION mismatch: "+$requiredVersion)}}
+  if($Version -eq "0.6.5"){foreach($requiredDoc in @("docs\public-api-abi.md","docs\provider-spi-4.0.md","docs\lifecycle-ownership.md","docs\adr\ADR-0007-proveniencia-portavel-e-evidencia-nativa-da-terminacao-do-transporte.md","docs\adr\ADR-0008-lifecycle-failure-aware-de-fechamento-nativo.md")){Require-File (Join-Path $extract $requiredDoc) ("missing API3/SPI4 document: "+$requiredDoc)}}
   if($manifest -notmatch ('(?m)^target_id=' + [regex]::Escape($package.Id) + '$')){throw "manifest target_id mismatch"}
   if((Get-Content -Raw (Join-Path $extract "consumer-link.ini")) -notmatch ('(?m)^target_id=' + [regex]::Escape($package.Id) + '$')){throw "consumer-link target_id mismatch"}
   if($Version -in @("0.6.2","0.6.3","0.6.4","0.6.5")){
@@ -141,7 +143,7 @@ if($CompileConsumers){
    Report "RUNTIME" "PASS";Report "RESULT" "PASS";$consumerCount++
   }
   if($package.Id -like '*vc6*'){Report "NSS_CONSUMER_COMPILE_LINK" "PASS"}
-  if($Version -ne "0.5.0") {
+  if($Version -ne "0.5.0" -and $Version -ne "0.6.5") {
    $api21Source=Join-Path $work "release_package_api21_consumer.c";Copy-Item -LiteralPath $api21Template -Destination $api21Source
    $api21Object=Join-Path $work "release_package_api21_consumer.obj";$api21Exe=Join-Path $work "release_package_api21_consumer.exe"
    $api21Command='call "'+$envBat+'" >nul && cl /nologo /W4 '+$runtimeFlag+' /I"'+$include+'" /Fo"'+$api21Object+'" /Fe"'+$api21Exe+'" /Tc"'+$api21Source+'" /link /LIBPATH:"'+$lib+'" '+$link
@@ -166,7 +168,8 @@ if($CompileConsumers){
  $selectionProcess=Start-Process -FilePath $selectionExe -WorkingDirectory $combinedWork -Wait -PassThru
  if($selectionProcess.ExitCode -ne 0){Report "COMBINED_SELECTION" "FAIL";throw "Combined public selection runtime failed"}
  Report "COMBINED_SELECTION" "PASS"
- if($Version -ne "0.5.0"){Report "API21_PACKAGE_ONLY_CONSUMER" "PASS";Report "NO_PRIVATE_HEADER_DEPENDENCY" "PASS"}
+ if($Version -eq "0.6.5"){Report "API3_PACKAGE_ONLY_CONSUMER" "PASS";Report "SPI3_NEGATIVE_COMPATIBILITY" "PASS_SOURCE_UNIT_GATE";Report "NO_PRIVATE_HEADER_DEPENDENCY" "PASS"}
+ elseif($Version -ne "0.5.0"){Report "API21_PACKAGE_ONLY_CONSUMER" "PASS";Report "NO_PRIVATE_HEADER_DEPENDENCY" "PASS"}
 }
 Report "CLEAN_MACHINE_RUNTIME" "NOT_PERFORMED"
 Report "NT4_PACKAGE_RUNTIME_VALIDATION" "NOT_PERFORMED"
