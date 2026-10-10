@@ -31,6 +31,6 @@ int main(void)
  config.provider_selection.exact_provider_id="schannel";result=pst_connection_create(runtime,&config,&connection);CHECK(result==PST_RESULT_OK&&connection,10);test_connection_release(connection);connection=NULL;
  memset(&provider_info,0,sizeof(provider_info));provider_info.struct_size=sizeof(provider_info);provider_info.api_version=PST_API_VERSION;CHECK(pst_runtime_get_provider_info(runtime,0,&provider_info)==PST_RESULT_OK&&provider_info.initialized&&!strcmp(provider_info.provider_id,"schannel")&&(provider_info.server_capabilities&PST_CAP_ROLE_SERVER)&&!(provider_info.server_capabilities&(PST_CAP_TLS_1_3|PST_CAP_ALPN_SERVER|PST_CAP_PEER_NAME_VERIFY)),11);
  pst_trust_release(trust);pst_runtime_release(runtime);pst_backend_registry_reset();
- printf("SCHANNEL_BACKEND=PASS SPI3=PASS ROLE_CLIENT=ADVERTISED ROLE_SERVER=ADVERTISED TLS12_SERVER=ADVERTISED TLS13_SERVER=UNAVAILABLE_NOT_ADVERTISED ALPN_SERVER=NOT_ADVERTISED GRACEFUL_SHUTDOWN=ADVERTISED CLIENT_MASK=0x00067eb5 SERVER_MASK=0x00047679 AGGREGATE_MASK=0x00067efd INIT_CYCLES=100 CLIENT_NO_LOCAL_IDENTITY=PASS\n");
+    printf("SCHANNEL_BACKEND=PASS SPI4=PASS ROLE_CLIENT=ADVERTISED ROLE_SERVER=ADVERTISED TLS12_SERVER=ADVERTISED TLS13_SERVER=UNAVAILABLE_NOT_ADVERTISED ALPN_SERVER=NOT_ADVERTISED GRACEFUL_SHUTDOWN=ADVERTISED CLIENT_MASK=0x00067eb5 SERVER_MASK=0x00047679 AGGREGATE_MASK=0x00067efd INIT_CYCLES=100 CLIENT_NO_LOCAL_IDENTITY=PASS\n");
  printf("test_backend_schannel: PASS\n");return 0;
 }

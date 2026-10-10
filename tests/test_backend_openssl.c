@@ -40,6 +40,6 @@ int main(void)
  config.provider_selection.exact_provider_id="openssl";CHECK(pst_connection_create(runtime_b,&config,&connection)==PST_RESULT_OK&&connection,15);
  memset(&provider_info,0,sizeof(provider_info));provider_info.struct_size=sizeof(provider_info);provider_info.api_version=PST_API_VERSION;CHECK(pst_connection_get_provider_info(connection,&provider_info)==PST_RESULT_OK&&!strcmp(provider_info.provider_id,"openssl")&&(provider_info.capabilities&PST_CAP_TLS_1_3)&&(provider_info.capabilities&PST_CAP_ROLE_SERVER)&&(provider_info.client_capabilities&PST_CAP_SYSTEM_TRUST)&&(provider_info.server_capabilities&PST_CAP_SYSTEM_TRUST),16);
  test_connection_release(connection);pst_trust_release(trust);pst_runtime_release(runtime_a);pst_runtime_release(runtime_b);pst_backend_registry_reset();CHECK(ERR_peek_error()==0UL,17);
- printf("OPENSSL_BACKEND=PASS VERSION=3.5.8 SPI3=PASS ROLE_CLIENT=ADVERTISED ROLE_SERVER=ADVERTISED TLS12=ADVERTISED TLS13=ADVERTISED GRACEFUL_SHUTDOWN=ADVERTISED CLIENT_MASK=0x00067eb7 SERVER_MASK=0x0004777b AGGREGATE_MASK=0x00067fff INIT_CYCLES=100 MULTI_RUNTIME=PASS ERROR_QUEUE=ISOLATED\n");
+    printf("OPENSSL_BACKEND=PASS VERSION=3.5.8 SPI4=PASS ROLE_CLIENT=ADVERTISED ROLE_SERVER=ADVERTISED TLS12=ADVERTISED TLS13=ADVERTISED GRACEFUL_SHUTDOWN=ADVERTISED CLIENT_MASK=0x00067eb7 SERVER_MASK=0x0004777b AGGREGATE_MASK=0x00067fff INIT_CYCLES=100 MULTI_RUNTIME=PASS ERROR_QUEUE=ISOLATED\n");
  printf("test_backend_openssl: PASS\n");return 0;
 }
