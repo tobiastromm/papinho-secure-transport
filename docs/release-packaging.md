@@ -124,6 +124,6 @@ Validate a comparison output without changing the frozen default hashes:
 
 Two clean runs produced byte-identical archives and identical extracted contents. The normalized archives differ from the earlier 0.4.0 candidates, whose creation metadata was not canonical, while relevant staged binary/runtime inputs remain unchanged. Because those earlier candidates already carry the complete Phase 9.F functional evidence, they remain the immutable 0.4.0 release candidates. The canonical builder is authoritative for future package creation; replacing the current ZIPs merely to normalize metadata would invalidate their frozen hashes without changing product behavior.
 
-## 0.6.5 API 2.2 documentation-refrozen candidate
+## 0.6.5 API 3.0 / SPI 4.0 prepackage candidate
 
-The candidate is API 2.2.0, SPI 3.0 and library 0.6.5 (0x00000605UL): source, VC6/NSS /ML, VC6/NSS /MD, Schannel, OpenSSL and Combined ZIPs plus checksum. No unsuffixed VC6 package exists. Published 0.6.4 remains immutable.
+The candidate is API 3.0.0, SPI 4.0 and library 0.6.5 (0x00000605UL). Its future governed set remains source, VC6/NSS /ML, VC6/NSS /MD, Schannel, OpenSSL and Combined ZIPs plus checksum; no package is generated or frozen by the prepackage qualification. No unsuffixed VC6 package exists. Published 0.6.4 remains immutable.

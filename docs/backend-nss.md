@@ -2,7 +2,7 @@
 
 # RetroZilla NSS/NSPR backend
 
-Current 0.6.0 status: RetroZilla NSS implements API 2.1/SPI 3.0 CLIENT and SERVER TLS 1.2/TLS 1.3, CUSTOM_TRUST, local identity, peer-certificate authentication, Peer Info, incremental I/O and reciprocal shutdown. SERVER SYSTEM_TRUST and complete PST SERVER ALPN are not advertised. Independent CLIENT SNI control remains partial. Real Windows NT 4.0 SP6 x86 package validation is an M10 release gate. The phase-by-phase material below is retained as historical engineering evidence; superseded capability statements are not the current mask. See [providers.md](providers.md) and [credentials-trust-peer.md](credentials-trust-peer.md).
+Published 0.6.0 baseline status: RetroZilla NSS implements API 2.1/SPI 3.0 CLIENT and SERVER TLS 1.2/TLS 1.3, CUSTOM_TRUST, local identity, peer-certificate authentication, Peer Info, incremental I/O and reciprocal shutdown. SERVER SYSTEM_TRUST and complete PST SERVER ALPN are not advertised. Independent CLIENT SNI control remains partial. Real Windows NT 4.0 SP6 x86 package validation was an M10 release gate. The phase-by-phase material below is retained as historical engineering evidence; superseded capability statements are not the current mask. See [providers.md](providers.md) and [credentials-trust-peer.md](credentials-trust-peer.md).
 
 Status: Phase 3 backend implementation. The backend is private and opt-in; it is not part of the default core build and exposes no NSS/NSPR type through the public header.
 
@@ -159,11 +159,11 @@ The integration executable was executed with an ephemeral private CA/server fixt
 
 ALPN, client credentials/mTLS, public trust loading, peer snapshots, public runtime selection, and consumer-facing transport setup remain deferred to Phases 4 and 5. No application protocol identifier is compiled into this backend.
 
-## Current API 2.2 transport-termination contract
+## Current API 3.0 / SPI 4.0 Model E contract
 
-The current candidate is library 0.6.5 (0x00000605UL), additive public API 2.2.0 and unchanged provider SPI 3.0. API 2.1 layouts and symbols remain compatible; no SPI vtable hook or layout was added.
+The current candidate is library 0.6.5 (0x00000605UL), public API 3.0.0 and provider SPI 4.0. API 3 removes the legacy void connection release and requires `pst_connection_try_release` with the 28-byte `PST_RELEASE_INFO` Model E disposition contract. SPI 4 requires failure-aware `connection_try_close` before infallible final destruction.
 
-API 2.2 adds pst_transport_termination_info_init(PST_TRANSPORT_TERMINATION_INFO *) and pst_connection_copy_transport_termination(const pst_connection *, PST_TRANSPORT_TERMINATION_INFO *). The structure has eight pst_u32 fields in order: struct_size, api_version, valid, termination, operation, native_domain, native_code, native_code_valid. Minimum and actual size are 32 bytes, alignment 4, offsets 0,4,8,12,16,20,24,28. A prefix below 32 or incompatible API major is rejected; a larger same-major record preserves its unknown tail.
+The preceding API 2.2 candidate added `pst_transport_termination_info_init(PST_TRANSPORT_TERMINATION_INFO *)` and `pst_connection_copy_transport_termination(const pst_connection *, PST_TRANSPORT_TERMINATION_INFO *)`; those immutable transport-termination facts remain available in API 3. `PST_TRANSPORT_TERMINATION_INFO` remains 32 bytes, while the independent Model E `PST_RELEASE_INFO` V1 contract is exactly 28 bytes.
 
 valid=0 means no event was observed. valid=1 with UNKNOWN means an event was observed but not classified portably. native_code_valid=0 means unavailable; otherwise native_domain names the provider namespace and native_code is an opaque 32-bit pattern. TLS result, portable FIN/RST/SOCKET_ERROR/UNKNOWN, and optional native evidence are independent. Native evidence is diagnostic, not causal proof or authority for trust, PST_RESULT_TRUNCATED, retry, fallback, framing, shutdown, ownership or selection.
 

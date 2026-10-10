@@ -312,4 +312,4 @@ CRT follows the same rule: it may remain matrix metadata when it does not discri
 
 ## Current 0.6.5 candidate
 
-Current versions are library 0.6.5, API 2.2.0 and SPI 3.0. VC6/NSS /ML and /MD remain distinct; Browser uses /MD and Accelerator the governed x64 OpenSSL target. Historical matrices above remain historical.
+Current versions are library 0.6.5, API 3.0.0 and SPI 4.0. VC6/NSS /ML and /MD remain distinct; Browser uses /MD and Accelerator the governed x64 OpenSSL target. Model E makes native close failure observable through a 28-byte `PST_RELEASE_INFO`, with no public retry. Historical matrices above remain historical.

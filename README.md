@@ -8,7 +8,7 @@ Instead of making an application depend directly on the APIs, types, lifecycle, 
 
 TLS is the secure-transport protocol implemented by PST today. Current providers include **RetroZilla NSS**, **Windows Schannel**, and **OpenSSL**.
 
-The 0.6.5 candidate uses additive public API **2.2.0**, unchanged provider SPI **3.0**, and library **0.6.5**. It preserves the CLIENT/SERVER, scheduler and idle remote-close contracts while adding immutable transport-termination provenance.
+The 0.6.5 candidate uses public API **3.0.0**, provider SPI **4.0**, and library **0.6.5**. It preserves the CLIENT/SERVER, scheduler, idle remote-close and immutable transport-termination contracts while adding failure-aware Model E release dispositions.
 
 PST is not limited to Internet software. It can sit underneath browsers, e-mail clients, business client/server applications, LAN services, messaging systems, and custom protocols.
 
@@ -96,11 +96,11 @@ Do not assume that a capability available in one role or provider is automatical
 | 🇬🇧 English | [Full project introduction](docs/en/README.md) | [Build, integration, and examples](docs/en/getting-started.md) |
 | 🇧🇷 Português (Brasil) | [Apresentação completa do projeto](docs/pt-BR/README.md) | [Build, integração e exemplos](docs/pt-BR/getting-started.md) |
 
-The public examples include [basic CLIENT](examples/basic_client.c) and [basic SERVER](examples/basic_server.c). The API 2.0 CLIENT/SERVER contract remains documented in [API 2.0](docs/api-2.0.md); the additive API 2.1 wait-set/SNI release contract is recorded in [Public API and ABI](docs/public-api-abi.md) and [Readiness / Progress](docs/readiness-progress.md). Provider authors use [SPI 3.0](docs/provider-spi-3.0.md).
+The public examples include [basic CLIENT](examples/basic_client.c) and [basic SERVER](examples/basic_server.c). Historical API contracts remain documented in [API 2.0](docs/api-2.0.md); the current lifecycle contract is recorded in [Public API and ABI](docs/public-api-abi.md). Provider authors use [SPI 4.0](docs/provider-spi-4.0.md).
 
 ## Current highlights
 
-- Current **0.6.5 / API 2.2.0 / SPI 3.0** patch candidate
+- Current **0.6.5 / API 3.0.0 / SPI 4.0** candidate
 - Published **0.5.0 / API 2.0.0 / SPI 3.0** historical baseline
 - CLIENT and SERVER roles with per-connection provider selection
 - TLS 1.2 validated with all three providers
@@ -117,7 +117,7 @@ The public examples include [basic CLIENT](examples/basic_client.c) and [basic S
 - Reciprocal TLS shutdown and explicit truncation detection
 - 250-cycle mixed M9 scheduler/security/lifecycle stress with no crashes or hangs
 
-The published 0.6.4 baseline remains immutable. The 0.6.5 candidate preserves the explicit VC6 /ML and /MD identities and requires targeted external recertification for API 2.2 transport provenance. Platforms outside the documented validation matrix remain unvalidated.
+The published 0.6.4 baseline remains immutable. The 0.6.5 candidate preserves the explicit VC6 /ML and /MD identities and requires external recertification for the API 3/SPI 4 failure-aware lifecycle. Platforms outside the documented validation matrix remain unvalidated.
 
 ## Distribution
 

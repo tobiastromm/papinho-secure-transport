@@ -4,7 +4,7 @@
 
 This target-separated SDK contains the public PST headers, one static provider build, its declared link/runtime dependencies, public examples, and release documentation.
 
-This is the PapinhoSecureTransport 0.6.5 SDK with public API 2.2 and provider SPI 3.0. CLIENT and SERVER remain selected per connection. API 2.1 added the portable wait-set; API 2.2 additively adds immutable transport-termination provenance without changing SPI 3.0. PapinhoSecureTransport is licensed under MPL-2.0; see LICENSE and THIRD_PARTY_NOTICES.md. The exact corresponding source is papinho-secure-transport-0.6.5-src.zip. The NSS source package also contains the exact modified runtime snapshot and fail-closed patch.
+This is the PapinhoSecureTransport 0.6.5 candidate SDK with public API 3.0 and provider SPI 4.0. CLIENT and SERVER remain selected per connection. API 3 replaces legacy void release with failure-aware `pst_connection_try_release` and the fixed 28-byte `PST_RELEASE_INFO`; unresolved native close remains terminal and retained. PapinhoSecureTransport is licensed under MPL-2.0; see LICENSE and THIRD_PARTY_NOTICES.md. The future exact corresponding source name remains papinho-secure-transport-0.6.5-src.zip. The NSS source package must also contain the governed runtime snapshot and fail-closed patch.
 
 ## Use
 

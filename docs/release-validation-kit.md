@@ -2,7 +2,7 @@
 
 # Release validation kit
 
-Status: M10 validates the current 0.6.0 / API 2.1.0 / SPI 3.0 release candidate. The 0.5.0 package-validation and clean-machine evidence remains recorded in `docs/codex/release-evidence/0.5.0/ss8-package-validation.md`; the Phase 9.F material retained below records the historical 0.4.0 validation.
+Status: M10 records the historical 0.6.0 / API 2.1.0 / SPI 3.0 release validation. The 0.5.0 package-validation and clean-machine evidence remains recorded in `docs/codex/release-evidence/0.5.0/ss8-package-validation.md`; the Phase 9.F material retained below records the historical 0.4.0 validation.
 
 ## Current 0.6.0 source of truth
 

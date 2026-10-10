@@ -2,7 +2,7 @@
 
 # Public API and ABI baseline
 
-This document keeps the historical ABI work visible while recording the current release contract. The published 0.6.0 through 0.6.3 baselines use API 2.1.0 / SPI 3.0. The 0.6.5 candidate uses additive API **2.2.0** and unchanged SPI **3.0**, while preserving API 2.1 layouts and the distinct VC6 CRT artifacts.
+This document keeps the historical ABI work visible while recording the current release contract. The published 0.6.0 through 0.6.4 baselines remain immutable. The 0.6.5 candidate intentionally advances to API **3.0.0** and SPI **4.0** for the failure-aware native-close lifecycle accepted in ADR-0008.
 
 API 2.1 is an additive evolution of API 2.0. It preserves the API 2.0 prefixes and adds the scheduler/readiness surface frozen by ADR-0005. M0–M9 found no need for an SPI change.
 
@@ -148,11 +148,26 @@ The earlier published baselines remain historical facts rather than being rewrit
 
 Detailed historical release evidence remains under `docs/codex/release-evidence/` and the API 2.0 migration documents. The frozen 0.6.0 package/ABI evidence does not retroactively change the published 0.4.0 or 0.5.0 contracts.
 
-## Current API 2.2 transport-termination contract
+## Current API 3.0 / SPI 4.0 Model E contract
 
-The current candidate is library 0.6.5 (0x00000605UL), additive public API 2.2.0 and unchanged provider SPI 3.0. API 2.1 layouts and symbols remain compatible; no SPI vtable hook or layout was added.
+The current candidate is library 0.6.5 (0x00000605UL), public API 3.0.0 and provider SPI 4.0. API 3 removes the legacy void connection release and requires `pst_connection_try_release` with the 28-byte `PST_RELEASE_INFO` Model E disposition contract. SPI 4 requires failure-aware `connection_try_close` before infallible final destruction.
 
-API 2.2 adds pst_transport_termination_info_init(PST_TRANSPORT_TERMINATION_INFO *) and pst_connection_copy_transport_termination(const pst_connection *, PST_TRANSPORT_TERMINATION_INFO *). The structure has eight pst_u32 fields in order: struct_size, api_version, valid, termination, operation, native_domain, native_code, native_code_valid. Minimum and actual size are 32 bytes, alignment 4, offsets 0,4,8,12,16,20,24,28. A prefix below 32 or incompatible API major is rejected; a larger same-major record preserves its unknown tail.
+The preceding API 2.2 candidate added `pst_transport_termination_info_init(PST_TRANSPORT_TERMINATION_INFO *)` and `pst_connection_copy_transport_termination(const pst_connection *, PST_TRANSPORT_TERMINATION_INFO *)`; those immutable transport-termination facts remain available in API 3. `PST_TRANSPORT_TERMINATION_INFO` remains 32 bytes, while the independent Model E `PST_RELEASE_INFO` V1 contract is exactly 28 bytes.
+
+## Current API 3.0 / SPI 4 failure-aware release contract
+
+API 3 removes the legacy void `pst_connection_release` entry point. Consumers
+initialize a 28-byte `PST_RELEASE_INFO` and call
+`pst_connection_try_release(connection, &info)`. `PST_RESULT_OK` is returned
+only with `PST_RELEASE_DISPOSITION_DESTROYED`. A wait-set precondition reports
+`INVALID_STATE / PRECONDITION_RETAINED` without attempting native close.
+Native-close uncertainty reports
+`RESOURCE_FAILURE / CLOSE_UNRESOLVED_RETAINED`, preserves the native error,
+and leaves a terminal query-only object. There is no public retry.
+
+SPI 4 adds mandatory `connection_try_close`; provider state destruction is
+permitted only after the provider confirms no native resource or a successful
+close. See [SPI 4.0](provider-spi-4.0.md).
 
 valid=0 means no event was observed. valid=1 with UNKNOWN means an event was observed but not classified portably. native_code_valid=0 means unavailable; otherwise native_domain names the provider namespace and native_code is an opaque 32-bit pattern. TLS result, portable FIN/RST/SOCKET_ERROR/UNKNOWN, and optional native evidence are independent. Native evidence is diagnostic, not causal proof or authority for trust, PST_RESULT_TRUNCATED, retry, fallback, framing, shutdown, ownership or selection.
 

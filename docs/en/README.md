@@ -296,7 +296,7 @@ TLS can, among other things:
 
 PST currently works with **TLS 1.2 and TLS 1.3**, depending on the provider, role, and target capabilities.
 
-The current 0.6.5 candidate uses **API 2.2.0 / SPI 3.0**. Published 0.5.0, 0.6.0, and 0.6.1 baselines remain historical.
+The current 0.6.5 candidate uses **API 3.0.0 / SPI 4.0** with failure-aware Model E release. Published 0.5.0, 0.6.0, and 0.6.1 baselines remain historical.
 
 ### Currently validated state
 
@@ -710,7 +710,7 @@ Depending on configuration, Accelerator may also create external connections on 
 
 # Current project state
 
-The current 0.6.5 candidate uses **API 2.2.0 / SPI 3.0**. It preserves the M0-M10 scheduler and provider baseline while introducing explicit VC6/RetroZilla NSS `/ML` and `/MD` package identities. Both variants passed real NT4 and clean-machine TLS validation; real PapinhoBrowser `/MD` integration with the `/MD` SDK passed TLS 1.3.
+The current 0.6.5 candidate uses **API 3.0.0 / SPI 4.0**. It preserves the M0-M10 scheduler and provider baseline while introducing failure-aware Model E release semantics. Historical `/ML` and `/MD` validation remains evidence for earlier bytes; the API 3/SPI 4 candidate still requires its governed external recertification.
 
 TLS 1.2 was validated with all three providers. TLS 1.3 was validated with RetroZilla NSS and OpenSSL. SERVER was validated with all three providers within their factual role-scoped capability masks.
 
@@ -751,11 +751,11 @@ Sponsorship does not change access to the software or the rights granted by its 
 
 PapinhoSecureTransport is licensed under the [Mozilla Public License 2.0](../../LICENSE). Redistributed dependencies retain their own terms; see [Third-party notices](../../THIRD_PARTY_NOTICES.md).
 
-## Current API 2.2 transport-termination contract
+## Current API 3.0 / SPI 4.0 Model E contract
 
-The current candidate is library 0.6.5 (0x00000605UL), additive public API 2.2.0 and unchanged provider SPI 3.0. API 2.1 layouts and symbols remain compatible; no SPI vtable hook or layout was added.
+The current candidate is library 0.6.5 (0x00000605UL), public API 3.0.0 and provider SPI 4.0. API 3 removes the legacy void connection release and requires `pst_connection_try_release` with the 28-byte `PST_RELEASE_INFO` Model E disposition contract. SPI 4 requires failure-aware `connection_try_close` before infallible final destruction.
 
-API 2.2 adds pst_transport_termination_info_init(PST_TRANSPORT_TERMINATION_INFO *) and pst_connection_copy_transport_termination(const pst_connection *, PST_TRANSPORT_TERMINATION_INFO *). The structure has eight pst_u32 fields in order: struct_size, api_version, valid, termination, operation, native_domain, native_code, native_code_valid. Minimum and actual size are 32 bytes, alignment 4, offsets 0,4,8,12,16,20,24,28. A prefix below 32 or incompatible API major is rejected; a larger same-major record preserves its unknown tail.
+The preceding API 2.2 candidate added `pst_transport_termination_info_init(PST_TRANSPORT_TERMINATION_INFO *)` and `pst_connection_copy_transport_termination(const pst_connection *, PST_TRANSPORT_TERMINATION_INFO *)`; those immutable transport-termination facts remain available in API 3. `PST_TRANSPORT_TERMINATION_INFO` remains 32 bytes, while the independent Model E `PST_RELEASE_INFO` V1 contract is exactly 28 bytes.
 
 valid=0 means no event was observed. valid=1 with UNKNOWN means an event was observed but not classified portably. native_code_valid=0 means unavailable; otherwise native_domain names the provider namespace and native_code is an opaque 32-bit pattern. TLS result, portable FIN/RST/SOCKET_ERROR/UNKNOWN, and optional native evidence are independent. Native evidence is diagnostic, not causal proof or authority for trust, PST_RESULT_TRUNCATED, retry, fallback, framing, shutdown, ownership or selection.
 

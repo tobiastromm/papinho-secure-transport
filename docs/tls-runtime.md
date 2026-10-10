@@ -30,7 +30,9 @@ pst_win32_socket_transport_create(native_value, &transport);
 pst_connection_attach(connection, transport, PST_OWNERSHIP_TRANSFERRED, &accepted);
 /* Repeated bounded handshake + get_interest/wait calls. */
 /* Secure read/write, peer snapshot, incremental shutdown. */
-pst_connection_release(connection);
+PST_RELEASE_INFO release_info;
+pst_release_info_init(&release_info, sizeof(release_info));
+pst_connection_try_release(connection, &release_info);
 pst_runtime_release(runtime);
 ```
 
