@@ -43,7 +43,7 @@ foreach ($id in $targets) {
     Copy-Required (Join-Path $repo "LICENSE") (Join-Path $stage "LICENSE")
     foreach ($file in @("papinho_secure_transport.h", "papinho_secure_transport_win32.h")) { Copy-Required (Join-Path $repo "include\$file") (Join-Path $stage "include\$file") }
     $distributedDocs = @("target-matrix.md", "release-packaging.md", "release-licensing.md", "release-notes-$Version.md", "consumer-linking.md", "security-and-limitations.md", "security-lifecycle-negative-matrix.md", "api-2.0.md", "provider-spi-3.0.md", "api-1.3-to-2.0-migration.md", "providers.md", "client-server-lifecycle.md", "en\README.md", "en\getting-started.md", "pt-BR\README.md", "pt-BR\getting-started.md")
-    if ($Version -eq "0.6.5") { $distributedDocs += @("public-api-abi.md", "provider-spi-4.0.md", "lifecycle-ownership.md", "native-close-failure-aware-design.md", "adr\ADR-0007-proveniencia-portavel-e-evidencia-nativa-da-terminacao-do-transporte.md", "adr\ADR-0008-lifecycle-failure-aware-de-fechamento-nativo.md") }
+    if ($Version -eq "0.6.5") { $distributedDocs += @("public-api-abi.md", "provider-spi-4.0.md", "lifecycle-ownership.md", "native-close-failure-aware-design.md", "adr\ADR-0007-proveniencia-portavel-de-terminacao-do-transporte.md", "adr\ADR-0008-lifecycle-failure-aware-de-fechamento-nativo.md") }
     foreach ($file in $distributedDocs) { Copy-Required (Join-Path $repo "docs\$file") (Join-Path $stage "docs\$file") }
     Get-ChildItem (Join-Path $repo "examples") -File | ForEach-Object { Copy-Required $_.FullName (Join-Path $stage "examples\$($_.Name)") }
 
