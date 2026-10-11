@@ -19,5 +19,13 @@ domain. RetroZilla NSS reports `PR_Close` failures in the NSPR domain and
 retains the factual descriptor resulting from the governed NSPR close path.
 Attach failure after ownership acceptance follows the same close authority.
 
+For the layered NSS/NSPR path, a failed `PR_Close` does not prove that the
+lower native socket remains independently usable: the SSL layer may already
+have transformed or consumed descriptor state. PST therefore retains the
+provider-owned layered descriptor identity and exposes no public retry or
+consumer native-close escape hatch. Synthetic boundary injection proves the
+Model E state machine and ownership containment; it is not evidence that a
+real Winsock or NSPR close failure occurred on a validated external system.
+
 See [ADR-0008](adr/ADR-0008-lifecycle-failure-aware-de-fechamento-nativo.md)
 and [Public API and ABI](public-api-abi.md).

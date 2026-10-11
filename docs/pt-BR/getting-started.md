@@ -499,9 +499,9 @@ O target NSS utiliza o runtime NSS/NSPR preparado pelo projeto. Você não preci
 
 ---
 
-# 5. A API pública: o modelo mental da versão 2.1
+# 5. A API pública: o modelo mental da versão 3
 
-A API 2.1 preserva os conceitos da API 2.0 e acrescenta readiness multiplexada sem entregar o event loop ao PST.
+A API 3 preserva os conceitos de conexão, scheduler e readiness multiplexada da API 2.1 sem entregar o event loop ao PST. Ela substitui deliberadamente o release legado void por `pst_connection_try_release` e pelo contrato Model E de 28 bytes de `PST_RELEASE_INFO`.
 
 ```text
 providers registrados
@@ -1001,7 +1001,7 @@ Use as operações públicas de interesse/wait do PST.
 
 # 15. Wait-set, fontes externas, wake e backpressure
 
-A API 2.1 oferece um **wait-set portátil** para observar várias conexões usando tokens definidos pelo consumidor. No Win32, `pst_external_source` permite incluir uma fonte nativa emprestada, como um listener, sem transferir seu ownership.
+A API 3 preserva o **wait-set portátil** introduzido pela API 2.1 para observar várias conexões usando tokens definidos pelo consumidor. No Win32, `pst_external_source` permite incluir uma fonte nativa emprestada, como um listener, sem transferir seu ownership.
 
 `timeout=0` faz poll imediato; timeout positivo é uma espera máxima do scheduler. `wake` pode ser chamado por outra thread e é diferente de timeout e cancelamento. A aplicação continua dona de seus deadlines.
 
@@ -1261,7 +1261,9 @@ Depois deste guia, os documentos mais importantes são:
 - [Apresentação completa em Português](README.md)
 - [Target Matrix](../target-matrix.md)
 - [API 2.0](../api-2.0.md)
-- [SPI 3.0](../provider-spi-3.0.md)
+- [Contrato atual de API 3.0 e ABI](../public-api-abi.md)
+- [SPI 4.0 atual](../provider-spi-4.0.md)
+- [SPI 3.0 histórica](../provider-spi-3.0.md)
 - [Migração API 1.3/SPI 2.4 → API 2.0/SPI 3.0](../api-1.3-to-2.0-migration.md)
 - [Segurança e limitações](../security-and-limitations.md)
 - [Packaging de release](../release-packaging.md)

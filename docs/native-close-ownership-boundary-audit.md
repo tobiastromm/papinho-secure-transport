@@ -8,8 +8,8 @@ de produção, API ou SPI.
 ## Baseline e evidência
 
 Auditoria sobre `fix/idle-connection-waitset-close`, commit
-`6cbfeeb2a5d3473d296e9119bd5775ae0333a5e8`, candidato 0.6.5 não publicado,
-API 2.2.0 e SPI 3.0. A release 0.6.4 permanece imutável e o WIP preexistente
+`6cbfeeb2a5d3473d296e9119bd5775ae0333a5e8`, baseline histórica anterior à decisão Model E do candidato 0.6.5,
+então API 2.2.0 e SPI 3.0. O candidato atual implementado é API 3.0.0/SPI 4.0. A release 0.6.4 permanece imutável e o WIP preexistente
 foi preservado.
 
 Fontes consultadas:

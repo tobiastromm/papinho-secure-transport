@@ -192,7 +192,7 @@ Uma aplicação também pode ter conexões CLIENT e SERVER no mesmo runtime e es
 
 # Muitas conexões sem entregar o event loop ao PST
 
-A API 2.1 acrescenta uma peça importante sem mudar a filosofia do projeto: um **wait-set portátil** pode observar várias conexões PST e, no Win32, fontes externas emprestadas como o socket de um listener que continua pertencendo à aplicação.
+A API 3 preserva uma peça importante introduzida pela API 2.1 sem mudar a filosofia do projeto: um **wait-set portátil** pode observar várias conexões PST e, no Win32, fontes externas emprestadas como o socket de um listener que continua pertencendo à aplicação.
 
 ```text
 conexão PST A ─┐
@@ -527,7 +527,7 @@ O bootstrap é explícito: o PST não procura aleatoriamente bibliotecas instala
 
 # Expected Peer Name, SNI e upgrade para TLS
 
-Na API 2.1, **Expected Peer Name** autentica o nome do certificado; **SNI** é informação de roteamento TLS. O CLIENT possui modos `COMPAT`, `DISABLED` e `EXPLICIT`. OpenSSL e Schannel comprovaram controle independente; RetroZilla NSS permanece factualmente parcial por causa do comportamento de `SSL_SetURL`, e combinações não suportadas são rejeitadas antes do binding.
+Na API 3, **Expected Peer Name** autentica o nome do certificado; **SNI** é informação de roteamento TLS. Os modos `COMPAT`, `DISABLED` e `EXPLICIT` introduzidos na API 2.1 são preservados. OpenSSL e Schannel comprovaram controle independente; RetroZilla NSS permanece factualmente parcial por causa do comportamento de `SSL_SetURL`, e combinações não suportadas são rejeitadas antes do binding.
 
 A trilha 0.6.0 também comprovou TLS no **mesmo transporte conectado depois de uma fase plaintext**, cobrindo fluxos genéricos STARTTLS-style e CONNECT-style nos três providers. SMTP, IMAP e HTTP continuam fora do PST. A aplicação deve parar numa boundary limpa: bytes TLS já lidos antecipadamente não são recuperados nesta versão. Depois que PST aceita ownership, falha TLS não volta para plaintext.
 
@@ -731,7 +731,7 @@ A versão 0.6.0 possui um package de código-fonte e SDKs estáticos separados p
 
 O Combined Schannel/OpenSSL é um package oficial opcional para seleção de providers; ele não representa uma quarta implementação TLS e não é uma recomendação padrão.
 
-Consulte o [guia prático](getting-started.md), a [matriz de targets](../target-matrix.md), a [API 2.0](../api-2.0.md), a [SPI 3.0](../provider-spi-3.0.md), o [guia de migração](../api-1.3-to-2.0-migration.md) e a [documentação de packaging](../release-packaging.md).
+Consulte o [guia prático](getting-started.md), a [matriz de targets](../target-matrix.md), o [contrato atual da API 3.0](../public-api-abi.md), a [SPI 4.0 atual](../provider-spi-4.0.md), a [API 2.0 histórica](../api-2.0.md), a [SPI 3.0 histórica](../provider-spi-3.0.md), o [guia de migração](../api-1.3-to-2.0-migration.md) e a [documentação de packaging](../release-packaging.md).
 
 # Segurança e limitações
 

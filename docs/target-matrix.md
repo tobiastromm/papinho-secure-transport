@@ -4,7 +4,7 @@ This is the canonical PapinhoSecureTransport target matrix. The ecosystem-wide n
 
 Target identity, build inputs, operating-system support policy, and observed validation are separate facts. A toolchain name is not an operating-system support claim.
 
-## 0.6.3 VC6 CRT-qualified targets
+## Historical 0.6.3 VC6 CRT-qualified targets
 
 From one source commit, the VC6/NSS `-ml` and `-md` targets use explicit
 `/ML` and `/MD` builds and isolated SDK packages. Package metadata identifies

@@ -2,15 +2,15 @@
 
 # Interoperability Matrix
 
-## Current development status — API 2.1 / library 0.6 candidate
+## Current candidate and historical execution baseline
 
-This document preserves the historical interoperability work while making the current cross-provider state explicit. `TESTED` means an execution is recorded, `SUPPORTED` is an implemented contract, `NOT TESTED` has no evidence, `UNSUPPORTED` is explicitly unavailable, and `NOT APPLICABLE` means the current target matrix cannot form that composition.
+The unpublished 0.6.5 candidate is API 3.0.0/SPI 4.0. It retains the established TLS/provider behavior but requires its own governed external recertification for the failure-aware Model E lifecycle. This document preserves the historical interoperability work while making that evidence boundary explicit. `TESTED` means an execution is recorded for the identified bytes, `SUPPORTED` is an implemented contract, `NOT TESTED` has no evidence, `UNSUPPORTED` is explicitly unavailable, and `NOT APPLICABLE` means the current target matrix cannot form that composition.
 
 M9 completed the 0.6.0 release candidate's cross-provider scheduler/security/stress matrix. Final physical NT4, clean-machine/package and publication validation are M10 work.
 
 ### M9 CLIENT × SERVER network matrix
 
-All positive rows use the provider-neutral API 2.1/SPI 3.0 contract and preserve pre-binding capability filtering, encrypted I/O, provider-authoritative readiness, terminal no-resurrection and reciprocal shutdown.
+These historical M9 positive rows used the provider-neutral API 2.1/SPI 3.0 contract. Their TLS evidence is not relabeled as API 3 external certification. The 0.6.5 candidate preserves pre-binding capability filtering, encrypted I/O, provider-authoritative readiness, terminal no-resurrection and reciprocal shutdown while changing release ownership through Model E.
 
 | CLIENT | SERVER | Target/process relationship | TLS 1.2 | TLS 1.3 |
 |---|---|---|---|---|

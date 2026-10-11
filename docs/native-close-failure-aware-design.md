@@ -3,11 +3,11 @@
 Status: Model E design aligned with proposed ADR-0008. No production contract
 is changed by this document.
 
-## Audited baseline
+## Historical audited baseline before the accepted Model E change
 
 - Branch `fix/idle-connection-waitset-close`.
 - HEAD `6cbfeeb2a5d3473d296e9119bd5775ae0333a5e8`.
-- API 2.2.0, SPI 3.0, candidate library 0.6.5.
+- At the time of this design audit: API 2.2.0, SPI 3.0, candidate library 0.6.5. The accepted and implemented current candidate is API 3.0.0/SPI 4.0; see ADR-0008 and `provider-spi-4.0.md`.
 - Published v0.6.4 remains immutable.
 
 Current `pst_connection_try_release` rejects wait-set membership, calls the

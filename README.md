@@ -32,7 +32,9 @@ Provider selection is also per connection:
 
 Role-scoped capability masks eliminate providers that cannot satisfy the requested connection before binding. After binding, the selected provider is pinned: handshake, authentication, trust, ALPN, I/O, transport, or shutdown failure does **not** cause fallback to another provider.
 
-## API 2.1: many connections without exposing provider internals
+## API 3: many connections without exposing provider internals
+
+API 3 retains the portable scheduler and readiness surface introduced by API 2.1. Its deliberate breaking change is lifecycle release: consumers use `pst_connection_try_release` with the fixed 28-byte `PST_RELEASE_INFO` and retain the reference unless the disposition is `PST_RELEASE_DISPOSITION_DESTROYED`.
 
 The 0.6.0 release track extends the common boundary to multiplexed readiness.
 
@@ -50,7 +52,7 @@ PST deliberately keeps several security concepts separate:
 - **Peer Authentication** controls whether a peer certificate is disabled, optional, or required.
 - **Peer Trust** is either **CUSTOM** or **SYSTEM**; PST does not silently union the two or fall back from one to the other.
 - **Expected Peer Name** is independent CLIENT-side certificate-name validation and is not applicable to SERVER.
-- **SNI** is routing information sent by a CLIENT and, in API 2.1, has explicit `COMPAT`, `DISABLED`, and `EXPLICIT` modes.
+- **SNI** is routing information sent by a CLIENT and has the `COMPAT`, `DISABLED`, and `EXPLICIT` modes introduced in API 2.1 and retained by API 3.
 - **Peer Info** reports copied TLS/certificate facts after negotiation.
 
 Expected Peer Name and SNI are therefore not the same setting. OpenSSL and Schannel have validated independent SNI control. The current RetroZilla NSS snapshot remains factually partial because its CLIENT hostname/SNI behavior is coupled through `SSL_SetURL`; PST filters unsupported combinations before binding instead of patching NSS or pretending the capability exists.

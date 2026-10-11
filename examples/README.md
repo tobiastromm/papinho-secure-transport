@@ -14,7 +14,7 @@ These sources include only public PST headers. They are intentionally small buil
 
 Build verification compiles them with `/W4`. The basic helpers are C89-compatible; modern SYSTEM_TRUST examples require a capable Schannel/OpenSSL target. Examples are educational and remain separate from the completed cross-machine release-validation kit.
 
-## Historical API 2.2 transport-termination contract
+## Current API 3 release and historical API 2.2 transport-termination contract
 
 The current candidate is library 0.6.5 (0x00000605UL), public API 3.0.0 and provider SPI 4.0. API 3 removes the legacy void connection release and requires `pst_connection_try_release` with the 28-byte `PST_RELEASE_INFO` Model E disposition contract. SPI 4 requires failure-aware `connection_try_close` before infallible final destruction.
 

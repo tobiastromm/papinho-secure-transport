@@ -4,9 +4,9 @@
 
 This document keeps the historical ABI work visible while recording the current release contract. The published 0.6.0 through 0.6.4 baselines remain immutable. The 0.6.5 candidate intentionally advances to API **3.0.0** and SPI **4.0** for the failure-aware native-close lifecycle accepted in ADR-0008.
 
-API 2.1 is an additive evolution of API 2.0. It preserves the API 2.0 prefixes and adds the scheduler/readiness surface frozen by ADR-0005. M0–M9 found no need for an SPI change.
+The sections below first preserve the historical API 2.1 foundation. API 2.1 was an additive evolution of API 2.0: it preserved the API 2.0 prefixes and added the scheduler/readiness surface frozen by ADR-0005. The normative current candidate contract is the API 3.0/SPI 4.0 section below; API 3 deliberately removes the legacy void connection release.
 
-## What API 2.1 adds
+## Historical API 2.1 additions retained by API 3
 
 The additive surface includes opaque `pst_wait_set` and `pst_external_source` handles, consumer-selected `pst_wait_token`, bounded `PST_WAIT_EVENT` / `PST_WAIT_SET_RESULT` records, wait-set membership operations, finite wait, cross-thread wake, external-source membership, and result-returning `pst_connection_try_release` / `pst_external_source_try_release` lifecycle helpers.
 
@@ -14,7 +14,7 @@ The portable API does not expose `SOCKET`, `HANDLE`, `PRFileDesc`, OpenSSL objec
 
 M1 implements portable wait-set membership, stable registration order, bounded enumeration, timeout-zero provider-authoritative polling and persistent terminal visibility. M2 adds borrowed external Win32 socket sources without ownership transfer. M3 adds finite blocking waits and coalescing cross-thread wake without periodic polling or sequential `N * timeout` waiting. M4 confirms that the existing `PST_IO_RESULT.bytes_transferred` contract already expresses bounded partial read/write and backpressure correctly.
 
-## API 2.1 result additions
+## Historical API 2.1 result additions retained by API 3
 
 API 2.1 retains the normalized results 0–15 and adds scheduler/lifecycle results:
 

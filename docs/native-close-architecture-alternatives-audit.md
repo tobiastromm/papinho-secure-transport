@@ -10,7 +10,7 @@ não altera API, SPI, produção, packages ou releases.
 - Branch: `fix/idle-connection-waitset-close`.
 - HEAD: `6cbfeeb2a5d3473d296e9119bd5775ae0333a5e8`.
 - Tree: `37ab882ba9ac0a9e956c7a682773d81a714d0838`.
-- Candidato não publicado: 0.6.5, API 2.2.0, SPI 3.0.
+- Baseline histórica no momento desta auditoria: candidato não publicado 0.6.5, API 2.2.0, SPI 3.0. O candidato atual implementado é API 3.0.0/SPI 4.0 conforme a ADR-0008 aceita.
 - Release publicada imutável: tag `v0.6.4`, commit
   `9e32c84dad6d8a84d6f1119ddde88ffe57583c89`.
 

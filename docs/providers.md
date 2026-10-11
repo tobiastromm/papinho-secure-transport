@@ -2,7 +2,7 @@
 
 # Providers and selection
 
-SPI 3.0 makes CLIENT and SERVER independent factual capabilities and selects an eligible provider per connection. All three current providers implement both roles, with deliberately asymmetric role masks.
+SPI 4.0 is the current 0.6.5 provider contract. It retains the role-scoped capability and selection model introduced by SPI 3.0 and adds mandatory failure-aware `connection_try_close`. All three current providers implement both roles, with deliberately asymmetric role masks.
 
 A provider is the engine adapter that implements PST's common secure-transport contract.
 
@@ -19,7 +19,7 @@ A provider is the engine adapter that implements PST's common secure-transport c
 | NONBLOCKING / BACKEND_WAIT | yes | yes | yes |
 | reciprocal graceful shutdown | yes | yes | yes |
 
-Exact API 2.1/SPI 3.0 role masks are:
+The exact role masks, introduced under API 2.1/SPI 3.0 and retained by API 3.0/SPI 4.0, are:
 
 | Provider | Aggregate | CLIENT | SERVER |
 |---|---:|---:|---:|
