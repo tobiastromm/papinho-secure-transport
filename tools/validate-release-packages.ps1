@@ -82,7 +82,7 @@ foreach($package in $packages){
   $manifest=Get-Content -Raw (Join-Path $extract "manifest.ini")
   $versionText=Get-Content -Raw (Join-Path $extract "VERSION")
   foreach($requiredVersion in @("package_version=$Version","library_version=$libraryVersion","api_version=$apiVersion","spi_version=$spiVersion")){if($versionText -notmatch ('(?m)^'+[regex]::Escape($requiredVersion)+'$')){throw ("VERSION mismatch: "+$requiredVersion)}}
-  if($Version -eq "0.6.5"){foreach($requiredDoc in @("docs\public-api-abi.md","docs\provider-spi-4.0.md","docs\lifecycle-ownership.md","docs\adr\ADR-0007-proveniencia-portavel-e-evidencia-nativa-da-terminacao-do-transporte.md","docs\adr\ADR-0008-lifecycle-failure-aware-de-fechamento-nativo.md")){Require-File (Join-Path $extract $requiredDoc) ("missing API3/SPI4 document: "+$requiredDoc)}}
+  if($Version -eq "0.6.5"){foreach($requiredDoc in @("docs\public-api-abi.md","docs\provider-spi-4.0.md","docs\lifecycle-ownership.md","docs\adr\ADR-0007-proveniencia-portavel-de-terminacao-do-transporte.md","docs\adr\ADR-0008-lifecycle-failure-aware-de-fechamento-nativo.md")){Require-File (Join-Path $extract $requiredDoc) ("missing API3/SPI4 document: "+$requiredDoc)}}
   if($manifest -notmatch ('(?m)^target_id=' + [regex]::Escape($package.Id) + '$')){throw "manifest target_id mismatch"}
   if((Get-Content -Raw (Join-Path $extract "consumer-link.ini")) -notmatch ('(?m)^target_id=' + [regex]::Escape($package.Id) + '$')){throw "consumer-link target_id mismatch"}
   if($Version -in @("0.6.2","0.6.3","0.6.4","0.6.5")){
