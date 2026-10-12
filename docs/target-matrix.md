@@ -313,3 +313,7 @@ CRT follows the same rule: it may remain matrix metadata when it does not discri
 ## Current 0.6.5 candidate
 
 Current versions are library 0.6.5, API 3.0.0 and SPI 4.0. VC6/NSS /ML and /MD remain distinct; Browser uses /MD and Accelerator the governed x64 OpenSSL target. Model E makes native close failure observable through a 28-byte `PST_RELEASE_INFO`, with no public retry. Historical matrices above remain historical.
+
+The VC6/NSS candidate uses qualified `ssl3.dll` SHA-256
+`68f20ede3c71cbaa132ef9e1da9f54ccf8fa5d96da761e29892070511fed0fce`.
+See [RetroZilla NSS/NSPR local patches](third-party/retrozilla-nss-patches.md).

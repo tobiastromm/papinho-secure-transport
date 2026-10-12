@@ -15,6 +15,12 @@ The authorized fail-closed pair was rechecked during Phase 3:
 - `freebl3.dll`: SHA-256 `12808c651528c9e08f5ccf86af00f9061b19103c0c712d376755664f41ee474d`;
 - `freebl3.chk`: SHA-256 `122aefebbfd76eb68352eb23d59d4caff70183b520f81b5017bf299f7b745daa`.
 
+The 0.6.5 candidate additionally carries the governed reciprocal-shutdown
+`pendingBuf` correction in `ssl3.dll`, SHA-256
+`68f20ede3c71cbaa132ef9e1da9f54ccf8fa5d96da761e29892070511fed0fce`.
+Its history, source correspondence and real NT4 evidence are documented in
+[RetroZilla NSS/NSPR local patches](third-party/retrozilla-nss-patches.md).
+
 The failure-injection-v3 artifacts remain outside the normal runtime and manifests. The PST backend adds no entropy source or fallback. Initialization errors from NSS are normalized as backend failure and terminate initialization without returning usable state.
 
 ## Build and dependency boundary
@@ -85,6 +91,11 @@ would-block reports `NEED_READ`, EOF after the NSS alert callback observed the
 peer `close_notify` reports COMPLETE, and raw EOF without that alert reports
 TRUNCATED. Connection destruction remains immediate and bounded and is not
 represented as a completed graceful TLS shutdown.
+
+Under the API 3/SPI 4 candidate, a would-block result from patched
+`PR_Shutdown` reports `NEED_WRITE` with WRITE interest. NSS retains generated
+TLS ciphertext until it is drained; the provider does not report COMPLETE or
+perform native SEND shutdown while `pendingBuf` remains.
 
 ## Error normalization
 

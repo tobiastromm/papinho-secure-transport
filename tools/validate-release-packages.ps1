@@ -64,7 +64,7 @@ foreach($package in $packages){
  if($package.Id -eq "source"){
   $sourceExtract=$extract
   $snapshot=Join-Path $extract "third_party\retrozilla-nss\source\retrozilla-2f274574d3c6ee8769914046920d649bbae9f81b-patched.zip"
-  Require-File $snapshot "missing NSS corresponding source";Require-File (Join-Path $extract "third_party\retrozilla-nss\patches\0001-win32-secure-rng-fail-closed-nt4.patch") "missing NSS patch"
+  Require-File $snapshot "missing NSS corresponding source";Require-File (Join-Path $extract "third_party\retrozilla-nss\patches\0001-win32-secure-rng-fail-closed-nt4.patch") "missing NSS RNG patch";Require-File (Join-Path $extract "third_party\retrozilla-nss\patches\0002-close-notify-pendingbuf-shutdown.patch") "missing NSS shutdown patch"
   if((Get-FileHash -Algorithm SHA256 -LiteralPath $snapshot).Hash.ToLowerInvariant() -ne "5371ce6fb2fd0df909faaed4cf92dc9c112844e1d1bedd7a8dc7f598b900d388"){throw "NSS source hash mismatch"}
   Require-File (Join-Path $extract "docs\target-matrix.md") "missing canonical target matrix"
   if($Version -in @("0.6.2","0.6.3","0.6.4","0.6.5")){
@@ -82,7 +82,7 @@ foreach($package in $packages){
   $manifest=Get-Content -Raw (Join-Path $extract "manifest.ini")
   $versionText=Get-Content -Raw (Join-Path $extract "VERSION")
   foreach($requiredVersion in @("package_version=$Version","library_version=$libraryVersion","api_version=$apiVersion","spi_version=$spiVersion")){if($versionText -notmatch ('(?m)^'+[regex]::Escape($requiredVersion)+'$')){throw ("VERSION mismatch: "+$requiredVersion)}}
-  if($Version -eq "0.6.5"){foreach($requiredDoc in @("docs\public-api-abi.md","docs\provider-spi-4.0.md","docs\lifecycle-ownership.md","docs\adr\ADR-0007-proveniencia-portavel-de-terminacao-do-transporte.md","docs\adr\ADR-0008-lifecycle-failure-aware-de-fechamento-nativo.md")){Require-File (Join-Path $extract $requiredDoc) ("missing API3/SPI4 document: "+$requiredDoc)}}
+  if($Version -eq "0.6.5"){foreach($requiredDoc in @("docs\public-api-abi.md","docs\provider-spi-4.0.md","docs\lifecycle-ownership.md","docs\third-party\retrozilla-nss-patches.md","docs\adr\ADR-0007-proveniencia-portavel-de-terminacao-do-transporte.md","docs\adr\ADR-0008-lifecycle-failure-aware-de-fechamento-nativo.md","docs\adr\ADR-0009-contrato-compartilhado-de-conformidade-model-e.md")){Require-File (Join-Path $extract $requiredDoc) ("missing API3/SPI4 document: "+$requiredDoc)}}
   if($manifest -notmatch ('(?m)^target_id=' + [regex]::Escape($package.Id) + '$')){throw "manifest target_id mismatch"}
   if((Get-Content -Raw (Join-Path $extract "consumer-link.ini")) -notmatch ('(?m)^target_id=' + [regex]::Escape($package.Id) + '$')){throw "consumer-link target_id mismatch"}
   if($Version -in @("0.6.2","0.6.3","0.6.4","0.6.5")){

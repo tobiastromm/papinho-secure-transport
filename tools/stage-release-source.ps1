@@ -51,9 +51,11 @@ $required = @(
     "tools\build-win32-x64-msvc-19.51-schannel.bat",
     "third_party\retrozilla-nss\source\retrozilla-2f274574d3c6ee8769914046920d649bbae9f81b-patched.zip",
     "third_party\retrozilla-nss\patches\0001-win32-secure-rng-fail-closed-nt4.patch",
+    "third_party\retrozilla-nss\patches\0002-close-notify-pendingbuf-shutdown.patch",
     "third_party\retrozilla-nss\PROVENANCE.md",
     "third_party\openssl\source\openssl-3.5.8.tar.gz",
     "third_party\openssl\PROVENANCE.md",
+    "docs\third-party\retrozilla-nss-patches.md",
     "THIRD_PARTY_NOTICES.md"
 )
 foreach ($relative in $required) {

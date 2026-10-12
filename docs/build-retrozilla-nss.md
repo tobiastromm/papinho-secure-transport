@@ -7,7 +7,9 @@ This is a third-party reproduction procedure, separate from the normal PST build
 ## Inputs
 
 1. Verify `third_party/retrozilla-nss/source/MANIFEST.sha256` and extract the single ZIP to a short, writable path such as `C:\rzbuild\RetroZilla`.
-2. Do not reapply patch 0001: the archive is the exact post-patch tree. Use `patches/MANIFEST.sha256` to audit the upstream delta and resulting `win_rand.c`.
+2. Do not reapply patch 0001: the archive is the exact post-patch RNG tree.
+   Apply patch 0002 with `patch -p1` from the extraction root, then verify
+   `sslimpl.h` and `sslsecur.c` against `patches/MANIFEST.sha256`.
 3. Use Microsoft Visual C++ 6.0 (`_MSC_VER=1200`), Visual Studio 6 SP5 plus Processor Pack. The compiler and linker are VC6; `win32-x86-vc6` does not merely mean that PST consumed the DLLs with VC6.
 4. Use the historical MozillaBuild-compatible MSYS shell recorded by `.mozconfig.mk`: GNU `/bin/make.exe`, POSIX shell/configure tools, Perl and Python 2.5-era tooling, plus `moztools-180compat`. These tools are external build dependencies, not redistributed by PST. No separate modern Windows SDK is part of the recorded build.
 

@@ -10,6 +10,9 @@ PapinhoSecureTransport 0.6.5 is an unpublished candidate with public API 3.0.0 a
 - Normalizes native FIN, reset and socket-error evidence without exposing provider-native types.
 - Preserves reciprocal TLS shutdown, truncation, provider binding, ownership and wait-set semantics.
 - Retains separate VC6 RetroZilla NSS /ML and /MD SDK identities.
+- Corrects the governed RetroZilla NSS reciprocal-shutdown path so queued
+  `close_notify` ciphertext is drained incrementally before native SEND
+  shutdown; real NT4 `/ML` and `/MD` qualification passed for the candidate.
 - Does not alter the published 0.6.4 release or its assets.
 
 Publication remains blocked on the targeted external NT4, clean-machine and consumer recertification gates.

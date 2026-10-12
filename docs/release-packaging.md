@@ -2,6 +2,13 @@
 
 # Release packaging decision
 
+## Unpublished 0.6.5 API 3/SPI 4 candidate
+
+The 0.6.5 source candidate includes both RetroZilla NSS patch files, their
+manifest and `docs/third-party/retrozilla-nss-patches.md`. The VC6 `/ML` and
+`/MD` SDKs carry the same qualified `ssl3.dll`; their PST static libraries and
+artifact identities remain separate because their CRT contracts differ.
+
 ## Historical 0.6.4 idle-liveness patch candidate
 
 The `0.6.4` candidate retains API 2.1.0, SPI 3.0 and every canonical target identity. Its production change restores remote close/error observation for established idle wait-set members. Published 0.6.3 archives remain immutable; final 0.6.4 archives and hashes are not frozen until targeted `/ML`, `/MD` and PapinhoBrowser `/MD` external recertification succeeds.

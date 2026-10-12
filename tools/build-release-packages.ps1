@@ -59,6 +59,8 @@ Require-File $packages[0].Stage "THIRD_PARTY_NOTICES.md"
 Require-File $packages[0].Stage "SHA256SUMS.txt"
 Require-File $packages[0].Stage "third_party\retrozilla-nss\source\retrozilla-2f274574d3c6ee8769914046920d649bbae9f81b-patched.zip"
 Require-File $packages[0].Stage "third_party\retrozilla-nss\patches\0001-win32-secure-rng-fail-closed-nt4.patch"
+Require-File $packages[0].Stage "third_party\retrozilla-nss\patches\0002-close-notify-pendingbuf-shutdown.patch"
+Require-File $packages[0].Stage "docs\third-party\retrozilla-nss-patches.md"
 foreach ($package in $packages | Select-Object -Skip 1) {
     foreach ($required in @("LICENSE", "THIRD_PARTY_NOTICES.md", "VERSION", "manifest.ini", "consumer-link.ini", "SHA256SUMS.txt", "include\papinho_secure_transport.h", "include\papinho_secure_transport_win32.h")) { Require-File $package.Stage $required }
     if (Test-Path -LiteralPath (Join-Path $package.Stage "include\pst_backend.h")) { throw "Private SPI leaked into SDK: $($package.Stage)" }

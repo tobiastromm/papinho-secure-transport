@@ -22,4 +22,8 @@ The five static 0.6.2 SDKs preserve file-level source availability through papin
 
 RetroZilla/NSS/NSPR files contain historical MPL and tri-license notices. Preserving texts is necessary but is not itself a conclusion about every source or modification obligation. The fail-closed RNG patch and source/build records remain linked from provenance.
 
+For the 0.6.5 candidate, corresponding source includes the governed source ZIP
+and both ordered patches: patch 0001 covers `win_rand.c`; patch 0002 covers
+`sslimpl.h`/`sslsecur.c` and the qualified `ssl3.dll`.
+
 Modern `/MD` consumers require the appropriate Microsoft Visual C++ runtime. PST staging does not copy Microsoft installers or DLLs; deployment must follow Microsoft's applicable terms. Windows system DLLs must not be repackaged as PST files.
