@@ -10,13 +10,26 @@ Upstream project: RetroZilla (`https://github.com/rn10950/RetroZilla`). Revision
 
 ## Local patchset
 
-`LOCAL PATCHSET EXISTS`. Apply order and hashes are in `patches/MANIFEST.sha256`. Patch 0001 makes Win32 secure RNG failure fail closed while retaining SystemFunction036 and CryptoAPI sources. It is required by PST's security basis and NT4 validation, not by VC6 syntax, TLS 1.3, or the PST adapter interface. The canonical ZIP is already post-patch: do not apply 0001 to it again. The patch exists to audit the delta against the recorded upstream revision. The resulting `security/nss/lib/freebl/win_rand.c` SHA-256 is recorded in the patch manifest.
+`LOCAL PATCHSET EXISTS`. Apply order and hashes are in `patches/MANIFEST.sha256`.
+Patch 0001 makes Win32 secure RNG failure fail closed while retaining
+SystemFunction036 and CryptoAPI sources. The canonical ZIP is already post-0001;
+do not apply that patch again. Patch 0002 is applied after extracting the ZIP.
+It makes reciprocal TLS shutdown preserve and drain NSS `pendingBuf`, propagate
+`PR_WOULD_BLOCK_ERROR`, generate `close_notify` once, and delay native SEND
+shutdown until the ciphertext is drained. The two patches and their output
+hashes are independent; patch 0002 does not change `freebl3.dll`.
 
 ## Source-to-binary chain
 
 `revision + ordered patchset + embedded mozconfig + documented VC6/MozillaBuild environment = prebuilt/win32-x86-vc6/runtime`.
 
-The canonical runtime is immutable for this housekeeping and every file is covered by `prebuilt/win32-x86-vc6/MANIFEST.sha256`. The generated header SDK used by the PST compilation is under `prebuilt/win32-x86-vc6/sdk`; its manifest distinguishes it from source and runtime. Object files, import libraries, PDBs, caches and the full external `dist/lib` tree are deliberately not preserved: PST resolves NSS/NSPR dynamically and only needs these generated headers plus the canonical runtime.
+Every canonical runtime file is covered by
+`prebuilt/win32-x86-vc6/MANIFEST.sha256`. The 0.6.5 candidate replaces only
+`ssl3.dll` with the qualified patch-0002 build; all other NSS/NSPR runtime bytes
+remain unchanged. The generated header SDK used by the PST compilation is under
+`prebuilt/win32-x86-vc6/sdk`; its manifest distinguishes it from source and
+runtime. Object files, import libraries, PDBs, caches and the full external
+`dist/lib` tree are deliberately not preserved.
 
 Reproducibility is LEVEL B: exact source, local delta, configuration, toolchain identity and build sequence are preserved, and the canonical binaries remain functionally validated. A fresh third-party rebuild was not attempted in this housekeeping, so byte identity is `NOT TESTED`, not claimed. Historical compiler/linker timestamps may prevent identical bytes.
 

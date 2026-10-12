@@ -1,0 +1,96 @@
+--- a/security/nss/lib/ssl/sslimpl.h
++++ b/security/nss/lib/ssl/sslimpl.h
+@@ -1029,6 +1029,7 @@ struct sslSocketStr {
+     PRThread *writerThread; /* thread holds SSL_LOCK_WRITER lock */
+ 
+     PRUint16 shutdownHow; /* See ssl_SHUTDOWN defines below. */
++    PRBool closeNotifyQueued; /* close_notify record was generated once. */
+ 
+     sslHandshakingType handshaking;
+ 
+--- a/security/nss/lib/ssl/sslsecur.c
++++ b/security/nss/lib/ssl/sslsecur.c
+@@ -697,6 +697,7 @@ ssl_SecureClose(sslSocket *ss)
+     int rv;
+ 
+     if (!(ss->shutdownHow & ssl_SHUTDOWN_SEND) &&
++        !ss->closeNotifyQueued &&
+         ss->firstHsDone) {
+ 
+         /* We don't want the final alert to be Nagle delayed. */
+@@ -711,6 +712,47 @@ ssl_SecureClose(sslSocket *ss)
+     return rv;
+ }
+ 
++/*
++ * Generate close_notify once, then make factual progress on any ciphertext
++ * retained by ssl3_SendRecord.  In nonblocking mode SSL3_SendAlert reports
++ * that the two plaintext alert bytes were accepted even when the resulting
++ * record remains in pendingBuf.  Native SEND shutdown must not precede the
++ * complete drain of that record.
++ *
++ * Caller holds the SSL socket writer lock.  This function performs at most
++ * one lower-layer write attempt per call so PR_WOULD_BLOCK_ERROR remains an
++ * incremental readiness contract rather than an internal retry loop.
++ */
++static SECStatus
++ssl_SendCloseNotify(sslSocket *ss)
++{
++    int sent = 0;
++
++    if (!ss->closeNotifyQueued) {
++        SECStatus rv = SSL3_SendAlert(ss, alert_warning, close_notify);
++        if (rv != SECSuccess) {
++            return rv;
++        }
++        ss->closeNotifyQueued = PR_TRUE;
++    }
++
++    ssl_GetXmitBufLock(ss);
++    if (ss->pendingBuf.len != 0) {
++        sent = ssl_SendSavedWriteData(ss);
++        if (sent < 0) {
++            ssl_ReleaseXmitBufLock(ss);
++            return SECFailure;
++        }
++        if (ss->pendingBuf.len != 0) {
++            PORT_SetError(PR_WOULD_BLOCK_ERROR);
++            ssl_ReleaseXmitBufLock(ss);
++            return SECFailure;
++        }
++    }
++    ssl_ReleaseXmitBufLock(ss);
++    return SECSuccess;
++}
++
+ /* Caller handles all locking */
+ int
+ ssl_SecureShutdown(sslSocket *ss, int nsprHow)
+@@ -728,12 +770,16 @@ ssl_SecureShutdown(sslSocket *ss, int nsprHow)
+         !(ss->shutdownHow & ssl_SHUTDOWN_SEND) &&
+         ss->firstHsDone) {
+ 
+-        (void)SSL3_SendAlert(ss, alert_warning, close_notify);
++        if (ssl_SendCloseNotify(ss) != SECSuccess) {
++            return PR_FAILURE;
++        }
+     }
+ 
+     rv = osfd->methods->shutdown(osfd, nsprHow);
+ 
+-    ss->shutdownHow |= sslHow;
++    if (rv == PR_SUCCESS) {
++        ss->shutdownHow |= sslHow;
++    }
+ 
+     return rv;
+ }
+@@ -867,7 +913,7 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
+     SSL_TRC(2, ("%d: SSL[%d]: SecureSend: sending %d bytes",
+                 SSL_GETPID(), ss->fd, len));
+ 
+-    if (ss->shutdownHow & ssl_SHUTDOWN_SEND) {
++    if ((ss->shutdownHow & ssl_SHUTDOWN_SEND) || ss->closeNotifyQueued) {
+         PORT_SetError(PR_SOCKET_SHUTDOWN_ERROR);
+         rv = PR_FAILURE;
+         goto done;

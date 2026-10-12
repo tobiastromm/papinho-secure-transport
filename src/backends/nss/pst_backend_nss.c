@@ -1168,12 +1168,11 @@ static PST_RESULT pst_nss_shutdown_step(void *state, pst_u32 *operation, PST_RES
         }
         pst_nss_capture_error(s, &c->last_error);
         if (pst_backend_nss_is_would_block(c->last_error)) {
-            *operation = PST_BACKEND_OPERATION_NEED_READ_WRITE;
+            *operation = PST_BACKEND_OPERATION_NEED_WRITE;
             *error = PST_RESULT_OK;
-            c->interest = PST_BACKEND_INTEREST_READ |
-                          PST_BACKEND_INTEREST_WRITE;
+            c->interest = PST_BACKEND_INTEREST_WRITE;
             pst_nss_trace("PR_Shutdown",
-                          "END status=would_block would_block=1");
+                          "END status=would_block need=write");
             return PST_RESULT_OK;
         }
         pst_nss_record(c, PST_DIAGNOSTIC_PHASE_SHUTDOWN);

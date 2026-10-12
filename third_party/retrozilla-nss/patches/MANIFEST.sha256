@@ -1,6 +1,9 @@
 UPSTREAM_REVISION  2f274574d3c6ee8769914046920d649bbae9f81b
 SOURCE_SNAPSHOT  ../source/retrozilla-2f274574d3c6ee8769914046920d649bbae9f81b-patched.zip
 SOURCE_SNAPSHOT_KIND  post-patch exact build tree
-PATCH_ORDER  0001-win32-secure-rng-fail-closed-nt4.patch
+PATCH_ORDER  0001-win32-secure-rng-fail-closed-nt4.patch (already present in source snapshot); 0002-close-notify-pendingbuf-shutdown.patch
 883cefc465fc0b1ad6875688f36f74c6933c1943d3368eaa879aea47a257e176  0001-win32-secure-rng-fail-closed-nt4.patch
+fab7d1e7ea696339ecd75b9f5265017e0248728183281eb0f76cf9319b03451f  0002-close-notify-pendingbuf-shutdown.patch
 PATCHED_TARGET_SHA256  security/nss/lib/freebl/win_rand.c  4dddc83482544c3757e81ffbfebe1fa96fcee0ff5205c00a0ce2a93d19b304d4
+PATCHED_TARGET_SHA256  security/nss/lib/ssl/sslimpl.h  4649cc834b5cebcaf0b253e5bafd06cac16d972ddcf1e8d13c297d81857bc875
+PATCHED_TARGET_SHA256  security/nss/lib/ssl/sslsecur.c  23c2195f6185c5473315440ce6614525083a6c9d4aaf52a0f87741d81df9fb30

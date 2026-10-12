@@ -1,6 +1,8 @@
 # RetroZilla NSS/NSPR legacy provider
 
-This directory preserves the exact historical source, local security patch, generated compile SDK, canonical Win32 x86 VC6 runtime, hashes, and original notices for the `retrozilla-nss` backend.
+This directory preserves the exact historical source, ordered local patches,
+generated compile SDK, canonical Win32 x86 VC6 runtime, hashes, and original
+notices for the `retrozilla-nss` backend.
 
 - Revision: `2f274574d3c6ee8769914046920d649bbae9f81b`
 - NSS: 3.42 Beta
@@ -14,6 +16,7 @@ This directory preserves the exact historical source, local security patch, gene
 - Runtime hashes: `prebuilt/win32-x86-vc6/MANIFEST.sha256`
 - Licenses/notices: `licenses/`
 - Full provenance: `PROVENANCE.md`
+- Detailed patch history: `../../docs/third-party/retrozilla-nss-patches.md`
 
 Runtime files are `ssl3`, `nss3`, `nssutil3`, `softokn3`, `freebl3`, `nssdbm3`, `nspr4`, `plc4`, and `plds4`, including the three integrity `.chk` files. S/MIME and SQLite DLLs are intentionally outside this provider package.
 
