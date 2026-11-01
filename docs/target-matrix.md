@@ -4,6 +4,24 @@ This is the canonical PapinhoSecureTransport target matrix. The ecosystem-wide n
 
 Target identity, build inputs, operating-system support policy, and observed validation are separate facts. A toolchain name is not an operating-system support claim.
 
+
+## Which package should I download?
+
+For the latest published 0.6.4 release, historical filenames remain unchanged:
+
+| Se você... | Baixe |
+|---|---|
+| quer os fontes | `papinho-secure-transport-0.6.4-src.zip` *(historical published naming; new releases use `source`)* |
+| usa Win32 x86 / VC6 / RetroZilla NSS com CRT `/MD` | `papinho-secure-transport-0.6.4-win32-x86-vc6-retrozilla-nss-md.zip` |
+| usa Win32 x86 / VC6 / RetroZilla NSS com CRT `/ML` | `papinho-secure-transport-0.6.4-win32-x86-vc6-retrozilla-nss-ml.zip` |
+| usa Win32 x64 e quer OpenSSL 3 | `papinho-secure-transport-0.6.4-win32-x64-msvc-19.51-openssl3.zip` |
+| usa Win32 x64 e precisa Schannel + OpenSSL 3 no mesmo pacote | `papinho-secure-transport-0.6.4-win32-x64-msvc-19.51-schannel-openssl3.zip` |
+| usa Win32 x64 e quer Schannel | `papinho-secure-transport-0.6.4-win32-x64-msvc-19.51-schannel.zip` |
+
+> **Não sabe qual arquivo baixar ou quer ver em quais sistemas cada target foi suportado/testado? Continue nesta Target Matrix.**
+
+For new releases, public assets follow PapinhoEngineering ADR-0002 revision 4: `source → win16 → win32`, then architecture order `x86 → x64 → arm64` where applicable. Published historical assets are not renamed.
+
 ## 0.6.3 VC6 CRT-qualified targets
 
 From one source commit, the VC6/NSS `-ml` and `-md` targets use explicit
@@ -61,16 +79,27 @@ Historical packages/evidence keep the unsuffixed name. If /ML is built/distribut
 
 ## Current and historical targets at a glance
 
-| Target ID | Architecture | Provider(s) | TLS | Tested on |
-|---|---:|---|---|---|
-| `win32-x86-vc6-retrozilla-nss` | x86 | RetroZilla NSS/NSPR | historical `/ML` identity; 1.2 / 1.3 | Windows NT 4.0 SP6 x86 |
-| `win32-x86-vc6-retrozilla-nss-ml` | x86 | RetroZilla NSS/NSPR | canonical `/ML` variant; 1.2 / 1.3 | Windows NT 4.0 SP6 x86; separate clean Windows machine |
-| `win32-x86-vc6-retrozilla-nss-md` | x86 | RetroZilla NSS/NSPR | canonical `/MD` variant; 1.2 / 1.3 | Windows NT 4.0 SP6 x86; separate clean Windows machine; real PapinhoBrowser integration |
-| `win32-x64-msvc-19.51-schannel` | x64 | Schannel | 1.2 validated | Windows 10 build 19045 x64 |
-| `win32-x64-msvc-19.51-openssl3` | x64 | OpenSSL 3.5.8 LTS | 1.2 / 1.3 | Windows 10 build 19045 x64 |
-| `win32-x64-msvc-19.51-schannel-openssl3` | x64 | Schannel + OpenSSL 3.5.8 LTS | capability-dependent | Windows 10 build 19045 x64 |
+### Win32
 
-The compact table is only a navigation summary. The factual details for each target are below, vertically, so they remain readable on narrow screens.
+#### x86
+
+| Target ID | Provider(s) | CRT / variant | TLS | Tested on |
+|---|---|---|---|---|
+| `win32-x86-vc6-retrozilla-nss` | RetroZilla NSS/NSPR | historical unsuffixed `/ML` identity | 1.2 / 1.3 | Windows NT 4.0 SP6 x86 |
+| `win32-x86-vc6-retrozilla-nss-ml` | RetroZilla NSS/NSPR | canonical `/ML` | 1.2 / 1.3 | Windows NT 4.0 SP6 x86; separate clean Windows machine |
+| `win32-x86-vc6-retrozilla-nss-md` | RetroZilla NSS/NSPR | canonical `/MD` | 1.2 / 1.3 | Windows NT 4.0 SP6 x86; separate clean Windows machine; real PapinhoBrowser integration |
+
+#### x64
+
+| Target ID | Provider(s) | CRT / variant | TLS | Tested on |
+|---|---|---|---|---|
+| `win32-x64-msvc-19.51-openssl3` | OpenSSL 3.5.8 LTS | `/MD` | 1.2 / 1.3 | Windows 10 build 19045 x64 |
+| `win32-x64-msvc-19.51-schannel-openssl3` | Schannel + OpenSSL 3.5.8 LTS | `/MD` | capability-dependent | Windows 10 build 19045 x64 |
+| `win32-x64-msvc-19.51-schannel` | Schannel | `/MD` | 1.2 validated | Windows 10 build 19045 x64 |
+
+No Win16 or Win32 arm64 target is currently distributed by PST.
+
+The compact tables are navigation summaries. Factual details remain below as vertical target records.
 
 ---
 
@@ -213,7 +242,7 @@ The absence of SERVER TLS 1.3 in this row is a factual statement about the valid
 
 ---
 
-## Which target should I download?
+## Detailed selection notes
 
 ### Windows NT 4.0 SP6 x86 in the validated configuration
 
@@ -252,6 +281,18 @@ win32-x64-msvc-19.51-schannel-openssl3
 The Combined package exists for provider selection. It is optional and is not a default recommendation.
 
 ---
+
+## Compatibility and qualification states
+
+PST follows PapinhoEngineering ADR-0002 revision 4:
+
+- `Supported on`: explicit project support declaration;
+- `Tested on`: direct validation evidence;
+- `UNQUALIFIED`: no sufficient qualification/support claim;
+- `Unsupported`: explicit no-support declaration;
+- `N/A`: combination does not apply.
+
+Do not use `?` alone to imply likely compatibility.
 
 ## Supported on vs. Tested on
 
